@@ -1,7 +1,7 @@
 # Samvad Backend — B1: Firebase Foundation + Authentication Backend
 
 Date: 2026-10-09
-Status: Revision 3, draft for review (revision 1 = `f5684fb`, revision 2 = `73605c1`)
+Status: Revision 3.1, approved by the owner as revision 3; plan-time amendments in §0.1 await review with the plan (revision 1 = `f5684fb`, revision 2 = `73605c1`, revision 3 = `c482629`)
 
 ## 0. What changed in revision 3
 
@@ -12,6 +12,20 @@ The owner decided to build a complete, production-ready **backend first** and th
 - Adds a **client contract** (§8) that states exactly what the future Android app must do, so the backend is specified and tested independently of any UI.
 - Keeps the Firebase-first architecture, the data model, the security controls and the auth-lifecycle rules from revision 2. Client-only items (resend countdown, local counters, screens) move into the client contract as requirements on the later app.
 - Renames the sub-project to **B1**; the roadmap is now backend-first (§1).
+
+### 0.1 Plan-time amendments (revision 3.1)
+
+Found while pinning versions and designing the tests for the implementation plan (`docs/superpowers/plans/2026-10-09-b1-firebase-foundation.md`). Each is a change to approved text and needs the owner's review together with the plan.
+
+1. **JDK 21 is required, not optional** (§5). The pinned `firebase-tools` 15.33.0 refuses Java below 21. JDK 17 is no longer a fallback.
+2. **Node 24 LTS, not 22** (§5). `@firebase/rules-unit-testing` 6.0.0 requires Node 24.12 or newer, `firebase-admin` 14 requires 22 or newer, vitest 5 does not support Node 25, and Cloud Functions supports the `nodejs24` runtime. Pinned versions are listed in §5.
+3. **Deleted-account tombstone** (§6.3, §7.1, §7.2). After `deleteAccount`, the deleted user's ID token stays valid for up to about an hour and rules cannot see whether the Auth user still exists, so that token could re-create `users`, `profiles` or `devices` documents. `deleteAccount` now writes a server-only `deletedAccounts/{uid}` tombstone first, and the create rules deny when it exists.
+4. **App Check replay protection** (§6.3, §8). Both callables set `consumeAppCheckToken`, so the client must send limited-use App Check tokens. Enforcement is switched off only when `FUNCTIONS_EMULATOR` is `true`.
+5. **Rules refinements** (§7.1). `displayName` must contain a non-whitespace character; `phoneE164` must match E.164 format as well as equal the token's number.
+6. **Index test restated** (§7.3, §10). The Firestore emulator does not enforce composite indexes, so a test cannot prove "no query needs one". The test instead asserts that `firestore.indexes.json` is empty and that the rules allow no `list` outside the owner's own `devices` collection (an unordered, unfiltered read).
+7. **Log-hygiene test method** (§10). Function logs are captured from the emulator's console output and scanned for the test phone number and tokens, with a positive control proving that real function log lines were captured.
+8. **Default region** (§6.3). Callables are pinned to `asia-south1` (Mumbai) via one constant; the owner should choose the Firestore location to match (§11).
+9. **New helper directory** `firebase/test-support/` and `firebase/e2e` flow test file location (§4.2).
 
 ## 1. Context and decomposition
 
@@ -116,9 +130,10 @@ firebase/
     src/lib/                       (auth/recency checks, logging helper)
     test/
   rules-tests/
-    firestore.rules.test.ts
+    firestore.*.test.ts            (users, profiles, devices, default-deny)
     storage.rules.test.ts
     database.rules.test.ts
+  test-support/                    (emulator constants, Auth-emulator phone sign-in helper, callable HTTP helper)
   README.md                        (setup, environments, deployment, App Check rollout)
 docs/security/incident-leaked-credentials.md   (already committed)
 docs/ARCHITECTURE.md                           (already committed; updated in this revision)
@@ -138,9 +153,10 @@ Optional, decided at plan time: `.github/workflows/firebase-ci.yml` (new file; `
 
 | Tool | Requirement |
 |---|---|
-| JDK | Needed by the Firestore, Realtime Database and Storage emulators (they run on the JVM), and later by Ktor. Recommended: **Eclipse Temurin 21 (LTS)**; fallback Temurin 17. The exact minimum is whatever the pinned `firebase-tools` requires, confirmed at plan time. The installed JDK 8 is too old. Android Studio's bundled JDK 25 should not be used as the build JDK for Gradle 8.x projects later (Gradle 8.14 runs on Java up to 24). |
-| Node.js | **22 LTS** for Cloud Functions and rules tests. The machine has Node 25 (non-LTS); use 22 for the functions runtime and keep `engines` aligned with a supported Cloud Functions runtime. |
+| JDK | **Eclipse Temurin 21 (LTS), required.** The Firestore, Realtime Database and Storage emulators run on the JVM and `firebase-tools` 15.33.0 refuses Java below 21. The installed JDK 8 is too old. Android Studio's bundled JDK 25 should not be used as the build JDK for Gradle 8.x projects later (Gradle 8.14 runs on Java up to 24). |
+| Node.js | **24 LTS (24.12 or newer)** for Cloud Functions (runtime `nodejs24`), rules tests and vitest. The machine has Node 25.8.1, which vitest 5 does not support, so Node 24 LTS must be installed. |
 | `firebase-tools` | Pinned devDependency in `firebase/package.json`, not global. |
+| Pinned versions (looked up 2026-10-09) | `firebase-tools` 15.33.0, `firebase-functions` 7.4.0, `firebase-admin` 14.5.0, `firebase` 13.0.0, `@firebase/rules-unit-testing` 6.0.0, `typescript` 5.9.3, `vitest` 5.0.3, `@types/node` 24.19.1. Lockfiles are committed. |
 | Language | TypeScript for Functions (Cloud Functions for Firebase supports Node.js and Python, not Kotlin). Kotlin enters with Ktor in B6. |
 
 Installing a JDK or Node version changes the machine, so it happens only with the owner's explicit OK at the start of the build phase. It does not alter the repository or the JDK 8 install. Library versions (Firebase Functions SDK, Admin SDK, emulator test library) are looked up and pinned together at plan time.
@@ -167,17 +183,20 @@ Authoritative limits are Firebase's per-number and per-project SMS quotas, App C
 | Register device | client writes `users/{uid}/devices/{deviceId}` | owner-only, field allow-list |
 | Logout (this device) | client deletes its device doc, then signs out | allowed by rules; no server call |
 | Sign out everywhere | callable `signOutAllDevices` | Admin `revokeRefreshTokens(uid)`; stamps `users/{uid}.tokensRevokedAt`; marks device docs `revokedAt`; rejects calls made within 60 seconds of the last revocation |
-| Delete account | callable `deleteAccount` | requires `auth_time` within 5 minutes (fresh OTP sign-in); recursively deletes `users/{uid}` (incl. `devices`) and `profiles/{uid}`, then deletes the Auth user; idempotent on retry |
+| Delete account | callable `deleteAccount` | requires `auth_time` within 5 minutes (fresh OTP sign-in); writes the server-only tombstone `deletedAccounts/{uid}`, recursively deletes `users/{uid}` (incl. `devices`) and `profiles/{uid}`, then deletes the Auth user (user-not-found counts as success); idempotent on retry |
 
 Both callables:
 
 - reject unauthenticated callers and non-phone sign-ins;
-- enforce App Check (`enforceAppCheck: true`; replay protection via limited-use tokens considered at plan time);
+- enforce App Check with replay protection (`enforceAppCheck` and `consumeAppCheckToken` are both true except when `FUNCTIONS_EMULATOR` is `true`), so the client must send limited-use App Check tokens;
+- run in region `asia-south1` (a single constant; clients must use the same region);
 - validate that no client-supplied UID is used; the target is always `request.auth.uid`;
 - are retry-safe: a repeat after partial failure completes the remaining steps without error;
 - log structured, PII-free events (no phone numbers, tokens or document contents).
 
 Token revocation limit: `revokeRefreshTokens` stops new ID tokens from being issued, but already-issued ID tokens stay valid until they expire (up to about an hour). Rules cannot assume instant revocation; server code that needs it must verify with revocation checking (`checkRevoked`). This is documented, not hidden.
+
+Why the tombstone: a deleted user's already-issued ID token stays valid for up to about an hour, and security rules cannot see whether the Auth user still exists. Without the tombstone that token could re-create `users`, `profiles` or `devices` documents after deletion. If `deleteAccount` fails after writing the tombstone, the user cannot re-onboard until a retry completes; the retry is safe.
 
 Data owned by later sub-projects (messages, media, memberships) adds its own deletion steps to `deleteAccount` in those specs.
 
@@ -193,7 +212,7 @@ Callables return typed errors using callable error codes (`unauthenticated`, `pe
 
 | Field | Type | Constraints |
 |---|---|---|
-| `phoneE164` | string | on create must equal `request.auth.token.phone_number`; immutable |
+| `phoneE164` | string | on create must match E.164 (`^\+[1-9][0-9]{6,14}$`) and equal `request.auth.token.phone_number`; immutable |
 | `consent` | map `{version:int, acceptedAt:timestamp}` | `acceptedAt == request.time`; version may only increase |
 | `createdAt` | timestamp | `== request.time` on create; immutable |
 | `tokensRevokedAt` | timestamp or absent | server-only (Admin SDK) |
@@ -202,10 +221,12 @@ Callables return typed errors using callable error codes (`unauthenticated`, `pe
 
 | Field | Type | Constraints |
 |---|---|---|
-| `displayName` | string | 1–64 chars |
+| `displayName` | string | 1–64 chars and contains a non-whitespace character |
 | `about` | string | ≤ 140 chars |
 | `photoUrl` | null | must be null in B1; B4 restricts it to the app's own Storage paths |
 | `updatedAt` | timestamp | `== request.time` |
+
+**`deletedAccounts/{uid}`** — server-only tombstone, written by `deleteAccount`; contains only `deletedAt` (timestamp). No client may read or write it. Permanent in B1 (a UID is not PII on its own and Firebase never reuses UIDs); a TTL policy is a B9 option.
 
 **`users/{uid}/devices/{deviceId}`** — one doc per install, owner-only. `deviceId` is a random UUID generated by the client at first launch; no hardware identifiers.
 
@@ -224,13 +245,15 @@ Callables return typed errors using callable error codes (`unauthenticated`, `pe
 - Every allow requires `request.auth != null` and `request.auth.token.firebase.sign_in_provider == 'phone'`.
 - `users/{uid}`: owner-only `get`; `list` denied; create/update only when `request.auth.uid == uid`, field allow-list (`hasOnly`), type/length checks and the immutability rules above; client delete denied.
 - `profiles/{uid}`: signed-in users may `get`, never `list`; owner-only create/update with field allow-list; client delete denied.
-- `users/{uid}/devices/{deviceId}`: owner-only read/create/update/delete; clients cannot set `revokedAt`.
+- `users/{uid}/devices/{deviceId}`: owner-only read/create/update/delete; `deviceId` must be a lowercase UUID; clients cannot set `revokedAt`.
+- `deletedAccounts/*`: no client access of any kind.
+- Creates of `users/{uid}`, `profiles/{uid}` and `devices/*` are additionally denied when `deletedAccounts/{uid}` exists.
 - Contact discovery (finding users by phone number) is not enabled. Phone numbers are readable only by their owner and trusted server code; discovery is designed in B6 as a rate-limited server-mediated path.
 - Storage rules: deny all. Realtime Database rules: deny all. Placeholders until B4 and B5. Note for B5: RTDB rules cannot read Firestore, so membership checks for presence/typing need a mirrored membership structure or Function-mediated writes; decided there.
 
 ### 7.3 Indexes
 
-All access in B1 is single-document get by UID, so **no composite indexes are required**. `firestore.indexes.json` is committed empty and the tests assert that no query in scope needs one. Indexes for message ordering and conversation lists are defined in B2 together with the queries that need them.
+All access in B1 is single-document get by UID, so **no composite indexes are required**. `firestore.indexes.json` is committed empty. The emulator does not enforce composite indexes, so this cannot be proven by running queries; the test asserts the file is empty and that the rules allow no `list` outside the owner's own `devices` collection (an unordered, unfiltered read). Indexes for message ordering and conversation lists are defined in B2 together with the queries that need them.
 
 ### 7.4 Retention
 
@@ -248,7 +271,7 @@ The backend is complete and tested without a UI. When the Android phase starts, 
 - Show Terms and Privacy links with an explicit consent step; write `consent.version` and the server timestamp.
 - Create `users/{uid}` and `profiles/{uid}` in one batched write; register a device doc; delete it on logout.
 - Re-authenticate (fresh OTP) before calling `deleteAccount`.
-- App Check: Play Integrity in staging/release, Debug provider in debug.
+- App Check: Play Integrity in staging/release, Debug provider in debug. Send a limited-use App Check token (`getLimitedUseToken`) with `deleteAccount` and `signOutAllDevices`, and call functions in region `asia-south1`.
 - Analytics and Crashlytics collection off by default and enabled only after consent; never include phone numbers, OTPs, tokens or message text.
 - Manifest: `allowBackup=false`, data-extraction rules exclude everything, no cleartext traffic (debug emulator host excepted).
 - No E2EE wording anywhere until it is implemented and verified.
@@ -279,7 +302,8 @@ The backend is complete and tested without a UI. When the Android phase starts, 
   - `users/{uid}` rejects mismatched or changed `phoneE164`, changed `createdAt`, unknown fields, wrong types, oversized strings, client-set `tokensRevokedAt`/`revokedAt`, and client delete;
   - `profiles` rejects non-null `photoUrl`;
   - any unnamed collection is denied;
-  - no query in scope requires a composite index.
+  - creates of `users`, `profiles` and `devices` are denied once `deletedAccounts/{uid}` exists, and clients cannot read or write `deletedAccounts`;
+  - `firestore.indexes.json` is empty and the rules allow no `list` outside the owner's own `devices` collection.
 - **Storage and Realtime Database rules:** deny-all verified for authenticated and unauthenticated users.
 - **Callable Functions** (run against the Functions + Auth + Firestore emulators with real ID tokens from the Auth emulator):
   - both reject unauthenticated callers and non-phone sign-ins;
@@ -287,7 +311,7 @@ The backend is complete and tested without a UI. When the Android phase starts, 
   - `signOutAllDevices` revokes tokens, stamps `tokensRevokedAt`, marks devices `revokedAt`, enforces the 60-second cooldown;
   - the target UID is always the caller's, even if the request payload names another UID.
 - **End-to-end sign-in flow on the Auth emulator:** a script requests a code for a test number, reads the code from the emulator, signs in, performs the client-contract writes (profile, device), calls `signOutAllDevices`, then `deleteAccount`.
-- **Log hygiene test:** function logs from the above runs contain no phone numbers or tokens.
+- **Log hygiene test:** the emulator console output from the end-to-end run is scanned for the test phone number and the issued tokens (none may appear); a positive control requires real function log lines (for example the `account_deleted` event) to be present, so the check cannot pass vacuously.
 
 ### Acceptance criteria
 
@@ -317,7 +341,7 @@ Real SMS delivery, Play Integrity attestation, App Check enforcement, SMS region
 
 ## 12. Risks
 
-- **Toolchain:** emulators will not run until a suitable JDK (and Node 22) is installed (§5).
+- **Toolchain:** emulators and tests will not run until JDK 21 and Node 24 LTS are installed (§5).
 - **Emulator vs. reality:** the Auth emulator skips SMS, Play Integrity and App Check, so passing emulator tests does not prove production behavior (§10).
 - **Token revocation latency:** up to about an hour for already-issued ID tokens (§6.3).
 - **Per-device revocation unavailable** until B8 (§9).

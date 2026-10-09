@@ -242,8 +242,8 @@ Project names are suggestions. Each environment has its own alias in `.firebaser
 
 | Tool | Requirement |
 |---|---|
-| JDK | Needed now by the Firebase emulators (they run on the JVM) and later by Ktor and the Android build. Recommended: Eclipse Temurin 21 LTS (fallback 17); the exact minimum is whatever the pinned `firebase-tools` requires, confirmed at plan time. The installed JDK 8 is too old. Android Studio's bundled JDK 25 is too new for Gradle 8.14, so it is not used as the Gradle build JDK. |
-| Node.js | 22 LTS for Cloud Functions and rules tests (the machine has Node 25, a non-LTS release) |
+| JDK | Needed now by the Firebase emulators (they run on the JVM) and later by Ktor and the Android build. Required: Eclipse Temurin 21 LTS (`firebase-tools` 15.33.0 refuses Java below 21). The installed JDK 8 is too old. Android Studio's bundled JDK 25 is too new for Gradle 8.14, so it is not used as the Gradle build JDK. |
+| Node.js | 24 LTS (24.12 or newer) for Cloud Functions (`nodejs24`), rules tests and vitest (the machine has Node 25.8.1, which vitest 5 does not support) |
 | `firebase-tools` | Pinned devDependency in `firebase/package.json`, not global |
 | Language | TypeScript for Cloud Functions (Functions supports Node.js and Python); Kotlin for Ktor (B6) and Android |
 | Gradle / Android SDK | Android phase only; SDK already present under `ANDROID_HOME` |
@@ -261,4 +261,4 @@ Project names are suggestions. Each environment has its own alias in `.firebaser
 | Native Android code | None written; deferred |
 | Firebase project | Not created (owner action) |
 | Leaked credentials | Open incident; runbook written; rotation not performed |
-| JDK 17+/21 and Node 22 | Not installed |
+| JDK 21 and Node 24 LTS | Not installed |
