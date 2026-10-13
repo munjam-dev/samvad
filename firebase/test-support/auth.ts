@@ -80,3 +80,27 @@ export async function callCallable(
   });
   return { status: res.status, body: await res.json().catch(() => null) };
 }
+
+/** Exchanges a refresh token for a new ID token, which picks up custom claims set since sign-in. */
+export async function refreshIdToken(refreshToken: string): Promise<string> {
+  const res = await json(
+    await fetch(`${AUTH}/securetoken.googleapis.com/v1/token?key=fake-api-key`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: refreshToken }).toString(),
+    }),
+  );
+  return res.id_token;
+}
+
+/** Signs in with a custom token minted by a function (two-step PIN sessions). */
+export async function signInWithCustomToken(token: string): Promise<{ idToken: string; refreshToken: string }> {
+  const res = await json(
+    await fetch(`${IDT}/accounts:signInWithCustomToken?key=fake-api-key`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ token, returnSecureToken: true }),
+    }),
+  );
+  return { idToken: res.idToken, refreshToken: res.refreshToken };
+}

@@ -46,6 +46,7 @@ cached, for example `env -u HTTPS_PROXY -u https_proxy npm test`.
 | `functions/src/onConversationCreated.ts`, `onBlockWritten.ts` | Triggers: mirror membership and block lists into RTDB for its rules |
 | `functions/src/onMessageUpdated.ts` | Trigger: deletes a message's media file when the message is deleted |
 | `functions/src/reportContact.ts` | Callable: report a contact with a 5-message evidence snapshot; optional block; 20 per day |
+| `functions/src/twoStep.ts` | Callables: two-step PIN (scrypt, lockout, PIN sessions via custom tokens, 7-day reset) |
 | `functions/src/lib/` | Phone-auth and recent-login guards; PII-free structured logger |
 | `rules-tests/`, `functions/test/` | Emulator tests (rules, callables over HTTP, e2e flow) |
 | `scripts/check-logs.mjs` | Fails if function output contains the test phone number or tokens |
@@ -60,7 +61,8 @@ Data model summary (full tables in spec §7):
 - `conversations/{cid}/messages/{uuid}` — client-generated IDs (idempotent retries); edit within 15 min, one-way soft delete, own-key reactions.
 - `conversations/{cid}/members/{uid}` — read/delivered timestamps (forward-only), unread count (reset-only), mute/pin/archive.
 - `users/{uid}/blocked/{otherUid}` — owner-only block list; while either side has blocked the other, nobody can send, edit or react in their direct chat.
-- `reports/{id}`, `rateLimits/{uid}` — server-only.
+- `reports/{id}`, `rateLimits/{uid}`, `twoStep/{uid}` — server-only.
+- With two-step verification on, every rule and callable refuses sessions that did not enter the PIN.
 
 The callables run in `asia-south1`, accept only phone sign-ins, ignore any UID in the payload, and enforce
 App Check with replay protection (`consumeAppCheckToken`) everywhere except the Functions emulator.
@@ -77,6 +79,7 @@ Clients must send limited-use App Check tokens.
 7. Provide the Terms of Service and Privacy Policy URLs for the app.
 8. Rotate the legacy credentials listed in `docs/security/incident-leaked-credentials.md`.
 9. Firestore → TTL: add a policy on collection group `reports`, field `expireAt` (reports expire after 90 days).
+10. IAM: give the Cloud Functions runtime service account the **Service Account Token Creator** role on itself (two-step verification mints custom tokens).
 
 ## Deployment
 

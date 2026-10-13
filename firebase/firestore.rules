@@ -4,9 +4,19 @@ service cloud.firestore {
 
     // ---- helpers -------------------------------------------------------
 
+    // Phase 1.5: a phone sign-in is enough unless two-step verification is on (claim ts). Then only a
+    // session created from a PIN check counts: a custom-token sign-in whose per-session claim pv
+    // equals the account claim tsv. Custom tokens are minted only by the verifyTwoStepPin function.
+    function verifiedSession() {
+      let t = request.auth.token;
+      return (t.firebase.sign_in_provider == 'phone' && t.get('ts', false) != true)
+        || (t.firebase.sign_in_provider == 'custom'
+            && t.get('pv', null) is string
+            && (t.get('ts', false) != true || t.get('pv', null) == t.get('tsv', null)));
+    }
+
     function signedIn() {
-      return request.auth != null
-        && request.auth.token.firebase.sign_in_provider == 'phone';
+      return request.auth != null && verifiedSession();
     }
 
     function isOwner(uid) {
@@ -315,6 +325,10 @@ service cloud.firestore {
     }
 
     match /rateLimits/{uid} {
+      allow read, write: if false;
+    }
+
+    match /twoStep/{uid} {
       allow read, write: if false;
     }
 

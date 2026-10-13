@@ -17,7 +17,10 @@ export function testDeps(overrides: Partial<Deps> = {}): Deps {
   return { ...defaultDeps(), push: fakePush().sender, ...overrides };
 }
 
-export function phoneRequest(uid: string, extra: { authTime?: number; provider?: string; data?: unknown } = {}) {
+export function phoneRequest(
+  uid: string,
+  extra: { authTime?: number; provider?: string; data?: unknown; claims?: Record<string, unknown> } = {},
+) {
   return {
     auth: {
       uid,
@@ -25,6 +28,7 @@ export function phoneRequest(uid: string, extra: { authTime?: number; provider?:
         auth_time: extra.authTime ?? Math.floor(Date.now() / 1000),
         firebase: { sign_in_provider: extra.provider ?? 'phone' },
         phone_number: '+919999900001',
+        ...extra.claims,
       },
     },
     data: extra.data ?? {},

@@ -2,9 +2,14 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
 
+    // Phase 1.5: same session check as firestore.rules verifiedSession().
     function signedIn() {
+      let t = request.auth.token;
       return request.auth != null
-        && request.auth.token.firebase.sign_in_provider == 'phone';
+        && ((t.firebase.sign_in_provider == 'phone' && t.get('ts', false) != true)
+            || (t.firebase.sign_in_provider == 'custom'
+                && t.get('pv', null) is string
+                && (t.get('ts', false) != true || t.get('pv', null) == t.get('tsv', null))));
     }
 
     // Cross-service rule: membership comes from the Firestore conversation document.

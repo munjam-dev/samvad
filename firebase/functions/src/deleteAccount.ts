@@ -4,6 +4,7 @@ import { buildCallableOptions } from './config';
 import { defaultDeps, type Deps } from './deps';
 import { requirePhoneAuth, requireRecentAuth } from './lib/guards';
 import { logEvent, newCorrelationId } from './lib/logger';
+import { checkPin, pinProblem } from './twoStep';
 
 /** Idempotent: every step tolerates having already run. */
 export async function deleteAccountCore(deps: Deps, uid: string): Promise<void> {
@@ -30,6 +31,7 @@ export async function deleteAccountCore(deps: Deps, uid: string): Promise<void> 
     await batch.commit();
   }
   await db.doc(`rateLimits/${uid}`).delete();
+  await db.doc(`twoStep/${uid}`).delete();
   try {
     await auth.deleteUser(uid);
   } catch (err: any) {
@@ -42,7 +44,15 @@ export async function handleDeleteAccount(
   deps: Deps = defaultDeps(),
 ): Promise<{ deleted: true }> {
   const { uid, authTimeSeconds } = requirePhoneAuth(request);
-  requireRecentAuth(authTimeSeconds, Math.floor(deps.nowMs() / 1000));
+  // With two-step on, the PIN replaces the fresh SMS sign-in: re-authenticating would start a new,
+  // unverified session and lock the app halfway through.
+  if ((await deps.db.doc(`twoStep/${uid}`).get()).exists) {
+    const pin = (request.data as { pin?: unknown } | null)?.pin;
+    if (pinProblem(pin) === 'format') throw new HttpsError('failed-precondition', 'pin-required');
+    await checkPin(deps, uid, pin as string);
+  } else {
+    requireRecentAuth(authTimeSeconds, Math.floor(deps.nowMs() / 1000));
+  }
   const correlationId = newCorrelationId();
   try {
     await deleteAccountCore(deps, uid);

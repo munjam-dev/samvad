@@ -26,7 +26,7 @@ describe('guards', () => {
   it('returns uid and auth_time for a phone token', () => {
     expect(
       requirePhoneAuth({ auth: { uid: 'u1', token: { auth_time: 1000, firebase: { sign_in_provider: 'phone' } } } }),
-    ).toEqual({ uid: 'u1', authTimeSeconds: 1000 });
+    ).toEqual({ uid: 'u1', authTimeSeconds: 1000, verified: true });
   });
 
   it('requireRecentAuth passes at exactly 300 s and throws failed-precondition at 301 s', () => {

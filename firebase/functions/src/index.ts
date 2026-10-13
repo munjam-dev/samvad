@@ -10,3 +10,11 @@ export { onMessageUpdated } from './onMessageUpdated';
 export { lookupPhoneNumbers } from './lookupPhoneNumbers';
 export { onBlockWritten } from './onBlockWritten';
 export { reportContact } from './reportContact';
+export {
+  setTwoStepPin,
+  verifyTwoStepPin,
+  disableTwoStep,
+  twoStepStatus,
+  requestTwoStepReset,
+  completeTwoStepReset,
+} from './twoStep';
