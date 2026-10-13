@@ -21,13 +21,16 @@ export async function applyMessageCreated(deps: Deps, msg: CreatedMessage): Prom
   const { db } = deps;
   const convRef = db.doc(`conversations/${msg.cid}`);
   const markerRef = db.doc(`processedEvents/${msg.eventId}`);
+  let recipients: string[] = [];
 
   await db.runTransaction(async (tx) => {
+    recipients = [];
     const [marker, conv] = await Promise.all([tx.get(markerRef), tx.get(convRef)]);
     if (marker.exists || !conv.exists) return;
 
     const members: string[] = conv.get('members') ?? [];
     const others = members.filter((m) => m !== msg.data.senderId);
+    recipients = others;
     const memberSnaps = await Promise.all(others.map((m) => tx.get(convRef.collection('members').doc(m))));
 
     const current = conv.get('lastMessage');
@@ -64,6 +67,52 @@ export async function applyMessageCreated(deps: Deps, msg: CreatedMessage): Prom
     tx.set(markerRef, { at: FieldValue.serverTimestamp() });
   });
   logEvent('message_fanout', { count: 1, outcome: 'ok' });
+
+  // Push only when this delivery applied the event, so a redelivered trigger never re-notifies.
+  if (recipients.length > 0) {
+    try {
+      await notifyRecipients(deps, msg, recipients);
+    } catch {
+      logEvent('push_failed', { outcome: 'error' });
+    }
+  }
+}
+
+/**
+ * Sends a data-only push to every active device of each recipient who hasn't muted the chat.
+ * The app builds the visible notification, so it can stay quiet while the chat is open.
+ * Dead tokens are cleared so they aren't retried.
+ */
+export async function notifyRecipients(deps: Deps, msg: CreatedMessage, recipients: string[]): Promise<void> {
+  const { db } = deps;
+  const sender = await db.doc(`profiles/${msg.data.senderId}`).get();
+  const title = (sender.get('displayName') as string | undefined) ?? 'New message';
+  const tokenOwners = new Map<string, FirebaseFirestore.DocumentReference>();
+
+  for (const uid of recipients) {
+    const member = await db.doc(`conversations/${msg.cid}/members/${uid}`).get();
+    if (member.get('muted') === true) continue;
+    const devices = await db.collection(`users/${uid}/devices`).where('fcmToken', '!=', null).get();
+    for (const d of devices.docs) {
+      if (d.get('revokedAt')) continue;
+      const token = d.get('fcmToken');
+      if (typeof token === 'string' && token.length > 0) tokenOwners.set(token, d.ref);
+    }
+  }
+  if (tokenOwners.size === 0) return;
+
+  const { invalidTokens } = await deps.push.send([...tokenOwners.keys()], {
+    type: 'message',
+    cid: msg.cid,
+    mid: msg.mid,
+    senderId: msg.data.senderId,
+    title,
+    body: (msg.data.text ?? '').slice(0, PREVIEW_LENGTH),
+  });
+  for (const t of invalidTokens) {
+    await tokenOwners.get(t)?.update({ fcmToken: null });
+  }
+  logEvent('push_sent', { count: tokenOwners.size, outcome: 'ok' });
 }
 
 export const onMessageCreated = onDocumentCreated(

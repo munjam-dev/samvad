@@ -290,13 +290,18 @@ describe('member state', () => {
   });
 
   it('member docs must start from defaults and only for actual members', async () => {
-    await seedConversation();
+    // A conversation no other test sends messages to, so no late trigger can touch its member docs.
+    const D = 'dave';
+    const cid = `${A}_${D}`;
     await seed(async (db) => {
-      await deleteDoc(doc(db, `conversations/${CID}/members/${B}`));
+      await setDoc(doc(db, `conversations/${cid}`), {
+        type: 'direct', members: [A, D], createdBy: A, createdAt: Timestamp.now(),
+        lastMessage: null, lastMessageAt: Timestamp.now(),
+      });
     });
     const db = fsOf(A);
-    await assertFails(setDoc(doc(db, `conversations/${CID}/members/${B}`), { ...memberDefaults(B), unreadCount: 3 }));
-    await assertFails(setDoc(doc(db, `conversations/${CID}/members/${C}`), memberDefaults(C)));
-    await assertSucceeds(setDoc(doc(db, `conversations/${CID}/members/${B}`), memberDefaults(B)));
+    await assertFails(setDoc(doc(db, `conversations/${cid}/members/${D}`), { ...memberDefaults(D), unreadCount: 3 }));
+    await assertFails(setDoc(doc(db, `conversations/${cid}/members/${C}`), memberDefaults(C)));
+    await assertSucceeds(setDoc(doc(db, `conversations/${cid}/members/${D}`), memberDefaults(D)));
   });
 });
