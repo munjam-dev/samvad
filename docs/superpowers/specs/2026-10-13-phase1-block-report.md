@@ -81,7 +81,7 @@ Firestore → TTL → collection group `reports`, field `expireAt`; no cost beyo
   typing, and stops sending typing signals.
 - Report dialog: reason list, "Also block" (on by default), the evidence disclosure.
 - Settings → Privacy → Blocked contacts: list with Unblock.
-- `:core` `Safety`: report reasons (wire values), direct-chat peer from a conversation ID.
+- `:core` `ReportReason`: report reasons and their wire values.
 
 ## Tests
 
@@ -89,4 +89,4 @@ Firestore → TTL → collection group `reports`, field `expireAt`; no cost beyo
   soft delete still allowed; reports and RTDB `blocks` unreadable; presence hidden both ways.
 - Functions: mirror trigger set and clear; `reportContact` membership, validation, evidence selection,
   idempotency, budget, block flag; deleteAccount clears `blocks/{uid}`.
-- `:core`: reason parsing, peer parsing.
+- `:core`: reason wire values.

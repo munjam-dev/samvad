@@ -43,6 +43,7 @@ import com.samvad.messenger.ui.components.SamvadMark
 import com.samvad.messenger.ui.home.HomeScreen
 import com.samvad.messenger.ui.newchat.NewChatScreen
 import com.samvad.messenger.ui.onboarding.OnboardingScreen
+import com.samvad.messenger.ui.settings.BlockedContactsScreen
 import com.samvad.messenger.ui.settings.SettingsScreen
 import com.samvad.messenger.ui.setup.ProfileSetupScreen
 import com.samvad.messenger.ui.theme.SamvadTheme
@@ -135,7 +136,16 @@ private fun SignedInNav(
       )
     }
     composable("settings") {
-      SettingsScreen(container = container, me = uid, onBack = { nav.popBackStack() }, onSignOut = session::signOut)
+      SettingsScreen(
+        container = container,
+        me = uid,
+        onBack = { nav.popBackStack() },
+        onSignOut = session::signOut,
+        onOpenBlocked = { nav.navigate("blocked") },
+      )
+    }
+    composable("blocked") {
+      BlockedContactsScreen(container = container, me = uid, onBack = { nav.popBackStack() })
     }
   }
 }

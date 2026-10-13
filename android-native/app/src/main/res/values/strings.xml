@@ -234,4 +234,26 @@
     <string name="voice_play">Play voice message</string>
     <string name="voice_pause">Pause</string>
     <string name="voice_permission">Allow microphone access to record voice messages.</string>
+    <!-- Phase 1.3: block and report -->
+    <string name="chat_block">Block</string>
+    <string name="chat_unblock">Unblock</string>
+    <string name="chat_report">Report</string>
+    <string name="block_title">Block %1$s?</string>
+    <string name="block_body">Neither of you will be able to send messages in this chat or see the other\'s online status and last seen. Samvad won\'t notify them.</string>
+    <string name="blocked_banner">You blocked %1$s.</string>
+    <string name="report_title">Report %1$s</string>
+    <string name="report_body">The last 5 messages from this contact will be sent to Samvad for review. They won\'t be notified.</string>
+    <string name="report_reason_spam">Spam or scam</string>
+    <string name="report_reason_abuse">Abusive or hateful</string>
+    <string name="report_reason_harassment">Harassment or bullying</string>
+    <string name="report_reason_impersonation">Pretending to be someone else</string>
+    <string name="report_reason_other">Something else</string>
+    <string name="report_also_block">Also block this contact</string>
+    <string name="report_sent">Thanks. Your report was sent.</string>
+    <string name="report_sent_blocked">Report sent and contact blocked.</string>
+    <string name="report_limit">You\'ve sent many reports today. Try again tomorrow.</string>
+    <string name="safety_failed">Couldn\'t update. Check your connection and try again.</string>
+    <string name="settings_blocked">Blocked contacts</string>
+    <string name="settings_blocked_body">They can\'t message you or see your last seen.</string>
+    <string name="blocked_empty">You haven\'t blocked anyone.</string>
 </resources>

@@ -9,6 +9,7 @@ import com.samvad.messenger.data.FirebaseServices
 import com.samvad.messenger.data.PreferencesRepository
 import com.samvad.messenger.data.PresenceRepository
 import com.samvad.messenger.data.MediaRepository
+import com.samvad.messenger.data.SafetyRepository
 import com.samvad.messenger.push.PushTokens
 
 /**
@@ -25,6 +26,7 @@ class AppContainer(context: Context) {
   val presence: PresenceRepository? = firebase?.let { PresenceRepository(it.rtdb) }
   val media: MediaRepository? = firebase?.let { MediaRepository(context, it.storage) }
   val contacts: ContactsRepository? = firebase?.let { ContactsRepository(context, it.functions) }
+  val safety: SafetyRepository? = firebase?.let { SafetyRepository(it.db, it.functions) }
   val push = PushTokens(enabled = firebase != null && !com.samvad.messenger.BuildConfig.USE_EMULATORS)
 
   val isConfigured: Boolean get() = firebase != null

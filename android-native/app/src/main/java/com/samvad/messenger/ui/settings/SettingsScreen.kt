@@ -23,6 +23,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Logout
+import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.Devices
 import androidx.compose.material.icons.outlined.Edit
@@ -78,7 +79,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(container: AppContainer, me: String, onBack: () -> Unit, onSignOut: () -> Unit) {
+fun SettingsScreen(container: AppContainer, me: String, onBack: () -> Unit, onSignOut: () -> Unit, onOpenBlocked: () -> Unit = {}) {
   val colors = SamvadTheme.colors
   val scope = rememberCoroutineScope()
   val snackbar = remember { SnackbarHostState() }
@@ -175,6 +176,9 @@ fun SettingsScreen(container: AppContainer, me: String, onBack: () -> Unit, onSi
               colors = SwitchDefaults.colors(checkedTrackColor = colors.primary, checkedThumbColor = colors.onPrimary),
             )
           }
+        }
+        if (container.safety != null) {
+          ActionRow(Icons.Outlined.Block, stringResource(R.string.settings_blocked), onClick = onOpenBlocked)
         }
         Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
           Icon(Icons.Outlined.Lock, null, tint = colors.onPrimaryContainer)

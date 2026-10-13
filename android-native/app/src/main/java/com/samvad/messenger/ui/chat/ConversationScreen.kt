@@ -144,6 +144,29 @@ fun ConversationScreen(
   val recording = vm.recorder.state.collectAsStateWithLifecycle().value
   val playback = vm.player.state.collectAsStateWithLifecycle().value
   val mediaError = vm.mediaError.collectAsStateWithLifecycle().value
+  val blocked = vm.blocked.collectAsStateWithLifecycle().value
+  val notice = vm.notice.collectAsStateWithLifecycle().value
+  val reportSending = vm.reporting.collectAsStateWithLifecycle().value
+  var confirmBlock by remember { mutableStateOf(false) }
+  var reportOpen by remember { mutableStateOf(false) }
+  val noticeText = notice?.let {
+    stringResource(
+      when (it) {
+        SafetyNotice.REPORTED -> R.string.report_sent
+        SafetyNotice.REPORTED_AND_BLOCKED -> R.string.report_sent_blocked
+        SafetyNotice.REPORT_LIMIT -> R.string.report_limit
+        SafetyNotice.FAILED -> R.string.safety_failed
+      },
+    )
+  }
+  LaunchedEffect(noticeText) {
+    if (noticeText != null) {
+      // Any outcome closes the report dialog; a retry reuses the same request ID.
+      reportOpen = false
+      snackbar.showSnackbar(noticeText)
+      vm.clearNotice()
+    }
+  }
   var attaching by remember { mutableStateOf(false) }
   var viewing by remember { mutableStateOf<String?>(null) }
   val context = LocalContext.current
@@ -266,6 +289,18 @@ fun ConversationScreen(
               onClick = { vm.toggle("muted", !state.muted); menu = false },
             )
             DropdownMenuItem(text = { Text(stringResource(R.string.chat_archive)) }, onClick = { vm.toggle("archived", true); menu = false; onBack() })
+            HorizontalDivider(color = colors.outlineVariant)
+            DropdownMenuItem(
+              text = { Text(stringResource(if (blocked) R.string.chat_unblock else R.string.chat_block)) },
+              onClick = {
+                menu = false
+                if (blocked) vm.unblock() else confirmBlock = true
+              },
+            )
+            DropdownMenuItem(
+              text = { Text(stringResource(R.string.chat_report), color = colors.error) },
+              onClick = { menu = false; reportOpen = true },
+            )
           }
         }
       }
@@ -333,7 +368,9 @@ fun ConversationScreen(
       uploads.forEach { up ->
         PendingUploadRow(up, onRetry = { vm.retryUpload(up.id) }, onCancel = { vm.cancelUpload(up.id) })
       }
-      if (recording.active) {
+      if (blocked) {
+        BlockedBar(state.title, onUnblock = vm::unblock)
+      } else if (recording.active) {
         RecorderBar(recording, onCancel = vm::cancelRecording, onSend = vm::finishRecording)
       } else {
         Composer(
@@ -371,6 +408,23 @@ fun ConversationScreen(
     }
   }
   viewing?.let { path -> MediaViewer(path, vm::bitmap) { viewing = null } }
+
+  if (confirmBlock) {
+    BlockDialog(
+      name = state.title,
+      onConfirm = { confirmBlock = false; vm.block() },
+      onDismiss = { confirmBlock = false },
+    )
+  }
+  if (reportOpen) {
+    ReportDialog(
+      name = state.title,
+      sending = reportSending,
+      alreadyBlocked = blocked,
+      onSend = vm::report,
+      onDismiss = { reportOpen = false },
+    )
+  }
 
   selected?.let { msg ->
     ModalBottomSheet(onDismissRequest = { selected = null }) {

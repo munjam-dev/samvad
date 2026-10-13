@@ -29,6 +29,8 @@ import com.samvad.messenger.media.VoiceRecorder
 import java.io.File
 import java.util.UUID
 import com.samvad.messenger.data.MessagesPage
+import com.samvad.messenger.data.ReportException
+import com.samvad.core.safety.ReportReason
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -65,6 +67,9 @@ data class PendingUpload(
 
 enum class MediaError { TOO_LARGE, TYPE_BLOCKED, UNREADABLE, DOWNLOAD, OPEN }
 
+/** One-shot feedback for block / report actions, shown as a snackbar. */
+enum class SafetyNotice { REPORTED, REPORTED_AND_BLOCKED, REPORT_LIMIT, FAILED }
+
 data class ComposerState(
   val text: String = "",
   val replyTo: Message? = null,
@@ -90,6 +95,17 @@ class ConversationViewModel(
   val recorder = VoiceRecorder(app, viewModelScope)
   val player = VoicePlayer(viewModelScope)
   private val presence = container.presence
+  private val safety = container.safety
+  private var reportRequestId: String? = null
+  private val _notice = MutableStateFlow<SafetyNotice?>(null)
+  val notice: StateFlow<SafetyNotice?> = _notice
+  private val _reporting = MutableStateFlow(false)
+  val reporting: StateFlow<Boolean> = _reporting
+
+  /** True while I have blocked the other person. Rules also stop messages if they blocked me. */
+  val blocked: StateFlow<Boolean> = safety?.blocked(me)?.map { otherUid in it }
+    ?.stateIn(viewModelScope, SharingStarted.Eagerly, false)
+    ?: MutableStateFlow(false)
   private val throttle = TypingThrottle { System.currentTimeMillis() }
   private val limit = MutableStateFlow(PAGE)
   private val failed = MutableStateFlow(false)
@@ -133,13 +149,14 @@ class ConversationViewModel(
   val status: StateFlow<PresenceStatus> = run {
     val p = presence ?: return@run MutableStateFlow<PresenceStatus>(PresenceStatus.Unknown)
     val ticker = flow { while (true) { emit(Unit); delay(1_000) } }
-    combine(p.typing(conversationId, otherUid), p.presence(otherUid), ticker) { typingAt, pres, _ ->
-      PresenceRules.status(typingAt, pres, p.serverNow())
+    combine(p.typing(conversationId, otherUid), p.presence(otherUid), blocked, ticker) { typingAt, pres, isBlocked, _ ->
+      if (isBlocked) PresenceStatus.Unknown else PresenceRules.status(typingAt, pres, p.serverNow())
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), PresenceStatus.Unknown)
   }
 
   private fun onTyping(text: String) {
     val p = presence ?: return
+    if (blocked.value) return
     if (text.isBlank()) {
       throttle.reset()
       viewModelScope.launch { p.clearTyping(conversationId, me) }
@@ -164,6 +181,7 @@ class ConversationViewModel(
   }
 
   private fun prepareAndSend(prepare: suspend () -> PreparedMedia) = viewModelScope.launch {
+    if (blocked.value) return@launch
     val media = try {
       prepare()
     } catch (e: MediaException.TooLarge) {
@@ -249,6 +267,7 @@ class ConversationViewModel(
   fun cancelContext() = _composer.update { it.copy(replyTo = null, editing = null, text = if (it.editing != null) "" else it.text) }
 
   fun submit() {
+    if (blocked.value) return
     val c = _composer.value
     val text = (MessageRules.validate(c.text) as? TextValidation.Ok)?.text ?: return
     _composer.value = ComposerState()
@@ -271,6 +290,41 @@ class ConversationViewModel(
   }
 
   fun toggle(field: String, value: Boolean) = viewModelScope.launch { runCatching { chats.setFlag(conversationId, me, field, value) } }
+
+  fun block() {
+    val s = safety ?: return
+    stopTyping()
+    if (recorder.state.value.active) recorder.cancel()
+    viewModelScope.launch { runCatching { s.block(me, otherUid) }.onFailure { _notice.value = SafetyNotice.FAILED } }
+  }
+
+  fun unblock() {
+    val s = safety ?: return
+    viewModelScope.launch { runCatching { s.unblock(me, otherUid) }.onFailure { _notice.value = SafetyNotice.FAILED } }
+  }
+
+  /** Sends a report; a retry after a failure reuses the request ID so the server stores it once. */
+  fun report(reason: ReportReason, alsoBlock: Boolean) {
+    val s = safety ?: return
+    if (_reporting.value) return
+    val requestId = reportRequestId ?: UUID.randomUUID().toString().also { reportRequestId = it }
+    _reporting.value = true
+    if (alsoBlock) stopTyping()
+    viewModelScope.launch {
+      _notice.value = try {
+        s.report(requestId, conversationId, reason, alsoBlock)
+        reportRequestId = null
+        if (alsoBlock) SafetyNotice.REPORTED_AND_BLOCKED else SafetyNotice.REPORTED
+      } catch (e: ReportException.LimitReached) {
+        SafetyNotice.REPORT_LIMIT
+      } catch (e: Exception) {
+        SafetyNotice.FAILED
+      }
+      _reporting.value = false
+    }
+  }
+
+  fun clearNotice() { _notice.value = null }
 
   fun canEdit(message: Message) = MessageRules.canEdit(message, me, System.currentTimeMillis())
 
