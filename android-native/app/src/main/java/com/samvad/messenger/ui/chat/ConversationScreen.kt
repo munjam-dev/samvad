@@ -94,6 +94,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -763,9 +765,16 @@ private fun Composer(
       ) {
         Box(Modifier.weight(1f).padding(vertical = 12.dp)) {
           if (state.text.isEmpty()) Text(hint, style = MaterialTheme.typography.bodyLarge, color = colors.onSurfaceVariant)
+          // Keeps the cursor. When the view model replaces the text (a picked @mention, starting an
+          // edit, clearing after send) the cursor moves to the end instead of staying mid-word.
+          var field by remember { mutableStateOf(TextFieldValue(state.text, TextRange(state.text.length))) }
+          val value = if (field.text == state.text) field else TextFieldValue(state.text, TextRange(state.text.length))
           BasicTextField(
-            value = state.text,
-            onValueChange = onText,
+            value = value,
+            onValueChange = {
+              field = it
+              if (it.text != value.text) onText(it.text)
+            },
             textStyle = MaterialTheme.typography.bodyLarge.copy(color = colors.onSurface),
             cursorBrush = SolidColor(colors.brand),
             maxLines = 6,

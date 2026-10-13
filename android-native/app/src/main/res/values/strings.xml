@@ -72,7 +72,10 @@
     <string name="home_search">Search chats, people, groups</string>
     <string name="home_headline">Your conversations, connected.</string>
     <string name="home_all_caught_up">All caught up</string>
-    <string name="home_unread_summary">%1$d unread in %2$d chats</string>
+    <plurals name="home_unread_summary">
+        <item quantity="one">%1$d unread in %2$d chat</item>
+        <item quantity="other">%1$d unread in %2$d chats</item>
+    </plurals>
     <string name="home_recent">Recent chats</string>
     <string name="home_pinned">Pinned</string>
     <string name="filter_all">All</string>
@@ -88,7 +91,10 @@
     <string name="cd_muted">Muted</string>
     <string name="cd_online">Online</string>
     <string name="cd_read">Read</string>
-    <string name="cd_unread_count">%1$d unread messages</string>
+    <plurals name="cd_unread_count">
+        <item quantity="one">%1$d unread message</item>
+        <item quantity="other">%1$d unread messages</item>
+    </plurals>
     <string name="home_empty_title">Start your first conversation</string>
     <string name="home_empty_body">Find friends who already use Samvad, or invite someone new.</string>
     <string name="home_empty_cta">Find people</string>

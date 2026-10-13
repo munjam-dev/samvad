@@ -81,6 +81,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -346,7 +347,7 @@ private fun Greeting(state: HomeUiState, onDark: Boolean, compact: Boolean = fal
 @Composable
 private fun SummaryLine(state: HomeUiState, accent: androidx.compose.ui.graphics.Color, dot: androidx.compose.ui.graphics.Color) {
   val text = if (state.summary.allCaughtUp) stringResource(R.string.home_all_caught_up)
-  else stringResource(R.string.home_unread_summary, state.summary.messages, state.summary.chats)
+  else pluralStringResource(R.plurals.home_unread_summary, state.summary.chats, state.summary.messages, state.summary.chats)
   Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
     Box(Modifier.size(7.dp).background(dot, CircleShape))
     Text(text, style = MaterialTheme.typography.labelMedium, color = accent)
@@ -417,7 +418,7 @@ private fun BentoHeader(state: HomeUiState, vm: HomeViewModel, onProfile: () -> 
         BubbleIllustration(Modifier.align(Alignment.CenterEnd).size(width = 132.dp, height = 104.dp))
         Column(Modifier.fillMaxWidth(0.66f).align(Alignment.TopStart)) { Greeting(state, onDark = true, compact = true) }
         val text = if (state.summary.allCaughtUp) stringResource(R.string.home_all_caught_up)
-        else stringResource(R.string.home_unread_summary, state.summary.messages, state.summary.chats)
+        else pluralStringResource(R.plurals.home_unread_summary, state.summary.chats, state.summary.messages, state.summary.chats)
         Text(
           text,
           style = MaterialTheme.typography.labelMedium,
@@ -600,7 +601,7 @@ fun ChatRowItem(row: ChatRow, highlight: Boolean, onClick: () -> Unit) {
         )
         if (row.muted) Icon(Icons.Outlined.NotificationsOff, stringResource(R.string.cd_muted), tint = colors.onSurfaceVariant, modifier = Modifier.size(16.dp))
         if (row.pinned) Icon(Icons.Outlined.PushPin, stringResource(R.string.cd_pinned), tint = colors.onSurfaceVariant, modifier = Modifier.size(16.dp))
-        if (row.unreadCount > 0) UnreadBadge(row.unreadCount, stringResource(R.string.cd_unread_count, row.unreadCount))
+        if (row.unreadCount > 0) UnreadBadge(row.unreadCount, pluralStringResource(R.plurals.cd_unread_count, row.unreadCount, row.unreadCount))
       }
     }
   }
