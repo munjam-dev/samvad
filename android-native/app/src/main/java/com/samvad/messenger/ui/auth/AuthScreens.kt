@@ -1,6 +1,6 @@
 package com.samvad.messenger.ui.auth
 
-import android.app.Activity
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
@@ -49,7 +49,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -79,7 +78,7 @@ import com.samvad.messenger.ui.theme.SamvadTheme
 fun AuthFlow(container: AppContainer) {
   val vm: AuthViewModel = viewModel(factory = AuthViewModel.factory(container.auth!!))
   val state = vm.state.collectAsStateWithLifecycle().value
-  val activity = LocalContext.current as Activity
+  val activity = requireNotNull(LocalActivity.current)
   AnimatedContent(state.step, label = "auth") { step ->
     when (step) {
       AuthStep.PHONE -> PhoneStep(state, vm, onSend = { vm.sendCode(activity) })

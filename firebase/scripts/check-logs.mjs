@@ -4,8 +4,12 @@
 import { readFileSync } from 'node:fs';
 
 const outputFile = process.argv[2];
+// Strip ANSI colour codes first: CI forces colour, so a function line may start with ESC[90m>.
+const ANSI = /\u001b\[[0-9;]*m/g;
 const output = readFileSync(outputFile, 'utf8')
+  .replace(ANSI, '')
   .split('\n')
+  .map((line) => line.trimStart())
   .filter((line) => line.startsWith('>') || line.includes('functions:'))
   .join('\n');
 const secrets = JSON.parse(readFileSync('.tmp/e2e-secrets.json', 'utf8'));

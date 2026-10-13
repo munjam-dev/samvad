@@ -1,6 +1,6 @@
 package com.samvad.messenger.ui.settings
 
-import android.app.Activity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -50,7 +50,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -239,7 +238,7 @@ fun SettingsScreen(container: AppContainer, me: String, onBack: () -> Unit, onSi
 private fun ReauthThenDelete(container: AppContainer, phone: String, onDeleted: () -> Unit, onError: () -> Unit) {
   val vm: AuthViewModel = viewModel(key = "reauth", factory = AuthViewModel.factory(container.auth!!, reauth = true, presetE164 = phone))
   val state = vm.state.collectAsStateWithLifecycle().value
-  val activity = LocalContext.current as Activity
+  val activity = requireNotNull(LocalActivity.current)
   LaunchedEffect(Unit) { if (state.step == AuthStep.PHONE) vm.sendCode(activity) }
   LaunchedEffect(state.step) {
     if (state.step == AuthStep.DONE) {
