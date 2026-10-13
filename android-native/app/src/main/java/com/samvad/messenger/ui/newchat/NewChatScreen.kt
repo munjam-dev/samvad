@@ -27,6 +27,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.material.icons.outlined.Link
+import androidx.compose.material.icons.outlined.GroupAdd
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -51,7 +58,10 @@ fun NewChatScreen(
   me: String,
   onBack: () -> Unit,
   onOpenChat: (conversationId: String, otherUid: String) -> Unit,
+  onNewGroup: () -> Unit = {},
+  onOpenGroup: (String) -> Unit = {},
 ) {
+  var joining by remember { mutableStateOf(false) }
   val vm: NewChatViewModel = viewModel(factory = NewChatViewModel.factory(container, me))
   val state = vm.state.collectAsStateWithLifecycle().value
   val colors = SamvadTheme.colors
@@ -71,6 +81,10 @@ fun NewChatScreen(
     }
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 32.dp)) {
+      if (container.groups != null) {
+        item(key = "new-group") { ActionEntry(Icons.Outlined.GroupAdd, stringResource(R.string.group_new), onNewGroup) }
+        item(key = "join-group") { ActionEntry(Icons.Outlined.Link, stringResource(R.string.group_join)) { joining = true } }
+      }
       item(key = "by-number") {
         Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
           Text(stringResource(R.string.newchat_by_number), style = MaterialTheme.typography.titleSmall, color = colors.onSurfaceVariant)
@@ -132,6 +146,28 @@ fun NewChatScreen(
         }
       }
     }
+  }
+  if (joining) {
+    com.samvad.messenger.ui.groups.JoinGroupDialog(
+      groups = container.groups!!,
+      onJoined = { cid -> joining = false; onOpenGroup(cid) },
+      onDismiss = { joining = false },
+    )
+  }
+}
+
+@Composable
+private fun ActionEntry(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
+  val colors = SamvadTheme.colors
+  Row(
+    Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 20.dp, vertical = 10.dp),
+    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.spacedBy(14.dp),
+  ) {
+    Box(Modifier.size(44.dp).background(colors.primary, androidx.compose.foundation.shape.CircleShape), contentAlignment = Alignment.Center) {
+      Icon(icon, null, tint = colors.onPrimary)
+    }
+    Text(label, style = MaterialTheme.typography.titleMedium, color = colors.onSurface)
   }
 }
 

@@ -10,6 +10,9 @@ A calm, private, phone-number messenger for Android, built on Firebase.
 
 ## Quick start
 
+**Building and running the app on your own machine:** follow [`docs/LOCAL_BUILD.md`](docs/LOCAL_BUILD.md)
+(local Firebase emulators, Android emulator or USB phone, two-person testing, troubleshooting).
+
 ```bash
 # Backend tests on the Firebase Emulator Suite (JDK 21, Node 24)
 cd firebase && npm install && npm --prefix functions install && npm test

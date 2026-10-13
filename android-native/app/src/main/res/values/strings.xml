@@ -367,4 +367,49 @@
         <item quantity="one">%1$d vote</item>
         <item quantity="other">%1$d votes</item>
     </plurals>
+    <!-- Phase 2: group screens -->
+    <string name="group_new">New group</string>
+    <string name="group_next">Next</string>
+    <string name="group_selected">%1$d of %2$d selected</string>
+    <string name="group_no_people_title">No one to add yet</string>
+    <string name="group_no_people_body">Start a chat with someone, or allow contacts access, to add them to a group.</string>
+    <string name="group_name_title">Name your group</string>
+    <string name="group_name_hint">Group name</string>
+    <string name="group_create">Create group</string>
+    <plurals name="group_members_count">
+        <item quantity="one">%1$d member</item>
+        <item quantity="other">%1$d members</item>
+    </plurals>
+    <string name="group_add_members">Add members</string>
+    <string name="group_add">Add</string>
+    <string name="group_change_photo">Change group photo</string>
+    <string name="group_rename">Edit group name</string>
+    <string name="group_description">Description</string>
+    <string name="group_add_description">Add a group description</string>
+    <string name="group_no_description">No description</string>
+    <string name="group_admin">Admin</string>
+    <string name="group_make_admin">Make group admin</string>
+    <string name="group_dismiss_admin">Dismiss as admin</string>
+    <string name="group_message_member">Message %1$s</string>
+    <string name="group_remove_member">Remove %1$s</string>
+    <string name="group_leave">Leave group</string>
+    <string name="group_leave_title">Leave %1$s?</string>
+    <string name="group_leave_body">You won\'t receive new messages from this group. If you\'re the only admin, the longest-standing member becomes admin.</string>
+    <string name="group_invite">Invite with code</string>
+    <string name="group_invite_body">Anyone with this code can join the group while it\'s active. Revoke it to stop new people joining.</string>
+    <string name="group_invite_send">Send code</string>
+    <string name="group_invite_copy">Copy code</string>
+    <string name="group_invite_revoke">Revoke code</string>
+    <string name="group_invite_share">Join my Samvad group "%1$s": open Samvad, tap New chat → Join with code, and enter %2$s</string>
+    <string name="group_join">Join with code</string>
+    <string name="group_join_hint">12-character code</string>
+    <string name="group_join_check">Check code</string>
+    <string name="group_join_preview">%1$s · %2$d members</string>
+    <string name="group_join_confirm">Join group</string>
+    <string name="group_join_invalid">That code doesn\'t work. It may have been revoked.</string>
+    <string name="group_error_no_eligible">None of the people you chose can be added.</string>
+    <string name="group_error_full">This group is full (256 members).</string>
+    <string name="group_error_limit">You\'ve reached today\'s limit. Try again tomorrow.</string>
+    <string name="group_error_not_allowed">Only group admins can do that.</string>
+    <string name="group_error_failed">Something went wrong. Check your connection and try again.</string>
 </resources>

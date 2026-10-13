@@ -43,6 +43,9 @@ import com.samvad.messenger.ui.components.SamvadMark
 import com.samvad.messenger.ui.home.HomeScreen
 import com.samvad.messenger.ui.newchat.NewChatScreen
 import com.samvad.messenger.ui.onboarding.OnboardingScreen
+import com.samvad.messenger.ui.groups.AddMembersScreen
+import com.samvad.messenger.ui.groups.GroupInfoScreen
+import com.samvad.messenger.ui.groups.NewGroupScreen
 import com.samvad.messenger.ui.security.TwoStepSettingsScreen
 import com.samvad.messenger.ui.security.TwoStepVerifyScreen
 import com.samvad.messenger.ui.settings.BlockedContactsScreen
@@ -136,6 +139,30 @@ private fun SignedInNav(
         conversationId = entry.arguments!!.getString("cid")!!,
         otherUid = null,
         onBack = { nav.popBackStack() },
+        onOpenGroupInfo = { nav.navigate("groupinfo/${entry.arguments!!.getString("cid")}") },
+      )
+    }
+    composable("groupinfo/{cid}", arguments = listOf(navArgument("cid") { type = NavType.StringType })) { entry ->
+      val cid = entry.arguments!!.getString("cid")!!
+      GroupInfoScreen(
+        container = container,
+        me = uid,
+        cid = cid,
+        onBack = { nav.popBackStack() },
+        onAddMembers = { nav.navigate("groupadd/$cid") },
+        onLeft = { nav.popBackStack("home", inclusive = false) },
+        onOpenChat = { chat, other -> nav.navigate("chat/$chat/$other") },
+      )
+    }
+    composable("groupadd/{cid}", arguments = listOf(navArgument("cid") { type = NavType.StringType })) { entry ->
+      AddMembersScreen(container = container, me = uid, cid = entry.arguments!!.getString("cid")!!, onBack = { nav.popBackStack() })
+    }
+    composable("newgroup") {
+      NewGroupScreen(
+        container = container,
+        me = uid,
+        onBack = { nav.popBackStack() },
+        onCreated = { cid -> nav.navigate("group/$cid") { popUpTo("home") } },
       )
     }
     composable("newchat") {
@@ -146,6 +173,8 @@ private fun SignedInNav(
         onOpenChat = { cid, other ->
           nav.navigate("chat/$cid/$other") { popUpTo("home") }
         },
+        onNewGroup = { nav.navigate("newgroup") },
+        onOpenGroup = { cid -> nav.navigate("group/$cid") { popUpTo("home") } },
       )
     }
     composable("settings") {
