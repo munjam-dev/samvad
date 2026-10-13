@@ -142,7 +142,8 @@ fun SamvadTextField(
 @Composable
 fun UnreadBadge(count: Int, contentDescription: String, modifier: Modifier = Modifier) {
   val colors = SamvadTheme.colors
-  val appear = remember { Animatable(if (LocalReducedMotion.current) 1f else 0.4f) }
+  val reduced = LocalReducedMotion.current
+  val appear = remember { Animatable(if (reduced) 1f else 0.4f) }
   LaunchedEffect(Unit) { appear.animateTo(1f, Motion.lively()) }
   Box(
     modifier
@@ -181,7 +182,8 @@ fun EmptyState(
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.spacedBy(12.dp),
   ) {
-    val pop = remember { Animatable(if (LocalReducedMotion.current) 1f else 0.6f) }
+    val reduced = LocalReducedMotion.current
+    val pop = remember { Animatable(if (reduced) 1f else 0.6f) }
     LaunchedEffect(Unit) { pop.animateTo(1f, Motion.lively()) }
     Box(
       Modifier.size(72.dp).graphicsLayer { scaleX = pop.value; scaleY = pop.value }.background(colors.primaryContainer, CircleShape),

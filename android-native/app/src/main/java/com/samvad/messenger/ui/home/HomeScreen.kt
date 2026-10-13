@@ -432,7 +432,8 @@ private fun BentoHeader(state: HomeUiState, vm: HomeViewModel, onProfile: () -> 
 @Composable
 private fun BubbleIllustration(modifier: Modifier) {
   val colors = SamvadTheme.colors
-  val t = remember { Animatable(if (LocalReducedMotion.current) 1f else 0f) }
+  val reduced = LocalReducedMotion.current
+  val t = remember { Animatable(if (reduced) 1f else 0f) }
   LaunchedEffect(Unit) { t.animateTo(1f, Motion.lively()) }
   Canvas(modifier) {
     val w = size.width
