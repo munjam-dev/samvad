@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Sanraksha</string>
+    <string name="tagline">Your Documents. Your Control.</string>
+    <string name="app_name_hindi">संरक्षा</string>
+    <string name="add_document">Add Document</string>
+    <string name="my_documents">My Documents</string>
+    <string name="reminders">Reminders</string>
+    <string name="settings">Settings</string>
+    <string name="home">Home</string>
+</resources>

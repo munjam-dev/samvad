@@ -17,11 +17,21 @@ migrate_working_dir/
 *.ipr
 *.iws
 .idea/
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# Gradle related
+.gradle
+.kotlin
+/local.properties
+/build
+/captures
+.externalNativeBuild
+.cxx
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -54,12 +64,7 @@ app.*.map.json
 *.pfx
 *.cer
 *.crt
-*.p12
-*.pem
-*.key
-*.pfx
-*.cer
-*.crt
+debug.keystore
 
 # Environment variables
 .env
