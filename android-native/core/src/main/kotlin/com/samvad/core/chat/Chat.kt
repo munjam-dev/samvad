@@ -48,6 +48,8 @@ data class Message(
   /** "text", "image", "file" or "voice". */
   val kind: String = "text",
   val media: Media? = null,
+  /** A copy forwarded from another chat (Phase 1.6). */
+  val forwarded: Boolean = false,
 )
 
 enum class DeliveryState { SENDING, SENT, DELIVERED, READ, FAILED }
@@ -83,6 +85,8 @@ sealed interface TextValidation {
 
 object MessageRules {
   const val MAX_LENGTH = 4096
+  /** Like WhatsApp, a message can be forwarded to at most this many chats at once. */
+  const val MAX_FORWARD_TARGETS = 5
   const val EDIT_WINDOW_MS = 15 * 60 * 1000L
 
   /** Trims trailing whitespace and enforces the server's 1–4096 non-blank rule. */
@@ -94,6 +98,8 @@ object MessageRules {
       else -> TextValidation.Ok(text)
     }
   }
+
+  fun canForward(message: Message): Boolean = !message.deleted && !message.pending && !message.failed
 
   fun canEdit(message: Message, me: String, nowMs: Long): Boolean =
     message.kind == "text" && message.senderId == me && !message.deleted && !message.pending &&

@@ -329,4 +329,16 @@
     <string name="export_share_title">Save or share chat</string>
     <string name="settings_read_receipts">Read receipts</string>
     <string name="settings_read_receipts_body">When off, others won\'t see when you\'ve read their messages, and you won\'t see theirs.</string>
+    <!-- Phase 1.6: forward -->
+    <string name="chat_forward">Forward</string>
+    <string name="forwarded">Forwarded</string>
+    <string name="forward_title">Forward to…</string>
+    <string name="forward_limit">Choose up to %1$d chats.</string>
+    <string name="forward_empty">No chats yet.</string>
+    <string name="forward_send">Send to %1$d</string>
+    <plurals name="forward_sent">
+        <item quantity="one">Forwarded to %1$d chat.</item>
+        <item quantity="other">Forwarded to %1$d chats.</item>
+    </plurals>
+    <string name="forward_partial">Forwarded to %1$d of %2$d chats. Some couldn\'t receive it.</string>
 </resources>

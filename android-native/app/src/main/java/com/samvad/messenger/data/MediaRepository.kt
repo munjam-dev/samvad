@@ -7,6 +7,7 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageMetadata
+import com.samvad.core.media.Media
 import com.samvad.core.media.MediaKind
 import com.samvad.core.media.MediaRules
 import java.io.ByteArrayOutputStream
@@ -86,6 +87,18 @@ class MediaRepository(private val context: Context, private val storage: Firebas
     file.delete()
     if (!MediaRules.isWithinLimit(bytes.size.toLong())) throw MediaException.TooLarge()
     return PreparedMedia(MediaKind.VOICE, "voice.m4a", "Voice message", "audio/mp4", bytes, durationMs = durationMs, waveform = waveform)
+  }
+
+  /**
+   * Prepares an existing attachment for forwarding. Storage rules tie each file to its chat, so a
+   * forwarded copy is uploaded again into every target chat from the local (downloaded) copy.
+   */
+  suspend fun prepareForward(media: Media, kind: MediaKind): PreparedMedia {
+    val bytes = withContext(Dispatchers.IO) { localFile(media.path).readBytes() }
+    return PreparedMedia(
+      kind, media.path.substringAfterLast('/'), media.name, media.mime, bytes,
+      media.width, media.height, media.durationMs, media.waveform,
+    )
   }
 
   /** Uploads with up to 3 attempts (1 s, 2 s back-off). Returns the storage path. */

@@ -138,18 +138,25 @@ class ChatRepository(private val db: FirebaseFirestore) {
   }
 
   /** Sends with a client-generated ID so a retry can never duplicate the message. */
-  suspend fun send(conversationId: String, me: String, text: String, replyTo: String?, id: String = UUID.randomUUID().toString()) {
+  suspend fun send(
+    conversationId: String,
+    me: String,
+    text: String,
+    replyTo: String?,
+    id: String = UUID.randomUUID().toString(),
+    forwarded: Boolean = false,
+  ) {
     failed.update { it - id }
     try {
-      db.document("conversations/$conversationId/messages/$id").set(
-        mapOf(
-          "senderId" to me,
-          "kind" to "text",
-          "text" to text,
-          "replyTo" to replyTo,
-          "createdAt" to FieldValue.serverTimestamp(),
-        ),
-      ).await()
+      val doc = buildMap<String, Any?> {
+        put("senderId", me)
+        put("kind", "text")
+        put("text", text)
+        put("replyTo", replyTo)
+        put("createdAt", FieldValue.serverTimestamp())
+        if (forwarded) put("forwarded", true)
+      }
+      db.document("conversations/$conversationId/messages/$id").set(doc).await()
     } catch (e: Exception) {
       failed.update { it + id }
       throw e
@@ -165,6 +172,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
     media: Media,
     caption: String,
     replyTo: String?,
+    forwarded: Boolean = false,
   ) {
     val map = buildMap<String, Any> {
       put("path", media.path)
@@ -184,7 +192,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
         "replyTo" to replyTo,
         "createdAt" to FieldValue.serverTimestamp(),
         "media" to map,
-      ),
+      ) + (if (forwarded) mapOf("forwarded" to true) else emptyMap()),
     ).await()
   }
 
@@ -306,6 +314,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
       pending = d.metadata.hasPendingWrites(),
       kind = d.getString("kind") ?: "text",
       media = (d.get("media") as? Map<*, *>)?.let(::toMedia),
+      forwarded = d.getBoolean("forwarded") ?: false,
     )
   }
 }

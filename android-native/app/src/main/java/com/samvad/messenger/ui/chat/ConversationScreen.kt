@@ -47,6 +47,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.Forward
 import androidx.compose.material.icons.automirrored.outlined.Reply
 import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.outlined.AttachFile
@@ -172,6 +173,18 @@ fun ConversationScreen(
   var viewing by remember { mutableStateOf<String?>(null) }
   val context = LocalContext.current
   var confirmExport by remember { mutableStateOf(false) }
+  var forwarding by remember { mutableStateOf<Message?>(null) }
+  val forwardResult = vm.forwardResult.collectAsStateWithLifecycle().value
+  val forwardText = forwardResult?.let {
+    if (it.failed == 0) androidx.compose.ui.res.pluralStringResource(R.plurals.forward_sent, it.sent, it.sent)
+    else stringResource(R.string.forward_partial, it.sent, it.sent + it.failed)
+  }
+  LaunchedEffect(forwardText) {
+    if (forwardText != null) {
+      vm.clearForwardResult()
+      snackbar.showSnackbar(forwardText)
+    }
+  }
   var exporting by remember { mutableStateOf(false) }
   val exportLabels = ExportLabels(
     header = stringResource(R.string.export_header, state.title),
@@ -452,6 +465,16 @@ fun ConversationScreen(
   }
   viewing?.let { path -> MediaViewer(path, vm::bitmap) { viewing = null } }
 
+  forwarding?.let { msg ->
+    ModalBottomSheet(onDismissRequest = { forwarding = null }) {
+      val targets = remember { vm.forwardTargets() }.collectAsStateWithLifecycle(null).value
+      ForwardSheet(targets) { chosen ->
+        forwarding = null
+        vm.forward(msg, chosen)
+      }
+    }
+  }
+
   if (confirmExport) {
     androidx.compose.material3.AlertDialog(
       onDismissRequest = { confirmExport = false },
@@ -497,6 +520,8 @@ fun ConversationScreen(
         },
         onEdit = { vm.startEdit(msg); selected = null },
         onDelete = { vm.delete(msg); selected = null },
+        canForward = com.samvad.core.chat.MessageRules.canForward(msg),
+        onForward = { forwarding = msg; selected = null },
       )
     }
   }
@@ -564,6 +589,7 @@ private fun MessageBubble(
         )
         .padding(horizontal = 12.dp, vertical = 8.dp),
     ) {
+      if (m.forwarded && !m.deleted) ForwardedLabel(tint = meta)
       if (replied != null && !m.deleted) {
         Column(
           Modifier
@@ -747,6 +773,8 @@ private fun MessageActions(
   onCopy: () -> Unit,
   onEdit: () -> Unit,
   onDelete: () -> Unit,
+  canForward: Boolean = false,
+  onForward: () -> Unit = {},
 ) {
   val colors = SamvadTheme.colors
   Column(Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
@@ -765,6 +793,7 @@ private fun MessageActions(
     }
     Spacer(Modifier.size(8.dp))
     ActionRow(Icons.AutoMirrored.Outlined.Reply, stringResource(R.string.chat_reply), onReply)
+    if (canForward) ActionRow(Icons.AutoMirrored.Outlined.Forward, stringResource(R.string.chat_forward), onForward)
     if (canCopy) ActionRow(Icons.Outlined.ContentCopy, stringResource(R.string.chat_copy), onCopy)
     if (canEdit) ActionRow(Icons.Outlined.Edit, stringResource(R.string.chat_edit), onEdit)
     if (mine) ActionRow(Icons.Outlined.Delete, stringResource(R.string.chat_delete), onDelete, danger = true)

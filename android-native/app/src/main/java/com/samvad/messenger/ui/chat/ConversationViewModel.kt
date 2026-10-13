@@ -44,6 +44,9 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 data class ConversationUiState(
@@ -72,6 +75,12 @@ enum class MediaError { TOO_LARGE, TYPE_BLOCKED, UNREADABLE, DOWNLOAD, OPEN }
 
 /** One-shot feedback for block / report actions, shown as a snackbar. */
 enum class SafetyNotice { REPORTED, REPORTED_AND_BLOCKED, REPORT_LIMIT, FAILED }
+
+/** A chat a message can be forwarded to. */
+data class ForwardTarget(val conversationId: String, val otherUid: String, val name: String)
+
+/** Outcome of a forward: how many chats got the copy and how many did not. */
+data class ForwardResult(val sent: Int, val failed: Int)
 
 data class ComposerState(
   val text: String = "",
@@ -349,6 +358,57 @@ class ConversationViewModel(
   }
 
   fun clearNotice() { _notice.value = null }
+
+  private val _forwardResult = MutableStateFlow<ForwardResult?>(null)
+  val forwardResult: StateFlow<ForwardResult?> = _forwardResult
+  fun clearForwardResult() { _forwardResult.value = null }
+
+  /** My direct chats, most recent first, with the other person's name. */
+  fun forwardTargets(): kotlinx.coroutines.flow.Flow<List<ForwardTarget>> =
+    combine(chats.conversations(me).catch { }, chats.profiles) { snap, profiles ->
+      snap.value.filter { !it.isGroup }.mapNotNull { c ->
+        val other = c.members.firstOrNull { it != me } ?: return@mapNotNull null
+        ForwardTarget(c.id, other, profiles[other]?.displayName ?: ChatList.DELETED_ACCOUNT)
+      }
+    }.onEach { targets -> chats.loadProfiles(targets.map { it.otherUid }) }
+
+  /**
+   * Sends a copy of [message] to up to [MessageRules.MAX_FORWARD_TARGETS] chats, labelled forwarded.
+   * Media is uploaded again into each target chat. Chats where it fails (for example a block) are
+   * counted, not retried.
+   */
+  fun forward(message: Message, targets: List<ForwardTarget>) = viewModelScope.launch {
+    val chosen = targets.distinctBy { it.conversationId }.take(MessageRules.MAX_FORWARD_TARGETS)
+    if (chosen.isEmpty() || !MessageRules.canForward(message)) return@launch
+    val kind = MediaKind.fromWire(message.kind)
+    val media = message.media
+    val prepared = if (kind != null && media != null) {
+      runCatching { mediaRepo.prepareForward(media, kind) }.getOrElse {
+        _forwardResult.value = ForwardResult(0, chosen.size)
+        return@launch
+      }
+    } else {
+      null
+    }
+    val outcomes = chosen.map { t ->
+      async {
+        runCatching {
+          if (prepared == null) {
+            chats.send(t.conversationId, me, message.text, replyTo = null, forwarded = true)
+          } else {
+            val id = UUID.randomUUID().toString()
+            val path = mediaRepo.upload(t.conversationId, id, me, prepared)
+            chats.sendMedia(
+              t.conversationId, me, id, prepared.kind.wire,
+              Media(path, prepared.displayName, prepared.bytes.size.toLong(), prepared.mime, prepared.width, prepared.height, prepared.durationMs, prepared.waveform),
+              message.text, replyTo = null, forwarded = true,
+            )
+          }
+        }.isSuccess
+      }
+    }.awaitAll()
+    _forwardResult.value = ForwardResult(sent = outcomes.count { it }, failed = outcomes.count { !it })
+  }
 
   fun canEdit(message: Message) = MessageRules.canEdit(message, me, System.currentTimeMillis())
 

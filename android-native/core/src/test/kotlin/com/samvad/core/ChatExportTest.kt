@@ -69,4 +69,14 @@ class ChatExportTest {
     assertEquals(DeliveryState.READ, MessageRules.deliveryState(m, other))
     assertEquals(DeliveryState.DELIVERED, MessageRules.deliveryState(m, other, showRead = false))
   }
+
+  @Test
+  fun `only settled, undeleted messages can be forwarded, to at most five chats`() {
+    val m = Message("1", "me", "hi", 1000)
+    assertEquals(true, MessageRules.canForward(m))
+    assertEquals(false, MessageRules.canForward(m.copy(deleted = true)))
+    assertEquals(false, MessageRules.canForward(m.copy(pending = true)))
+    assertEquals(false, MessageRules.canForward(m.copy(failed = true)))
+    assertEquals(5, MessageRules.MAX_FORWARD_TARGETS)
+  }
 }
