@@ -53,13 +53,7 @@ class MediaRepository(private val context: Context, private val storage: Firebas
    * metadata again before storing it.
    */
   suspend fun prepareAvatar(uri: Uri): ByteArray = withContext(Dispatchers.Default) {
-    val resolver = context.contentResolver
-    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-    resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
-    if (bounds.outWidth <= 0 || bounds.outHeight <= 0) throw MediaException.Unreadable()
-    val opts = BitmapFactory.Options().apply { inSampleSize = MediaRules.sampleSize(bounds.outWidth, bounds.outHeight, AVATAR_PX * 2) }
-    val decoded = resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, opts) }
-      ?: throw MediaException.Unreadable()
+    val decoded = ImageCodec.decodeUpright(context.contentResolver, uri, AVATAR_PX * 2) ?: throw MediaException.Unreadable()
     val side = minOf(decoded.width, decoded.height)
     val square = Bitmap.createBitmap(decoded, (decoded.width - side) / 2, (decoded.height - side) / 2, side, side)
     val scaled = if (side > AVATAR_PX) Bitmap.createScaledBitmap(square, AVATAR_PX, AVATAR_PX, true) else square
@@ -69,15 +63,9 @@ class MediaRepository(private val context: Context, private val storage: Firebas
     out.toByteArray()
   }
 
-  /** Downscales to 1600 px and re-encodes as JPEG, which also strips EXIF data such as GPS location. */
+  /** Upright, downscaled to 1600 px and re-encoded as JPEG, which also strips EXIF data such as GPS location. */
   suspend fun prepareImage(uri: Uri): PreparedMedia = withContext(Dispatchers.Default) {
-    val resolver = context.contentResolver
-    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-    resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
-    if (bounds.outWidth <= 0 || bounds.outHeight <= 0) throw MediaException.Unreadable()
-    val opts = BitmapFactory.Options().apply { inSampleSize = MediaRules.sampleSize(bounds.outWidth, bounds.outHeight) }
-    val decoded = resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, opts) }
-      ?: throw MediaException.Unreadable()
+    val decoded = ImageCodec.decodeUpright(context.contentResolver, uri, MediaRules.MAX_IMAGE_EDGE) ?: throw MediaException.Unreadable()
     val (w, h) = MediaRules.fitWithin(decoded.width, decoded.height)
     val scaled = if (w == decoded.width && h == decoded.height) decoded else Bitmap.createScaledBitmap(decoded, w, h, true)
     val out = ByteArrayOutputStream()

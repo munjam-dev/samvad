@@ -74,11 +74,11 @@ internal fun SystemLineChip(text: String) {
     Text(
       text,
       style = MaterialTheme.typography.labelMedium,
-      color = colors.onSurfaceVariant,
+      color = colors.onChip,
       textAlign = TextAlign.Center,
       modifier = Modifier
         .widthIn(max = 320.dp)
-        .background(colors.surfaceContainer, RoundedCornerShape(10.dp))
+        .background(colors.chip, RoundedCornerShape(10.dp))
         .padding(horizontal = 12.dp, vertical = 6.dp),
     )
   }
@@ -148,7 +148,7 @@ internal fun PollCard(message: Message, result: PollResult, mine: Boolean, onVot
   val poll = message.poll ?: return
   val colors = SamvadTheme.colors
   val fg = colors.onBubble
-  val sub = if (mine) colors.bubbleMeta else colors.onSurfaceVariant
+  val sub = colors.bubbleMeta
   Column(Modifier.widthIn(min = 220.dp, max = 300.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
     Text(poll.question, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = fg)
     Text(

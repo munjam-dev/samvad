@@ -168,7 +168,7 @@ fun VoiceNote(messageId: String, media: Media, playback: PlaybackState, mine: Bo
       Text(
         MediaRules.formatDuration(if (active) playback.positionMs else duration),
         style = MaterialTheme.typography.labelSmall,
-        color = if (mine) colors.bubbleMeta else colors.onSurfaceVariant,
+        color = colors.bubbleMeta,
       )
     }
   }

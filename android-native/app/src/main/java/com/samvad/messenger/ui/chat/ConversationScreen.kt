@@ -596,8 +596,8 @@ private fun DateChip(label: String) {
     Text(
       label,
       style = MaterialTheme.typography.labelMedium,
-      color = colors.onSurfaceVariant,
-      modifier = Modifier.background(colors.surfaceContainer, RoundedCornerShape(10.dp)).padding(horizontal = 12.dp, vertical = 5.dp),
+      color = colors.onChip,
+      modifier = Modifier.background(colors.chip, RoundedCornerShape(10.dp)).padding(horizontal = 12.dp, vertical = 5.dp),
     )
   }
 }
@@ -629,7 +629,7 @@ private fun MessageBubble(
   val indent = if (mine) 0.dp else AVATAR_SIZE + AVATAR_GAP
   val viewSender = item.senderName?.let { stringResource(R.string.chat_view_person, it) }
   val bg = if (mine) colors.bubbleOutgoing else colors.bubbleIncoming
-  val meta = if (mine) colors.bubbleMeta else colors.onSurfaceVariant
+  val meta = colors.bubbleMeta
   val retryLabel = stringResource(R.string.chat_retry)
   val reduced = LocalReducedMotion.current
   val appear = remember(m.id) { Animatable(if (animateIn && !reduced) 0f else 1f) }

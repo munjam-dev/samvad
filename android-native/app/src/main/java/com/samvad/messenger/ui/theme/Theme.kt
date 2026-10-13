@@ -14,6 +14,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.samvad.core.design.ChatThemeColors
 import com.samvad.core.design.Radii
 import com.samvad.core.design.SamvadPalette
 import com.samvad.core.design.SamvadPalettes
@@ -54,6 +55,9 @@ data class SamvadColors(
   val onError: Color,
   val notificationDot: Color,
   val isDark: Boolean,
+  /** Date and event chips in a conversation; a chat theme may override them. */
+  val chip: Color = surfaceContainer,
+  val onChip: Color = onSurfaceVariant,
 )
 
 private fun c(argb: Long) = Color(argb)
@@ -104,6 +108,21 @@ private val LocalSamvadColors = staticCompositionLocalOf { SamvadPalettes.Light.
 object SamvadTheme {
   val colors: SamvadColors
     @Composable @ReadOnlyComposable get() = LocalSamvadColors.current
+}
+
+/**
+ * Applies a chat theme's bubble, metadata and chip colours to a conversation (US-008). Everything
+ * else keeps the app theme. Contrast of every theme is verified in ChatThemesTest.
+ */
+@Composable
+fun ProvideChatTheme(theme: ChatThemeColors, content: @Composable () -> Unit) {
+  fun c(argb: Long) = Color(argb)
+  val colors = SamvadTheme.colors.copy(
+    bubbleIncoming = c(theme.bubbleIncoming), bubbleOutgoing = c(theme.bubbleOutgoing),
+    onBubble = c(theme.text), bubbleMeta = c(theme.meta),
+    chip = c(theme.chip), onChip = c(theme.chipText),
+  )
+  CompositionLocalProvider(LocalSamvadColors provides colors, content = content)
 }
 
 @Composable
