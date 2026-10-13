@@ -1,0 +1,9 @@
+node_modules/
+functions/lib/
+*.log
+.firebaserc
+.tmp/
+functions/.env
+functions/.env.*
+*-adminsdk-*.json
+serviceAccount*.json

@@ -1,0 +1,22 @@
+{
+  "name": "samvad-firebase",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:functions": "npm --prefix functions run build",
+    "test": "npm run build:functions && firebase emulators:exec --only auth,firestore,database,storage,functions --project demo-samvad \"vitest run\"",
+    "test:file": "node scripts/test-file.mjs",
+    "test:e2e:logs": "node scripts/e2e-logs.mjs",
+    "emulators": "npm run build:functions && firebase emulators:start --only auth,firestore,database,storage,functions --project demo-samvad"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "6.0.0",
+    "@types/node": "24.19.1",
+    "firebase": "13.0.0",
+    "firebase-admin": "14.5.0",
+    "firebase-functions": "7.4.0",
+    "firebase-tools": "15.33.0",
+    "typescript": "5.9.3",
+    "vitest": "5.0.3"
+  }
+}
