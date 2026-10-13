@@ -19,8 +19,10 @@ sealed interface TimelineItem {
     /** True when the previous message is from the same sender within 2 minutes (tighter spacing). */
     val groupedWithPrevious: Boolean,
     val timeLabel: String,
-    /** Groups: the sender's name above the first incoming bubble of a run; null otherwise. */
+    /** The sender's name above the first incoming bubble of a run (groups and personal chats); null otherwise. */
     val senderName: String? = null,
+    /** The sender's round photo beside the bubble: first incoming bubble of a run only. */
+    val showAvatar: Boolean = false,
   ) : TimelineItem {
     override val key: String get() = message.id
   }
@@ -44,6 +46,8 @@ object Timeline {
     showReadReceipts: Boolean = true,
     /** Groups: names for sender labels and event lines; null for direct chats. */
     groupNames: ((String) -> String)? = null,
+    /** Direct chats: the other person's display name for the label above their runs. */
+    otherName: String? = null,
   ): List<TimelineItem> {
     val out = ArrayList<TimelineItem>(messages.size + 8)
     var lastDay: String? = null
@@ -62,6 +66,8 @@ object Timeline {
         continue
       }
       val mine = m.senderId == me
+      val startsRun = !mine &&
+        (previous == null || previous.senderId != m.senderId || m.createdAt - previous.createdAt >= GROUP_WINDOW_MS)
       val grouped = previous != null && previous.senderId == m.senderId && m.createdAt - previous.createdAt < GROUP_WINDOW_MS
       out += TimelineItem.Bubble(
         message = m,
@@ -70,7 +76,8 @@ object Timeline {
         delivery = if (mine) MessageRules.deliveryState(m, if (groupNames != null) null else other, showReadReceipts) else null,
         groupedWithPrevious = grouped,
         timeLabel = TimeLabels.clock(m.createdAt, zone),
-        senderName = if (groupNames != null && !mine && !grouped) groupNames(m.senderId) else null,
+        senderName = if (startsRun) groupNames?.invoke(m.senderId) ?: otherName else null,
+        showAvatar = startsRun,
       )
       previous = m
     }

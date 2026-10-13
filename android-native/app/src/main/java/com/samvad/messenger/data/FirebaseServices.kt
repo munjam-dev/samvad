@@ -26,6 +26,7 @@ class FirebaseServices private constructor(
 ) {
   companion object {
     private const val DEMO_PROJECT = "demo-samvad"
+    private const val EMULATOR_APP = "samvad-emulators"
 
     /**
      * Not a real key. firebase-functions pulls in firebase-iid, which rejects every callable unless
@@ -34,9 +35,10 @@ class FirebaseServices private constructor(
     private const val DEMO_API_KEY = "A-demo-key-for-local-emulators-only-000"
 
     fun create(context: Context): FirebaseServices? {
-      val existing = FirebaseApp.getApps(context).firstOrNull() ?: FirebaseApp.initializeApp(context)
-      val app: FirebaseApp = existing ?: if (BuildConfig.USE_EMULATORS) {
-        FirebaseApp.initializeApp(
+      // Emulator builds always use their own app for the demo project, even when a real
+      // google-services.json is present (it auto-initialises the default app for the real project).
+      val app: FirebaseApp = if (BuildConfig.USE_EMULATORS) {
+        FirebaseApp.getApps(context).firstOrNull { it.name == EMULATOR_APP } ?: FirebaseApp.initializeApp(
           context,
           FirebaseOptions.Builder()
             .setProjectId(DEMO_PROJECT)
@@ -46,9 +48,10 @@ class FirebaseServices private constructor(
             .setDatabaseUrl("https://$DEMO_PROJECT-default-rtdb.firebaseio.com")
             .setStorageBucket("$DEMO_PROJECT.appspot.com")
             .build(),
+          EMULATOR_APP,
         )
       } else {
-        return null
+        FirebaseApp.getApps(context).firstOrNull() ?: FirebaseApp.initializeApp(context) ?: return null
       }
 
       val auth = FirebaseAuth.getInstance(app)

@@ -19,7 +19,7 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 
 data class AppPreferences(
   val themeMode: ThemeMode = ThemeMode.SYSTEM,
-  val homeLayout: HomeLayout = HomeLayout.BENTO,
+  val homeLayout: HomeLayout = HomeLayout.DEFAULT,
   val onboardingDone: Boolean = false,
   val notificationPromptDismissed: Boolean = false,
   val appLockEnabled: Boolean = false,
@@ -45,7 +45,7 @@ class PreferencesRepository(private val context: Context) {
   val preferences: Flow<AppPreferences> = context.dataStore.data.map { p ->
     AppPreferences(
       themeMode = p[theme]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() } ?: ThemeMode.SYSTEM,
-      homeLayout = p[layout]?.let { runCatching { HomeLayout.valueOf(it) }.getOrNull() } ?: HomeLayout.BENTO,
+      homeLayout = HomeLayout.parse(p[layout]),
       onboardingDone = p[onboarding] ?: false,
       notificationPromptDismissed = p[notifPrompt] ?: false,
       appLockEnabled = p[appLock] ?: false,

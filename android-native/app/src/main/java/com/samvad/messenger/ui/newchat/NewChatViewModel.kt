@@ -44,7 +44,10 @@ class NewChatViewModel(private val container: AppContainer, private val me: Stri
 
   fun onPermissionResult(granted: Boolean) {
     _state.update { it.copy(hasPermission = granted, permissionDenied = !granted) }
-    if (granted) load()
+    if (granted) {
+      load()
+      viewModelScope.launch { container.savedNames?.refresh(force = true) }
+    }
   }
 
   fun load() = viewModelScope.launch {

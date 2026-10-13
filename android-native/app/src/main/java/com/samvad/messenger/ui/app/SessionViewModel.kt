@@ -6,7 +6,9 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.samvad.messenger.AppContainer
 import com.samvad.messenger.data.AppPreferences
+import com.samvad.messenger.data.SavedNames
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -62,6 +64,7 @@ class SessionViewModel(private val container: AppContainer) : ViewModel() {
               if (dest == Destination.HOME) {
                 registerDevice(user.uid)
                 container.presence?.goOnline(user.uid)
+                useSavedNames(user.uid)
               }
             }
           }
@@ -82,6 +85,18 @@ class SessionViewModel(private val container: AppContainer) : ViewModel() {
     }
   }
 
+  private var namesJob: Job? = null
+
+  /** Names people as saved in my contacts (US-002); refreshed at most daily by the repository. */
+  private fun useSavedNames(uid: String) {
+    val saved = container.savedNames ?: return
+    if (namesJob?.isActive == true) return
+    namesJob = viewModelScope.launch {
+      launch { saved.state.collect { container.chats?.useNames(uid, it) } }
+      saved.refresh()
+    }
+  }
+
   fun finishOnboarding() = viewModelScope.launch { container.preferences.setOnboardingDone() }
 
   fun profileCreated() {
@@ -95,6 +110,9 @@ class SessionViewModel(private val container: AppContainer) : ViewModel() {
       container.accounts?.unregisterDevice(uid, container.preferences.deviceId())
     }
     registeredUid = null
+    namesJob?.cancel()
+    container.savedNames?.clear()
+    container.chats?.useNames(null, SavedNames())
     container.push.forgetToken()
     container.auth?.signOut()
   }

@@ -68,6 +68,9 @@ class ContactsRepository(private val context: Context, private val functions: Fi
         throw e
       }
     }
-    return numbers.mapNotNull { n -> cache[n]?.let { n to it } }.toMap()
+    return cached(numbers)
   }
+
+  /** Matches already known this session, without calling the server (e.g. after the daily limit). */
+  fun cached(numbers: List<String>): Map<String, String> = numbers.mapNotNull { n -> cache[n]?.let { n to it } }.toMap()
 }

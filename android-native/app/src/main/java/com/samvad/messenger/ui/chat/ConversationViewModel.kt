@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.samvad.core.chat.Profile
 import com.samvad.core.chat.ChatExport
 import com.samvad.core.chat.ChatList
 import com.samvad.core.chat.Conversation
@@ -199,7 +200,10 @@ class ConversationViewModel(
       offline = p.fromCache,
       title = title,
       initials = ChatList.initials(title),
-      items = Timeline.build(p.messages, me, other, System.currentTimeMillis(), showReadReceipts = showRead, groupNames = names).asReversed(),
+      items = Timeline.build(
+        p.messages, me, other, System.currentTimeMillis(), showReadReceipts = showRead, groupNames = names,
+        otherName = if (isGroup) null else title,
+      ).asReversed(),
       hasMore = p.hasMore,
       muted = mine?.muted ?: false,
       pinned = mine?.pinned ?: false,
@@ -217,20 +221,22 @@ class ConversationViewModel(
     val p = presence
     if (!isGroup || p == null) return@run MutableStateFlow(GroupStatus())
     val ticker = flow { while (true) { emit(Unit); delay(1_000) } }
-    combine(p.typingIn(conversationId), group, chats.profiles, ticker) { typing, g, profiles, _ ->
+    combine(p.typingIn(conversationId), group, chats.profiles, chats.rawProfiles, ticker) { typing, g, profiles, raw, _ ->
       val name = { uid: String -> profiles[uid]?.displayName ?: ChatList.DELETED_ACCOUNT }
       val now = p.serverNow()
       GroupStatus(
         typing = typing.filter { (uid, at) -> uid != me && PresenceRules.isTyping(at, now) }.keys.map(name),
         members = g?.members.orEmpty().filter { it != me }.map(name).sorted(),
-        allNames = g?.members.orEmpty().mapNotNull { profiles[it]?.displayName },
+        // Mention text carries profile names; highlight those and this device's names for the same people.
+        allNames = g?.members.orEmpty().flatMap { listOfNotNull(raw[it]?.displayName, profiles[it]?.displayName) }.distinct(),
       )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GroupStatus())
   }
 
   /** Groups: members matching the "@query" being typed (uid → name), at most 8. */
   val mentionCandidates: StateFlow<List<Pair<String, String>>> =
-    combine(_composer, group, chats.profiles) { c, g, profiles ->
+    // Profile names, not saved contact names: the inserted "@Name" is read by everyone in the group.
+    combine(_composer, group, chats.rawProfiles) { c, g, profiles ->
       val query = c.mentionQuery ?: return@combine emptyList()
       g?.members.orEmpty().filter { it != me }
         .mapNotNull { uid -> profiles[uid]?.displayName?.let { uid to it } }
@@ -238,6 +244,9 @@ class ConversationViewModel(
         .sortedBy { it.second }
         .take(8)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+  /** A person's profile as named on this device, if loaded. */
+  fun profile(uid: String): Profile? = chats.profiles.value[uid]
 
   /** A person's name in this chat: the other person, or a group member. */
   fun displayName(uid: String): String =

@@ -38,6 +38,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -96,6 +97,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -104,6 +106,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.samvad.core.chat.ChatList
 import com.samvad.core.chat.DeliveryState
 import com.samvad.core.chat.Message
 import com.samvad.core.chat.TimelineItem
@@ -149,6 +152,7 @@ fun ConversationScreen(
   val clipboard = LocalClipboardManager.current
   val lifecycle = LocalLifecycleOwner.current.lifecycle
   var selected by remember { mutableStateOf<Message?>(null) }
+  var person by remember { mutableStateOf<String?>(null) }
   var menu by remember { mutableStateOf(false) }
   val copied = stringResource(R.string.chat_copied)
   val uploads = vm.uploads.collectAsStateWithLifecycle().value
@@ -421,6 +425,7 @@ fun ConversationScreen(
                   replied = item.message.replyTo?.let { id -> state.items.firstOrNull { it.key == id } as? TimelineItem.Bubble },
                   otherName = item.message.replyTo?.let { id -> (state.items.firstOrNull { it.key == id } as? TimelineItem.Bubble)?.message?.senderId }?.let(vm::displayName) ?: state.title,
                   onLongPress = { selected = item.message },
+                  onOpenSender = { person = item.message.senderId },
                   onRetry = { vm.retry(item.message) },
                   onReact = { emoji -> vm.react(item.message, emoji) },
                   mentionNames = groupStatus.allNames,
@@ -509,6 +514,12 @@ fun ConversationScreen(
     }
   }
   viewing?.let { path -> MediaViewer(path, vm::bitmap) { viewing = null } }
+
+  person?.let { uid ->
+    ModalBottomSheet(onDismissRequest = { person = null }) {
+      PersonSheet(uid, vm.displayName(uid), vm.profile(uid)?.about.orEmpty())
+    }
+  }
 
   if (composingPoll) {
     ModalBottomSheet(onDismissRequest = { composingPoll = false }) {
@@ -603,11 +614,20 @@ private fun MessageBubble(
   onReact: (String) -> Unit,
   mediaContent: @Composable () -> Unit = {},
   mentionNames: List<String> = emptyList(),
+  /** Opens the sender's info (incoming messages: avatar and name). */
+  onOpenSender: () -> Unit = {},
 ) {
   val colors = SamvadTheme.colors
   val m = item.message
   val mine = item.mine
-  val shape = if (mine) RoundedCornerShape(20.dp, 20.dp, 6.dp, 20.dp) else RoundedCornerShape(20.dp, 20.dp, 20.dp, 6.dp)
+  // The first bubble of a run carries the tail at its top corner, beside the avatar (US-003).
+  val shape = when {
+    item.groupedWithPrevious -> RoundedCornerShape(20.dp)
+    mine -> RoundedCornerShape(20.dp, 6.dp, 20.dp, 20.dp)
+    else -> RoundedCornerShape(6.dp, 20.dp, 20.dp, 20.dp)
+  }
+  val indent = if (mine) 0.dp else AVATAR_SIZE + AVATAR_GAP
+  val viewSender = item.senderName?.let { stringResource(R.string.chat_view_person, it) }
   val bg = if (mine) colors.bubbleOutgoing else colors.bubbleIncoming
   val meta = if (mine) colors.bubbleMeta else colors.onSurfaceVariant
   val retryLabel = stringResource(R.string.chat_retry)
@@ -628,59 +648,76 @@ private fun MessageBubble(
       },
     horizontalAlignment = if (mine) Alignment.End else Alignment.Start,
   ) {
-    Column(
-      Modifier
-        .widthIn(max = 300.dp)
-        .clip(shape)
-        .background(bg)
-        .then(if (!mine) Modifier.border(1.dp, colors.outlineVariant, shape) else Modifier)
-        .combinedClickable(
-          onClick = { if (m.failed) onRetry() },
-          onClickLabel = if (m.failed) retryLabel else null,
-          onLongClick = { if (!m.deleted && !m.pending) onLongPress() },
-        )
-        .padding(horizontal = 12.dp, vertical = 8.dp),
-    ) {
-      item.senderName?.let { SenderLabel(it, m.senderId) }
-      if (m.forwarded && !m.deleted) ForwardedLabel(tint = meta)
-      if (replied != null && !m.deleted) {
-        Column(
-          Modifier
-            .padding(bottom = 6.dp)
-            .background(if (mine) colors.primaryContainer else colors.surfaceContainer, RoundedCornerShape(10.dp))
-            .padding(horizontal = 10.dp, vertical = 6.dp),
-        ) {
-          Text(
-            if (replied.mine) stringResource(R.string.chat_you) else otherName,
-            style = MaterialTheme.typography.labelMedium,
-            color = colors.primary,
+    Row(verticalAlignment = Alignment.Top) {
+      if (!mine) {
+        if (item.showAvatar) {
+          Avatar(
+            ChatList.initials(item.senderName ?: ""),
+            m.senderId,
+            size = AVATAR_SIZE,
+            modifier = Modifier
+              .clip(CircleShape)
+              .clickable(onClickLabel = viewSender, onClick = onOpenSender),
           )
-          Text(replied.message.text, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        } else {
+          Spacer(Modifier.width(AVATAR_SIZE))
         }
+        Spacer(Modifier.width(AVATAR_GAP))
       }
-      if (!m.deleted && (m.media != null || m.poll != null)) {
-        mediaContent()
-        if (m.text.isNotBlank()) Spacer(Modifier.size(6.dp))
-      }
-      if (m.deleted || m.text.isNotBlank()) {
-        Text(
-          if (m.deleted) AnnotatedString(stringResource(R.string.chat_deleted)) else mentionText(m.text, mentionNames),
-          style = MaterialTheme.typography.bodyLarge,
-          color = if (m.deleted) colors.onSurfaceVariant else colors.onBubble,
-        )
-      }
-      Row(
-        Modifier.align(Alignment.End).padding(top = 2.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+      Column(
+        Modifier
+          .widthIn(max = 300.dp)
+          .clip(shape)
+          .background(bg)
+          .then(if (!mine) Modifier.border(1.dp, colors.outlineVariant, shape) else Modifier)
+          .combinedClickable(
+            onClick = { if (m.failed) onRetry() },
+            onClickLabel = if (m.failed) retryLabel else null,
+            onLongClick = { if (!m.deleted && !m.pending) onLongPress() },
+          )
+          .padding(horizontal = 12.dp, vertical = 8.dp),
       ) {
-        if (m.editedAt != null && !m.deleted) Text(stringResource(R.string.chat_edited), style = MaterialTheme.typography.labelSmall, color = meta)
-        Text(item.timeLabel, style = MaterialTheme.typography.labelSmall, color = meta)
-        item.delivery?.let { DeliveryIcon(it) }
+        item.senderName?.let { SenderLabel(it, m.senderId) }
+        if (m.forwarded && !m.deleted) ForwardedLabel(tint = meta)
+        if (replied != null && !m.deleted) {
+          Column(
+            Modifier
+              .padding(bottom = 6.dp)
+              .background(if (mine) colors.primaryContainer else colors.surfaceContainer, RoundedCornerShape(10.dp))
+              .padding(horizontal = 10.dp, vertical = 6.dp),
+          ) {
+            Text(
+              if (replied.mine) stringResource(R.string.chat_you) else otherName,
+              style = MaterialTheme.typography.labelMedium,
+              color = colors.primary,
+            )
+            Text(replied.message.text, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+          }
+        }
+        if (!m.deleted && (m.media != null || m.poll != null)) {
+          mediaContent()
+          if (m.text.isNotBlank()) Spacer(Modifier.size(6.dp))
+        }
+        if (m.deleted || m.text.isNotBlank()) {
+          Text(
+            if (m.deleted) AnnotatedString(stringResource(R.string.chat_deleted)) else mentionText(m.text, mentionNames),
+            style = MaterialTheme.typography.bodyLarge,
+            color = if (m.deleted) colors.onSurfaceVariant else colors.onBubble,
+          )
+        }
+        Row(
+          Modifier.align(Alignment.End).padding(top = 2.dp),
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+          if (m.editedAt != null && !m.deleted) Text(stringResource(R.string.chat_edited), style = MaterialTheme.typography.labelSmall, color = meta)
+          Text(item.timeLabel, style = MaterialTheme.typography.labelSmall, color = meta)
+          item.delivery?.let { DeliveryIcon(it) }
+        }
       }
     }
     if (m.failed) {
-      Text(retryLabel, style = MaterialTheme.typography.labelSmall, color = colors.error, modifier = Modifier.padding(top = 2.dp))
+      Text(retryLabel, style = MaterialTheme.typography.labelSmall, color = colors.error, modifier = Modifier.padding(top = 2.dp, start = indent))
     }
     androidx.compose.animation.AnimatedVisibility(
       visible = m.reactions.isNotEmpty(),
@@ -689,7 +726,7 @@ private fun MessageBubble(
     ) {
       Row(
         Modifier
-          .padding(top = 2.dp, start = 8.dp, end = 8.dp)
+          .padding(top = 2.dp, start = 8.dp + indent, end = 8.dp)
           .background(colors.surface, RoundedCornerShape(12.dp))
           .border(1.dp, colors.outlineVariant, RoundedCornerShape(12.dp))
           .padding(horizontal = 8.dp, vertical = 2.dp),
@@ -705,6 +742,9 @@ private fun MessageBubble(
     }
   }
 }
+
+private val AVATAR_SIZE = 32.dp
+private val AVATAR_GAP = 8.dp
 
 @Composable
 private fun DeliveryIcon(state: DeliveryState) {
@@ -870,5 +910,23 @@ private fun ActionRow(icon: ImageVector, label: String, onClick: () -> Unit, dan
   ) {
     Icon(icon, null, tint = if (danger) colors.error else colors.onSurfaceVariant)
     Text(label, style = MaterialTheme.typography.bodyLarge, color = if (danger) colors.error else colors.onSurface)
+  }
+}
+
+/** A person's photo, name and about, opened from their avatar or name in a chat. */
+@Composable
+private fun PersonSheet(uid: String, name: String, about: String) {
+  val colors = SamvadTheme.colors
+  Column(
+    Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, bottom = 32.dp),
+    horizontalAlignment = Alignment.CenterHorizontally,
+  ) {
+    Avatar(ChatList.initials(name), uid, size = 96.dp)
+    Spacer(Modifier.size(12.dp))
+    Text(name, style = MaterialTheme.typography.titleLarge, color = colors.onSurface, textAlign = TextAlign.Center)
+    if (about.isNotBlank()) {
+      Spacer(Modifier.size(6.dp))
+      Text(about, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, textAlign = TextAlign.Center)
+    }
   }
 }

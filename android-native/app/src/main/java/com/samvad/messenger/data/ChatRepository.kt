@@ -9,6 +9,7 @@ import com.google.firebase.firestore.MetadataChanges
 import com.google.firebase.firestore.Query
 import com.samvad.core.chat.Conversation
 import com.samvad.core.chat.ConversationIds
+import com.samvad.core.chat.DisplayNames
 import com.samvad.core.chat.LastMessage
 import com.samvad.core.chat.MemberState
 import com.samvad.core.chat.Message
@@ -39,7 +40,31 @@ data class MessagesPage(val messages: List<Message>, val hasMore: Boolean, val f
 class ChatRepository(private val db: FirebaseFirestore) {
 
   private val profileCache = MutableStateFlow<Map<String, Profile>>(emptyMap())
-  val profiles: StateFlow<Map<String, Profile>> = profileCache.asStateFlow()
+
+  /** Profiles as their owners wrote them. Use for text others will read, such as @mentions. */
+  val rawProfiles: StateFlow<Map<String, Profile>> = profileCache.asStateFlow()
+
+  private val named = MutableStateFlow<Map<String, Profile>>(emptyMap())
+
+  /** Profiles named for this device: saved contact name, else "~ Profile name" (US-002). */
+  val profiles: StateFlow<Map<String, Profile>> = named.asStateFlow()
+
+  @Volatile private var savedNames = SavedNames()
+  @Volatile private var me: String? = null
+
+  /** Called when the signed-in user or the saved-names map changes. */
+  fun useNames(me: String?, saved: SavedNames) {
+    this.me = me
+    savedNames = saved
+    rename()
+  }
+
+  private fun rename() {
+    val saved = savedNames
+    named.value = profileCache.value.mapValues { (uid, p) ->
+      if (uid == me) p else p.copy(displayName = DisplayNames.of(p.displayName, saved.byUid[uid], saved.available))
+    }
+  }
 
   private val failed = MutableStateFlow<Set<String>>(emptySet())
 
@@ -86,6 +111,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
       if (snap.exists()) {
         val p = Profile(uid, snap.getString("displayName") ?: "", snap.getString("about") ?: "", snap.getString("photoUrl"))
         profileCache.update { it + (uid to p) }
+        rename()
       }
     }
   }

@@ -134,6 +134,7 @@
     <string name="chat_editing">Editing message</string>
     <string name="chat_cancel">Cancel</string>
     <string name="chat_you">You</string>
+    <string name="chat_view_person">View %1$s</string>
     <string name="chat_empty">Say hello to %1$s 👋</string>
     <string name="chat_too_long">Messages can be up to 4096 characters.</string>
     <string name="chat_scroll_latest">Jump to latest</string>

@@ -11,6 +11,7 @@ import com.samvad.messenger.data.PreferencesRepository
 import com.samvad.messenger.data.PresenceRepository
 import com.samvad.messenger.data.MediaRepository
 import com.samvad.messenger.data.SafetyRepository
+import com.samvad.messenger.data.SavedNamesRepository
 import com.samvad.messenger.data.TwoStepRepository
 import com.samvad.messenger.push.PushTokens
 import com.samvad.messenger.security.AppLock
@@ -33,6 +34,7 @@ class AppContainer(context: Context) {
   val presence: PresenceRepository? = firebase?.let { PresenceRepository(it.rtdb) }
   val media: MediaRepository? = firebase?.let { MediaRepository(context, it.storage) }
   val contacts: ContactsRepository? = firebase?.let { ContactsRepository(context, it.functions) }
+  val savedNames: SavedNamesRepository? = contacts?.let { SavedNamesRepository(context, it) }
   val safety: SafetyRepository? = firebase?.let { SafetyRepository(it.db, it.functions) }
   val twoStep: TwoStepRepository? = firebase?.let { TwoStepRepository(it.auth, it.functions) }
   val groups: GroupRepository? = firebase?.let { GroupRepository(it.functions) }

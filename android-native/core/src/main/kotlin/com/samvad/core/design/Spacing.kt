@@ -30,4 +30,14 @@ object Radii {
 enum class ThemeMode { SYSTEM, LIGHT, DARK, AMOLED }
 
 /** The three home compositions explored on the design canvas. */
-enum class HomeLayout { CLEAN, BOLD, BENTO }
+enum class HomeLayout {
+  CLEAN, BOLD, BENTO;
+
+  companion object {
+    /** Owner decision (2026-10-13): new installs open on Bold Header. */
+    val DEFAULT = BOLD
+
+    /** A stored name, or [DEFAULT] when nothing (or something unknown) is stored. */
+    fun parse(stored: String?): HomeLayout = entries.firstOrNull { it.name == stored } ?: DEFAULT
+  }
+}

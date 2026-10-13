@@ -41,7 +41,7 @@ data class HomeUiState(
   val searching: Boolean = false,
   val greeting: String = "",
   val me: Profile? = null,
-  val layout: HomeLayout = HomeLayout.BENTO,
+  val layout: HomeLayout = HomeLayout.DEFAULT,
 )
 
 private data class Inputs(
