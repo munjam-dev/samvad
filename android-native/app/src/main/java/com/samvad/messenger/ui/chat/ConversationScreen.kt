@@ -658,7 +658,7 @@ private fun MessageBubble(
           Text(replied.message.text, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
       }
-      if (!m.deleted && m.media != null) {
+      if (!m.deleted && (m.media != null || m.poll != null)) {
         mediaContent()
         if (m.text.isNotBlank()) Spacer(Modifier.size(6.dp))
       }
