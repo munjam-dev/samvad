@@ -99,6 +99,19 @@ service cloud.firestore {
 
         allow delete: if isOwner(uid);
       }
+
+      // Phase 1.3: people this user has blocked. Mirrored to RTDB blocks/{uid} by a trigger.
+      match /blocked/{otherUid} {
+        allow read: if isOwner(uid);
+
+        allow create: if isOwner(uid)
+          && otherUid != uid
+          && otherUid.matches('^[A-Za-z0-9]{1,128}$')
+          && request.resource.data.keys().hasOnly(['createdAt'])
+          && request.resource.data.createdAt == request.time;
+
+        allow delete: if isOwner(uid);
+      }
     }
 
     // ---- profiles ------------------------------------------------------
@@ -163,6 +176,17 @@ service cloud.firestore {
       return signedIn() && request.auth.uid in convAfter(cid).members;
     }
 
+    // Phase 1.3: in a direct chat, nobody can message while either person has blocked the other.
+    function isBlocked(uid, otherUid) {
+      return exists(/databases/$(database)/documents/users/$(uid)/blocked/$(otherUid));
+    }
+
+    function notBlocked(cid) {
+      let c = convAfter(cid);
+      return c.type != 'direct'
+        || (!isBlocked(c.members[0], c.members[1]) && !isBlocked(c.members[1], c.members[0]));
+    }
+
     // Timestamp field that may only stay the same or move forward, never past now.
     function forwardOnly(field) {
       return request.resource.data[field] == resource.data[field]
@@ -213,7 +237,8 @@ service cloud.firestore {
               || (request.resource.data.replyTo is string && isUuid(request.resource.data.replyTo)))
           && request.resource.data.createdAt == request.time
           && request.resource.data.get('deleted', false) == false
-          && request.resource.data.get('reactions', {}).size() == 0;
+          && request.resource.data.get('reactions', {}).size() == 0
+          && notBlocked(cid);
 
         function notDeletedMessage() {
           return resource.data.get('deleted', false) == false;
@@ -248,7 +273,7 @@ service cloud.firestore {
                     && after[request.auth.uid].size() <= 16));
         }
 
-        allow update: if isMemberOf(cid) && (isEdit() || isSoftDelete() || isOwnReaction());
+        allow update: if isMemberOf(cid) && (isSoftDelete() || ((isEdit() || isOwnReaction()) && notBlocked(cid)));
       }
 
       match /members/{memberId} {
@@ -282,6 +307,14 @@ service cloud.firestore {
     // ---- server-only ---------------------------------------------------
 
     match /deletedAccounts/{uid} {
+      allow read, write: if false;
+    }
+
+    match /reports/{reportId} {
+      allow read, write: if false;
+    }
+
+    match /rateLimits/{uid} {
       allow read, write: if false;
     }
 

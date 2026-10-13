@@ -1,4 +1,4 @@
-# Samvad — Firebase backend (B1 + B2)
+# Samvad — Firebase backend
 
 Firebase project for Samvad Messenger: security rules, Cloud Functions and an Emulator Suite test
 suite. Specs: [B1 foundation + auth](../docs/superpowers/specs/2026-10-09-foundation-auth-design.md),
@@ -35,13 +35,17 @@ cached, for example `env -u HTTPS_PROXY -u https_proxy npm test`.
 
 | Path | Purpose |
 |---|---|
-| `firestore.rules` | Deny-by-default rules for `users`, `users/{uid}/devices`, `profiles`, `deletedAccounts` |
-| `storage.rules`, `database.rules.json` | Deny all (placeholders until B4 and B5) |
+| `firestore.rules` | Deny-by-default rules for users, devices, block lists, profiles, conversations, messages, members |
+| `storage.rules` | Chat media: members only, immutable uploads, 16 MB cap, content-type allow-list |
+| `database.rules.json` | Presence (hidden by privacy setting or block), typing (members only), server-only mirrors |
 | `firestore.indexes.json` | Chat-list index (`members` CONTAINS + `lastMessageAt` DESC) and a `members.uid` collection-group override |
 | `functions/src/deleteAccount.ts` | Callable: tombstone → recursive delete → profile delete → Auth user delete; idempotent |
 | `functions/src/signOutAllDevices.ts` | Callable: 60 s cooldown, revoke refresh tokens, stamp `tokensRevokedAt`, mark devices `revokedAt` |
 | `functions/src/onMessageCreated.ts` | Trigger: sets the conversation's `lastMessage`, bumps other members' `unreadCount`; idempotent per event |
 | `functions/src/lookupPhoneNumbers.ts` | Callable: up to 50 E.164 numbers → registered UIDs; 500 numbers per user per rolling day |
+| `functions/src/onConversationCreated.ts`, `onBlockWritten.ts` | Triggers: mirror membership and block lists into RTDB for its rules |
+| `functions/src/onMessageUpdated.ts` | Trigger: deletes a message's media file when the message is deleted |
+| `functions/src/reportContact.ts` | Callable: report a contact with a 5-message evidence snapshot; optional block; 20 per day |
 | `functions/src/lib/` | Phone-auth and recent-login guards; PII-free structured logger |
 | `rules-tests/`, `functions/test/` | Emulator tests (rules, callables over HTTP, e2e flow) |
 | `scripts/check-logs.mjs` | Fails if function output contains the test phone number or tokens |
@@ -55,6 +59,8 @@ Data model summary (full tables in spec §7):
 - `conversations/{uidA_uidB}` — direct chats, members only; created by a member when both have profiles; `lastMessage` is trigger-written.
 - `conversations/{cid}/messages/{uuid}` — client-generated IDs (idempotent retries); edit within 15 min, one-way soft delete, own-key reactions.
 - `conversations/{cid}/members/{uid}` — read/delivered timestamps (forward-only), unread count (reset-only), mute/pin/archive.
+- `users/{uid}/blocked/{otherUid}` — owner-only block list; while either side has blocked the other, nobody can send, edit or react in their direct chat.
+- `reports/{id}`, `rateLimits/{uid}` — server-only.
 
 The callables run in `asia-south1`, accept only phone sign-ins, ignore any UID in the payload, and enforce
 App Check with replay protection (`consumeAppCheckToken`) everywhere except the Functions emulator.
@@ -70,6 +76,7 @@ Clients must send limited-use App Check tokens.
 6. Set budget alerts and quotas for SMS, Firestore and Functions.
 7. Provide the Terms of Service and Privacy Policy URLs for the app.
 8. Rotate the legacy credentials listed in `docs/security/incident-leaked-credentials.md`.
+9. Firestore → TTL: add a policy on collection group `reports`, field `expireAt` (reports expire after 90 days).
 
 ## Deployment
 

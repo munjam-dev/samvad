@@ -5,7 +5,7 @@
 
     "presence": {
       "$uid": {
-        ".read": "auth != null && auth.token.firebase.sign_in_provider == 'phone' && (auth.uid == $uid || root.child('privacy').child($uid).child('hideLastSeen').val() != true)",
+        ".read": "auth != null && auth.token.firebase.sign_in_provider == 'phone' && (auth.uid == $uid || (root.child('privacy').child($uid).child('hideLastSeen').val() != true && !root.child('blocks').child($uid).child(auth.uid).exists() && !root.child('blocks').child(auth.uid).child($uid).exists()))",
         ".write": "auth != null && auth.token.firebase.sign_in_provider == 'phone' && auth.uid == $uid",
         ".validate": "newData.hasChildren(['online', 'lastSeen']) && newData.child('online').isBoolean() && newData.child('lastSeen').isNumber() && newData.child('lastSeen').val() <= now + 60000",
         "online": { ".validate": true },
@@ -37,6 +37,11 @@
       "$cid": {
         ".read": "auth != null && auth.token.firebase.sign_in_provider == 'phone' && data.child(auth.uid).exists()"
       }
+    },
+
+    "blocks": {
+      ".read": false,
+      ".write": false
     }
   }
 }
