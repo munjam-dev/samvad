@@ -10,6 +10,13 @@ import com.samvad.core.chat.MessageRules
 import com.samvad.core.chat.TextValidation
 import com.samvad.core.chat.Timeline
 import com.samvad.core.chat.TimelineItem
+import com.samvad.core.presence.PresenceRules
+import com.samvad.core.presence.PresenceStatus
+import com.samvad.core.presence.TypingThrottle
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import com.samvad.messenger.AppContainer
 import com.samvad.messenger.data.MessagesPage
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -52,6 +59,8 @@ class ConversationViewModel(
   private val otherUid: String,
 ) : ViewModel() {
   private val chats = container.chats!!
+  private val presence = container.presence
+  private val throttle = TypingThrottle { System.currentTimeMillis() }
   private val limit = MutableStateFlow(PAGE)
   private val failed = MutableStateFlow(false)
   private val reload = MutableStateFlow(0)
@@ -90,13 +99,46 @@ class ConversationViewModel(
     )
   }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ConversationUiState())
 
+  /** Header line: typing…, online, last seen …, or nothing when hidden. Re-evaluated every second so stale typing expires. */
+  val status: StateFlow<PresenceStatus> = run {
+    val p = presence ?: return@run MutableStateFlow<PresenceStatus>(PresenceStatus.Unknown)
+    val ticker = flow { while (true) { emit(Unit); delay(1_000) } }
+    combine(p.typing(conversationId, otherUid), p.presence(otherUid), ticker) { typingAt, pres, _ ->
+      PresenceRules.status(typingAt, pres, p.serverNow())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), PresenceStatus.Unknown)
+  }
+
+  private fun onTyping(text: String) {
+    val p = presence ?: return
+    if (text.isBlank()) {
+      throttle.reset()
+      viewModelScope.launch { p.clearTyping(conversationId, me) }
+    } else if (throttle.onKeystroke()) {
+      viewModelScope.launch { p.setTyping(conversationId, me) }
+    }
+  }
+
+  private fun stopTyping() {
+    throttle.reset()
+    presence?.let { p -> viewModelScope.launch { p.clearTyping(conversationId, me) } }
+  }
+
+  override fun onCleared() {
+    // viewModelScope is already cancelled here, so clear the typing mark on a short-lived scope.
+    presence?.let { p -> CoroutineScope(Dispatchers.IO).launch { p.clearTyping(conversationId, me) } }
+    super.onCleared()
+  }
+
   fun loadMore() {
     if (state.value.hasMore) limit.update { it + PAGE }
   }
 
   fun markRead() = viewModelScope.launch { chats.markRead(conversationId, me) }
 
-  fun onText(text: String) = _composer.update { it.copy(text = text, tooLong = text.length > MessageRules.MAX_LENGTH) }
+  fun onText(text: String) {
+    _composer.update { it.copy(text = text, tooLong = text.length > MessageRules.MAX_LENGTH) }
+    onTyping(text)
+  }
 
   fun reply(message: Message) = _composer.update { it.copy(replyTo = message, editing = null) }
 
@@ -108,6 +150,7 @@ class ConversationViewModel(
     val c = _composer.value
     val text = (MessageRules.validate(c.text) as? TextValidation.Ok)?.text ?: return
     _composer.value = ComposerState()
+    stopTyping()
     viewModelScope.launch {
       runCatching {
         if (c.editing != null) chats.edit(conversationId, c.editing.id, text)

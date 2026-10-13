@@ -36,6 +36,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -151,6 +154,28 @@ fun SettingsScreen(container: AppContainer, me: String, onBack: () -> Unit, onSi
       }
 
       Group(stringResource(R.string.settings_privacy)) {
+        val presenceRepo = container.presence
+        if (presenceRepo != null) {
+          val hidden = remember { presenceRepo.hideLastSeen(me) }.collectAsStateWithLifecycle(false).value
+          Row(
+            Modifier
+              .fillMaxWidth()
+              .toggleable(hidden, role = Role.Switch, onValueChange = { v -> scope.launch { runCatching { presenceRepo.setHideLastSeen(me, v) } } })
+              .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+          ) {
+            Column(Modifier.weight(1f)) {
+              Text(stringResource(R.string.settings_hide_last_seen), style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
+              Text(stringResource(R.string.settings_hide_last_seen_body), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
+            }
+            Switch(
+              checked = hidden,
+              onCheckedChange = null,
+              colors = SwitchDefaults.colors(checkedTrackColor = colors.primary, checkedThumbColor = colors.onPrimary),
+            )
+          }
+        }
         Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
           Icon(Icons.Outlined.Lock, null, tint = colors.onPrimaryContainer)
           Text(stringResource(R.string.settings_privacy_body), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)

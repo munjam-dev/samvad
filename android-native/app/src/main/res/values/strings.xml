@@ -207,4 +207,9 @@
     <string name="notif_prompt_allow">Turn on</string>
     <string name="notif_prompt_later">Not now</string>
     <string name="settings_notifications">Notifications</string>
+
+    <!-- Presence -->
+    <string name="chat_typing">typing…</string>
+    <string name="settings_hide_last_seen">Hide last seen &amp; online</string>
+    <string name="settings_hide_last_seen_body">Others won\'t see when you\'re online or when you were last active.</string>
 </resources>

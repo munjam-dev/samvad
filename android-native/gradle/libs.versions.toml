@@ -41,6 +41,7 @@ firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
 firebase-functions = { group = "com.google.firebase", name = "firebase-functions" }
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
+firebase-database = { group = "com.google.firebase", name = "firebase-database" }
 firebase-appcheck-playintegrity = { group = "com.google.firebase", name = "firebase-appcheck-playintegrity" }
 firebase-appcheck-debug = { group = "com.google.firebase", name = "firebase-appcheck-debug" }
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }

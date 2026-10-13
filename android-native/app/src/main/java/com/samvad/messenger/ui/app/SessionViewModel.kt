@@ -56,7 +56,10 @@ class SessionViewModel(private val container: AppContainer) : ViewModel() {
                   accountCheckFailed = hasAccount.isFailure,
                 ),
               )
-              if (dest == Destination.HOME) registerDevice(user.uid)
+              if (dest == Destination.HOME) {
+                registerDevice(user.uid)
+                container.presence?.goOnline(user.uid)
+              }
             }
           }
         }
@@ -84,7 +87,10 @@ class SessionViewModel(private val container: AppContainer) : ViewModel() {
 
   fun signOut() = viewModelScope.launch {
     val uid = state.value.uid
-    if (uid != null) container.accounts?.unregisterDevice(uid, container.preferences.deviceId())
+    if (uid != null) {
+      container.presence?.goOffline(uid)
+      container.accounts?.unregisterDevice(uid, container.preferences.deviceId())
+    }
     registeredUid = null
     container.push.forgetToken()
     container.auth?.signOut()

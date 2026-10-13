@@ -100,6 +100,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.samvad.core.chat.DeliveryState
 import com.samvad.core.chat.Message
 import com.samvad.core.chat.TimelineItem
+import com.samvad.core.presence.PresenceStatus
+import androidx.compose.animation.togetherWith
 import com.samvad.messenger.AppContainer
 import com.samvad.messenger.R
 import com.samvad.messenger.push.ActiveChat
@@ -123,6 +125,7 @@ fun ConversationScreen(
   val vm: ConversationViewModel = viewModel(factory = ConversationViewModel.factory(container, me, conversationId, otherUid))
   val state = vm.state.collectAsStateWithLifecycle().value
   val composer = vm.composer.collectAsStateWithLifecycle().value
+  val presence = vm.status.collectAsStateWithLifecycle().value
   val colors = SamvadTheme.colors
   val list = rememberLazyListState()
   val scope = rememberCoroutineScope()
@@ -177,14 +180,35 @@ fun ConversationScreen(
       ) {
         IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, stringResource(R.string.cd_back), tint = colors.onSurface) }
         Avatar(state.initials, otherUid, size = 40.dp)
-        Text(
-          state.title,
-          style = MaterialTheme.typography.titleMedium,
-          color = colors.onSurface,
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-          modifier = Modifier.weight(1f).padding(start = 12.dp),
-        )
+        Column(Modifier.weight(1f).padding(start = 12.dp)) {
+          Text(
+            state.title,
+            style = MaterialTheme.typography.titleMedium,
+            color = colors.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+          )
+          val subtitle = when (presence) {
+            PresenceStatus.Typing -> stringResource(R.string.chat_typing)
+            PresenceStatus.Online -> stringResource(R.string.chat_online)
+            is PresenceStatus.LastSeen -> presence.label
+            PresenceStatus.Unknown -> null
+          }
+          androidx.compose.animation.AnimatedContent(
+            targetState = subtitle,
+            transitionSpec = { fadeIn() togetherWith fadeOut() },
+            label = "presence",
+          ) { line ->
+            if (line != null) {
+              Text(
+                line,
+                style = MaterialTheme.typography.labelMedium,
+                color = if (presence == PresenceStatus.Typing || presence == PresenceStatus.Online) colors.primary else colors.onSurfaceVariant,
+                maxLines = 1,
+              )
+            }
+          }
+        }
         Box {
           IconButton(onClick = { menu = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.cd_more), tint = colors.onSurface) }
           DropdownMenu(menu, onDismissRequest = { menu = false }) {
