@@ -254,11 +254,12 @@ Project names are suggestions. Each environment has its own alias in `.firebaser
 
 | Item | State |
 |---|---|
-| Order of work | Backend first (B1 to B9), Android app later on the owner's instruction |
-| B1 design spec (revision 3, backend-only) | Written, awaiting your approval |
-| Implementation plan | Not written (needs spec approval first) |
+| Order of work | B1 backend, then A1 Android foundation, then each later B/A pair (owner decision 2026-10-13) |
+| B1 design spec (revision 3.1, backend-only) | Approved as rev 3; §0.1 amendments await review with the B1 plan |
+| B1 implementation plan | Written (`docs/superpowers/plans/2026-10-09-b1-firebase-foundation.md`), awaiting review |
+| Android design system + client spec (rev 4) | Written (`docs/superpowers/specs/2026-10-13-android-design-system-client.md`), awaiting your approval |
 | Backend code (`firebase/`) | None written |
-| Native Android code | None written; deferred |
+| Native Android code (`android-native/`) | None written; A1 plan follows rev 4 approval |
 | Firebase project | Not created (owner action) |
 | Leaked credentials | Open incident; runbook written; rotation not performed |
 | JDK 21 and Node 24 LTS | Not installed |
