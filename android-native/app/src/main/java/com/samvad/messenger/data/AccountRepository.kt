@@ -3,7 +3,6 @@ package com.samvad.messenger.data
 import android.os.Build
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.functions.FirebaseFunctionsException
 import com.google.firebase.functions.HttpsCallableOptions
@@ -70,7 +69,10 @@ class AccountRepository(
     awaitClose { reg.remove() }
   }
 
-  /** Registers this install, or refreshes lastSeenAt when it is already registered. */
+  /**
+   * Registers this install, or refreshes lastSeenAt when it is already registered. Reads first:
+   * an update() of a missing doc is rejected by the rules as PERMISSION_DENIED, never NOT_FOUND.
+   */
   suspend fun registerDevice(uid: String, deviceId: String, fcmToken: String?) {
     val ref = db.document("users/$uid/devices/$deviceId")
     val common = mapOf(
@@ -79,20 +81,15 @@ class AccountRepository(
       "lastSeenAt" to FieldValue.serverTimestamp(),
       "fcmToken" to fcmToken,
     )
-    try {
-      ref.update(common).await()
-    } catch (e: FirebaseFirestoreException) {
-      if (e.code != FirebaseFirestoreException.Code.NOT_FOUND) throw e
-      ref.set(common + mapOf("platform" to "android", "createdAt" to FieldValue.serverTimestamp())).await()
-    }
+    db.runTransaction { tx ->
+      if (tx.get(ref).exists()) tx.update(ref, common)
+      else tx.set(ref, common + mapOf("platform" to "android", "createdAt" to FieldValue.serverTimestamp()))
+    }.await()
   }
 
-  /** Called when FCM rotates this install's token. */
-  suspend fun updatePushToken(uid: String, deviceId: String, fcmToken: String) {
-    db.document("users/$uid/devices/$deviceId").update(
-      mapOf("fcmToken" to fcmToken, "lastSeenAt" to FieldValue.serverTimestamp()),
-    ).await()
-  }
+  /** Called when FCM rotates this install's token; may run before the first registration. */
+  suspend fun updatePushToken(uid: String, deviceId: String, fcmToken: String) =
+    registerDevice(uid, deviceId, fcmToken)
 
   suspend fun unregisterDevice(uid: String, deviceId: String) {
     runCatching { db.document("users/$uid/devices/$deviceId").delete().await() }
