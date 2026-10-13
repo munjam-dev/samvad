@@ -58,6 +58,11 @@ export async function resetEmulators(): Promise<void> {
     `http://${fs.host}:${fs.port}/emulator/v1/projects/${PROJECT_ID}/databases/(default)/documents`,
     { method: 'DELETE' },
   );
+  const rt = HOSTS.database;
+  await fetch(`http://${rt.host}:${rt.port}/.json?ns=${PROJECT_ID}-default-rtdb`, {
+    method: 'DELETE',
+    headers: { authorization: 'Bearer owner' },
+  });
 }
 
 export async function callCallable(

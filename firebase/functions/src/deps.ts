@@ -1,5 +1,6 @@
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth, type Auth } from 'firebase-admin/auth';
+import { getDatabaseWithUrl, type Database } from 'firebase-admin/database';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
 
@@ -11,6 +12,7 @@ export interface PushSender {
 export interface Deps {
   db: Firestore;
   auth: Auth;
+  rtdb: Database;
   nowMs: () => number;
   push: PushSender;
 }
@@ -44,7 +46,21 @@ export const fcmPushSender: PushSender = {
   },
 };
 
+/** The project's default Realtime Database URL (FIREBASE_CONFIG in Functions, derived elsewhere). */
+export function databaseUrl(env: NodeJS.ProcessEnv = process.env): string {
+  const cfg = env.FIREBASE_CONFIG ? JSON.parse(env.FIREBASE_CONFIG) : {};
+  if (cfg.databaseURL) return cfg.databaseURL;
+  const project = cfg.projectId ?? env.GCLOUD_PROJECT ?? 'demo-samvad';
+  return `https://${project}-default-rtdb.firebaseio.com`;
+}
+
 export function defaultDeps(): Deps {
   ensureAdminApp();
-  return { db: getFirestore(), auth: getAuth(), nowMs: () => Date.now(), push: fcmPushSender };
+  return {
+    db: getFirestore(),
+    auth: getAuth(),
+    rtdb: getDatabaseWithUrl(databaseUrl()),
+    nowMs: () => Date.now(),
+    push: fcmPushSender,
+  };
 }

@@ -33,8 +33,8 @@ describe('default deny', () => {
 
   it('realtime database denies read and write of any path', async () => {
     for (const ctx of contexts()) {
-      await assertFails(get(dbRef(ctx.database(), 'presence/x')));
-      await assertFails(set(dbRef(ctx.database(), 'presence/x'), true));
+      await assertFails(get(dbRef(ctx.database(), 'unknown/x')));
+      await assertFails(set(dbRef(ctx.database(), 'unknown/x'), true));
     }
   });
 });

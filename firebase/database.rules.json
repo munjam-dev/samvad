@@ -1,6 +1,42 @@
 {
   "rules": {
     ".read": false,
-    ".write": false
+    ".write": false,
+
+    "presence": {
+      "$uid": {
+        ".read": "auth != null && auth.token.firebase.sign_in_provider == 'phone' && (auth.uid == $uid || root.child('privacy').child($uid).child('hideLastSeen').val() != true)",
+        ".write": "auth != null && auth.token.firebase.sign_in_provider == 'phone' && auth.uid == $uid",
+        ".validate": "newData.hasChildren(['online', 'lastSeen']) && newData.child('online').isBoolean() && newData.child('lastSeen').isNumber() && newData.child('lastSeen').val() <= now + 60000",
+        "online": { ".validate": true },
+        "lastSeen": { ".validate": true },
+        "$other": { ".validate": false }
+      }
+    },
+
+    "privacy": {
+      "$uid": {
+        ".read": "auth != null && auth.token.firebase.sign_in_provider == 'phone' && auth.uid == $uid",
+        ".write": "auth != null && auth.token.firebase.sign_in_provider == 'phone' && auth.uid == $uid",
+        "hideLastSeen": { ".validate": "newData.isBoolean()" },
+        "$other": { ".validate": false }
+      }
+    },
+
+    "typing": {
+      "$cid": {
+        ".read": "auth != null && auth.token.firebase.sign_in_provider == 'phone' && root.child('members').child($cid).child(auth.uid).exists()",
+        "$uid": {
+          ".write": "auth != null && auth.token.firebase.sign_in_provider == 'phone' && auth.uid == $uid && root.child('members').child($cid).child(auth.uid).exists()",
+          ".validate": "newData.isNumber() && newData.val() <= now + 60000"
+        }
+      }
+    },
+
+    "members": {
+      "$cid": {
+        ".read": "auth != null && auth.token.firebase.sign_in_provider == 'phone' && data.child(auth.uid).exists()"
+      }
+    }
   }
 }

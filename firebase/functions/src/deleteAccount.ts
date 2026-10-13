@@ -13,6 +13,13 @@ export async function deleteAccountCore(deps: Deps, uid: string): Promise<void> 
   await db.doc(`profiles/${uid}`).delete();
   // B2: leave every conversation (sent messages stay so the other member's history is intact).
   const memberships = await db.collectionGroup('members').where('uid', '==', uid).get();
+  // Phase 1.1: clear presence, privacy and the RTDB membership mirror for this user.
+  const rtdbCleanup: Record<string, null> = { [`presence/${uid}`]: null, [`privacy/${uid}`]: null };
+  for (const d of memberships.docs) {
+    const cid = d.ref.parent.parent?.id;
+    if (cid) rtdbCleanup[`members/${cid}/${uid}`] = null;
+  }
+  await deps.rtdb.ref().update(rtdbCleanup);
   for (let i = 0; i < memberships.docs.length; i += 400) {
     const batch = db.batch();
     memberships.docs.slice(i, i + 400).forEach((d) => batch.delete(d.ref));
