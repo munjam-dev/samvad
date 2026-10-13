@@ -108,6 +108,7 @@ import com.samvad.core.presence.PresenceStatus
 import androidx.compose.animation.togetherWith
 import com.samvad.messenger.AppContainer
 import com.samvad.messenger.R
+import com.samvad.core.chat.ExportLabels
 import com.samvad.messenger.push.ActiveChat
 import com.samvad.messenger.push.Notifications
 import com.samvad.messenger.ui.components.Avatar
@@ -170,6 +171,40 @@ fun ConversationScreen(
   var attaching by remember { mutableStateOf(false) }
   var viewing by remember { mutableStateOf<String?>(null) }
   val context = LocalContext.current
+  var confirmExport by remember { mutableStateOf(false) }
+  var exporting by remember { mutableStateOf(false) }
+  val exportLabels = ExportLabels(
+    header = stringResource(R.string.export_header, state.title),
+    deleted = stringResource(R.string.chat_deleted),
+    photo = stringResource(R.string.export_photo),
+    voice = stringResource(R.string.export_voice),
+    file = stringResource(R.string.export_file),
+    edited = stringResource(R.string.export_edited),
+    unknownSender = stringResource(R.string.export_unknown),
+  )
+  val you = stringResource(R.string.chat_you)
+  val exportFailed = stringResource(R.string.export_failed)
+  val shareTitle = stringResource(R.string.export_share_title)
+  val runExport: () -> Unit = {
+    exporting = true
+    scope.launch {
+      val file = vm.exportChat(exportLabels, you)
+      exporting = false
+      if (file == null) {
+        snackbar.showSnackbar(exportFailed)
+      } else {
+        val uri = androidx.core.content.FileProvider.getUriForFile(context, context.packageName + ".files", file)
+        val send = android.content.Intent(android.content.Intent.ACTION_SEND)
+          .setType("text/plain")
+          .putExtra(android.content.Intent.EXTRA_STREAM, uri)
+          .putExtra(android.content.Intent.EXTRA_SUBJECT, file.nameWithoutExtension)
+          .addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        container.appLock.expectExternal()
+        runCatching { context.startActivity(android.content.Intent.createChooser(send, shareTitle)) }
+          .onFailure { snackbar.showSnackbar(exportFailed) }
+      }
+    }
+  }
   val pickPhoto = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri -> uri?.let(vm::sendImage) }
   val pickDocument = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let(vm::sendDocument) }
   val micPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -290,6 +325,11 @@ fun ConversationScreen(
               onClick = { vm.toggle("muted", !state.muted); menu = false },
             )
             DropdownMenuItem(text = { Text(stringResource(R.string.chat_archive)) }, onClick = { vm.toggle("archived", true); menu = false; onBack() })
+            DropdownMenuItem(
+              text = { Text(stringResource(R.string.export_chat)) },
+              enabled = !exporting,
+              onClick = { menu = false; confirmExport = true },
+            )
             HorizontalDivider(color = colors.outlineVariant)
             DropdownMenuItem(
               text = { Text(stringResource(if (blocked) R.string.chat_unblock else R.string.chat_block)) },
@@ -411,6 +451,18 @@ fun ConversationScreen(
     }
   }
   viewing?.let { path -> MediaViewer(path, vm::bitmap) { viewing = null } }
+
+  if (confirmExport) {
+    androidx.compose.material3.AlertDialog(
+      onDismissRequest = { confirmExport = false },
+      title = { Text(stringResource(R.string.export_chat)) },
+      text = { Text(stringResource(R.string.export_body)) },
+      confirmButton = {
+        androidx.compose.material3.TextButton({ confirmExport = false; runExport() }) { Text(stringResource(R.string.export_confirm)) }
+      },
+      dismissButton = { androidx.compose.material3.TextButton({ confirmExport = false }) { Text(stringResource(R.string.cancel)) } },
+    )
+  }
 
   if (confirmBlock) {
     BlockDialog(

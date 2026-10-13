@@ -212,17 +212,25 @@ class ChatRepository(private val db: FirebaseFirestore) {
       .update("reactions.$me", emoji ?: FieldValue.delete()).await()
   }
 
-  suspend fun markRead(conversationId: String, me: String) {
+  /** With [sendReceipt] off (read receipts disabled), the unread count resets but lastReadAt is not shared. */
+  suspend fun markRead(conversationId: String, me: String, sendReceipt: Boolean = true) {
     runCatching {
-      db.document("conversations/$conversationId/members/$me").update(
-        mapOf(
-          "lastReadAt" to FieldValue.serverTimestamp(),
-          "lastDeliveredAt" to FieldValue.serverTimestamp(),
-          "unreadCount" to 0,
-        ),
-      ).await()
+      val update = buildMap<String, Any> {
+        if (sendReceipt) put("lastReadAt", FieldValue.serverTimestamp())
+        put("lastDeliveredAt", FieldValue.serverTimestamp())
+        put("unreadCount", 0)
+      }
+      db.document("conversations/$conversationId/members/$me").update(update).await()
     }
   }
+
+  /** Up to [limit] newest messages, oldest first, for a chat export (one read per message). */
+  suspend fun exportMessages(conversationId: String, limit: Int): List<Message> =
+    db.collection("conversations/$conversationId/messages")
+      .orderBy("createdAt", Query.Direction.DESCENDING)
+      .limit(limit.toLong())
+      .get().await()
+      .documents.map(::toMessage).reversed()
 
   suspend fun markDelivered(conversationId: String, me: String) {
     runCatching {

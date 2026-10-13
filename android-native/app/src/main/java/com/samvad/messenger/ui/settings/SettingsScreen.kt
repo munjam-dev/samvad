@@ -198,6 +198,12 @@ fun SettingsScreen(
           )
         }
         SwitchRow(
+          title = stringResource(R.string.settings_read_receipts),
+          body = stringResource(R.string.settings_read_receipts_body),
+          checked = prefs.readReceipts,
+          onChange = { v -> scope.launch { container.preferences.setReadReceipts(v) } },
+        )
+        SwitchRow(
           title = stringResource(R.string.settings_app_lock),
           body = stringResource(R.string.settings_app_lock_body),
           checked = prefs.appLockEnabled,

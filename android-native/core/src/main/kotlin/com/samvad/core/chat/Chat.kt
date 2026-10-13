@@ -99,11 +99,14 @@ object MessageRules {
     message.kind == "text" && message.senderId == me && !message.deleted && !message.pending &&
       nowMs - message.createdAt < EDIT_WINDOW_MS
 
-  /** Delivery state of one of my messages, from the other member's read/delivered marks. */
-  fun deliveryState(message: Message, other: MemberState?): DeliveryState = when {
+  /**
+   * Delivery state of one of my messages, from the other member's read/delivered marks. With my
+   * read receipts off I do not see theirs either ([showRead] false caps the state at delivered).
+   */
+  fun deliveryState(message: Message, other: MemberState?, showRead: Boolean = true): DeliveryState = when {
     message.failed -> DeliveryState.FAILED
     message.pending -> DeliveryState.SENDING
-    other?.lastReadAt != null && other.lastReadAt >= message.createdAt -> DeliveryState.READ
+    showRead && other?.lastReadAt != null && other.lastReadAt >= message.createdAt -> DeliveryState.READ
     other?.lastDeliveredAt != null && other.lastDeliveredAt >= message.createdAt -> DeliveryState.DELIVERED
     else -> DeliveryState.SENT
   }

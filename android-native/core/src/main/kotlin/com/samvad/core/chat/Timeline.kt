@@ -34,6 +34,7 @@ object Timeline {
     other: MemberState?,
     nowMs: Long,
     zone: ZoneId = ZoneId.systemDefault(),
+    showReadReceipts: Boolean = true,
   ): List<TimelineItem> {
     val out = ArrayList<TimelineItem>(messages.size + 8)
     var lastDay: String? = null
@@ -49,7 +50,7 @@ object Timeline {
       out += TimelineItem.Bubble(
         message = m,
         mine = mine,
-        delivery = if (mine) MessageRules.deliveryState(m, other) else null,
+        delivery = if (mine) MessageRules.deliveryState(m, other, showReadReceipts) else null,
         groupedWithPrevious = previous != null && previous.senderId == m.senderId &&
           m.createdAt - previous.createdAt < GROUP_WINDOW_MS,
         timeLabel = TimeLabels.clock(m.createdAt, zone),

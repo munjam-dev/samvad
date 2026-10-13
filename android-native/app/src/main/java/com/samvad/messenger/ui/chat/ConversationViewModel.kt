@@ -4,7 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.samvad.core.chat.ChatExport
 import com.samvad.core.chat.ChatList
+import com.samvad.core.chat.ExportLabels
+import kotlinx.coroutines.withContext
 import com.samvad.core.chat.Message
 import com.samvad.core.chat.MessageRules
 import com.samvad.core.chat.TextValidation
@@ -111,6 +114,10 @@ class ConversationViewModel(
   private val failed = MutableStateFlow(false)
   private val reload = MutableStateFlow(0)
 
+  /** My read-receipts setting: off means I neither send read marks nor see other people's. */
+  private val receipts: StateFlow<Boolean> = container.preferences.preferences.map { it.readReceipts }
+    .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
   private val _composer = MutableStateFlow(ComposerState())
   val composer: StateFlow<ComposerState> = _composer
 
@@ -128,8 +135,8 @@ class ConversationViewModel(
     chats.memberState(conversationId, otherUid),
     chats.memberState(conversationId, me),
     chats.profiles.map { it[otherUid] },
-    failed,
-  ) { p: MessagesPage, other, mine, profile, err ->
+    combine(failed, receipts) { f, r -> f to r },
+  ) { p: MessagesPage, other, mine, profile, (err, showRead) ->
     val title = profile?.displayName ?: ChatList.DELETED_ACCOUNT
     ConversationUiState(
       loading = false,
@@ -137,7 +144,7 @@ class ConversationViewModel(
       offline = p.fromCache,
       title = title,
       initials = ChatList.initials(title),
-      items = Timeline.build(p.messages, me, other, System.currentTimeMillis()).asReversed(),
+      items = Timeline.build(p.messages, me, other, System.currentTimeMillis(), showReadReceipts = showRead).asReversed(),
       hasMore = p.hasMore,
       muted = mine?.muted ?: false,
       pinned = mine?.pinned ?: false,
@@ -253,7 +260,24 @@ class ConversationViewModel(
     if (state.value.hasMore) limit.update { it + PAGE }
   }
 
-  fun markRead() = viewModelScope.launch { chats.markRead(conversationId, me) }
+  fun markRead() = viewModelScope.launch { chats.markRead(conversationId, me, sendReceipt = receipts.value) }
+
+  /**
+   * Writes the chat as text (newest [ChatExport.MAX_MESSAGES] messages, media described, not
+   * included) to the private exports cache, for the share sheet. Returns null on failure.
+   */
+  suspend fun exportChat(labels: ExportLabels, myName: String): File? = runCatching {
+    val messages = chats.exportMessages(conversationId, ChatExport.MAX_MESSAGES)
+    val names = mapOf(me to myName, otherUid to state.value.title)
+    withContext(Dispatchers.IO) {
+      val dir = File(app.cacheDir, "exports").apply { mkdirs() }
+      // Keep only the latest export on the device.
+      dir.listFiles()?.forEach { it.delete() }
+      File(dir, ChatExport.fileName(state.value.title)).apply {
+        writeText(ChatExport.format(messages, names, labels, java.time.ZoneId.systemDefault()))
+      }
+    }
+  }.getOrNull()
 
   fun onText(text: String) {
     _composer.update { it.copy(text = text, tooLong = text.length > MessageRules.MAX_LENGTH) }

@@ -26,6 +26,7 @@ data class AppPreferences(
   val lockTimeout: LockTimeout = LockTimeout.ONE_MINUTE,
   val secureScreen: Boolean = false,
   val notificationPreviews: Boolean = true,
+  val readReceipts: Boolean = true,
 )
 
 /** Local, non-sensitive preferences. Never stores verification IDs, codes or tokens. */
@@ -39,6 +40,7 @@ class PreferencesRepository(private val context: Context) {
   private val lockAfter = stringPreferencesKey("lock_timeout")
   private val secure = booleanPreferencesKey("secure_screen")
   private val previews = booleanPreferencesKey("notification_previews")
+  private val receipts = booleanPreferencesKey("read_receipts")
 
   val preferences: Flow<AppPreferences> = context.dataStore.data.map { p ->
     AppPreferences(
@@ -50,6 +52,7 @@ class PreferencesRepository(private val context: Context) {
       lockTimeout = p[lockAfter]?.let { runCatching { LockTimeout.valueOf(it) }.getOrNull() } ?: LockTimeout.ONE_MINUTE,
       secureScreen = p[secure] ?: false,
       notificationPreviews = p[previews] ?: true,
+      readReceipts = p[receipts] ?: true,
     )
   }
 
@@ -61,6 +64,7 @@ class PreferencesRepository(private val context: Context) {
   suspend fun setLockTimeout(value: LockTimeout) = context.dataStore.edit { it[lockAfter] = value.name }
   suspend fun setSecureScreen(enabled: Boolean) = context.dataStore.edit { it[secure] = enabled }
   suspend fun setNotificationPreviews(enabled: Boolean) = context.dataStore.edit { it[previews] = enabled }
+  suspend fun setReadReceipts(enabled: Boolean) = context.dataStore.edit { it[receipts] = enabled }
 
   /** Random per-install ID (lowercase UUID); no hardware identifiers. */
   suspend fun deviceId(): String {

@@ -189,6 +189,15 @@ describe('messages', () => {
     );
   });
 
+  it('a forwarded copy may be labelled forwarded: true, never false, and the label cannot be edited away', async () => {
+    await seedConversation();
+    const id = randomUUID();
+    await assertSucceeds(setDoc(doc(fsOf(A), `conversations/${CID}/messages/${id}`), newMessage(A, { forwarded: true })));
+    await assertFails(setDoc(doc(fsOf(A), `conversations/${CID}/messages/${randomUUID()}`), newMessage(A, { forwarded: false })));
+    await assertFails(setDoc(doc(fsOf(A), `conversations/${CID}/messages/${randomUUID()}`), newMessage(A, { forwarded: 'yes' })));
+    await assertFails(updateDoc(doc(fsOf(A), `conversations/${CID}/messages/${id}`), { forwarded: deleteField() }));
+  });
+
   it('non-members cannot read or write messages', async () => {
     await seedConversation();
     const id = randomUUID();

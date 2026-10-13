@@ -231,7 +231,7 @@ service cloud.firestore {
 
         allow create: if isMemberOf(cid)
           && isUuid(mid)
-          && request.resource.data.keys().hasOnly(['senderId', 'kind', 'text', 'replyTo', 'createdAt', 'deleted', 'reactions', 'media'])
+          && request.resource.data.keys().hasOnly(['senderId', 'kind', 'text', 'replyTo', 'createdAt', 'deleted', 'reactions', 'media', 'forwarded'])
           && request.resource.data.keys().hasAll(['senderId', 'kind', 'text', 'replyTo', 'createdAt'])
           && request.resource.data.senderId == request.auth.uid
           && (
@@ -248,6 +248,8 @@ service cloud.firestore {
           && request.resource.data.createdAt == request.time
           && request.resource.data.get('deleted', false) == false
           && request.resource.data.get('reactions', {}).size() == 0
+          // Phase 1.6: a forwarded copy is labelled; the flag can only be true and never changes.
+          && request.resource.data.get('forwarded', true) == true
           && notBlocked(cid);
 
         function notDeletedMessage() {

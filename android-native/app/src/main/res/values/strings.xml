@@ -315,4 +315,18 @@
     <string name="notif_channel_security_desc">Important changes to your account\'s security</string>
     <string name="notif_security_title">Security alert</string>
     <string name="notif_two_step_reset">Someone asked to reset your two-step verification. If it wasn\'t you, just open Samvad: that cancels it.</string>
+    <!-- Phase 1.6: export chat, read receipts -->
+    <string name="export_chat">Export chat</string>
+    <string name="export_body">Creates a text file of this chat (up to the latest 5,000 messages) that you can share or save, for example to Google Drive. Photos, voice notes and files are not included. Anyone with the file can read it.</string>
+    <string name="export_confirm">Export</string>
+    <string name="export_header">Samvad chat with %1$s. Photos, voice notes and files are not included.</string>
+    <string name="export_photo">Photo</string>
+    <string name="export_voice">Voice message</string>
+    <string name="export_file">File</string>
+    <string name="export_edited">(edited)</string>
+    <string name="export_unknown">Deleted account</string>
+    <string name="export_failed">Couldn\'t export this chat. Try again.</string>
+    <string name="export_share_title">Save or share chat</string>
+    <string name="settings_read_receipts">Read receipts</string>
+    <string name="settings_read_receipts_body">When off, others won\'t see when you\'ve read their messages, and you won\'t see theirs.</string>
 </resources>
