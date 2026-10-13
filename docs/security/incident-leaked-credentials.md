@@ -1,5 +1,8 @@
 # Incident runbook: credentials committed to git
 
+> **Update 2026-10-13:** all legacy files named below (`backend/`, `lib/`, `android/`, `PRODUCTION_SETUP.md`) were removed from the working tree. They are still in git history (inspect with `git show 8a88c5b:<path>`), so **rotation is still required**; the history purge in the last step remains optional.
+
+
 Status: open. Created 2026-10-09. Contains no secret values and must stay that way.
 
 ## What was found

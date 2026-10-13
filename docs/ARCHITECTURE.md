@@ -1,52 +1,29 @@
 # Samvad Messenger (संवाद) — Stack and Architecture
 
-Last updated: 2026-10-09 (revised: backend-first order)
+Last updated: 2026-10-13 (legacy code removed; B1, B2 and the Android client built)
 
-This document describes two things and keeps them apart:
+This document has two parts:
 
-- **Part A — What exists in the repository today** (verified by inspection).
-- **Part B — The target architecture** (planned; nothing in Part B is built yet, and nothing here claims it works).
+- **Part A — What is in the repository today.**
+- **Part B — The target architecture.** Sub-projects B1, B2 and the Android client foundation are built; the rest of Part B is planned.
 
-Exact library versions are intentionally not listed. They are resolved together (AGP, Kotlin, Compose BOM, Hilt, Firebase BoM, and so on) when each implementation plan is written, and then recorded in `android-native/gradle/libs.versions.toml`.
-
-Detailed designs live in `docs/superpowers/specs/`. The first one is `2026-10-09-foundation-auth-design.md`.
+Exact library versions live in `android-native/gradle/libs.versions.toml`, `firebase/package.json` and `firebase/functions/package.json`.
+Detailed designs live in `docs/superpowers/specs/`. Current status and the release checklist: `docs/IMPLEMENTATION_STATUS.md`.
 
 ---
 
 ## Part A — What is in the repository today
 
-### A.1 Overview
+| Area | Technology | Location |
+|---|---|---|
+| Android app | Kotlin, Jetpack Compose, Material 3; `:core` pure-Kotlin module + `:app` | `android-native/` |
+| Backend | Firebase: Auth (phone), Firestore rules, Cloud Functions (TypeScript), Emulator Suite tests | `firebase/` |
+| CI | GitHub Actions: emulator tests + log-hygiene check, `:core` tests, `:app` build/unit tests/lint | `.github/workflows/samvad-ci.yml` |
+| Docs | Specs, plans, security runbook, status | `docs/` |
 
-| Area | Technology | Location | Status |
-|---|---|---|---|
-| Mobile app | Flutter / Dart (about 3.8k lines) | `lib/`, `android/`, `ios/`, `web/`, `linux/`, `macos/`, `windows/` | Exists. Build status unverified. |
-| App data layer | Supabase (`supabase_flutter`) | `lib/samvad_app.dart`, `lib/screens/chat_list_screen.dart`, `lib/screens/chat_screen.dart`, `supabase/` | Exists. Legacy. |
-| Custom backend | Node.js, Express, Socket.io, MongoDB (Mongoose), JWT, bcrypt | `backend/` | Exists. Legacy. |
-| Firebase | Only `firebase_core`, `firebase_messaging`, `flutter_local_notifications` in `pubspec.yaml` | none | No Firebase project config in the repo. |
-| CI / build services | GitHub Actions, GitLab CI, Bitrise, Codemagic, AppCenter | `.github/workflows/build.yml`, `.gitlab-ci.yml`, `bitrise.yml`, `codemagic.yaml`, `appcenter.json` | Flutter-oriented. |
-| Docs | Many ad-hoc APK build guides | repo root `*.md`, `*.bat` | Legacy. |
-| New specs and runbooks | Markdown | `docs/` | Added during this work. |
+The legacy Flutter app, the Node/Express/MongoDB and Supabase backends, the unrelated AI Studio "Sanraksha" vault app and the Flutter-era CI configs and build guides were removed on 2026-10-13. They remain in git history.
 
-### A.2 Flutter app
-
-- **Screens** (`lib/screens/`): splash, login, chat list, chat, profile, settings.
-- **Entry points:** `lib/main.dart`, `lib/main_simple.dart`, `lib/samvad_app.dart`, `lib/zingify_app.dart` (the app was renamed from Zingify to Samvad; the rename is unfinished in the working tree).
-- **Notable packages:** `flutter_animate`, `google_fonts`, `shimmer`, `shared_preferences`, `flutter_secure_storage`, `http`, `permission_handler`, `flutter_contacts`, `image_picker`, `file_picker`, `emoji_picker_flutter`, `country_picker`, `supabase_flutter`, `firebase_core`, `firebase_messaging`, `flutter_local_notifications`, `device_info_plus`, `rxdart`, `uuid`.
-- **Package IDs in use (inconsistent):** `com.example.samvad_messenger` (Gradle), `com.samvad.messenger` (staged `MainActivity.kt`), `com.example.zingify_mobile_new` (old).
-- **Android build:** Gradle Kotlin DSL with the Flutter Gradle plugin; wrapper pinned to Gradle 8.14.
-
-### A.3 Legacy backend (`backend/`)
-
-- `server.js` (about 260 lines): Express + Socket.io + Mongoose + JWT.
-- Deployment files: `Dockerfile`, `Procfile`, `heroku.yml`, `healthcheck.js`.
-- Not part of the target architecture.
-
-### A.4 Known problems in the current repo
-
-- Credentials are tracked in git (details in `docs/security/incident-leaked-credentials.md`; no values are reproduced).
-- 73 uncommitted working-tree changes from a half-finished rename. They are preserved and must not be reset or discarded.
-- Only JDK 8 is installed and `JAVA_HOME` is unset, so a modern Android Gradle Plugin cannot run.
-- No Firebase configuration, security rules or tests for any of the above.
+**Still open from the legacy code:** credentials that were committed earlier (including `backend/.env`) are still in git history and must be rotated — see `docs/security/incident-leaked-credentials.md`. Removing the files from the tree does not remove them from history.
 
 ---
 
@@ -91,7 +68,7 @@ Detailed designs live in `docs/superpowers/specs/`. The first one is `2026-10-09
   Local dev/test: Firebase Emulator Suite
 ```
 
-### B.3 Android application stack (later phase, not started)
+### B.3 Android application stack
 
 | Layer | Technology |
 |---|---|

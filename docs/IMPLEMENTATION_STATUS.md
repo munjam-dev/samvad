@@ -41,7 +41,8 @@ Groups (B3/A3), media and voice notes (B4/A4), presence, typing and push notific
 
 ## Release-readiness checklist
 
-- [ ] Rotate the leaked legacy credentials; remove `backend/.env` from the repo (`docs/security/incident-leaked-credentials.md`).
+- [x] Remove the legacy code (Flutter, Node/Mongo, Supabase, Sanraksha, old CI) and `backend/.env` from the working tree (2026-10-13).
+- [ ] **Rotate the leaked legacy credentials** — they remain in git history (`docs/security/incident-leaked-credentials.md`); optionally purge history afterwards.
 - [x] Build `:app` with the SDK and pass lint (CI run #3).
 - [ ] Run `connectedDebugAndroidTest` on an emulator/device.
 - [ ] Manual pass against the emulators: sign-in, profile, two users chatting offline/online, retry, edit/delete, read receipts, delete account.
