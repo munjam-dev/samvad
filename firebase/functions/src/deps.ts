@@ -53,10 +53,14 @@ export const fcmPushSender: PushSender = {
   },
 };
 
-/** The project's default Realtime Database URL (FIREBASE_CONFIG in Functions, derived elsewhere). */
+/**
+ * The project's default Realtime Database URL (FIREBASE_CONFIG in Functions, derived elsewhere).
+ * The Functions emulator passes the legacy "<project>.firebaseio.com" URL, a different emulator
+ * namespace from the default instance that the app and the rules use, so it is ignored there.
+ */
 export function databaseUrl(env: NodeJS.ProcessEnv = process.env): string {
   const cfg = env.FIREBASE_CONFIG ? JSON.parse(env.FIREBASE_CONFIG) : {};
-  if (cfg.databaseURL) return cfg.databaseURL;
+  if (cfg.databaseURL && env.FUNCTIONS_EMULATOR !== 'true') return cfg.databaseURL;
   const project = cfg.projectId ?? env.GCLOUD_PROJECT ?? 'demo-samvad';
   return `https://${project}-default-rtdb.firebaseio.com`;
 }

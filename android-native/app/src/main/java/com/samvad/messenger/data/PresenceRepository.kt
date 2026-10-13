@@ -6,10 +6,13 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ServerValue
 import com.google.firebase.database.ValueEventListener
 import com.samvad.core.presence.Presence
+import kotlin.math.min
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 /**
@@ -79,17 +82,41 @@ class PresenceRepository(private val rtdb: FirebaseDatabase) {
     rtdb.getReference("privacy/$uid/hideLastSeen").setValue(if (hide) true else null).await()
   }
 
+  /**
+   * A denied listen is cancelled for good, but access can arrive later: the membership mirror is
+   * written by a trigger just after a chat is created, and blocks or privacy can be lifted. So a
+   * cancelled listener is re-attached with backoff for as long as the flow is collected.
+   */
   private fun <T> valueFlow(path: String, map: (DataSnapshot) -> T?): Flow<T?> = callbackFlow {
     val ref = rtdb.getReference(path)
-    val listener = object : ValueEventListener {
-      override fun onDataChange(snapshot: DataSnapshot) {
-        trySend(if (snapshot.exists()) map(snapshot) else null)
+    var listener: ValueEventListener? = null
+    var failures = 0
+
+    fun attach() {
+      val l = object : ValueEventListener {
+        override fun onDataChange(snapshot: DataSnapshot) {
+          failures = 0
+          trySend(if (snapshot.exists()) map(snapshot) else null)
+        }
+        override fun onCancelled(error: DatabaseError) {
+          trySend(null)
+          val wait = min(RETRY_MAX_MS, RETRY_BASE_MS shl min(failures++, 6))
+          launch {
+            delay(wait)
+            attach()
+          }
+        }
       }
-      override fun onCancelled(error: DatabaseError) {
-        trySend(null)
-      }
+      listener = l
+      ref.addValueEventListener(l)
     }
-    ref.addValueEventListener(listener)
-    awaitClose { ref.removeEventListener(listener) }
+
+    attach()
+    awaitClose { listener?.let(ref::removeEventListener) }
+  }
+
+  private companion object {
+    const val RETRY_BASE_MS = 1_000L
+    const val RETRY_MAX_MS = 60_000L
   }
 }

@@ -19,6 +19,15 @@ describe('RTDB membership mirror', () => {
     );
   });
 
+  it('uses the default instance in the Functions emulator, where clients and rules live', () => {
+    // The emulator passes the legacy "<project>.firebaseio.com" URL in FIREBASE_CONFIG.
+    const env = {
+      FUNCTIONS_EMULATOR: 'true',
+      FIREBASE_CONFIG: JSON.stringify({ projectId: 'demo-samvad', databaseURL: 'https://demo-samvad.firebaseio.com' }),
+    };
+    expect(databaseUrl(env)).toBe('https://demo-samvad-default-rtdb.firebaseio.com');
+  });
+
   it('mirrors members and is idempotent', async () => {
     await mirrorMembers(deps, 'alice_bob', ['alice', 'bob']);
     await mirrorMembers(deps, 'alice_bob', ['alice', 'bob']);
