@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Samvad</string>
+    <string name="brand_devanagari">संवाद</string>
+    <string name="cd_samvad_mark">Samvad</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_get_started">Get started</string>
+    <string name="onboarding_1_title">Your conversations, connected.</string>
+    <string name="onboarding_1_body">Chat with the people who matter — fast, calm and in your language.</string>
+    <string name="onboarding_2_title">Private by design</string>
+    <string name="onboarding_2_body">Your phone number stays private. Only the people you chat with see your name and about.</string>
+    <string name="onboarding_3_title">Made for every day</string>
+    <string name="onboarding_3_body">Light, dark and true-black themes, readable at any text size, gentle on battery and data.</string>
+    <string name="onboarding_page">Page %1$d of %2$d</string>
+
+    <!-- Phone -->
+    <string name="phone_title">Your phone number</string>
+    <string name="phone_body">We\'ll text you a 6-digit code to confirm it\'s you. Carrier rates may apply.</string>
+    <string name="phone_country">Country</string>
+    <string name="phone_number">Mobile number</string>
+    <string name="phone_valid">Valid mobile number</string>
+    <string name="phone_invalid">Enter a valid mobile number</string>
+    <string name="phone_not_mobile">This looks like a landline. Use a mobile number.</string>
+    <string name="phone_consent">I agree to the Terms of Service and acknowledge the Privacy Policy.</string>
+    <string name="phone_terms">Terms of Service</string>
+    <string name="phone_privacy">Privacy Policy</string>
+    <string name="phone_send_code">Send code</string>
+    <string name="phone_search_country">Search countries</string>
+    <string name="cd_back">Back</string>
+
+    <!-- OTP -->
+    <string name="otp_title">Enter the code</string>
+    <string name="otp_sent_to">Sent to %1$s</string>
+    <string name="otp_wrong_number">Wrong number?</string>
+    <string name="otp_label">6-digit code</string>
+    <string name="otp_auto">Waiting to read the SMS automatically…</string>
+    <string name="otp_didnt_get">Didn\'t get it?</string>
+    <string name="otp_resend">Resend code</string>
+    <string name="otp_resend_in">Resend in %1$s</string>
+    <string name="otp_resends_left">%1$d resends left</string>
+    <string name="otp_verify">Verify</string>
+    <string name="otp_attempts_left">%1$d attempts left</string>
+
+    <!-- Auth errors -->
+    <string name="error_invalid_number">That phone number isn\'t valid.</string>
+    <string name="error_invalid_code">That code isn\'t right. Check the SMS and try again.</string>
+    <string name="error_code_expired">This code has expired. Request a new one.</string>
+    <string name="error_too_many">Too many attempts. Please wait a while before trying again.</string>
+    <string name="error_network">You\'re offline. Check your connection and try again.</string>
+    <string name="error_app_verification">We couldn\'t verify this app. Update Samvad and try again.</string>
+    <string name="error_user_disabled">This account has been disabled.</string>
+    <string name="error_new_code_required">Too many wrong codes. Request a new code.</string>
+    <string name="error_unknown">Something went wrong. Please try again.</string>
+    <string name="error_hourly_limit">You\'ve asked for several codes for this number. Try again in an hour.</string>
+    <string name="error_resend_limit">Resend limit reached. Go back and request a new code.</string>
+
+    <!-- Profile setup -->
+    <string name="setup_step">Step %1$d of %2$d</string>
+    <string name="setup_name_title">What should we call you?</string>
+    <string name="setup_name_hint">Your name</string>
+    <string name="setup_name_help">Shown to people you chat with. Up to 64 characters.</string>
+    <string name="setup_about_title">Add a short about</string>
+    <string name="setup_about_hint">e.g. Tending the balcony garden</string>
+    <string name="setup_about_help">Optional · up to 140 characters</string>
+    <string name="setup_finish">Start chatting</string>
+    <string name="setup_skip">Skip</string>
+
+    <!-- Home -->
+    <string name="home_search">Search chats, people, groups</string>
+    <string name="home_headline">Your conversations, connected.</string>
+    <string name="home_all_caught_up">All caught up</string>
+    <string name="home_unread_summary">%1$d unread in %2$d chats</string>
+    <string name="home_recent">Recent chats</string>
+    <string name="home_pinned">Pinned</string>
+    <string name="filter_all">All</string>
+    <string name="filter_unread">Unread</string>
+    <string name="filter_groups">Groups</string>
+    <string name="filter_favorites">Favorites</string>
+    <string name="cd_search">Search</string>
+    <string name="cd_notifications">Notifications</string>
+    <string name="cd_profile">Your profile</string>
+    <string name="cd_new_chat">New chat</string>
+    <string name="cd_more">More options</string>
+    <string name="cd_pinned">Pinned</string>
+    <string name="cd_muted">Muted</string>
+    <string name="cd_online">Online</string>
+    <string name="cd_read">Read</string>
+    <string name="cd_unread_count">%1$d unread messages</string>
+    <string name="home_empty_title">Start your first conversation</string>
+    <string name="home_empty_body">Find friends who already use Samvad, or invite someone new.</string>
+    <string name="home_empty_cta">Find people</string>
+    <string name="home_filter_empty">Nothing here yet</string>
+    <string name="home_offline">You\'re offline. Showing saved chats.</string>
+    <string name="home_load_error">Couldn\'t load your chats.</string>
+    <string name="retry">Retry</string>
+    <string name="nav_chats">Chats</string>
+    <string name="nav_calls">Calls</string>
+    <string name="nav_communities">Communities</string>
+    <string name="nav_settings">Settings</string>
+    <string name="search_hint">Search chats</string>
+    <string name="search_no_results">No chats match \"%1$s\"</string>
+
+    <!-- Coming soon tabs (honest empty states, no mock data) -->
+    <string name="calls_title">Calls</string>
+    <string name="calls_body">Voice and video calling is being built. It will appear here when it\'s ready.</string>
+    <string name="communities_title">Communities</string>
+    <string name="communities_body">Communities and channels are on the way. Group chats arrive first.</string>
+
+    <!-- Conversation -->
+    <string name="chat_message_hint">Message</string>
+    <string name="cd_send">Send</string>
+    <string name="cd_attach">Attach</string>
+    <string name="cd_emoji">Emoji</string>
+    <string name="chat_online">online</string>
+    <string name="chat_today">Today</string>
+    <string name="chat_edited">edited</string>
+    <string name="chat_deleted">This message was deleted</string>
+    <string name="chat_reply">Reply</string>
+    <string name="chat_copy">Copy</string>
+    <string name="chat_edit">Edit</string>
+    <string name="chat_delete">Delete for everyone</string>
+    <string name="chat_react">React</string>
+    <string name="chat_retry">Not sent · Tap to retry</string>
+    <string name="chat_replying_to">Replying to %1$s</string>
+    <string name="chat_editing">Editing message</string>
+    <string name="chat_cancel">Cancel</string>
+    <string name="chat_you">You</string>
+    <string name="chat_empty">Say hello to %1$s 👋</string>
+    <string name="chat_too_long">Messages can be up to 4096 characters.</string>
+    <string name="chat_scroll_latest">Jump to latest</string>
+    <string name="chat_attachments_soon">Photos, files and voice notes arrive with the media update.</string>
+    <string name="cd_delivery_sending">Sending</string>
+    <string name="cd_delivery_sent">Sent</string>
+    <string name="cd_delivery_delivered">Delivered</string>
+    <string name="cd_delivery_read">Read</string>
+    <string name="cd_delivery_failed">Not sent</string>
+    <string name="chat_copied">Copied</string>
+    <string name="chat_mute">Mute</string>
+    <string name="chat_unmute">Unmute</string>
+    <string name="chat_pin">Pin</string>
+    <string name="chat_unpin">Unpin</string>
+    <string name="chat_archive">Archive</string>
+
+    <!-- New chat -->
+    <string name="newchat_title">New chat</string>
+    <string name="newchat_permission_title">Find friends on Samvad</string>
+    <string name="newchat_permission_body">Samvad checks your contacts\' phone numbers against Samvad accounts so you can start chatting. Numbers are sent securely for matching and are not stored or shown to anyone.</string>
+    <string name="newchat_permission_allow">Allow access to contacts</string>
+    <string name="newchat_permission_denied">Contacts access is off. You can still start a chat by number.</string>
+    <string name="newchat_by_number">Start a chat by number</string>
+    <string name="newchat_number_hint">Phone number with country code</string>
+    <string name="newchat_search">Search contacts</string>
+    <string name="newchat_on_samvad">On Samvad</string>
+    <string name="newchat_none">None of your contacts use Samvad yet.</string>
+    <string name="newchat_not_found">That number isn\'t on Samvad yet.</string>
+    <string name="newchat_invite">Invite</string>
+    <string name="newchat_invite_text">Let\'s chat on Samvad — a calm, private messenger.</string>
+    <string name="newchat_limit">Lookup limit reached for today. Try again tomorrow.</string>
+    <string name="newchat_start">Chat</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_edit_profile">Edit profile</string>
+    <string name="settings_account">Account</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_system">System default</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_theme_amoled">True black</string>
+    <string name="settings_home_layout">Home layout</string>
+    <string name="settings_layout_clean">Clean</string>
+    <string name="settings_layout_bold">Bold header</string>
+    <string name="settings_layout_bento">Card &amp; bento</string>
+    <string name="settings_privacy">Privacy &amp; security</string>
+    <string name="settings_privacy_body">Your phone number is visible only to you. Messages are protected in transit and at rest by Firebase; Samvad does not yet offer end-to-end encryption.</string>
+    <string name="settings_help">Help &amp; feedback</string>
+    <string name="settings_sign_out">Sign out</string>
+    <string name="settings_sign_out_all">Sign out of all devices</string>
+    <string name="settings_sign_out_all_body">Ends every session, including this one. Sessions on other devices may take up to an hour to expire.</string>
+    <string name="settings_signed_out_all">Signed out everywhere.</string>
+    <string name="settings_delete">Delete account</string>
+    <string name="settings_delete_body">This permanently deletes your profile and leaves all chats. Messages you sent stay with the people you sent them to. You\'ll confirm with a fresh SMS code.</string>
+    <string name="settings_delete_confirm">Delete my account</string>
+    <string name="settings_cooldown">Please wait a minute before trying again.</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="profile_name">Name</string>
+    <string name="profile_about">About</string>
+    <string name="profile_phone">Phone</string>
+    <string name="profile_saved">Profile saved</string>
+
+    <!-- Setup required -->
+    <string name="setup_required_title">Firebase setup required</string>
+    <string name="setup_required_body">This build has no Firebase configuration. Add app/google-services.json for your project, or build a debug version with -Psamvad.useEmulators=true.</string>
+</resources>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Samvad pinwheel mark: seven concave petals around an open centre. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group android:translateX="23.00" android:translateY="23.00" android:scaleX="0.62" android:scaleY="0.62">
+        <group android:rotation="0.0" android:pivotX="50" android:pivotY="50">
+            <path android:pathData="M48,33C42,27.5 36,23.5 28.5,20.5C38,17.5 48,12.5 58.5,5C57.5,15.5 53.5,25 48,33Z" android:fillColor="#FFFFFFFF" android:strokeColor="#FFFFFFFF" android:strokeWidth="2.4" android:strokeLineJoin="round" />
+        </group>
+        <group android:rotation="51.43" android:pivotX="50" android:pivotY="50">
+            <path android:pathData="M48,33C42,27.5 36,23.5 28.5,20.5C38,17.5 48,12.5 58.5,5C57.5,15.5 53.5,25 48,33Z" android:fillColor="#FFFFFFFF" android:strokeColor="#FFFFFFFF" android:strokeWidth="2.4" android:strokeLineJoin="round" />
+        </group>
+        <group android:rotation="102.86" android:pivotX="50" android:pivotY="50">
+            <path android:pathData="M48,33C42,27.5 36,23.5 28.5,20.5C38,17.5 48,12.5 58.5,5C57.5,15.5 53.5,25 48,33Z" android:fillColor="#FFFFFFFF" android:strokeColor="#FFFFFFFF" android:strokeWidth="2.4" android:strokeLineJoin="round" />
+        </group>
+        <group android:rotation="154.29" android:pivotX="50" android:pivotY="50">
+            <path android:pathData="M48,33C42,27.5 36,23.5 28.5,20.5C38,17.5 48,12.5 58.5,5C57.5,15.5 53.5,25 48,33Z" android:fillColor="#FFFFFFFF" android:strokeColor="#FFFFFFFF" android:strokeWidth="2.4" android:strokeLineJoin="round" />
+        </group>
+        <group android:rotation="205.71" android:pivotX="50" android:pivotY="50">
+            <path android:pathData="M48,33C42,27.5 36,23.5 28.5,20.5C38,17.5 48,12.5 58.5,5C57.5,15.5 53.5,25 48,33Z" android:fillColor="#FFFFFFFF" android:strokeColor="#FFFFFFFF" android:strokeWidth="2.4" android:strokeLineJoin="round" />
+        </group>
+        <group android:rotation="257.14" android:pivotX="50" android:pivotY="50">
+            <path android:pathData="M48,33C42,27.5 36,23.5 28.5,20.5C38,17.5 48,12.5 58.5,5C57.5,15.5 53.5,25 48,33Z" android:fillColor="#FFFFFFFF" android:strokeColor="#FFFFFFFF" android:strokeWidth="2.4" android:strokeLineJoin="round" />
+        </group>
+        <group android:rotation="308.57" android:pivotX="50" android:pivotY="50">
+            <path android:pathData="M48,33C42,27.5 36,23.5 28.5,20.5C38,17.5 48,12.5 58.5,5C57.5,15.5 53.5,25 48,33Z" android:fillColor="#FFFFFFFF" android:strokeColor="#FFFFFFFF" android:strokeWidth="2.4" android:strokeLineJoin="round" />
+        </group>
+    </group>
+</vector>
