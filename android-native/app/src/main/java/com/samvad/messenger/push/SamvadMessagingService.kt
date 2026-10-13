@@ -7,7 +7,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 /** Receives the backend's data-only pushes and keeps this install's FCM token current. */
 class SamvadMessagingService : FirebaseMessagingService() {
@@ -18,7 +20,10 @@ class SamvadMessagingService : FirebaseMessagingService() {
     if (data["type"] != "message") return
     val cid = data["cid"] ?: return
     val sender = data["senderId"] ?: return
-    Notifications.showMessage(this, cid, sender, data["title"].orEmpty(), data["body"].orEmpty())
+    // onMessageReceived runs on a background thread, so a short blocking read of the settings is fine.
+    val prefs = (application as SamvadApplication).container.preferences
+    val showPreview = runCatching { runBlocking { prefs.preferences.first().notificationPreviews } }.getOrDefault(false)
+    Notifications.showMessage(this, cid, sender, data["title"].orEmpty(), data["body"].orEmpty(), showPreview)
   }
 
   override fun onNewToken(token: String) {

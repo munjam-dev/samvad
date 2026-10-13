@@ -62,6 +62,17 @@ object ConversationIds {
   }
 
   fun otherMember(conversation: Conversation, me: String): String? = conversation.members.firstOrNull { it != me }
+
+  private val UID = Regex("^[A-Za-z0-9]{1,128}$")
+
+  /**
+   * Whether [conversationId] is a well-formed direct chat ID that includes [otherUid]. Used to
+   * validate chat links arriving in intents before navigating (rules still guard the data).
+   */
+  fun isDirectWith(conversationId: String, otherUid: String): Boolean {
+    val parts = conversationId.split('_')
+    return parts.size == 2 && parts[0] < parts[1] && parts.all(UID::matches) && otherUid in parts
+  }
 }
 
 sealed interface TextValidation {

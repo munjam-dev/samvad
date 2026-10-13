@@ -1,6 +1,9 @@
 package com.samvad.messenger.ui.settings
 
 import androidx.activity.compose.LocalActivity
+import androidx.fragment.app.FragmentActivity
+import com.samvad.core.security.LockTimeout
+import com.samvad.messenger.security.BiometricGate
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -45,6 +48,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,6 +59,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -95,6 +100,10 @@ fun SettingsScreen(container: AppContainer, me: String, onBack: () -> Unit, onSi
   val msgSignedOutAll = stringResource(R.string.settings_signed_out_all)
   val msgCooldown = stringResource(R.string.settings_cooldown)
   val msgError = stringResource(R.string.error_unknown)
+  val msgNoScreenLock = stringResource(R.string.settings_app_lock_unavailable)
+  val lockTitle = stringResource(R.string.lock_prompt_title)
+  val lockSubtitle = stringResource(R.string.lock_prompt_subtitle)
+  val activity = LocalActivity.current
 
   Column(Modifier.fillMaxSize().background(colors.background)) {
     Column(
@@ -147,36 +156,65 @@ fun SettingsScreen(container: AppContainer, me: String, onBack: () -> Unit, onSi
 
       Group(stringResource(R.string.settings_notifications)) {
         ActionRow(Icons.Outlined.Notifications, stringResource(R.string.settings_notifications), onClick = {
+          container.appLock.expectExternal()
           context.startActivity(
             android.content.Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
               .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.packageName),
           )
         })
+        SwitchRow(
+          title = stringResource(R.string.settings_previews),
+          body = stringResource(R.string.settings_previews_body),
+          checked = prefs.notificationPreviews,
+          onChange = { v -> scope.launch { container.preferences.setNotificationPreviews(v) } },
+        )
       }
 
       Group(stringResource(R.string.settings_privacy)) {
         val presenceRepo = container.presence
         if (presenceRepo != null) {
           val hidden = remember { presenceRepo.hideLastSeen(me) }.collectAsStateWithLifecycle(false).value
-          Row(
-            Modifier
-              .fillMaxWidth()
-              .toggleable(hidden, role = Role.Switch, onValueChange = { v -> scope.launch { runCatching { presenceRepo.setHideLastSeen(me, v) } } })
-              .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-          ) {
-            Column(Modifier.weight(1f)) {
-              Text(stringResource(R.string.settings_hide_last_seen), style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
-              Text(stringResource(R.string.settings_hide_last_seen_body), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
+          SwitchRow(
+            title = stringResource(R.string.settings_hide_last_seen),
+            body = stringResource(R.string.settings_hide_last_seen_body),
+            checked = hidden,
+            onChange = { v -> scope.launch { runCatching { presenceRepo.setHideLastSeen(me, v) } } },
+          )
+        }
+        SwitchRow(
+          title = stringResource(R.string.settings_app_lock),
+          body = stringResource(R.string.settings_app_lock_body),
+          checked = prefs.appLockEnabled,
+          onChange = { v ->
+            val host = activity as? FragmentActivity
+            when {
+              host == null -> Unit
+              v && !BiometricGate.available(context) -> scope.launch { snackbar.showSnackbar(msgNoScreenLock) }
+              // Turning it on or off both need the owner's fingerprint, face or screen lock.
+              else -> BiometricGate.prompt(host, container.appLock, lockTitle, lockSubtitle) { ok ->
+                if (ok) scope.launch { container.preferences.setAppLock(v) }
+              }
             }
-            Switch(
-              checked = hidden,
-              onCheckedChange = null,
-              colors = SwitchDefaults.colors(checkedTrackColor = colors.primary, checkedThumbColor = colors.onPrimary),
-            )
+          },
+        )
+        androidx.compose.animation.AnimatedVisibility(visible = prefs.appLockEnabled) {
+          Column {
+            Text(stringResource(R.string.settings_lock_after), style = MaterialTheme.typography.titleSmall, color = colors.onSurfaceVariant, modifier = Modifier.padding(start = 16.dp, top = 4.dp))
+            listOf(
+              LockTimeout.IMMEDIATELY to R.string.settings_lock_immediately,
+              LockTimeout.ONE_MINUTE to R.string.settings_lock_one_minute,
+              LockTimeout.THIRTY_MINUTES to R.string.settings_lock_thirty_minutes,
+            ).forEach { (value, label) ->
+              RadioRow(stringResource(label), prefs.lockTimeout == value) { scope.launch { container.preferences.setLockTimeout(value) } }
+            }
           }
         }
+        SwitchRow(
+          title = stringResource(R.string.settings_block_screenshots),
+          body = stringResource(R.string.settings_block_screenshots_body),
+          checked = prefs.secureScreen,
+          onChange = { v -> scope.launch { container.preferences.setSecureScreen(v) } },
+        )
         if (container.safety != null) {
           ActionRow(Icons.Outlined.Block, stringResource(R.string.settings_blocked), onClick = onOpenBlocked)
         }
@@ -247,7 +285,10 @@ fun SettingsScreen(container: AppContainer, me: String, onBack: () -> Unit, onSi
     AlertDialog(
       onDismissRequest = { confirmDelete = false },
       title = { Text(stringResource(R.string.settings_delete)) },
-      text = { Text(stringResource(R.string.settings_delete_body)) },
+      text = {
+        ObscuredTouchGuard()
+        Text(stringResource(R.string.settings_delete_body))
+      },
       confirmButton = {
         TextButton({ confirmDelete = false; reauthing = true }) {
           Text(stringResource(R.string.settings_delete_confirm), color = colors.error)
@@ -347,5 +388,43 @@ private fun ActionRow(icon: ImageVector, label: String, danger: Boolean = false,
   ) {
     Icon(icon, null, tint = if (danger) colors.error else colors.onPrimaryContainer)
     Text(label, style = MaterialTheme.typography.bodyLarge, color = if (danger) colors.error else colors.onSurface)
+  }
+}
+
+@Composable
+private fun SwitchRow(title: String, body: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+  val colors = SamvadTheme.colors
+  Row(
+    Modifier
+      .fillMaxWidth()
+      .toggleable(checked, role = Role.Switch, onValueChange = onChange)
+      .padding(horizontal = 16.dp, vertical = 12.dp),
+    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.spacedBy(14.dp),
+  ) {
+    Column(Modifier.weight(1f)) {
+      Text(title, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
+      Text(body, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
+    }
+    Switch(
+      checked = checked,
+      onCheckedChange = null,
+      colors = SwitchDefaults.colors(checkedTrackColor = colors.primary, checkedThumbColor = colors.onPrimary),
+    )
+  }
+}
+
+/**
+ * Tapjacking guard for irreversible confirmations: while shown, its window ignores touches that pass
+ * through another app's overlay. Not applied app-wide, because screen-dimmer apps would block all input.
+ */
+@Composable
+private fun ObscuredTouchGuard() {
+  val view = LocalView.current
+  DisposableEffect(view) {
+    val root = view.rootView
+    val previous = root.filterTouchesWhenObscured
+    root.filterTouchesWhenObscured = true
+    onDispose { root.filterTouchesWhenObscured = previous }
   }
 }

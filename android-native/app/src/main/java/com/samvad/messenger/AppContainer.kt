@@ -11,6 +11,10 @@ import com.samvad.messenger.data.PresenceRepository
 import com.samvad.messenger.data.MediaRepository
 import com.samvad.messenger.data.SafetyRepository
 import com.samvad.messenger.push.PushTokens
+import com.samvad.messenger.security.AppLock
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 
 /**
  * Manual dependency container. A DI framework (Hilt) is deferred until the build can be verified
@@ -18,6 +22,7 @@ import com.samvad.messenger.push.PushTokens
  */
 class AppContainer(context: Context) {
   val preferences = PreferencesRepository(context)
+  val appLock = AppLock(preferences, CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate))
   val firebase: FirebaseServices? = FirebaseServices.create(context)
 
   val auth: AuthRepository? = firebase?.let { AuthRepository(it.auth) }

@@ -42,8 +42,19 @@ object Notifications {
       (android.os.Build.VERSION.SDK_INT < 33 ||
         ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED)
 
-  /** One notification per conversation; a newer message replaces the older one. */
-  fun showMessage(context: Context, conversationId: String, senderId: String, title: String, body: String) {
+  /**
+   * One notification per conversation; a newer message replaces the older one. With [showPreview]
+   * off, only "New message" is shown. On a secure lock screen only the public version (no sender,
+   * no text) is shown, whatever the setting.
+   */
+  fun showMessage(
+    context: Context,
+    conversationId: String,
+    senderId: String,
+    title: String,
+    body: String,
+    showPreview: Boolean = true,
+  ) {
     if (!canPost(context) || ActiveChat.id.value == conversationId) return
     val open = Intent(context, MainActivity::class.java)
       .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
@@ -55,12 +66,24 @@ object Notifications {
       open,
       PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
     )
+    val appName = context.getString(R.string.app_name)
+    val newMessage = context.getString(R.string.notif_new_message)
+    val shownTitle = if (showPreview) title.ifBlank { newMessage } else appName
+    val shownBody = if (showPreview) body else newMessage
+    val public = NotificationCompat.Builder(context, CHANNEL_MESSAGES)
+      .setSmallIcon(R.drawable.ic_notification)
+      .setColor(ContextCompat.getColor(context, R.color.notification_accent))
+      .setContentTitle(appName)
+      .setContentText(newMessage)
+      .build()
     val notification = NotificationCompat.Builder(context, CHANNEL_MESSAGES)
       .setSmallIcon(R.drawable.ic_notification)
       .setColor(ContextCompat.getColor(context, R.color.notification_accent))
-      .setContentTitle(title.ifBlank { context.getString(R.string.notif_new_message) })
-      .setContentText(body)
-      .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+      .setContentTitle(shownTitle)
+      .setContentText(shownBody)
+      .setStyle(NotificationCompat.BigTextStyle().bigText(shownBody))
+      .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+      .setPublicVersion(public)
       .setCategory(NotificationCompat.CATEGORY_MESSAGE)
       .setPriority(NotificationCompat.PRIORITY_HIGH)
       .setAutoCancel(true)

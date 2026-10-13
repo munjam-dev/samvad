@@ -256,4 +256,21 @@
     <string name="settings_blocked">Blocked contacts</string>
     <string name="settings_blocked_body">They can\'t message you or see your last seen.</string>
     <string name="blocked_empty">You haven\'t blocked anyone.</string>
+    <!-- Phase 1.4: security -->
+    <string name="lock_title">Samvad is locked</string>
+    <string name="lock_body">Unlock with your fingerprint, face or phone screen lock.</string>
+    <string name="lock_unlock">Unlock</string>
+    <string name="lock_prompt_title">Unlock Samvad</string>
+    <string name="lock_prompt_subtitle">Confirm it\'s you</string>
+    <string name="settings_app_lock">App lock</string>
+    <string name="settings_app_lock_body">Ask for your fingerprint, face or screen lock to open Samvad.</string>
+    <string name="settings_app_lock_unavailable">Set up a screen lock on your phone first.</string>
+    <string name="settings_lock_after">Lock automatically</string>
+    <string name="settings_lock_immediately">Immediately</string>
+    <string name="settings_lock_one_minute">After 1 minute</string>
+    <string name="settings_lock_thirty_minutes">After 30 minutes</string>
+    <string name="settings_block_screenshots">Block screenshots</string>
+    <string name="settings_block_screenshots_body">Stops screenshots and screen recordings of Samvad and hides it in recent apps.</string>
+    <string name="settings_previews">Show message preview</string>
+    <string name="settings_previews_body">Show who wrote and what they said in notifications. The lock screen never shows message text.</string>
 </resources>

@@ -199,6 +199,7 @@ fun ConversationScreen(
       val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
         .setDataAndType(uri, media.mime)
         .addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+      container.appLock.expectExternal()
       runCatching { context.startActivity(intent) }.onFailure {
         snackbar.showSnackbar(context.getString(R.string.media_open_failed))
       }
@@ -398,10 +399,12 @@ fun ConversationScreen(
       AttachOptions(
         onPhoto = {
           attaching = false
+          container.appLock.expectExternal()
           pickPhoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         },
         onDocument = {
           attaching = false
+          container.appLock.expectExternal()
           pickDocument.launch(com.samvad.core.media.MediaRules.pickableDocuments)
         },
       )
