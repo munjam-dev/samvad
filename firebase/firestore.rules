@@ -118,6 +118,140 @@ service cloud.firestore {
         && validProfile(request.resource.data);
     }
 
+    // ---- conversations (B2) ---------------------------------------------
+
+    function isUuid(id) {
+      return id.matches('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$');
+    }
+
+    function hasProfile(uid) {
+      return exists(/databases/$(database)/documents/profiles/$(uid));
+    }
+
+    function validText(text) {
+      return text is string
+        && text.size() >= 1
+        && text.size() <= 4096
+        && text.matches('(?s).*\\S.*');
+    }
+
+    // Post-write view, so a conversation and its member docs can be created in one batch.
+    function convAfter(cid) {
+      return getAfter(/databases/$(database)/documents/conversations/$(cid)).data;
+    }
+
+    function isMemberOf(cid) {
+      return signedIn() && request.auth.uid in convAfter(cid).members;
+    }
+
+    // Timestamp field that may only stay the same or move forward, never past now.
+    function forwardOnly(field) {
+      return request.resource.data[field] == resource.data[field]
+        || (request.resource.data[field] is timestamp
+            && request.resource.data[field] <= request.time
+            && (resource.data[field] == null || request.resource.data[field] >= resource.data[field]));
+    }
+
+    match /conversations/{cid} {
+      allow get, list: if signedIn() && request.auth.uid in resource.data.members;
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['type', 'members', 'createdBy', 'createdAt', 'lastMessage', 'lastMessageAt'])
+        && request.resource.data.keys().hasAll(['type', 'members', 'createdBy', 'createdAt', 'lastMessageAt'])
+        && request.resource.data.type == 'direct'
+        && request.resource.data.members is list
+        && request.resource.data.members.size() == 2
+        && request.resource.data.members[0] < request.resource.data.members[1]
+        && cid == request.resource.data.members[0] + '_' + request.resource.data.members[1]
+        && request.auth.uid in request.resource.data.members
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.lastMessageAt == request.time
+        && request.resource.data.get('lastMessage', null) == null
+        && hasProfile(request.resource.data.members[0])
+        && hasProfile(request.resource.data.members[1])
+        && notDeleted(request.resource.data.members[0])
+        && notDeleted(request.resource.data.members[1]);
+
+      match /messages/{mid} {
+        allow read: if isMemberOf(cid);
+
+        allow create: if isMemberOf(cid)
+          && isUuid(mid)
+          && request.resource.data.keys().hasOnly(['senderId', 'kind', 'text', 'replyTo', 'createdAt', 'deleted', 'reactions'])
+          && request.resource.data.keys().hasAll(['senderId', 'kind', 'text', 'replyTo', 'createdAt'])
+          && request.resource.data.senderId == request.auth.uid
+          && request.resource.data.kind == 'text'
+          && validText(request.resource.data.text)
+          && (request.resource.data.replyTo == null
+              || (request.resource.data.replyTo is string && isUuid(request.resource.data.replyTo)))
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.get('deleted', false) == false
+          && request.resource.data.get('reactions', {}).size() == 0;
+
+        function notDeletedMessage() {
+          return resource.data.get('deleted', false) == false;
+        }
+
+        function isEdit() {
+          return resource.data.senderId == request.auth.uid
+            && notDeletedMessage()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'editedAt'])
+            && validText(request.resource.data.text)
+            && request.resource.data.editedAt == request.time
+            && request.time < resource.data.createdAt + duration.value(15, 'm');
+        }
+
+        function isSoftDelete() {
+          return resource.data.senderId == request.auth.uid
+            && notDeletedMessage()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deleted', 'text'])
+            && request.resource.data.deleted == true
+            && request.resource.data.text == '';
+        }
+
+        function isOwnReaction() {
+          let after = request.resource.data.get('reactions', {});
+          return notDeletedMessage()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions'])
+            && after.diff(resource.data.get('reactions', {})).affectedKeys().hasOnly([request.auth.uid])
+            && (!(request.auth.uid in after)
+                || (after[request.auth.uid] is string
+                    && after[request.auth.uid].size() >= 1
+                    && after[request.auth.uid].size() <= 16));
+        }
+
+        allow update: if isMemberOf(cid) && (isEdit() || isSoftDelete() || isOwnReaction());
+      }
+
+      match /members/{memberId} {
+        allow read: if isMemberOf(cid);
+
+        allow create: if isMemberOf(cid)
+          && memberId in convAfter(cid).members
+          && request.resource.data.keys().hasOnly(['uid', 'lastReadAt', 'lastDeliveredAt', 'unreadCount', 'muted', 'pinned', 'archived'])
+          && request.resource.data.keys().hasAll(['uid', 'lastReadAt', 'lastDeliveredAt', 'unreadCount', 'muted', 'pinned', 'archived'])
+          && request.resource.data.uid == memberId
+          && request.resource.data.lastReadAt == null
+          && request.resource.data.lastDeliveredAt == null
+          && request.resource.data.unreadCount == 0
+          && request.resource.data.muted == false
+          && request.resource.data.pinned == false
+          && request.resource.data.archived == false;
+
+        allow update: if isMemberOf(cid)
+          && memberId == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['lastReadAt', 'lastDeliveredAt', 'unreadCount', 'muted', 'pinned', 'archived'])
+          && forwardOnly('lastReadAt')
+          && forwardOnly('lastDeliveredAt')
+          && (request.resource.data.unreadCount == resource.data.unreadCount || request.resource.data.unreadCount == 0)
+          && request.resource.data.muted is bool
+          && request.resource.data.pinned is bool
+          && request.resource.data.archived is bool;
+      }
+    }
+
     // ---- server-only ---------------------------------------------------
 
     match /deletedAccounts/{uid} {

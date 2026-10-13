@@ -17,14 +17,24 @@ afterAll(async () => {
 });
 
 describe('indexes and list access', () => {
-  it('firestore.indexes.json declares no composite indexes', () => {
+  it('declares exactly the chat-list index and the members.uid collection-group override', () => {
     const json = JSON.parse(readFileSync(join(root, 'firestore.indexes.json'), 'utf8'));
-    expect(json).toEqual({ indexes: [], fieldOverrides: [] });
+    expect(json.indexes).toEqual([
+      {
+        collectionGroup: 'conversations',
+        queryScope: 'COLLECTION',
+        fields: [
+          { fieldPath: 'members', arrayConfig: 'CONTAINS' },
+          { fieldPath: 'lastMessageAt', order: 'DESCENDING' },
+        ],
+      },
+    ]);
+    expect(json.fieldOverrides.map((o: any) => `${o.collectionGroup}.${o.fieldPath}`)).toEqual(['members.uid']);
   });
 
-  it('no collection other than users/{uid}/devices allows list', async () => {
+  it('users, profiles and deletedAccounts cannot be listed; conversations only via a members filter', async () => {
     const db = phoneContext(env, 'alice').firestore();
-    for (const name of ['users', 'profiles', 'deletedAccounts']) {
+    for (const name of ['users', 'profiles', 'deletedAccounts', 'conversations']) {
       await assertFails(getDocs(collection(db, name)));
     }
   });

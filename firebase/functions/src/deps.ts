@@ -8,8 +8,16 @@ export interface Deps {
   nowMs: () => number;
 }
 
-/** Uses the runtime service account (Application Default Credentials); never a key file. */
-export function defaultDeps(): Deps {
+/**
+ * Initialises the default Admin app once. Must run at module load: Firestore triggers decode
+ * their event snapshot with the default app before handler code runs.
+ * Uses the runtime service account (Application Default Credentials); never a key file.
+ */
+export function ensureAdminApp(): void {
   if (getApps().length === 0) initializeApp();
+}
+
+export function defaultDeps(): Deps {
+  ensureAdminApp();
   return { db: getFirestore(), auth: getAuth(), nowMs: () => Date.now() };
 }

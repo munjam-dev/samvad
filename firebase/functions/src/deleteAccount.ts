@@ -11,6 +11,14 @@ export async function deleteAccountCore(deps: Deps, uid: string): Promise<void> 
   await db.doc(`deletedAccounts/${uid}`).set({ deletedAt: FieldValue.serverTimestamp() });
   await db.recursiveDelete(db.doc(`users/${uid}`));
   await db.doc(`profiles/${uid}`).delete();
+  // B2: leave every conversation (sent messages stay so the other member's history is intact).
+  const memberships = await db.collectionGroup('members').where('uid', '==', uid).get();
+  for (let i = 0; i < memberships.docs.length; i += 400) {
+    const batch = db.batch();
+    memberships.docs.slice(i, i + 400).forEach((d) => batch.delete(d.ref));
+    await batch.commit();
+  }
+  await db.doc(`rateLimits/${uid}`).delete();
   try {
     await auth.deleteUser(uid);
   } catch (err: any) {
