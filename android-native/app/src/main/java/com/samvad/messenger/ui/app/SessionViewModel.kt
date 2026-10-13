@@ -70,7 +70,8 @@ class SessionViewModel(private val container: AppContainer) : ViewModel() {
     if (registeredUid == uid) return
     registeredUid = uid
     viewModelScope.launch {
-      runCatching { container.accounts?.registerDevice(uid, container.preferences.deviceId()) }
+      val token = container.push.currentToken()
+      runCatching { container.accounts?.registerDevice(uid, container.preferences.deviceId(), token) }
         .onFailure { registeredUid = null }
     }
   }
@@ -85,6 +86,7 @@ class SessionViewModel(private val container: AppContainer) : ViewModel() {
     val uid = state.value.uid
     if (uid != null) container.accounts?.unregisterDevice(uid, container.preferences.deviceId())
     registeredUid = null
+    container.push.forgetToken()
     container.auth?.signOut()
   }
 

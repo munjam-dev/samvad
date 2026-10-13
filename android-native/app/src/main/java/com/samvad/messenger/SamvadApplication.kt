@@ -9,5 +9,6 @@ class SamvadApplication : Application() {
   override fun onCreate() {
     super.onCreate()
     container = AppContainer(this)
+    com.samvad.messenger.push.Notifications.createChannels(this)
   }
 }

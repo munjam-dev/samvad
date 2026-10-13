@@ -19,7 +19,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.compose.runtime.LaunchedEffect
 import com.samvad.messenger.AppContainer
+import com.samvad.messenger.ChatLink
 import com.samvad.messenger.R
 import com.samvad.messenger.ui.auth.AuthFlow
 import com.samvad.messenger.ui.chat.ConversationScreen
@@ -33,7 +35,13 @@ import com.samvad.messenger.ui.setup.ProfileSetupScreen
 import com.samvad.messenger.ui.theme.SamvadTheme
 
 @Composable
-fun SamvadRoot(container: AppContainer, session: SessionViewModel, state: SessionState) {
+fun SamvadRoot(
+  container: AppContainer,
+  session: SessionViewModel,
+  state: SessionState,
+  link: ChatLink? = null,
+  onLinkHandled: () -> Unit = {},
+) {
   Box(Modifier.fillMaxSize().background(SamvadTheme.colors.background)) {
     AnimatedContent(state.destination, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "root") { dest ->
       when (dest) {
@@ -48,15 +56,27 @@ fun SamvadRoot(container: AppContainer, session: SessionViewModel, state: Sessio
         Destination.ONBOARDING -> OnboardingScreen(onDone = session::finishOnboarding)
         Destination.SIGN_IN -> AuthFlow(container)
         Destination.PROFILE_SETUP -> ProfileSetupScreen(container, state.uid!!, state.phone.orEmpty(), session::profileCreated)
-        Destination.HOME -> SignedInNav(container, session, state.uid!!)
+        Destination.HOME -> SignedInNav(container, session, state.uid!!, link, onLinkHandled)
       }
     }
   }
 }
 
 @Composable
-private fun SignedInNav(container: AppContainer, session: SessionViewModel, uid: String) {
+private fun SignedInNav(
+  container: AppContainer,
+  session: SessionViewModel,
+  uid: String,
+  link: ChatLink?,
+  onLinkHandled: () -> Unit,
+) {
   val nav = rememberNavController()
+  LaunchedEffect(link) {
+    if (link != null) {
+      nav.navigate("chat/${link.conversationId}/${link.otherUid}") { popUpTo("home") }
+      onLinkHandled()
+    }
+  }
   NavHost(nav, startDestination = "home") {
     composable("home") {
       HomeScreen(

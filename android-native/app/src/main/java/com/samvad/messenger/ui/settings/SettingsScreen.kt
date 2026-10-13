@@ -27,6 +27,7 @@ import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.Devices
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -81,6 +82,7 @@ fun SettingsScreen(container: AppContainer, me: String, onBack: () -> Unit, onSi
   val prefs = container.preferences.preferences.collectAsStateWithLifecycle(AppPreferences()).value
   val profile = remember { container.accounts!!.profile(me) }.collectAsStateWithLifecycle(null).value
   val phone = container.auth?.currentUser?.phoneNumber.orEmpty()
+  val context = androidx.compose.ui.platform.LocalContext.current
   var editing by remember { mutableStateOf(false) }
   var confirmSignOutAll by remember { mutableStateOf(false) }
   var confirmDelete by remember { mutableStateOf(false) }
@@ -137,6 +139,15 @@ fun SettingsScreen(container: AppContainer, me: String, onBack: () -> Unit, onSi
         ).forEach { (layout, label) ->
           RadioRow(stringResource(label), prefs.homeLayout == layout) { scope.launch { container.preferences.setHomeLayout(layout) } }
         }
+      }
+
+      Group(stringResource(R.string.settings_notifications)) {
+        ActionRow(Icons.Outlined.Notifications, stringResource(R.string.settings_notifications), onClick = {
+          context.startActivity(
+            android.content.Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+              .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.packageName),
+          )
+        })
       }
 
       Group(stringResource(R.string.settings_privacy)) {

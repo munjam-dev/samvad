@@ -65,19 +65,27 @@ class AccountRepository(
   }
 
   /** Registers this install, or refreshes lastSeenAt when it is already registered. */
-  suspend fun registerDevice(uid: String, deviceId: String) {
+  suspend fun registerDevice(uid: String, deviceId: String, fcmToken: String?) {
     val ref = db.document("users/$uid/devices/$deviceId")
     val common = mapOf(
       "appVersion" to BuildConfig.VERSION_NAME.take(32),
       "osVersion" to Build.VERSION.RELEASE.take(32),
       "lastSeenAt" to FieldValue.serverTimestamp(),
+      "fcmToken" to fcmToken,
     )
     try {
       ref.update(common).await()
     } catch (e: FirebaseFirestoreException) {
       if (e.code != FirebaseFirestoreException.Code.NOT_FOUND) throw e
-      ref.set(common + mapOf("platform" to "android", "createdAt" to FieldValue.serverTimestamp(), "fcmToken" to null)).await()
+      ref.set(common + mapOf("platform" to "android", "createdAt" to FieldValue.serverTimestamp())).await()
     }
+  }
+
+  /** Called when FCM rotates this install's token. */
+  suspend fun updatePushToken(uid: String, deviceId: String, fcmToken: String) {
+    db.document("users/$uid/devices/$deviceId").update(
+      mapOf("fcmToken" to fcmToken, "lastSeenAt" to FieldValue.serverTimestamp()),
+    ).await()
   }
 
   suspend fun unregisterDevice(uid: String, deviceId: String) {

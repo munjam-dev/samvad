@@ -20,6 +20,7 @@ data class AppPreferences(
   val themeMode: ThemeMode = ThemeMode.SYSTEM,
   val homeLayout: HomeLayout = HomeLayout.BENTO,
   val onboardingDone: Boolean = false,
+  val notificationPromptDismissed: Boolean = false,
 )
 
 /** Local, non-sensitive preferences. Never stores verification IDs, codes or tokens. */
@@ -28,18 +29,21 @@ class PreferencesRepository(private val context: Context) {
   private val layout = stringPreferencesKey("home_layout")
   private val onboarding = booleanPreferencesKey("onboarding_done")
   private val deviceId = stringPreferencesKey("device_id")
+  private val notifPrompt = booleanPreferencesKey("notification_prompt_dismissed")
 
   val preferences: Flow<AppPreferences> = context.dataStore.data.map { p ->
     AppPreferences(
       themeMode = p[theme]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() } ?: ThemeMode.SYSTEM,
       homeLayout = p[layout]?.let { runCatching { HomeLayout.valueOf(it) }.getOrNull() } ?: HomeLayout.BENTO,
       onboardingDone = p[onboarding] ?: false,
+      notificationPromptDismissed = p[notifPrompt] ?: false,
     )
   }
 
   suspend fun setThemeMode(mode: ThemeMode) = context.dataStore.edit { it[theme] = mode.name }
   suspend fun setHomeLayout(value: HomeLayout) = context.dataStore.edit { it[layout] = value.name }
   suspend fun setOnboardingDone() = context.dataStore.edit { it[onboarding] = true }
+  suspend fun dismissNotificationPrompt() = context.dataStore.edit { it[notifPrompt] = true }
 
   /** Random per-install ID (lowercase UUID); no hardware identifiers. */
   suspend fun deviceId(): String {

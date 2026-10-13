@@ -57,6 +57,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -70,6 +71,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -77,6 +79,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
@@ -86,6 +89,8 @@ import com.samvad.core.chat.Message
 import com.samvad.core.chat.TimelineItem
 import com.samvad.messenger.AppContainer
 import com.samvad.messenger.R
+import com.samvad.messenger.push.ActiveChat
+import com.samvad.messenger.push.Notifications
 import com.samvad.messenger.ui.components.Avatar
 import com.samvad.messenger.ui.components.StatusBanner
 import com.samvad.messenger.ui.theme.SamvadTheme
@@ -115,6 +120,26 @@ fun ConversationScreen(
   var menu by remember { mutableStateOf(false) }
   val copied = stringResource(R.string.chat_copied)
   val mediaSoon = stringResource(R.string.chat_attachments_soon)
+
+  // While this chat is on screen, its notifications are suppressed and cleared.
+  val appContext = LocalContext.current.applicationContext
+  DisposableEffect(conversationId, lifecycle) {
+    val observer = LifecycleEventObserver { _, event ->
+      when (event) {
+        Lifecycle.Event.ON_RESUME -> {
+          ActiveChat.set(conversationId)
+          Notifications.cancel(appContext, conversationId)
+        }
+        Lifecycle.Event.ON_PAUSE -> ActiveChat.set(null)
+        else -> Unit
+      }
+    }
+    lifecycle.addObserver(observer)
+    onDispose {
+      lifecycle.removeObserver(observer)
+      ActiveChat.set(null)
+    }
+  }
 
   // Read receipts: only while the screen is actually visible.
   LaunchedEffect(state.latestIncomingId) {

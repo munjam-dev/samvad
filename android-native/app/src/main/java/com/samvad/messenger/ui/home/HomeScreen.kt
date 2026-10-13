@@ -68,6 +68,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 import com.samvad.core.chat.ChatFilter
 import com.samvad.core.chat.ChatList
 import com.samvad.core.chat.ChatRow
@@ -100,7 +101,7 @@ fun HomeScreen(
 
   Box(Modifier.fillMaxSize().background(colors.background)) {
     when (Tab.entries[tab]) {
-      Tab.CHATS -> ChatsTab(state, vm, onOpenChat, onNewChat, onOpenSettings)
+      Tab.CHATS -> ChatsTab(container, state, vm, onOpenChat, onNewChat, onOpenSettings)
       Tab.CALLS -> ComingSoon(Icons.Outlined.Call, R.string.calls_title, R.string.calls_body)
       Tab.COMMUNITIES -> ComingSoon(Icons.Outlined.Groups, R.string.communities_title, R.string.communities_body)
     }
@@ -130,6 +131,7 @@ private fun ComingSoon(icon: ImageVector, title: Int, body: Int) {
 
 @Composable
 private fun ChatsTab(
+  container: AppContainer,
   state: HomeUiState,
   vm: HomeViewModel,
   onOpenChat: (String, String) -> Unit,
@@ -146,6 +148,7 @@ private fun ChatsTab(
         HomeLayout.BENTO -> BentoHeader(state, vm, onOpenSettings)
       }
     }
+    item(key = "notif-prompt") { NotificationPrompt(container) }
     item(key = "banners") {
       StatusBanner(state.offline, stringResource(R.string.home_offline))
       StatusBanner(state.error, stringResource(R.string.home_load_error), isError = true, actionLabel = stringResource(R.string.retry), onAction = vm::retry)
@@ -577,6 +580,49 @@ private fun FloatingNavBar(selected: Int, onSelect: (Int) -> Unit, modifier: Mod
           Spacer(Modifier.height(3.dp))
           Text(stringResource(label), style = MaterialTheme.typography.labelSmall, color = if (active) colors.primary else colors.onSurfaceVariant, maxLines = 1)
         }
+      }
+    }
+  }
+}
+
+/**
+ * Asks for notification permission once, from a dismissible card (Android 13+), never on launch.
+ * "Not now" is remembered so the card doesn't come back.
+ */
+@Composable
+private fun NotificationPrompt(container: AppContainer) {
+  if (android.os.Build.VERSION.SDK_INT < 33) return
+  val colors = SamvadTheme.colors
+  val context = androidx.compose.ui.platform.LocalContext.current
+  val scope = androidx.compose.runtime.rememberCoroutineScope()
+  val prefs = container.preferences.preferences.collectAsStateWithLifecycle(null).value ?: return
+  var granted by androidx.compose.runtime.remember {
+    androidx.compose.runtime.mutableStateOf(com.samvad.messenger.push.Notifications.canPost(context))
+  }
+  val launcher = androidx.activity.compose.rememberLauncherForActivityResult(
+    androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+  ) { ok ->
+    granted = ok
+    if (!ok) scope.launch { container.preferences.dismissNotificationPrompt() }
+  }
+  AnimatedVisibility(!granted && !prefs.notificationPromptDismissed) {
+    Column(
+      Modifier
+        .padding(horizontal = 14.dp, vertical = 6.dp)
+        .fillMaxWidth()
+        .background(colors.primaryContainer, RoundedCornerShape(22.dp))
+        .padding(16.dp),
+      verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+      Text(stringResource(R.string.notif_prompt_title), style = MaterialTheme.typography.titleMedium, color = colors.onPrimaryContainer)
+      Text(stringResource(R.string.notif_prompt_body), style = MaterialTheme.typography.bodyMedium, color = colors.onPrimaryContainer)
+      Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        com.samvad.messenger.ui.components.QuietButton(stringResource(R.string.notif_prompt_allow), {
+          launcher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        })
+        com.samvad.messenger.ui.components.QuietButton(stringResource(R.string.notif_prompt_later), {
+          scope.launch { container.preferences.dismissNotificationPrompt() }
+        })
       }
     }
   }

@@ -7,6 +7,7 @@ import com.samvad.messenger.data.ChatRepository
 import com.samvad.messenger.data.ContactsRepository
 import com.samvad.messenger.data.FirebaseServices
 import com.samvad.messenger.data.PreferencesRepository
+import com.samvad.messenger.push.PushTokens
 
 /**
  * Manual dependency container. A DI framework (Hilt) is deferred until the build can be verified
@@ -20,6 +21,7 @@ class AppContainer(context: Context) {
   val accounts: AccountRepository? = firebase?.let { AccountRepository(it.db, it.functions) }
   val chats: ChatRepository? = firebase?.let { ChatRepository(it.db) }
   val contacts: ContactsRepository? = firebase?.let { ContactsRepository(context, it.functions) }
+  val push = PushTokens(enabled = firebase != null && !com.samvad.messenger.BuildConfig.USE_EMULATORS)
 
   val isConfigured: Boolean get() = firebase != null
 }

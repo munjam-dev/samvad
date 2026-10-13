@@ -197,4 +197,14 @@
     <!-- Setup required -->
     <string name="setup_required_title">Firebase setup required</string>
     <string name="setup_required_body">This build has no Firebase configuration. Add app/google-services.json for your project, or build a debug version with -Psamvad.useEmulators=true.</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_messages">Messages</string>
+    <string name="notif_channel_messages_desc">New messages from your chats</string>
+    <string name="notif_new_message">New message</string>
+    <string name="notif_prompt_title">Turn on notifications</string>
+    <string name="notif_prompt_body">Hear about new messages even when Samvad is closed. Muted chats stay quiet.</string>
+    <string name="notif_prompt_allow">Turn on</string>
+    <string name="notif_prompt_later">Not now</string>
+    <string name="settings_notifications">Notifications</string>
 </resources>
