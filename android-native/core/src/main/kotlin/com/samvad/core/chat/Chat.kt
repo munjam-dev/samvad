@@ -4,7 +4,8 @@ import com.samvad.core.media.Media
 
 /** Domain models shared by the data layer and the UI. Times are epoch milliseconds. */
 
-data class Profile(val uid: String, val displayName: String, val about: String = "")
+/** [photoPath] is a Storage path (avatars/{uid}/…) readable through the SDK, never a public URL. */
+data class Profile(val uid: String, val displayName: String, val about: String = "", val photoPath: String? = null)
 
 data class LastMessage(
   val id: String,

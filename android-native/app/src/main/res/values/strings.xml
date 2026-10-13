@@ -341,4 +341,10 @@
         <item quantity="other">Forwarded to %1$d chats.</item>
     </plurals>
     <string name="forward_partial">Forwarded to %1$d of %2$d chats. Some couldn\'t receive it.</string>
+    <!-- Phase 1.6: profile photo -->
+    <string name="settings_photo">Change profile photo</string>
+    <string name="settings_photo_choose">Choose photo</string>
+    <string name="settings_photo_remove">Remove photo</string>
+    <string name="settings_photo_note">Your photo is cropped to a square and its location data is removed. People you\'ve blocked can\'t see it.</string>
+    <string name="settings_photo_failed">Couldn\'t update your photo. Try again.</string>
 </resources>

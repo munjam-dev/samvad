@@ -1,6 +1,17 @@
 package com.samvad.messenger.ui.settings
 
 import androidx.activity.compose.LocalActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.PhotoCamera
+import androidx.compose.material.icons.outlined.PhotoLibrary
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.fragment.app.FragmentActivity
 import com.samvad.core.security.LockTimeout
 import com.samvad.messenger.security.BiometricGate
@@ -110,6 +121,19 @@ fun SettingsScreen(
   var confirmDelete by remember { mutableStateOf(false) }
   var reauthing by remember { mutableStateOf(false) }
   var deletingWithPin by remember { mutableStateOf(false) }
+  var photoMenu by remember { mutableStateOf(false) }
+  var photoBusy by remember { mutableStateOf(false) }
+  val msgPhotoFailed = stringResource(R.string.settings_photo_failed)
+  val updatePhoto: (suspend () -> ByteArray?) -> Unit = { produce ->
+    photoBusy = true
+    scope.launch {
+      runCatching { container.accounts!!.setProfilePhoto(produce()) }.onFailure { snackbar.showSnackbar(msgPhotoFailed) }
+      photoBusy = false
+    }
+  }
+  val pickPhoto = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+    if (uri != null) updatePhoto { container.media!!.prepareAvatar(uri) }
+  }
   // With two-step on, deletion is confirmed with the PIN instead of a fresh SMS code.
   val twoStepOn = produceState(false) { value = runCatching { container.twoStep?.session()?.enabled == true }.getOrDefault(false) }.value
   var busy by remember { mutableStateOf(false) }
@@ -134,7 +158,25 @@ fun SettingsScreen(
         Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
       }
       Row(Modifier.padding(start = 12.dp, top = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        Avatar(ChatList.initials(profile?.displayName ?: ""), me, size = 72.dp)
+        val photoLabel = stringResource(R.string.settings_photo)
+        Box(
+          Modifier
+            .clip(CircleShape)
+            .clickable(enabled = !photoBusy, onClickLabel = photoLabel) { photoMenu = true }
+            .semantics { contentDescription = photoLabel },
+        ) {
+          Avatar(ChatList.initials(profile?.displayName ?: ""), me, size = 72.dp, photoPath = profile?.photoPath)
+          if (photoBusy) {
+            CircularProgressIndicator(Modifier.size(72.dp), color = colors.brand, strokeWidth = 3.dp)
+          } else {
+            Icon(
+              Icons.Outlined.PhotoCamera,
+              null,
+              tint = colors.onPrimary,
+              modifier = Modifier.align(Alignment.BottomEnd).size(24.dp).background(colors.primary, CircleShape).padding(4.dp),
+            )
+          }
+        }
         Column(Modifier.weight(1f)) {
           Text(profile?.displayName ?: "", style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
           if (!profile?.about.isNullOrBlank()) Text(profile!!.about, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
@@ -324,6 +366,30 @@ fun SettingsScreen(
       },
       dismissButton = { TextButton({ confirmDelete = false }) { Text(stringResource(R.string.cancel)) } },
     )
+  }
+
+  if (photoMenu) {
+    ModalBottomSheet(onDismissRequest = { photoMenu = false }) {
+      Column(Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
+        ActionRow(Icons.Outlined.PhotoLibrary, stringResource(R.string.settings_photo_choose), onClick = {
+          photoMenu = false
+          container.appLock.expectExternal()
+          pickPhoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+        })
+        if (profile?.photoPath != null) {
+          ActionRow(Icons.Outlined.Delete, stringResource(R.string.settings_photo_remove), danger = true, onClick = {
+            photoMenu = false
+            updatePhoto { null }
+          })
+        }
+        Text(
+          stringResource(R.string.settings_photo_note),
+          style = MaterialTheme.typography.bodySmall,
+          color = colors.onSurfaceVariant,
+          modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        )
+      }
+    }
   }
 
   if (deletingWithPin) {

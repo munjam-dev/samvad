@@ -70,12 +70,16 @@ class ChatRepository(private val db: FirebaseFirestore) {
     awaitClose { reg.remove() }
   }
 
-  suspend fun loadProfiles(uids: Collection<String>) {
-    val missing = uids.filter { it !in profileCache.value }
-    for (uid in missing) {
+  suspend fun loadProfiles(uids: Collection<String>) = fetchProfiles(uids.filter { it !in profileCache.value })
+
+  /** Re-reads profiles even when cached, so a new name or photo shows up (one read each). */
+  suspend fun refreshProfiles(uids: Collection<String>) = fetchProfiles(uids)
+
+  private suspend fun fetchProfiles(uids: Collection<String>) {
+    for (uid in uids) {
       val snap = runCatching { db.document("profiles/$uid").get().await() }.getOrNull() ?: continue
       if (snap.exists()) {
-        val p = Profile(uid, snap.getString("displayName") ?: "", snap.getString("about") ?: "")
+        val p = Profile(uid, snap.getString("displayName") ?: "", snap.getString("about") ?: "", snap.getString("photoUrl"))
         profileCache.update { it + (uid to p) }
       }
     }

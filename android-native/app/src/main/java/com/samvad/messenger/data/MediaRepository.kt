@@ -42,7 +42,32 @@ sealed class MediaException(message: String) : Exception(message) {
  * membership rules apply to every read; public download URLs (bearer links) are never used.
  */
 class MediaRepository(private val context: Context, private val storage: FirebaseStorage) {
+  private companion object {
+    const val AVATAR_PX = 512
+  }
+
   private val cacheDir = File(context.cacheDir, "media").apply { mkdirs() }
+
+  /**
+   * Profile photo: centre-cropped square, 512 px, JPEG. Re-encoding drops EXIF; the server strips any
+   * metadata again before storing it.
+   */
+  suspend fun prepareAvatar(uri: Uri): ByteArray = withContext(Dispatchers.Default) {
+    val resolver = context.contentResolver
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
+    if (bounds.outWidth <= 0 || bounds.outHeight <= 0) throw MediaException.Unreadable()
+    val opts = BitmapFactory.Options().apply { inSampleSize = MediaRules.sampleSize(bounds.outWidth, bounds.outHeight, AVATAR_PX * 2) }
+    val decoded = resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, opts) }
+      ?: throw MediaException.Unreadable()
+    val side = minOf(decoded.width, decoded.height)
+    val square = Bitmap.createBitmap(decoded, (decoded.width - side) / 2, (decoded.height - side) / 2, side, side)
+    val scaled = if (side > AVATAR_PX) Bitmap.createScaledBitmap(square, AVATAR_PX, AVATAR_PX, true) else square
+    val out = ByteArrayOutputStream()
+    scaled.compress(Bitmap.CompressFormat.JPEG, 85, out)
+    listOf(decoded, square, scaled).distinct().forEach { it.recycle() }
+    out.toByteArray()
+  }
 
   /** Downscales to 1600 px and re-encodes as JPEG, which also strips EXIF data such as GPS location. */
   suspend fun prepareImage(uri: Uri): PreparedMedia = withContext(Dispatchers.Default) {

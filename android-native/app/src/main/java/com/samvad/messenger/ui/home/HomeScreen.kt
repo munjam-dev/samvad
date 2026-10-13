@@ -287,7 +287,7 @@ private fun HeaderActions(state: HomeUiState, vm: HomeViewModel, onProfile: () -
         .semantics { role = Role.Button },
       contentAlignment = Alignment.Center,
     ) {
-      Avatar(initials, seed = state.me?.uid ?: "me", size = 34.dp)
+      Avatar(initials, seed = state.me?.uid ?: "me", size = 34.dp, photoPath = state.me?.photoPath)
     }
   }
 }

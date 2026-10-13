@@ -131,7 +131,8 @@ class ConversationViewModel(
   val composer: StateFlow<ComposerState> = _composer
 
   init {
-    viewModelScope.launch { chats.loadProfiles(listOf(otherUid)) }
+    // Re-read on open so a changed name or photo shows up.
+    viewModelScope.launch { chats.refreshProfiles(listOf(otherUid)) }
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)

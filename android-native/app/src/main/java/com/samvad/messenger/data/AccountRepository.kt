@@ -61,7 +61,11 @@ class AccountRepository(
 
   fun profile(uid: String): Flow<Profile?> = callbackFlow {
     val reg = db.document("profiles/$uid").addSnapshotListener { snap, _ ->
-      trySend(snap?.takeIf { it.exists() }?.let { Profile(uid, it.getString("displayName") ?: "", it.getString("about") ?: "") })
+      trySend(
+        snap?.takeIf { it.exists() }?.let {
+          Profile(uid, it.getString("displayName") ?: "", it.getString("about") ?: "", it.getString("photoUrl"))
+        },
+      )
     }
     awaitClose { reg.remove() }
   }
@@ -95,6 +99,19 @@ class AccountRepository(
   }
 
   suspend fun signOutAllDevices() = call("signOutAllDevices")
+
+  /**
+   * Sets (or with null removes) the profile photo. The setProfilePhoto function validates the JPEG,
+   * strips its metadata and stores it; clients cannot write photos directly.
+   */
+  suspend fun setProfilePhoto(jpeg: ByteArray?) {
+    try {
+      val encoded: Any? = jpeg?.let { android.util.Base64.encodeToString(it, android.util.Base64.NO_WRAP) }
+      functions.getHttpsCallable("setProfilePhoto", limitedUse).call(mapOf("jpegBase64" to encoded)).await()
+    } catch (e: Exception) {
+      throw AccountException.Failed(e)
+    }
+  }
 
   /** With two-step on, [pin] replaces the fresh SMS sign-in the server otherwise requires. */
   suspend fun deleteAccount(pin: String? = null) = call("deleteAccount", pin?.let { mapOf("pin" to it) })
