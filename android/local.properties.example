@@ -1,3 +1,0 @@
-# Copy this file to android/local.properties and update the values for your machine.
-flutter.sdk=/path/to/flutter
-sdk.dir=/path/to/android/sdk

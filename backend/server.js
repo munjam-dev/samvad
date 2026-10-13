@@ -1,4 +1,4 @@
-// Production Backend Server for Zingify App
+// Production Backend Server for Samvad Messenger
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -25,7 +25,7 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://zingify:zingify123@cluster0.mongodb.net/zingify?retryWrites=true&w=majority', {
+mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://samvad:samvad123@cluster0.mongodb.net/samvad?retryWrites=true&w=majority', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
@@ -56,13 +56,13 @@ const User = mongoose.model('User', userSchema);
 const Message = mongoose.model('Message', messageSchema);
 
 // JWT Secret
-const JWT_SECRET = process.env.JWT_SECRET || 'zingify_super_secret_key_2024_production_ready';
+const JWT_SECRET = process.env.JWT_SECRET || 'samvad_messenger_super_secret_key_2024_production_ready';
 
 // Socket.IO connection handling
 const connectedUsers = new Map();
 
 io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
+  console.log('User connected to Samvad:', socket.id);
 
   // User authentication
   socket.on('authenticate', async (token) => {
@@ -181,7 +181,7 @@ io.on('connection', (socket) => {
       // Notify other users that this user is offline
       socket.broadcast.emit('user_offline', { userId: socket.userId });
     }
-    console.log('User disconnected:', socket.id);
+    console.log('User disconnected from Samvad:', socket.id);
   });
 });
 
@@ -253,12 +253,12 @@ app.get('/api/messages/:userId', async (req, res) => {
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.json({ status: 'OK', message: 'Samvad Messenger API is running', timestamp: new Date().toISOString() });
 });
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-  console.log(`Zingify server running on port ${PORT}`);
+  console.log(`Samvad Messenger server running on port ${PORT}`);
 });
 
 module.exports = app;

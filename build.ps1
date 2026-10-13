@@ -1,0 +1,1 @@
+$env:JAVA_HOME="C:\Users\PC\jdk17\jdk-17.0.10+7"; Remove-Item Env:\ANDROID_PREFS_ROOT -ErrorAction SilentlyContinue; Remove-Item Env:\ANDROID_USER_HOME -ErrorAction SilentlyContinue; flutter build apk --debug

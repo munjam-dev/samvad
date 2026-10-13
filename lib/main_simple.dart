@@ -56,11 +56,9 @@ class ZingifyApp extends StatelessWidget {
           primary: ZingifyColors.primary,
           secondary: ZingifyColors.secondary,
           surface: ZingifyColors.surface,
-          background: ZingifyColors.background,
           onPrimary: ZingifyColors.onPrimary,
           onSecondary: ZingifyColors.onSecondary,
           onSurface: ZingifyColors.onSurface,
-          onBackground: ZingifyColors.onSurface,
         ),
         fontFamily: 'Inter',
         scaffoldBackgroundColor: ZingifyColors.background,
@@ -137,7 +135,7 @@ class ZingifyLogo extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: ZingifyColors.primary.withOpacity(0.3),
+            color: ZingifyColors.primary.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -160,7 +158,7 @@ class ZingifyLogo extends StatelessWidget {
               width: size * 0.15,
               height: size * 0.15,
               decoration: BoxDecoration(
-                color: ZingifyColors.accent.withOpacity(0.8),
+                color: ZingifyColors.accent.withValues(alpha: 0.8),
                 shape: BoxShape.circle,
               ),
             ),
@@ -172,7 +170,7 @@ class ZingifyLogo extends StatelessWidget {
               width: size * 0.15,
               height: size * 0.15,
               decoration: BoxDecoration(
-                color: ZingifyColors.accent.withOpacity(0.8),
+                color: ZingifyColors.accent.withValues(alpha: 0.8),
                 shape: BoxShape.circle,
               ),
             ),
@@ -276,8 +274,8 @@ class _SplashScreenState extends State<SplashScreen>
             end: Alignment.bottomCenter,
             colors: [
               ZingifyColors.primary,
-              ZingifyColors.primary.withOpacity(0.8),
-              ZingifyColors.secondary.withOpacity(0.6),
+              ZingifyColors.primary.withValues(alpha: 0.8),
+              ZingifyColors.secondary.withValues(alpha: 0.6),
               ZingifyColors.background,
             ],
             stops: const [0.0, 0.3, 0.6, 1.0],
@@ -326,7 +324,7 @@ class _SplashScreenState extends State<SplashScreen>
                                 letterSpacing: 2,
                                 shadows: [
                                   Shadow(
-                                    color: Colors.black.withOpacity(0.3),
+                                    color: Colors.black.withValues(alpha: 0.3),
                                     blurRadius: 10,
                                     offset: const Offset(0, 5),
                                   ),
@@ -339,11 +337,11 @@ class _SplashScreenState extends State<SplashScreen>
                               style: TextStyle(
                                 fontFamily: 'Inter',
                                 fontSize: 16,
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                                 letterSpacing: 1,
                                 shadows: [
                                   Shadow(
-                                    color: Colors.black.withOpacity(0.2),
+                                    color: Colors.black.withValues(alpha: 0.2),
                                     blurRadius: 5,
                                     offset: const Offset(0, 2),
                                   ),
@@ -369,7 +367,7 @@ class _SplashScreenState extends State<SplashScreen>
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 14,
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -379,7 +377,7 @@ class _SplashScreenState extends State<SplashScreen>
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 12,
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.white.withValues(alpha: 0.6),
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -506,8 +504,8 @@ class _LoginScreenState extends State<LoginScreen> {
             end: Alignment.bottomCenter,
             colors: [
               ZingifyColors.primary,
-              ZingifyColors.primary.withOpacity(0.8),
-              ZingifyColors.secondary.withOpacity(0.6),
+              ZingifyColors.primary.withValues(alpha: 0.8),
+              ZingifyColors.secondary.withValues(alpha: 0.6),
               ZingifyColors.background,
             ],
           ),
@@ -534,7 +532,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           color: Colors.white,
                           shadows: [
                             Shadow(
-                              color: Colors.black.withOpacity(0.3),
+                              color: Colors.black.withValues(alpha: 0.3),
                               blurRadius: 10,
                               offset: const Offset(0, 5),
                             ),
@@ -546,7 +544,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         'India\'s Premium Messaging App',
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                         ),
                       ),
                     ],
@@ -558,10 +556,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.3),
+                        color: Colors.white.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Column(
@@ -587,7 +585,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               prefixIcon: const Icon(Icons.phone, color: ZingifyColors.primary),
                               counterText: '',
                               filled: true,
-                              fillColor: Colors.white.withOpacity(0.9),
+                              fillColor: Colors.white.withValues(alpha: 0.9),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide.none,
@@ -611,7 +609,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               prefixIcon: const Icon(Icons.message, color: ZingifyColors.primary),
                               counterText: '',
                               filled: true,
-                              fillColor: Colors.white.withOpacity(0.9),
+                              fillColor: Colors.white.withValues(alpha: 0.9),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide.none,
@@ -619,7 +617,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           const SizedBox(height: 16),
-                          Text(
+                          const Text(
                             'Demo OTP: 123456',
                             style: TextStyle(
                               fontSize: 12,
@@ -665,7 +663,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 _otpController.clear();
                               });
                             },
-                            child: Text(
+                            child: const Text(
                               'Change Phone Number',
                               style: TextStyle(
                                 color: Colors.white,

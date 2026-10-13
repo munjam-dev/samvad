@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../main.dart';
+import '../samvad_app.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -56,15 +55,9 @@ class _SplashScreenState extends State<SplashScreen>
       final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
       
       if (isLoggedIn) {
-        // User is logged in, navigate to chat list
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, '/chat-list');
-        }
+        Navigator.pushReplacementNamed(context, '/home');
       } else {
-        // User is not logged in, navigate to login
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, '/login');
-        }
+        Navigator.pushReplacementNamed(context, '/login');
       }
     }
   }
@@ -81,17 +74,11 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              ZingifyColors.primary,
-              ZingifyColors.primary.withOpacity(0.8),
-              ZingifyColors.secondary.withOpacity(0.6),
-              ZingifyColors.background,
-            ],
-            stops: const [0.0, 0.3, 0.6, 1.0],
+            colors: SamvadColors.gradientBackground,
           ),
         ),
         child: SafeArea(
@@ -113,26 +100,17 @@ class _SplashScreenState extends State<SplashScreen>
                           width: 120,
                           height: 120,
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Colors.white, Colors.white],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
+                            color: Colors.white.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(30),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.white.withOpacity(0.3),
+                                color: SamvadColors.primary.withOpacity(0.3),
                                 blurRadius: 30,
                                 offset: const Offset(0, 15),
                               ),
-                              BoxShadow(
-                                color: ZingifyColors.primary.withOpacity(0.3),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              ),
                             ],
                           ),
-                          child: const ZingifyLogo(size: 80, animated: false),
+                          child: const SamvadLogo(size: 80),
                         ),
                       ),
                     );
@@ -151,38 +129,22 @@ class _SplashScreenState extends State<SplashScreen>
                         offset: Offset(0, (1 - _textController.value) * 20),
                         child: Column(
                           children: [
-                            Text(
-                              'Zingify',
+                            const Text(
+                              'Samvad',
                               style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 42,
+                                fontSize: 48,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
-                                letterSpacing: 2,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.black.withOpacity(0.3),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
+                                letterSpacing: 4,
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Premium Messaging',
+                              'संवाद Messenger',
                               style: TextStyle(
-                                fontFamily: 'Inter',
                                 fontSize: 16,
-                                color: Colors.white.withOpacity(0.9),
-                                letterSpacing: 1,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.black.withOpacity(0.2),
-                                    blurRadius: 5,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
+                                color: Colors.white.withOpacity(0.7),
+                                letterSpacing: 2,
                               ),
                             ),
                           ],
@@ -190,9 +152,6 @@ class _SplashScreenState extends State<SplashScreen>
                       ),
                     );
                   },
-                ).animate().fadeIn(
-                  duration: const Duration(milliseconds: 600),
-                  delay: const Duration(milliseconds: 300),
                 ),
 
                 const SizedBox(height: 60),
@@ -201,88 +160,49 @@ class _SplashScreenState extends State<SplashScreen>
                 AnimatedBuilder(
                   animation: _pulseController,
                   builder: (context, child) {
-                    return Opacity(
-                      opacity: _textController.value,
-                      child: Transform.scale(
-                        scale: 1.0 + (_pulseController.value * 0.1),
+                    return Transform.scale(
+                      scale: 1.0 + (_pulseController.value * 0.2),
+                      child: Opacity(
+                        opacity: 0.5 - (_pulseController.value * 0.3),
                         child: Container(
-                          width: 50,
-                          height: 50,
+                          width: 40,
+                          height: 40,
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.white.withOpacity(0.8),
-                                Colors.white.withOpacity(0.4),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(25),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.6),
-                              width: 2,
-                            ),
-                          ),
-                          child: Center(
-                            child: Container(
-                              width: 20,
-                              height: 20,
-                              decoration: BoxDecoration(
-                                color: ZingifyColors.primary,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
                           ),
                         ),
                       ),
                     );
                   },
-                ).animate().fadeIn(
-                  duration: const Duration(milliseconds: 600),
-                  delay: const Duration(milliseconds: 600),
                 ),
 
                 const Spacer(),
 
                 // Tagline
-                AnimatedBuilder(
-                  animation: _textController,
-                  builder: (context, child) {
-                    return Opacity(
-                      opacity: _textController.value * 0.7,
-                      child: Transform.translate(
-                        offset: Offset(0, (1 - _textController.value) * 10),
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 40),
-                          child: Column(
-                            children: [
-                              Text(
-                                'India-First, Global Scale',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 14,
-                                  color: Colors.white.withOpacity(0.8),
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '🔐 End-to-End Encrypted',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 12,
-                                  color: Colors.white.withOpacity(0.6),
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ],
-                          ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 40),
+                  child: Column(
+                    children: [
+                      Text(
+                        'संवाद - Conversations that connect.',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withOpacity(0.8),
+                          letterSpacing: 0.5,
                         ),
                       ),
-                    );
-                  },
-                ).animate().fadeIn(
-                  duration: const Duration(milliseconds: 600),
-                  delay: const Duration(milliseconds: 900),
-                ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '🔐 End-to-End Encrypted',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withOpacity(0.5),
+                        ),
+                      ),
+                    ],
+                  ),
+                ).animate().fadeIn(delay: 1.seconds),
               ],
             ),
           ),

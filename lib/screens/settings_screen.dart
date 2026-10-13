@@ -1,212 +1,184 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../main.dart';
+import '../samvad_app.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  bool _darkMode = true;
+  bool _notifications = true;
+  bool _autoDownload = true;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ZingifyColors.background,
+      backgroundColor: SamvadColors.background,
       appBar: AppBar(
-        backgroundColor: ZingifyColors.surface,
-        elevation: 0,
-        title: const Text(
-          'Settings',
-          style: TextStyle(
-            color: ZingifyColors.onSurface,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        title: const Text('Settings'),
         leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back, color: ZingifyColors.onSurface),
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // App Settings
-            GlassContainer(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(
-                      'App Settings',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: ZingifyColors.onSurface,
-                      ),
-                    ),
-                  ),
-                  _buildSettingTile(
-                    icon: Icons.dark_mode,
-                    title: 'Dark Mode',
-                    subtitle: 'Toggle dark theme',
-                    trailing: Switch(
-                      value: false,
-                      onChanged: (value) {},
-                      activeColor: ZingifyColors.primary,
-                    ),
-                  ),
-                  _buildDivider(),
-                  _buildSettingTile(
-                    icon: Icons.notifications,
-                    title: 'Notifications',
-                    subtitle: 'Manage notifications',
-                    onTap: () {},
-                  ),
-                  _buildDivider(),
-                  _buildSettingTile(
-                    icon: Icons.language,
-                    title: 'Language',
-                    subtitle: 'English',
-                    onTap: () {},
-                  ),
-                ],
+            _buildSectionHeader('Preference'),
+            _buildSettingsGroup([
+              _buildToggleTile(
+                'Dark Mode',
+                'OLED optimized theme',
+                Icons.dark_mode_outlined,
+                _darkMode,
+                (v) => setState(() => _darkMode = v),
               ),
-            ).animate().fadeIn(duration: 400.ms),
+              _buildDivider(),
+              _buildToggleTile(
+                'Notifications',
+                'Real-time alerts',
+                Icons.notifications_none_rounded,
+                _notifications,
+                (v) => setState(() => _notifications = v),
+              ),
+            ]),
+            
+            const SizedBox(height: 24),
+            _buildSectionHeader('Privacy'),
+            _buildSettingsGroup([
+              _buildActionTile(
+                'Blocked Contacts',
+                'Manage blocked users',
+                Icons.block_flipped,
+                () {},
+              ),
+              _buildDivider(),
+              _buildActionTile(
+                'Last Seen',
+                'Privacy visibility',
+                Icons.visibility_outlined,
+                () {},
+              ),
+            ]),
 
             const SizedBox(height: 24),
-
-            // Chat Settings
-            GlassContainer(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(
-                      'Chat Settings',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: ZingifyColors.onSurface,
-                      ),
-                    ),
-                  ),
-                  _buildSettingTile(
-                    icon: Icons.wallpaper,
-                    title: 'Wallpaper',
-                    subtitle: 'Change chat wallpaper',
-                    onTap: () {},
-                  ),
-                  _buildDivider(),
-                  _buildSettingTile(
-                    icon: Icons.font_download,
-                    title: 'Font Size',
-                    subtitle: 'Medium',
-                    onTap: () {},
-                  ),
-                  _buildDivider(),
-                  _buildSettingTile(
-                    icon: Icons.download,
-                    title: 'Download Media',
-                    subtitle: 'Auto-download on Wi-Fi',
-                    trailing: Switch(
-                      value: true,
-                      onChanged: (value) {},
-                      activeColor: ZingifyColors.primary,
-                    ),
-                  ),
-                ],
+            _buildSectionHeader('Storage & Data'),
+            _buildSettingsGroup([
+              _buildToggleTile(
+                'Auto-Download',
+                'Download media on Wi-Fi',
+                Icons.download_for_offline_outlined,
+                _autoDownload,
+                (v) => setState(() => _autoDownload = v),
               ),
-            ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
+              _buildDivider(),
+              _buildActionTile(
+                'Storage Usage',
+                'Clear cache and data',
+                Icons.storage_rounded,
+                () {},
+              ),
+            ]),
 
             const SizedBox(height: 24),
-
-            // About
-            GlassContainer(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(
-                      'About',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: ZingifyColors.onSurface,
-                      ),
-                    ),
-                  ),
-                  _buildSettingTile(
-                    icon: Icons.info,
-                    title: 'Version',
-                    subtitle: '1.0.0',
-                  ),
-                  _buildDivider(),
-                  _buildSettingTile(
-                    icon: Icons.privacy_tip,
-                    title: 'Privacy Policy',
-                    onTap: () {},
-                  ),
-                  _buildDivider(),
-                  _buildSettingTile(
-                    icon: Icons.description,
-                    title: 'Terms of Service',
-                    onTap: () {},
-                  ),
-                ],
+            _buildSectionHeader('About'),
+            _buildSettingsGroup([
+              _buildActionTile(
+                'Samvad Version',
+                '1.0.0 Stable Release',
+                Icons.info_outline_rounded,
+                null,
+                showArrow: false,
               ),
-            ).animate().fadeIn(delay: 400.ms, duration: 400.ms),
+              _buildDivider(),
+              _buildActionTile(
+                'Privacy Policy',
+                'Terms and conditions',
+                Icons.description_outlined,
+                () {},
+              ),
+            ]),
+            
+            const SizedBox(height: 40),
+            Center(
+              child: Text(
+                'Samvad Messenger Premium',
+                style: TextStyle(
+                  color: SamvadColors.onSurfaceMuted.withOpacity(0.5),
+                  fontSize: 12,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSettingTile({
-    required IconData icon,
-    required String title,
-    String? subtitle,
-    Widget? trailing,
-    VoidCallback? onTap,
-  }) {
-    return ListTile(
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [ZingifyColors.primary, ZingifyColors.secondary],
-          ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Icon(icon, color: Colors.white, size: 20),
-      ),
-      title: Text(
-        title,
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, bottom: 12),
+      child: Text(
+        title.toUpperCase(),
         style: const TextStyle(
-          fontWeight: FontWeight.w600,
-          color: ZingifyColors.onSurface,
+          color: SamvadColors.primaryLight,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.5,
         ),
       ),
-      subtitle: subtitle != null
-          ? Text(
-              subtitle,
-              style: TextStyle(
-                color: ZingifyColors.onSurface.withOpacity(0.6),
-                fontSize: 14,
-              ),
-            )
-          : null,
-      trailing: trailing ?? const Icon(Icons.chevron_right, color: ZingifyColors.primary),
+    ).animate().fadeIn(duration: 400.ms);
+  }
+
+  Widget _buildSettingsGroup(List<Widget> children) {
+    return Container(
+      decoration: BoxDecoration(
+        color: SamvadColors.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: SamvadColors.border),
+      ),
+      child: Column(children: children),
+    ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.05, end: 0);
+  }
+
+  Widget _buildToggleTile(String title, String subtitle, IconData icon, bool value, Function(bool) onChanged) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      leading: Icon(icon, color: Colors.white70),
+      title: Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+      subtitle: Text(subtitle, style: const TextStyle(color: SamvadColors.onSurfaceMuted, fontSize: 13)),
+      trailing: Switch(
+        value: value,
+        onChanged: onChanged,
+        activeColor: SamvadColors.primary,
+        activeTrackColor: SamvadColors.primary.withOpacity(0.3),
+      ),
+    );
+  }
+
+  Widget _buildActionTile(String title, String subtitle, IconData icon, VoidCallback? onTap, {bool showArrow = true}) {
+    return ListTile(
       onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      leading: Icon(icon, color: Colors.white70),
+      title: Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+      subtitle: Text(subtitle, style: const TextStyle(color: SamvadColors.onSurfaceMuted, fontSize: 13)),
+      trailing: showArrow ? const Icon(Icons.chevron_right, color: Colors.white24) : null,
     );
   }
 
   Widget _buildDivider() {
-    return Divider(
-      height: 1,
-      color: ZingifyColors.border,
-      indent: 72,
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20),
+      child: Divider(color: SamvadColors.border, height: 1),
     );
   }
 }

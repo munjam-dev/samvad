@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../main.dart';
+import '../samvad_app.dart';
+import 'chat_screen.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});
@@ -13,350 +13,276 @@ class ChatListScreen extends StatefulWidget {
 class _ChatListScreenState extends State<ChatListScreen> {
   int _selectedTab = 0;
   final List<String> _tabs = ['All', 'Personal', 'Groups'];
-  
-  // Demo data
-  final List<ChatItem> _demoChats = [
-    ChatItem(
-      name: 'Rahul Sharma',
-      lastMessage: 'Hey! How are you doing?',
-      time: '2:30 PM',
-      unread: 2,
-      isOnline: true,
-      avatar: 'RS',
-    ),
-    ChatItem(
-      name: 'Priya Patel',
-      lastMessage: 'See you tomorrow!',
-      time: '1:15 PM',
-      unread: 0,
-      isOnline: false,
-      avatar: 'PP',
-    ),
-    ChatItem(
-      name: 'Tech Team',
-      lastMessage: 'John: Meeting at 3 PM',
-      time: '12:45 PM',
-      unread: 5,
-      isOnline: false,
-      avatar: 'TT',
-      isGroup: true,
-    ),
-    ChatItem(
-      name: 'Mom',
-      lastMessage: 'Don\'t forget to call me',
-      time: '11:30 AM',
-      unread: 1,
-      isOnline: true,
-      avatar: 'M',
-    ),
-  ];
+  List<Chat> _chats = [];
+  bool _isLoading = true;
 
-  List<ChatItem> get _filteredChats {
-    if (_selectedTab == 0) return _demoChats;
-    if (_selectedTab == 1) return _demoChats.where((chat) => !chat.isGroup).toList();
-    return _demoChats.where((chat) => chat.isGroup).toList();
+  @override
+  void initState() {
+    super.initState();
+    _loadChats();
+    _setupSocketListeners();
+  }
+
+  Future<void> _loadChats() async {
+    setState(() => _isLoading = true);
+    final chats = await ApiService.getChats();
+    if (mounted) {
+      setState(() {
+        _chats = chats;
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _setupSocketListeners() {
+    // To be implemented with Supabase in Phase 8
+  }
+
+  List<Chat> get _filteredChats {
+    if (_selectedTab == 0) return _chats;
+    if (_selectedTab == 1) return _chats.where((chat) => !chat.isGroup).toList();
+    return _chats.where((chat) => chat.isGroup).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ZingifyColors.background,
+      backgroundColor: SamvadColors.background,
       body: SafeArea(
         child: Column(
           children: [
-            // Header with Gradient
-            Container(
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [ZingifyColors.primary, ZingifyColors.secondary],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    // App Header
-                    Row(
-                      children: [
-                        const ZingifyLogo(size: 40),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Zingify',
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              Text(
-                                'Premium Messaging',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.white.withOpacity(0.9),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () {},
-                          icon: const Icon(Icons.search, color: Colors.white),
-                        ),
-                        IconButton(
-                          onPressed: () {},
-                          icon: const Icon(Icons.more_vert, color: Colors.white),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // Search Bar
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
-                        ),
-                      ),
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: 'Search chats...',
-                          hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                          prefixIcon: Icon(Icons.search, color: Colors.white.withOpacity(0.7)),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        ),
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
+            // Header
+            _buildHeader(),
+            
             // Tabs
-            Container(
-              color: ZingifyColors.surface,
-              child: Row(
-                children: _tabs.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final tab = entry.value;
-                  final isSelected = _selectedTab == index;
-                  
-                  return Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() => _selectedTab = index),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(
-                              color: isSelected ? ZingifyColors.primary : Colors.transparent,
-                              width: 2,
-                            ),
-                          ),
-                        ),
-                        child: Text(
-                          tab,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: isSelected ? ZingifyColors.primary : ZingifyColors.onSurface.withOpacity(0.6),
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
+            _buildTabs(),
 
             // Chat List
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: _filteredChats.length,
-                itemBuilder: (context, index) {
-                  final chat = _filteredChats[index];
-                  return ChatListItem(chat: chat)
-                      .animate()
-                      .fadeIn(delay: (index * 100).ms, duration: 300.ms)
-                      .slideX(begin: -0.1, duration: 300.ms);
-                },
-              ),
+              child: _isLoading 
+                ? const Center(child: CircularProgressIndicator(color: SamvadColors.primary))
+                : _chats.isEmpty 
+                  ? _buildEmptyState()
+                  : RefreshIndicator(
+                      onRefresh: _loadChats,
+                      color: SamvadColors.primary,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        itemCount: _filteredChats.length,
+                        itemBuilder: (context, index) {
+                          final chat = _filteredChats[index];
+                          return ChatListItem(chat: chat)
+                              .animate()
+                              .fadeIn(delay: (index * 50).ms)
+                              .slideY(begin: 0.1, end: 0);
+                        },
+                      ),
+                    ),
             ),
           ],
         ),
       ),
-      floatingActionButton: Container(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [ZingifyColors.primary, ZingifyColors.secondary],
-          ),
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: [
-            BoxShadow(
-              color: ZingifyColors.primary.withOpacity(0.3),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Implement new chat / contact selection
+        },
+        backgroundColor: SamvadColors.primary,
+        elevation: 8,
+        child: const Icon(Icons.add_comment_rounded, color: Colors.white),
+      ).animate().scale(delay: 400.ms),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        children: [
+          const SamvadLogo(size: 40),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Samvad',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 1,
+                  ),
+                ),
+                Text(
+                  'संवाद Messenger',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: SamvadColors.onSurfaceMuted,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: FloatingActionButton(
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('New chat feature coming soon!'),
-                backgroundColor: ZingifyColors.primary,
+          ),
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.search, color: Colors.white70),
+          ),
+          IconButton(
+            onPressed: () {
+              Navigator.pushNamed(context, '/settings');
+            },
+            icon: const Icon(Icons.settings_outlined, color: Colors.white70),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabs() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: SamvadColors.surface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: _tabs.asMap().entries.map((entry) {
+          final index = entry.key;
+          final isSelected = _selectedTab == index;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _selectedTab = index),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: isSelected ? SamvadColors.primary : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  entry.value,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : SamvadColors.onSurfaceMuted,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
               ),
-            );
-          },
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          child: const Icon(Icons.chat, color: Colors.white, size: 24),
-        ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.chat_bubble_outline_rounded, size: 80, color: Colors.white.withOpacity(0.1)),
+          const SizedBox(height: 24),
+          const Text(
+            'No Conversations Yet',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Start your first conversation on Samvad.',
+            style: TextStyle(color: Colors.white.withOpacity(0.5)),
+          ),
+          const SizedBox(height: 32),
+          ElevatedButton(
+            onPressed: () {},
+            child: const Text('New Chat'),
+          ),
+        ],
       ),
     );
   }
 }
 
-class ChatItem {
-  final String name;
-  final String lastMessage;
-  final String time;
-  final int unread;
-  final bool isOnline;
-  final String avatar;
-  final bool isGroup;
-
-  ChatItem({
-    required this.name,
-    required this.lastMessage,
-    required this.time,
-    required this.unread,
-    required this.isOnline,
-    required this.avatar,
-    this.isGroup = false,
-  });
-}
-
 class ChatListItem extends StatelessWidget {
-  final ChatItem chat;
+  final Chat chat;
 
-  const ChatListItem({
-    super.key,
-    required this.chat,
-  });
+  const ChatListItem({super.key, required this.chat});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: ZingifyColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: ZingifyColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+    final lastMsg = chat.lastMessage?.content ?? 'Start a conversation';
+    final time = chat.lastMessageTime != null 
+        ? '${chat.lastMessageTime!.hour}:${chat.lastMessageTime!.minute.toString().padLeft(2, '0')}'
+        : '';
+
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      leading: Stack(
+        children: [
+          CircleAvatar(
+            radius: 28,
+            backgroundColor: SamvadColors.surface,
+            backgroundImage: chat.participant.profilePicture != null 
+                ? NetworkImage(chat.participant.profilePicture!) 
+                : null,
+            child: chat.participant.profilePicture == null 
+                ? Text(
+                    chat.participant.name[0].toUpperCase(),
+                    style: const TextStyle(color: SamvadColors.primary, fontWeight: FontWeight.bold, fontSize: 20),
+                  )
+                : null,
           ),
+          if (chat.participant.isOnline)
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Container(
+                width: 14,
+                height: 14,
+                decoration: BoxDecoration(
+                  color: SamvadColors.success,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: SamvadColors.background, width: 2),
+                ),
+              ),
+            ),
         ],
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Stack(
-          children: [
-            CircleAvatar(
-              backgroundColor: chat.isGroup ? ZingifyColors.secondary : ZingifyColors.primary,
-              child: Text(
-                chat.avatar,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            if (chat.isOnline)
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  width: 14,
-                  height: 14,
-                  decoration: BoxDecoration(
-                    color: ZingifyColors.accent,
-                    border: Border.all(color: ZingifyColors.surface, width: 2),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        title: Text(
-          chat.name,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            color: ZingifyColors.onSurface,
-          ),
-        ),
-        subtitle: Text(
-          chat.lastMessage,
-          style: TextStyle(
-            color: ZingifyColors.onSurface.withOpacity(0.6),
-            fontSize: 14,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              chat.time,
-              style: TextStyle(
-                color: ZingifyColors.onSurface.withOpacity(0.5),
-                fontSize: 12,
-              ),
-            ),
-            if (chat.unread > 0) ...[
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: ZingifyColors.primary,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  chat.unread.toString(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-        onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Opening chat with ${chat.name}...'),
-              backgroundColor: ZingifyColors.primary,
-            ),
-          );
-        },
+      title: Text(
+        chat.participant.name,
+        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 16),
       ),
+      subtitle: Text(
+        lastMsg,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14),
+      ),
+      trailing: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(time, style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12)),
+          if (chat.unreadCount > 0)
+            Container(
+              margin: const EdgeInsets.only(top: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: SamvadColors.primary,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                chat.unreadCount.toString(),
+                style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+              ),
+            ),
+        ],
+      ),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ChatScreen(chat: chat)),
+        );
+      },
     );
   }
 }

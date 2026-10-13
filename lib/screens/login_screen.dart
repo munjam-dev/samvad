@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../main.dart';
+import 'package:country_picker/country_picker.dart';
+import '../samvad_app.dart';
+import 'dart:async';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,22 +11,62 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  // Phone Form Controllers
   final _phoneController = TextEditingController();
   final _otpController = TextEditingController();
+  final _phoneNameController = TextEditingController();
+  
+  // Email Form Controllers
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _emailNameController = TextEditingController();
+
+  bool _isSignUp = false;
   bool _otpSent = false;
   bool _isLoading = false;
-  String? _verificationId;
+  bool _termsAccepted = true;
+  int _resendSeconds = 0;
+  Timer? _resendTimer;
+  
+  String _selectedCountryCode = '+91';
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
 
   @override
   void dispose() {
+    _tabController.dispose();
     _phoneController.dispose();
     _otpController.dispose();
+    _phoneNameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _emailNameController.dispose();
+    _resendTimer?.cancel();
     super.dispose();
   }
 
+  void _startResendTimer() {
+    _resendTimer?.cancel();
+    setState(() => _resendSeconds = 30);
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_resendSeconds > 0) {
+        setState(() => _resendSeconds--);
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  // --- Phone OTP Flow ---
   Future<void> _sendOTP() async {
-    if (_phoneController.text.isEmpty || _phoneController.text.length < 10) {
+    if (_phoneController.text.trim().isEmpty || _phoneController.text.trim().length < 10) {
       _showError('Please enter a valid phone number');
       return;
     }
@@ -34,49 +74,128 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // For demo purposes, simulate OTP sending
-      await Future.delayed(const Duration(seconds: 2));
-      
-      setState(() {
-        _otpSent = true;
-        _isLoading = false;
-      });
+      final result = await ApiService.sendOTP(
+        phone: _phoneController.text.trim(),
+        countryCode: _selectedCountryCode,
+      );
 
-      _showSuccess('OTP sent successfully! Use 123456 for demo.');
+      setState(() => _isLoading = false);
+      if (result['success']) {
+        setState(() => _otpSent = true);
+        _startResendTimer();
+        _showSuccess(result['message'] ?? 'OTP sent successfully');
+      } else {
+        _showError(result['message'] ?? 'Failed to send OTP');
+      }
     } catch (e) {
       setState(() => _isLoading = false);
-      _showError('Failed to send OTP. Please try again.');
+      _showError('Connection error. Please try again.');
     }
   }
 
   Future<void> _verifyOTP() async {
-    if (_otpController.text.isEmpty || _otpController.text.length != 6) {
-      _showError('Please enter a valid OTP');
+    if (_otpController.text.trim().isEmpty || _otpController.text.trim().length != 6) {
+      _showError('Please enter the 6-digit OTP code');
       return;
     }
 
-    // Demo OTP verification
-    if (_otpController.text == '123456') {
-      setState(() => _isLoading = true);
+    if (!_termsAccepted) {
+      _showError('Please accept the Terms and Privacy Policy');
+      return;
+    }
 
-      try {
-        // Simulate authentication
-        await Future.delayed(const Duration(seconds: 1));
-        
-        // Save login state
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('isLoggedIn', true);
-        await prefs.setString('phoneNumber', _phoneController.text);
+    setState(() => _isLoading = true);
 
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, '/chat-list');
-        }
-      } catch (e) {
-        setState(() => _isLoading = false);
-        _showError('Failed to verify OTP. Please try again.');
+    try {
+      final result = await ApiService.verifyOTP(
+        phone: _phoneController.text.trim(),
+        countryCode: _selectedCountryCode,
+        otp: _otpController.text.trim(),
+        name: _phoneNameController.text.trim().isNotEmpty ? _phoneNameController.text.trim() : null,
+      );
+
+      setState(() => _isLoading = false);
+      if (result['success']) {
+        if (mounted) Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        _showError(result['message'] ?? 'Invalid OTP code');
       }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _showError('Verification failed. Try again.');
+    }
+  }
+
+  // --- Email Auth Flow ---
+  Future<void> _handleEmailAuth() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || !email.contains('@')) {
+      _showError('Please enter a valid email address');
+      return;
+    }
+
+    if (password.isEmpty || password.length < 6) {
+      _showError('Password must be at least 6 characters');
+      return;
+    }
+
+    if (!_termsAccepted) {
+      _showError('Please accept the Terms and Privacy Policy');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      Map<String, dynamic> result;
+      if (_isSignUp) {
+        final name = _emailNameController.text.trim();
+        if (name.isEmpty) {
+          _showError('Please enter your display name');
+          setState(() => _isLoading = false);
+          return;
+        }
+        result = await ApiService.signUpWithEmail(
+          email: email,
+          password: password,
+          displayName: name,
+        );
+      } else {
+        result = await ApiService.signInWithEmail(
+          email: email,
+          password: password,
+        );
+      }
+
+      setState(() => _isLoading = false);
+      if (result['success']) {
+        if (mounted) Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        _showError(result['message'] ?? 'Authentication failed');
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _showError('Authentication error. Try again.');
+    }
+  }
+
+  Future<void> _handleForgotPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty || !email.contains('@')) {
+      _showError('Enter your email address to reset password');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    final result = await ApiService.resetPassword(email);
+    setState(() => _isLoading = false);
+
+    if (result['success']) {
+      _showSuccess(result['message'] ?? 'Password reset email sent');
     } else {
-      _showError('Invalid OTP. Use 123456 for demo.');
+      _showError(result['message'] ?? 'Reset password failed');
     }
   }
 
@@ -84,7 +203,7 @@ class _LoginScreenState extends State<LoginScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.red,
+        backgroundColor: SamvadColors.error,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -95,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: ZingifyColors.accent,
+        backgroundColor: SamvadColors.success,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -106,208 +225,323 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        height: double.infinity,
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              ZingifyColors.primary,
-              ZingifyColors.primary.withOpacity(0.8),
-              ZingifyColors.secondary.withOpacity(0.6),
-              ZingifyColors.background,
-            ],
+            colors: SamvadColors.gradientBackground,
           ),
         ),
         child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Logo
-                  const ZingifyLogo(size: 100)
-                      .animate()
-                      .scale(duration: 600.ms, curve: Curves.elasticOut)
-                      .fadeIn(duration: 400.ms),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            child: Column(
+              children: [
+                const SamvadLogo(size: 72).animate().fadeIn().scale(),
+                const SizedBox(height: 20),
+                const Text(
+                  'Welcome to Samvad',
+                  style: TextStyle(
+                    fontSize: 28, 
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ).animate().fadeIn(delay: 150.ms),
+                const SizedBox(height: 6),
+                Text(
+                  'Meaningful conversations, securely connected',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                ).animate().fadeIn(delay: 200.ms),
+                const SizedBox(height: 32),
 
-                  const SizedBox(height: 40),
-
-                  // Welcome Text
-                  Column(
-                    children: [
-                      Text(
-                        'Welcome to Zingify',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black.withOpacity(0.3),
-                              blurRadius: 10,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'India\'s Premium Messaging App',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white.withOpacity(0.9),
-                        ),
-                      ),
+                // Tab Switcher
+                Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: SamvadColors.surface.withValues(alpha: 0.8),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: SamvadColors.border),
+                  ),
+                  child: TabBar(
+                    controller: _tabController,
+                    indicator: BoxDecoration(
+                      color: SamvadColors.primary,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    labelColor: Colors.white,
+                    unselectedLabelColor: SamvadColors.onSurfaceMuted,
+                    dividerColor: Colors.transparent,
+                    tabs: const [
+                      Tab(text: 'Phone OTP'),
+                      Tab(text: 'Email'),
                     ],
-                  ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
+                  ),
+                ),
 
-                  const SizedBox(height: 60),
+                const SizedBox(height: 24),
 
-                  // Login Form
-                  GlassContainer(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
+                // Form Container
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: SamvadColors.surface.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(color: SamvadColors.border.withValues(alpha: 0.5)),
+                  ),
+                  child: SizedBox(
+                    height: 380,
+                    child: TabBarView(
+                      controller: _tabController,
                       children: [
-                        Text(
-                          _otpSent ? 'Enter OTP' : 'Enter Phone Number',
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600,
-                            color: ZingifyColors.onSurface,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-
-                        if (!_otpSent) ...[
-                          // Phone Input
-                          TextField(
-                            controller: _phoneController,
-                            keyboardType: TextInputType.phone,
-                            maxLength: 10,
-                            decoration: InputDecoration(
-                              hintText: '+91 98765 43210',
-                              prefixIcon: const Icon(Icons.phone, color: ZingifyColors.primary),
-                              counterText: '',
-                            ),
-                          ),
-                        ] else ...[
-                          // OTP Input
-                          TextField(
-                            controller: _otpController,
-                            keyboardType: TextInputType.number,
-                            maxLength: 6,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 24,
-                              letterSpacing: 8,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            decoration: InputDecoration(
-                              hintText: '123456',
-                              prefixIcon: const Icon(Icons.message, color: ZingifyColors.primary),
-                              counterText: '',
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Demo OTP: 123456',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: ZingifyColors.accent,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-
-                        const SizedBox(height: 30),
-
-                        // Action Button
-                        SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : (_otpSent ? _verifyOTP : _sendOTP),
-                            child: _isLoading
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        // --- Phone OTP Tab ---
+                        SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              if (!_otpSent) ...[
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 3,
+                                      child: TextButton(
+                                        onPressed: () {
+                                          showCountryPicker(
+                                            context: context,
+                                            showPhoneCode: true,
+                                            onSelect: (Country country) {
+                                              setState(() {
+                                                _selectedCountryCode = '+${country.phoneCode}';
+                                              });
+                                            },
+                                            countryListTheme: CountryListThemeData(
+                                              borderRadius: BorderRadius.circular(20),
+                                              backgroundColor: SamvadColors.surface,
+                                              textStyle: const TextStyle(color: Colors.white),
+                                              searchTextStyle: const TextStyle(color: Colors.white),
+                                              bottomSheetHeight: MediaQuery.of(context).size.height * 0.7,
+                                            ),
+                                          );
+                                        },
+                                        child: Text(
+                                          _selectedCountryCode,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  )
-                                : Text(
-                                    _otpSent ? 'Verify OTP' : 'Send OTP',
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      flex: 6,
+                                      child: TextField(
+                                        controller: _phoneController,
+                                        keyboardType: TextInputType.phone,
+                                        maxLength: 10,
+                                        style: const TextStyle(color: Colors.white),
+                                        decoration: const InputDecoration(
+                                          hintText: 'Phone Number',
+                                          counterText: '',
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                TextField(
+                                  controller: _phoneNameController,
+                                  style: const TextStyle(color: Colors.white),
+                                  decoration: const InputDecoration(
+                                    hintText: 'Display Name (Optional)',
+                                    prefixIcon: Icon(Icons.person_outline, color: SamvadColors.onSurfaceMuted),
+                                  ),
+                                ),
+                              ] else ...[
+                                TextField(
+                                  controller: _otpController,
+                                  keyboardType: TextInputType.number,
+                                  maxLength: 6,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 28, 
+                                    letterSpacing: 12, 
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                  decoration: const InputDecoration(
+                                    hintText: '000000',
+                                    hintStyle: TextStyle(letterSpacing: 12, color: SamvadColors.onSurfaceMuted),
+                                    counterText: '',
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  _resendSeconds > 0 
+                                      ? 'Resend code in $_resendSeconds s'
+                                      : 'Didn\'t receive code?',
+                                  style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                                ),
+                                if (_resendSeconds == 0)
+                                  TextButton(
+                                    onPressed: _sendOTP,
+                                    child: const Text(
+                                      'Resend Code', 
+                                      style: TextStyle(fontWeight: FontWeight.bold, color: SamvadColors.primaryLight),
                                     ),
                                   ),
+                              ],
+                              const SizedBox(height: 20),
+                              Row(
+                                children: [
+                                  Checkbox(
+                                    value: _termsAccepted,
+                                    onChanged: (v) => setState(() => _termsAccepted = v!),
+                                    activeColor: SamvadColors.primary,
+                                  ),
+                                  const Expanded(
+                                    child: Text(
+                                      'I agree to Terms & Privacy Policy', 
+                                      style: TextStyle(fontSize: 12, color: Colors.white70),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: _isLoading ? null : (_otpSent ? _verifyOTP : _sendOTP),
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                  ),
+                                  child: _isLoading 
+                                      ? const SizedBox(
+                                          height: 20, 
+                                          width: 20, 
+                                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                        )
+                                      : Text(_otpSent ? 'Verify OTP' : 'Send OTP'),
+                                ),
+                              ),
+                              if (_otpSent) ...[
+                                const SizedBox(height: 8),
+                                TextButton(
+                                  onPressed: () => setState(() => _otpSent = false),
+                                  child: const Text(
+                                    'Change Phone Number',
+                                    style: TextStyle(color: Colors.white70),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
 
-                        if (_otpSent) ...[
-                          const SizedBox(height: 16),
-                          TextButton(
-                            onPressed: () {
-                              setState(() {
-                                _otpSent = false;
-                                _otpController.clear();
-                              });
-                            },
-                            child: Text(
-                              'Change Phone Number',
-                              style: TextStyle(
-                                color: ZingifyColors.primary,
-                                fontWeight: FontWeight.w500,
+                        // --- Email Auth Tab ---
+                        SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              if (_isSignUp) ...[
+                                TextField(
+                                  controller: _emailNameController,
+                                  style: const TextStyle(color: Colors.white),
+                                  decoration: const InputDecoration(
+                                    hintText: 'Display Name',
+                                    prefixIcon: Icon(Icons.person_outline, color: SamvadColors.onSurfaceMuted),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                              ],
+                              TextField(
+                                controller: _emailController,
+                                keyboardType: TextInputType.emailAddress,
+                                style: const TextStyle(color: Colors.white),
+                                decoration: const InputDecoration(
+                                  hintText: 'Email Address',
+                                  prefixIcon: Icon(Icons.email_outlined, color: SamvadColors.onSurfaceMuted),
+                                ),
                               ),
-                            ),
+                              const SizedBox(height: 12),
+                              TextField(
+                                controller: _passwordController,
+                                obscureText: true,
+                                style: const TextStyle(color: Colors.white),
+                                decoration: const InputDecoration(
+                                  hintText: 'Password',
+                                  prefixIcon: Icon(Icons.lock_outline, color: SamvadColors.onSurfaceMuted),
+                                ),
+                              ),
+                              if (!_isSignUp) ...[
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: TextButton(
+                                    onPressed: _handleForgotPassword,
+                                    child: const Text(
+                                      'Forgot Password?',
+                                      style: TextStyle(color: SamvadColors.primaryLight, fontSize: 12),
+                                    ),
+                                  ),
+                                ),
+                              ] else ...[
+                                const SizedBox(height: 12),
+                              ],
+                              Row(
+                                children: [
+                                  Checkbox(
+                                    value: _termsAccepted,
+                                    onChanged: (v) => setState(() => _termsAccepted = v!),
+                                    activeColor: SamvadColors.primary,
+                                  ),
+                                  const Expanded(
+                                    child: Text(
+                                      'I agree to Terms & Privacy Policy', 
+                                      style: TextStyle(fontSize: 12, color: Colors.white70),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: _isLoading ? null : _handleEmailAuth,
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                  ),
+                                  child: _isLoading 
+                                      ? const SizedBox(
+                                          height: 20, 
+                                          width: 20, 
+                                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                        )
+                                      : Text(_isSignUp ? 'Create Account' : 'Sign In'),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              TextButton(
+                                onPressed: () => setState(() => _isSignUp = !_isSignUp),
+                                child: Text(
+                                  _isSignUp 
+                                      ? 'Already have an account? Sign In'
+                                      : 'Don\'t have an account? Sign Up',
+                                  style: const TextStyle(color: Colors.white70, fontSize: 13),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ],
                     ),
-                  ).animate().fadeIn(delay: 400.ms, duration: 400.ms),
-
-                  const SizedBox(height: 40),
-
-                  // Features
-                  Column(
-                    children: [
-                      _buildFeature('🔐', 'End-to-End Encryption'),
-                      const SizedBox(height: 12),
-                      _buildFeature('🌙', 'Dark Mode Support'),
-                      const SizedBox(height: 12),
-                      _buildFeature('📱', 'Cross-Platform Sync'),
-                    ],
-                  ).animate().fadeIn(delay: 600.ms, duration: 400.ms),
-                ],
-              ),
+                  ),
+                ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1, end: 0),
+              ],
             ),
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildFeature(String emoji, String text) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          emoji,
-          style: const TextStyle(fontSize: 20),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.white.withOpacity(0.9),
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
     );
   }
 }

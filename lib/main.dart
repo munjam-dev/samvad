@@ -1,1 +1,5 @@
-export 'zingify_app.dart';
+import 'samvad_app.dart' as app;
+
+void main() {
+  app.main();
+}

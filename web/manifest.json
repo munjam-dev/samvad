@@ -1,11 +1,11 @@
 {
-    "name": "zingify_mobile_new",
-    "short_name": "zingify_mobile_new",
+    "name": "Samvad Messenger",
+    "short_name": "Samvad",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0F172A",
+    "theme_color": "#6366F1",
+    "description": "संवाद - Meaningful conversations, securely connected.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

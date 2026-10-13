@@ -1,267 +1,307 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../main.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+import 'package:image_picker/image_picker.dart';
+import '../samvad_app.dart';
+import 'dart:async';
 
-class ChatScreen extends StatelessWidget {
-  final String chatId;
+class ChatScreen extends StatefulWidget {
+  final Chat chat;
 
   const ChatScreen({
     super.key,
-    required this.chatId,
+    required this.chat,
   });
+
+  @override
+  State<ChatScreen> createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends State<ChatScreen> {
+  final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  List<Message> _messages = [];
+  bool _isLoading = true;
+  bool _isTyping = false;
+  Timer? _typingTimer;
+  bool _showEmojiPicker = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMessages();
+    _setupSocketListeners();
+    _markMessagesAsSeen();
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    _scrollController.dispose();
+    _typingTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadMessages() async {
+    final messages = await ApiService.getMessages(widget.chat.participant.id);
+    if (mounted) {
+      setState(() {
+        _messages = messages;
+        _isLoading = false;
+      });
+      _scrollToBottom();
+    }
+  }
+
+  void _setupSocketListeners() {
+    // Realtime to be implemented with Supabase in Phase 8
+  }
+
+  void _markMessagesAsSeen() {
+    ApiService.markMessagesSeen(widget.chat.participant.id);
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  void _sendMessage() {
+    if (_messageController.text.trim().isEmpty) return;
+    final content = _messageController.text.trim();
+    _messageController.clear();
+    
+    ApiService.sendMessage(
+      conversationId: widget.chat.id,
+      content: content,
+    );
+    _scrollToBottom();
+  }
+
+  void _onTypingChanged() {
+    ApiService.sendTyping(widget.chat.participant.id, true);
+    _typingTimer?.cancel();
+    _typingTimer = Timer(const Duration(seconds: 2), () {
+      ApiService.sendTyping(widget.chat.participant.id, false);
+    });
+  }
+
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      // Logic to upload image and send message
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ZingifyColors.background,
+      backgroundColor: SamvadColors.background,
       appBar: AppBar(
-        backgroundColor: ZingifyColors.surface,
+        backgroundColor: SamvadColors.surface,
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back, color: ZingifyColors.onSurface),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
         ),
         title: Row(
           children: [
             CircleAvatar(
-              backgroundColor: ZingifyColors.primary,
-              child: const Text(
-                'RS',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              radius: 18,
+              backgroundColor: SamvadColors.primary,
+              backgroundImage: widget.chat.participant.profilePicture != null 
+                  ? NetworkImage(widget.chat.participant.profilePicture!) 
+                  : null,
+              child: widget.chat.participant.profilePicture == null 
+                  ? Text(widget.chat.participant.name[0].toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 14))
+                  : null,
             ),
             const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Rahul Sharma',
-                  style: TextStyle(
-                    color: ZingifyColors.onSurface,
-                    fontWeight: FontWeight.w600,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.chat.participant.name,
+                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                   ),
-                ),
-                Text(
-                  'Online',
-                  style: TextStyle(
-                    color: ZingifyColors.accent,
-                    fontSize: 12,
+                  Text(
+                    _isTyping ? 'typing...' : (widget.chat.participant.isOnline ? 'Online' : 'Offline'),
+                    style: TextStyle(
+                      color: _isTyping || widget.chat.participant.isOnline ? SamvadColors.success : SamvadColors.onSurfaceMuted,
+                      fontSize: 12,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
         actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.video_call, color: ZingifyColors.onSurface),
-          ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.call, color: ZingifyColors.onSurface),
-          ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.more_vert, color: ZingifyColors.onSurface),
-          ),
+          IconButton(icon: const Icon(Icons.videocam, color: Colors.white70), onPressed: () {}),
+          IconButton(icon: const Icon(Icons.call, color: Colors.white70), onPressed: () {}),
         ],
       ),
       body: Column(
         children: [
-          // Messages Area
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage('assets/images/chat_bg.png'),
-                  repeat: ImageRepeat.repeat,
-                  opacity: 0.1,
+            child: _isLoading 
+              ? const Center(child: CircularProgressIndicator(color: SamvadColors.primary))
+              : ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(20),
+                  itemCount: _messages.length,
+                  itemBuilder: (context, index) => MessageBubble(
+                    message: _messages[index],
+                    isMe: _messages[index].sender.id == ApiService.currentUser?.id,
+                  ),
                 ),
-              ),
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: 10,
-                itemBuilder: (context, index) {
-                  final isMe = index % 2 == 0;
-                  return MessageBubble(
-                    isMe: isMe,
-                    message: isMe 
-                        ? 'Hey! How are you doing? This is a test message from Zingify!'
-                        : 'I\'m doing great! Zingify looks amazing with the glassmorphism UI!',
-                    time: '2:${30 + index}0 PM',
-                  ).animate().fadeIn(delay: (index * 100).ms, duration: 300.ms);
-                },
-              ),
-            ),
           ),
-
-          // Message Input
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: ZingifyColors.surface,
-              border: Border(
-                top: BorderSide(color: ZingifyColors.border),
-              ),
-            ),
-            child: Row(
-              children: [
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.emoji_emotions, color: ZingifyColors.primary),
-                ),
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.attach_file, color: ZingifyColors.primary),
-                ),
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: ZingifyColors.background,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: ZingifyColors.border),
-                    ),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Type a message...',
-                        hintStyle: TextStyle(color: ZingifyColors.onSurface.withOpacity(0.5)),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [ZingifyColors.primary, ZingifyColors.secondary],
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: IconButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Message sent!'),
-                          backgroundColor: ZingifyColors.primary,
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.send, color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          _buildInputArea(),
+          if (_showEmojiPicker) _buildEmojiPicker(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildInputArea() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: const BoxDecoration(
+        color: SamvadColors.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      child: SafeArea(
+        child: Row(
+          children: [
+            IconButton(
+              icon: Icon(_showEmojiPicker ? Icons.keyboard : Icons.emoji_emotions, color: SamvadColors.primaryLight),
+              onPressed: () => setState(() => _showEmojiPicker = !_showEmojiPicker),
+            ),
+            IconButton(
+              icon: const Icon(Icons.attach_file, color: SamvadColors.primaryLight),
+              onPressed: _pickImage,
+            ),
+            Expanded(
+              child: TextField(
+                controller: _messageController,
+                onChanged: (_) => _onTypingChanged(),
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  hintText: 'Type a message...',
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  filled: false,
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: _sendMessage,
+              icon: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(colors: SamvadColors.gradientPrimary),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.send, color: Colors.white, size: 20),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmojiPicker() {
+    return SizedBox(
+      height: 250,
+      child: EmojiPicker(
+        onEmojiSelected: (category, emoji) {
+          _messageController.text += emoji.emoji;
+        },
+        config: Config(
+          bgColor: SamvadColors.background,
+          indicatorColor: SamvadColors.primary,
+          iconColorSelected: SamvadColors.primary,
+          backspaceColor: SamvadColors.primary,
+        ),
       ),
     );
   }
 }
 
 class MessageBubble extends StatelessWidget {
+  final Message message;
   final bool isMe;
-  final String message;
-  final String time;
 
   const MessageBubble({
     super.key,
-    required this.isMe,
     required this.message,
-    required this.time,
+    required this.isMe,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-        children: [
-          if (!isMe) ...[
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: ZingifyColors.primary,
-              child: const Text(
-                'RS',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
+    return Align(
+      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+        decoration: BoxDecoration(
+          color: isMe ? SamvadColors.messageSent : SamvadColors.messageReceived,
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(20),
+            topRight: const Radius.circular(20),
+            bottomLeft: Radius.circular(isMe ? 20 : 0),
+            bottomRight: Radius.circular(isMe ? 0 : 20),
+          ),
+          boxShadow: [
+            if (isMe) 
+              BoxShadow(
+                color: SamvadColors.primary.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              )
           ],
-          Flexible(
-            child: Column(
-              crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              message.content,
+              style: const TextStyle(fontSize: 16, color: Colors.white),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.7,
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  decoration: BoxDecoration(
-                    gradient: isMe
-                        ? const LinearGradient(
-                            colors: [ZingifyColors.primary, ZingifyColors.secondary],
-                          )
-                        : null,
-                    color: isMe ? null : ZingifyColors.surface,
-                    borderRadius: BorderRadius.circular(20),
-                    border: isMe
-                        ? null
-                        : Border.all(color: ZingifyColors.border),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 5,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Text(
-                    message,
-                    style: TextStyle(
-                      color: isMe ? Colors.white : ZingifyColors.onSurface,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
                 Text(
-                  time,
-                  style: TextStyle(
-                    color: ZingifyColors.onSurface.withOpacity(0.5),
-                    fontSize: 11,
-                  ),
+                  '${message.timestamp.hour}:${message.timestamp.minute.toString().padLeft(2, '0')}',
+                  style: const TextStyle(fontSize: 10, color: Colors.white54),
                 ),
+                if (isMe) ...[
+                  const SizedBox(width: 4),
+                  Icon(
+                    message.status == 'seen' ? Icons.done_all : Icons.check,
+                    size: 14,
+                    color: message.status == 'seen' ? Colors.blueAccent : Colors.white54,
+                  ),
+                ],
               ],
             ),
-          ),
-          if (isMe) ...[
-            const SizedBox(width: 8),
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: ZingifyColors.secondary,
-              child: const Text(
-                'ME',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
           ],
-        ],
-      ),
+        ),
+      ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0),
     );
   }
 }

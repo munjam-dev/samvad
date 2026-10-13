@@ -1,53 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Modify this file to customize your launch splash screen -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Background Gradient -->
-    <item>
-        <shape android:shape="rectangle">
-            <gradient
-                android:startColor="#6366F1"
-                android:centerColor="#6366F1"
-                android:endColor="#EC4899"
-                android:angle="270" />
-        </shape>
-    </item>
+    <item android:drawable="@android:color/white" />
 
-    <!-- Zingify Logo -->
-    <item android:gravity="center">
-        <vector
-            android:width="120dp"
-            android:height="120dp"
-            android:viewportWidth="120"
-            android:viewportHeight="120">
-            
-            <!-- Logo Background -->
-            <path
-                android:fillColor="#FFFFFF"
-                android:fillAlpha="0.1"
-                android:pathData="M20,20 L100,20 A20,20 0 0,1 100,100 L20,100 A20,20 0 0,1 20,20 Z"/>
-            
-            <!-- Z Shape -->
-            <path
-                android:fillColor="#FFFFFF"
-                android:strokeColor="#FFFFFF"
-                android:strokeWidth="6"
-                android:strokeLineCap="round"
-                android:strokeLineJoin="round"
-                android:pathData="M35,45 L85,45 L35,75 L85,75"/>
-            
-            <!-- Chat Bubbles -->
-            <circle
-                android:fillColor="#10B981"
-                android:fillAlpha="0.8"
-                android:cx="40"
-                android:cy="85"
-                android:r="6"/>
-            <circle
-                android:fillColor="#10B981"
-                android:fillAlpha="0.8"
-                android:cx="80"
-                android:cy="85"
-                android:r="6"/>
-        </vector>
-    </item>
+    <!-- You can insert your own image assets here -->
+    <!-- <item>
+        <bitmap
+            android:gravity="center"
+            android:src="@mipmap/launch_image" />
+    </item> -->
 </layer-list>
