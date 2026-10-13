@@ -1,6 +1,20 @@
 package com.samvad.messenger.ui.components
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.graphicsLayer
+import com.samvad.messenger.ui.theme.LocalReducedMotion
+import com.samvad.messenger.ui.theme.Motion
+import com.samvad.messenger.ui.theme.pressScale
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -48,10 +62,12 @@ fun PrimaryButton(
   loading: Boolean = false,
 ) {
   val colors = SamvadTheme.colors
+  val interaction = remember { MutableInteractionSource() }
   Button(
     onClick = onClick,
     enabled = enabled && !loading,
-    modifier = modifier.fillMaxWidth().height(56.dp),
+    interactionSource = interaction,
+    modifier = modifier.fillMaxWidth().height(56.dp).pressScale(interaction),
     shape = RoundedCornerShape(Radii.BUTTON.dp),
     colors = ButtonDefaults.buttonColors(
       containerColor = colors.primary,
@@ -60,10 +76,12 @@ fun PrimaryButton(
       disabledContentColor = colors.onSurfaceVariant,
     ),
   ) {
-    if (loading) {
-      CircularProgressIndicator(Modifier.size(22.dp), color = colors.onPrimary, strokeWidth = 2.5.dp)
-    } else {
-      Text(text, style = MaterialTheme.typography.labelLarge)
+    AnimatedContent(loading, label = "button") { busy ->
+      if (busy) {
+        CircularProgressIndicator(Modifier.size(22.dp), color = colors.onPrimary, strokeWidth = 2.5.dp)
+      } else {
+        Text(text, style = MaterialTheme.typography.labelLarge)
+      }
     }
   }
 }
@@ -124,15 +142,26 @@ fun SamvadTextField(
 @Composable
 fun UnreadBadge(count: Int, contentDescription: String, modifier: Modifier = Modifier) {
   val colors = SamvadTheme.colors
+  val appear = remember { Animatable(if (LocalReducedMotion.current) 1f else 0.4f) }
+  LaunchedEffect(Unit) { appear.animateTo(1f, Motion.lively()) }
   Box(
     modifier
+      .graphicsLayer { scaleX = appear.value; scaleY = appear.value }
       .defaultMinSize(minWidth = 22.dp, minHeight = 22.dp)
       .background(colors.primary, RoundedCornerShape(11.dp))
       .padding(horizontal = 7.dp)
       .semantics { this.contentDescription = contentDescription },
     contentAlignment = Alignment.Center,
   ) {
-    Text(if (count > 99) "99+" else count.toString(), color = colors.onPrimary, style = MaterialTheme.typography.labelMedium)
+    AnimatedContent(
+      targetState = count,
+      transitionSpec = {
+        (slideInVertically(Motion.offsetSpring) { it } + fadeIn()) togetherWith (slideOutVertically(Motion.offsetSpring) { -it } + fadeOut())
+      },
+      label = "badge",
+    ) { n ->
+      Text(if (n > 99) "99+" else n.toString(), color = colors.onPrimary, style = MaterialTheme.typography.labelMedium)
+    }
   }
 }
 
@@ -152,7 +181,12 @@ fun EmptyState(
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.spacedBy(12.dp),
   ) {
-    Box(Modifier.size(72.dp).background(colors.primaryContainer, CircleShape), contentAlignment = Alignment.Center) {
+    val pop = remember { Animatable(if (LocalReducedMotion.current) 1f else 0.6f) }
+    LaunchedEffect(Unit) { pop.animateTo(1f, Motion.lively()) }
+    Box(
+      Modifier.size(72.dp).graphicsLayer { scaleX = pop.value; scaleY = pop.value }.background(colors.primaryContainer, CircleShape),
+      contentAlignment = Alignment.Center,
+    ) {
       Icon(icon, contentDescription = null, tint = colors.onPrimaryContainer, modifier = Modifier.size(32.dp))
     }
     Text(title, style = MaterialTheme.typography.titleLarge, color = colors.onSurface, textAlign = TextAlign.Center)

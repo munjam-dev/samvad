@@ -1,7 +1,20 @@
 package com.samvad.messenger.ui.app
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.ui.draw.rotate
+import com.samvad.messenger.ui.theme.LocalReducedMotion
+import com.samvad.messenger.ui.theme.Motion
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
@@ -43,9 +56,13 @@ fun SamvadRoot(
   onLinkHandled: () -> Unit = {},
 ) {
   Box(Modifier.fillMaxSize().background(SamvadTheme.colors.background)) {
-    AnimatedContent(state.destination, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "root") { dest ->
+    AnimatedContent(
+      state.destination,
+      transitionSpec = { (fadeIn(tween(320)) + scaleIn(initialScale = 0.97f)) togetherWith (fadeOut(tween(180)) + scaleOut(targetScale = 1.02f)) },
+      label = "root",
+    ) { dest ->
       when (dest) {
-        Destination.LOADING -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { SamvadMark(96.dp) }
+        Destination.LOADING -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { LoadingMark() }
         Destination.SETUP_REQUIRED -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
           EmptyState(
             Icons.Outlined.Build,
@@ -77,7 +94,15 @@ private fun SignedInNav(
       onLinkHandled()
     }
   }
-  NavHost(nav, startDestination = "home") {
+  val spring = Motion.offsetSpring
+  NavHost(
+    nav,
+    startDestination = "home",
+    enterTransition = { slideInHorizontally(spring) { it / 3 } + fadeIn(tween(220)) },
+    exitTransition = { slideOutHorizontally(spring) { -it / 10 } + fadeOut(tween(160)) },
+    popEnterTransition = { slideInHorizontally(spring) { -it / 10 } + fadeIn(tween(220)) },
+    popExitTransition = { slideOutHorizontally(spring) { it / 3 } + fadeOut(tween(160)) },
+  ) {
     composable("home") {
       HomeScreen(
         container = container,
@@ -113,4 +138,16 @@ private fun SignedInNav(
       SettingsScreen(container = container, me = uid, onBack = { nav.popBackStack() }, onSignOut = session::signOut)
     }
   }
+}
+
+/** The pinwheel turns slowly only while the app is deciding where to go (the load window). */
+@Composable
+private fun LoadingMark() {
+  if (LocalReducedMotion.current) {
+    SamvadMark(96.dp)
+    return
+  }
+  val spin = rememberInfiniteTransition(label = "loading")
+  val angle = spin.animateFloat(0f, 360f, infiniteRepeatable(tween(2400, easing = LinearEasing), RepeatMode.Restart), label = "angle")
+  SamvadMark(96.dp, Modifier.rotate(angle.value))
 }

@@ -1,6 +1,19 @@
 package com.samvad.messenger.ui.chat
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
+import com.samvad.messenger.ui.theme.LocalReducedMotion
+import com.samvad.messenger.ui.theme.Motion
+import com.samvad.messenger.ui.theme.motionSpec
+import com.samvad.messenger.ui.theme.pressScale
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -149,6 +162,11 @@ fun ConversationScreen(
   val nearTop by remember { derivedStateOf { (list.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) >= list.layoutInfo.totalItemsCount - 5 } }
   LaunchedEffect(nearTop, state.hasMore) { if (nearTop && state.hasMore) vm.loadMore() }
   val awayFromLatest by remember { derivedStateOf { list.firstVisibleItemIndex > 3 } }
+  // Messages present at first load appear instantly; only later arrivals animate in.
+  var initialIds by remember { mutableStateOf<Set<String>?>(null) }
+  LaunchedEffect(state.loading, state.items.isNotEmpty()) {
+    if (!state.loading && initialIds == null) initialIds = state.items.map { it.key }.toSet()
+  }
 
   Box(Modifier.fillMaxSize().background(colors.background)) {
     Column(Modifier.fillMaxSize().imePadding()) {
@@ -202,10 +220,12 @@ fun ConversationScreen(
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
           ) {
             items(state.items, key = { it.key }, contentType = { it::class }) { item ->
+              Box(Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null, placementSpec = Motion.offsetSpring)) {
               when (item) {
                 is TimelineItem.DateSeparator -> DateChip(item.label)
                 is TimelineItem.Bubble -> MessageBubble(
                   item = item,
+                  animateIn = initialIds?.contains(item.key) == false,
                   replied = item.message.replyTo?.let { id -> state.items.firstOrNull { it.key == id } as? TimelineItem.Bubble },
                   otherName = state.title,
                   onLongPress = { selected = item.message },
@@ -213,14 +233,15 @@ fun ConversationScreen(
                   onReact = { emoji -> vm.react(item.message, emoji) },
                 )
               }
+              }
             }
           }
         }
         androidx.compose.animation.AnimatedVisibility(
           visible = awayFromLatest,
           modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
-          enter = fadeIn(),
-          exit = fadeOut(),
+          enter = fadeIn() + scaleIn(Motion.lively(), initialScale = 0.6f),
+          exit = fadeOut() + scaleOut(targetScale = 0.6f),
         ) {
           SmallFloatingActionButton(
             onClick = { scope.launch { list.animateScrollToItem(0) } },
@@ -280,6 +301,7 @@ private fun DateChip(label: String) {
 @Composable
 private fun MessageBubble(
   item: TimelineItem.Bubble,
+  animateIn: Boolean,
   replied: TimelineItem.Bubble?,
   otherName: String,
   onLongPress: () -> Unit,
@@ -293,9 +315,21 @@ private fun MessageBubble(
   val bg = if (mine) colors.bubbleOutgoing else colors.bubbleIncoming
   val meta = if (mine) colors.bubbleMeta else colors.onSurfaceVariant
   val retryLabel = stringResource(R.string.chat_retry)
+  val reduced = LocalReducedMotion.current
+  val appear = remember(m.id) { Animatable(if (animateIn && !reduced) 0f else 1f) }
+  LaunchedEffect(m.id) { if (appear.value < 1f) appear.animateTo(1f, Motion.lively()) }
 
   Column(
-    Modifier.fillMaxWidth().padding(top = if (item.groupedWithPrevious) 2.dp else 8.dp),
+    Modifier
+      .fillMaxWidth()
+      .padding(top = if (item.groupedWithPrevious) 2.dp else 8.dp)
+      .graphicsLayer {
+        alpha = appear.value.coerceIn(0f, 1f)
+        val s = 0.85f + 0.15f * appear.value
+        scaleX = s
+        scaleY = s
+        transformOrigin = TransformOrigin(if (mine) 1f else 0f, 1f)
+      },
     horizontalAlignment = if (mine) Alignment.End else Alignment.Start,
   ) {
     Column(
@@ -344,7 +378,11 @@ private fun MessageBubble(
     if (m.failed) {
       Text(retryLabel, style = MaterialTheme.typography.labelSmall, color = colors.error, modifier = Modifier.padding(top = 2.dp))
     }
-    if (m.reactions.isNotEmpty()) {
+    androidx.compose.animation.AnimatedVisibility(
+      visible = m.reactions.isNotEmpty(),
+      enter = scaleIn(Motion.lively(), initialScale = 0.4f) + fadeIn(),
+      exit = scaleOut() + fadeOut(),
+    ) {
       Row(
         Modifier
           .padding(top = 2.dp, start = 8.dp, end = 8.dp)
@@ -379,7 +417,9 @@ private fun DeliveryIcon(state: DeliveryState) {
     DeliveryState.FAILED -> colors.error
     else -> colors.bubbleMeta
   }
-  Icon(icon, stringResource(label), tint = tint, modifier = Modifier.size(15.dp))
+  Crossfade(targetState = icon, label = "delivery") { shown ->
+    Icon(shown, stringResource(label), tint = tint, modifier = Modifier.size(15.dp))
+  }
 }
 
 @Composable
@@ -432,16 +472,27 @@ private fun Composer(
         IconButton(onClick = onAttach) { Icon(Icons.Outlined.AttachFile, stringResource(R.string.cd_attach), tint = colors.onSurfaceVariant) }
       }
       val canSend = state.text.isNotBlank() && !state.tooLong
+      val sendBg by animateColorAsState(if (canSend) colors.primary else colors.surfaceContainer, motionSpec(Motion.standard()), label = "sendBg")
+      val sendTint by animateColorAsState(if (canSend) colors.onPrimary else colors.onSurfaceVariant, motionSpec(Motion.standard()), label = "sendTint")
+      val sendScale by animateFloatAsState(if (canSend) 1f else 0.9f, motionSpec(Motion.lively()), label = "sendScale")
+      val sendPress = remember { MutableInteractionSource() }
       IconButton(
         onClick = onSend,
         enabled = canSend,
-        modifier = Modifier.size(48.dp).background(if (canSend) colors.primary else colors.surfaceContainer, CircleShape),
+        interactionSource = sendPress,
+        modifier = Modifier
+          .size(48.dp)
+          .graphicsLayer { scaleX = sendScale; scaleY = sendScale }
+          .pressScale(sendPress, 0.88f)
+          .background(sendBg, CircleShape),
       ) {
-        Icon(
-          if (state.editing != null) Icons.Outlined.Done else Icons.AutoMirrored.Outlined.Send,
-          stringResource(R.string.cd_send),
-          tint = if (canSend) colors.onPrimary else colors.onSurfaceVariant,
-        )
+        Crossfade(targetState = state.editing != null, label = "sendIcon") { editing ->
+          Icon(
+            if (editing) Icons.Outlined.Done else Icons.AutoMirrored.Outlined.Send,
+            stringResource(R.string.cd_send),
+            tint = sendTint,
+          )
+        }
       }
     }
   }

@@ -1,6 +1,29 @@
 package com.samvad.messenger.ui.home
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.graphicsLayer
+import com.samvad.messenger.ui.theme.LocalReducedMotion
+import com.samvad.messenger.ui.theme.Motion
+import com.samvad.messenger.ui.theme.enterOnce
+import com.samvad.messenger.ui.theme.motionSpec
+import com.samvad.messenger.ui.theme.pressScale
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -97,21 +120,37 @@ fun HomeScreen(
   val vm: HomeViewModel = viewModel(factory = HomeViewModel.factory(container, me))
   val state = vm.state.collectAsStateWithLifecycle().value
   val colors = SamvadTheme.colors
+  val reduced = LocalReducedMotion.current
   var tab by rememberSaveable { mutableIntStateOf(0) }
 
   Box(Modifier.fillMaxSize().background(colors.background)) {
-    when (Tab.entries[tab]) {
-      Tab.CHATS -> ChatsTab(container, state, vm, onOpenChat, onNewChat, onOpenSettings)
-      Tab.CALLS -> ComingSoon(Icons.Outlined.Call, R.string.calls_title, R.string.calls_body)
-      Tab.COMMUNITIES -> ComingSoon(Icons.Outlined.Groups, R.string.communities_title, R.string.communities_body)
+    AnimatedContent(
+      targetState = Tab.entries[tab],
+      transitionSpec = { (fadeIn(tween(220)) + scaleIn(initialScale = 0.98f)) togetherWith fadeOut(tween(120)) },
+      label = "tab",
+    ) { t ->
+      when (t) {
+        Tab.CHATS -> ChatsTab(container, state, vm, onOpenChat, onNewChat, onOpenSettings)
+        Tab.CALLS -> ComingSoon(Icons.Outlined.Call, R.string.calls_title, R.string.calls_body)
+        Tab.COMMUNITIES -> ComingSoon(Icons.Outlined.Groups, R.string.communities_title, R.string.communities_body)
+      }
     }
     if (Tab.entries[tab] == Tab.CHATS) {
+      val fabIn = remember { Animatable(if (reduced) 1f else 0f) }
+      LaunchedEffect(Unit) { fabIn.animateTo(1f, Motion.lively()) }
+      val fabPress = remember { MutableInteractionSource() }
       FloatingActionButton(
         onClick = onNewChat,
+        interactionSource = fabPress,
         containerColor = colors.primary,
         contentColor = colors.onPrimary,
         shape = RoundedCornerShape(20.dp),
-        modifier = Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(end = 20.dp, bottom = 104.dp),
+        modifier = Modifier
+          .align(Alignment.BottomEnd)
+          .navigationBarsPadding()
+          .padding(end = 20.dp, bottom = 104.dp)
+          .graphicsLayer { scaleX = fabIn.value; scaleY = fabIn.value; rotationZ = (1f - fabIn.value) * -90f }
+          .pressScale(fabPress, 0.9f),
       ) { Icon(Icons.Outlined.Add, stringResource(R.string.cd_new_chat)) }
     }
     FloatingNavBar(
@@ -140,6 +179,7 @@ private fun ChatsTab(
 ) {
   val colors = SamvadTheme.colors
   val open: (ChatRow) -> Unit = { row -> onOpenChat(row.conversationId, vm.otherOf(row)) }
+  val seen = remember { mutableSetOf<Any>() }
   LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 128.dp)) {
     item(key = "header") {
       when (state.layout) {
@@ -194,10 +234,12 @@ private fun ChatsTab(
       else -> {
         val carded = state.layout != HomeLayout.CLEAN
         if (carded) item(key = "card-top") { CardEdge(top = true, heading = stringResource(R.string.home_recent)) }
-        items(state.rows, key = { it.conversationId }) { row ->
+        itemsIndexed(state.rows, key = { _, r -> r.conversationId }) { index, row ->
           val highlight = state.layout == HomeLayout.BENTO && row.pinned
           Box(
             Modifier
+              .animateItem(fadeInSpec = null, fadeOutSpec = null, placementSpec = Motion.offsetSpring)
+              .enterOnce(index, seen, row.conversationId)
               .padding(horizontal = if (carded) 14.dp else 0.dp)
               .background(if (carded) colors.surface else colors.background),
           ) {
@@ -390,23 +432,28 @@ private fun BentoHeader(state: HomeUiState, vm: HomeViewModel, onProfile: () -> 
 @Composable
 private fun BubbleIllustration(modifier: Modifier) {
   val colors = SamvadTheme.colors
+  val t = remember { Animatable(if (LocalReducedMotion.current) 1f else 0f) }
+  LaunchedEffect(Unit) { t.animateTo(1f, Motion.lively()) }
   Canvas(modifier) {
     val w = size.width
     val h = size.height
-    drawRoundRect(colors.brand.copy(alpha = 0.55f), Offset(w * 0.30f, h * 0.02f), Size(w * 0.68f, h * 0.48f), CornerRadius(h * 0.14f))
-    drawRoundRect(colors.lime, Offset(w * 0.02f, h * 0.40f), Size(w * 0.62f, h * 0.44f), CornerRadius(h * 0.13f))
+    val back = (1f - t.value) * w * 0.5f
+    val front = (1f - t.value) * w * 0.8f
+    drawRoundRect(colors.brand.copy(alpha = 0.55f), Offset(w * 0.30f + back, h * 0.02f), Size(w * 0.68f, h * 0.48f), CornerRadius(h * 0.14f))
+    drawRoundRect(colors.lime, Offset(w * 0.02f + front, h * 0.40f), Size(w * 0.62f, h * 0.44f), CornerRadius(h * 0.13f))
     val dot = colors.deep
-    listOf(0.17f, 0.31f, 0.45f).forEach { x -> drawCircle(dot, radius = h * 0.035f, center = Offset(w * x, h * 0.62f)) }
+    listOf(0.17f, 0.31f, 0.45f).forEach { x -> drawCircle(dot, radius = h * 0.035f * t.value, center = Offset(w * x + front, h * 0.62f)) }
   }
 }
 
 @Composable
 private fun RecentPeople(people: List<ChatRow>, onOpen: (ChatRow) -> Unit) {
   val colors = SamvadTheme.colors
+  val peopleSeen = remember { mutableSetOf<Any>() }
   LazyRow(contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-    items(people, key = { "p-" + it.conversationId }) { p ->
+    itemsIndexed(people, key = { _, it -> "p-" + it.conversationId }) { index, p ->
       Column(
-        Modifier.width(64.dp).clip(RoundedCornerShape(12.dp)).clickable(onClickLabel = p.title) { onOpen(p) },
+        Modifier.enterOnce(index, peopleSeen, p.conversationId).width(64.dp).clip(RoundedCornerShape(12.dp)).clickable(onClickLabel = p.title) { onOpen(p) },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
       ) {
@@ -436,13 +483,17 @@ private fun ChipFilters(state: HomeUiState, onSelect: (ChatFilter) -> Unit) {
   LazyRow(contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
     items(ChatFilter.entries.toList(), key = { it.name }) { f ->
       val sel = f == state.filter
+      val bg by animateColorAsState(if (sel) colors.primary else colors.surface, motionSpec(Motion.standard()), label = "chipBg")
+      val edge by animateColorAsState(if (sel) colors.primary else colors.outlineVariant, motionSpec(Motion.standard()), label = "chipEdge")
+      val press = remember { MutableInteractionSource() }
       Row(
         Modifier
+          .pressScale(press)
           .height(36.dp)
           .clip(RoundedCornerShape(18.dp))
-          .background(if (sel) colors.primary else colors.surface)
-          .border(1.dp, if (sel) colors.primary else colors.outlineVariant, RoundedCornerShape(18.dp))
-          .clickable { onSelect(f) }
+          .background(bg)
+          .border(1.dp, edge, RoundedCornerShape(18.dp))
+          .clickable(interactionSource = press, indication = LocalIndication.current) { onSelect(f) }
           .semantics { selected = sel; role = Role.Tab }
           .padding(horizontal = 15.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -463,7 +514,7 @@ private fun ChipFilters(state: HomeUiState, onSelect: (ChatFilter) -> Unit) {
 @Composable
 private fun SegmentedFilters(state: HomeUiState, onSelect: (ChatFilter) -> Unit) {
   val colors = SamvadTheme.colors
-  Row(
+  BoxWithConstraints(
     Modifier
       .padding(horizontal = 20.dp, vertical = 8.dp)
       .fillMaxWidth()
@@ -471,15 +522,24 @@ private fun SegmentedFilters(state: HomeUiState, onSelect: (ChatFilter) -> Unit)
       .background(colors.surfaceContainer, RoundedCornerShape(14.dp))
       .padding(4.dp),
   ) {
+    val segment = maxWidth / ChatFilter.entries.size
+    val indicatorX by animateDpAsState(segment * state.filter.ordinal, motionSpec(Motion.lively()), label = "segment")
+    Box(
+      Modifier
+        .offset(x = indicatorX)
+        .width(segment)
+        .fillMaxHeight()
+        .shadow(1.dp, RoundedCornerShape(10.dp))
+        .background(colors.surface, RoundedCornerShape(10.dp)),
+    )
+    Row(Modifier.fillMaxSize()) {
     ChatFilter.entries.forEach { f ->
       val sel = f == state.filter
       Box(
         Modifier
           .weight(1f)
           .fillMaxSize()
-          .then(if (sel) Modifier.shadow(1.dp, RoundedCornerShape(10.dp)) else Modifier)
           .clip(RoundedCornerShape(10.dp))
-          .background(if (sel) colors.surface else colors.surfaceContainer)
           .clickable { onSelect(f) }
           .semantics { selected = sel; role = Role.Tab },
         contentAlignment = Alignment.Center,
@@ -492,19 +552,22 @@ private fun SegmentedFilters(state: HomeUiState, onSelect: (ChatFilter) -> Unit)
         )
       }
     }
+    }
   }
 }
 
 @Composable
 fun ChatRowItem(row: ChatRow, highlight: Boolean, onClick: () -> Unit) {
   val colors = SamvadTheme.colors
+  val press = remember { MutableInteractionSource() }
   Row(
     Modifier
       .fillMaxWidth()
       .padding(horizontal = 6.dp, vertical = 1.dp)
+      .pressScale(press, 0.98f)
       .clip(RoundedCornerShape(18.dp))
       .background(if (highlight) colors.primaryContainer else androidx.compose.ui.graphics.Color.Transparent)
-      .clickable(onClick = onClick)
+      .clickable(interactionSource = press, indication = LocalIndication.current, onClick = onClick)
       .padding(horizontal = 14.dp, vertical = 11.dp),
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.spacedBy(13.dp),
@@ -562,6 +625,9 @@ private fun FloatingNavBar(selected: Int, onSelect: (Int) -> Unit, modifier: Mod
     ) {
       items.forEachIndexed { i, (label, icon, activeIcon) ->
         val active = i == selected
+        val pill by animateColorAsState(if (active) colors.primaryContainer else colors.surface, motionSpec(Motion.standard()), label = "pill")
+        val pillWidth by animateDpAsState(if (active) 52.dp else 30.dp, motionSpec(Motion.lively()), label = "pillW")
+        val tint by animateColorAsState(if (active) colors.brand else colors.onSurfaceVariant, motionSpec(Motion.standard()), label = "tint")
         Column(
           Modifier
             .weight(1f)
@@ -572,10 +638,10 @@ private fun FloatingNavBar(selected: Int, onSelect: (Int) -> Unit, modifier: Mod
           verticalArrangement = Arrangement.Center,
         ) {
           Box(
-            Modifier.size(width = 52.dp, height = 30.dp).background(if (active) colors.primaryContainer else colors.surface, RoundedCornerShape(15.dp)),
+            Modifier.size(width = pillWidth, height = 30.dp).background(pill, RoundedCornerShape(15.dp)),
             contentAlignment = Alignment.Center,
           ) {
-            Icon(if (active) activeIcon else icon, null, tint = if (active) colors.brand else colors.onSurfaceVariant, modifier = Modifier.size(22.dp))
+            Icon(if (active) activeIcon else icon, null, tint = tint, modifier = Modifier.size(22.dp))
           }
           Spacer(Modifier.height(3.dp))
           Text(stringResource(label), style = MaterialTheme.typography.labelSmall, color = if (active) colors.primary else colors.onSurfaceVariant, maxLines = 1)

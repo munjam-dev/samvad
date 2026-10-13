@@ -3,6 +3,18 @@ package com.samvad.messenger.ui.auth
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
+import androidx.compose.ui.graphics.graphicsLayer
+import com.samvad.messenger.ui.theme.LocalReducedMotion
+import com.samvad.messenger.ui.theme.Motion
+import com.samvad.messenger.ui.theme.motionSpec
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -226,6 +238,14 @@ fun OtpStep(
   BackHandler(onBack = onBack)
   LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
   LaunchedEffect(state.code) { if (state.code.length == 6) onVerify() }
+  // A wrong code gives a short horizontal shake (skipped when animations are off).
+  val reduced = LocalReducedMotion.current
+  val shake = remember { Animatable(0f) }
+  LaunchedEffect(state.error) {
+    if (state.error != null && !reduced) {
+      for (x in listOf(14f, -12f, 9f, -6f, 3f, 0f)) shake.animateTo(x, tween(45))
+    }
+  }
 
   Column(Modifier.fillMaxSize().systemBarsPadding().imePadding().padding(horizontal = 24.dp)) {
     IconButton(onClick = onBack, modifier = Modifier.padding(top = 4.dp)) {
@@ -243,21 +263,40 @@ fun OtpStep(
       value = state.code,
       onValueChange = onCode,
       keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-      modifier = Modifier.focusRequester(focus).semantics { contentDescription = label },
+      modifier = Modifier
+        .focusRequester(focus)
+        .graphicsLayer { translationX = shake.value * density }
+        .semantics { contentDescription = label },
       decorationBox = {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
           repeat(6) { i ->
             val char = state.code.getOrNull(i)?.toString() ?: ""
             val active = i == state.code.length
+            val edge by animateColorAsState(
+              when {
+                state.error != null -> colors.error
+                active -> colors.primary
+                else -> colors.outline
+              },
+              motionSpec(Motion.standard()),
+              label = "otpEdge",
+            )
+            val edgeWidth by animateDpAsState(if (active) 2.dp else 1.dp, motionSpec(Motion.standard()), label = "otpWidth")
             Box(
               Modifier
                 .weight(1f)
                 .height(60.dp)
                 .background(colors.surface, RoundedCornerShape(14.dp))
-                .border(if (active) 2.dp else 1.dp, if (active) colors.primary else colors.outline, RoundedCornerShape(14.dp)),
+                .border(edgeWidth, edge, RoundedCornerShape(14.dp)),
               contentAlignment = Alignment.Center,
             ) {
-              Text(char, style = TextStyle(fontFamily = JakartaSans, fontSize = 24.sp), color = colors.onSurface, textAlign = TextAlign.Center)
+              AnimatedContent(
+                targetState = char,
+                transitionSpec = { (scaleIn(Motion.lively(), initialScale = 0.5f) + fadeIn()) togetherWith fadeOut() },
+                label = "otpDigit",
+              ) { c ->
+                Text(c, style = TextStyle(fontFamily = JakartaSans, fontSize = 24.sp), color = colors.onSurface, textAlign = TextAlign.Center)
+              }
             }
           }
         }

@@ -119,7 +119,7 @@ fun SamvadTheme(mode: ThemeMode = ThemeMode.SYSTEM, content: @Composable () -> U
     else -> SamvadPalettes.Light
   }
   val colors = palette.toColors()
-  CompositionLocalProvider(LocalSamvadColors provides colors) {
+  CompositionLocalProvider(LocalSamvadColors provides colors, LocalReducedMotion provides rememberReducedMotion()) {
     MaterialTheme(
       colorScheme = colors.toMaterial(),
       typography = SamvadTypography,

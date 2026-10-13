@@ -26,6 +26,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
+import com.samvad.messenger.ui.theme.LocalReducedMotion
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -63,15 +65,34 @@ fun OnboardingScreen(onDone: () -> Unit) {
     }
     HorizontalPager(pager, Modifier.weight(1f)) { page ->
       val (title, body) = pages[page]
+      // Parallax: the mark turns and the copy drifts with the swipe, so pages feel layered.
+      val offset = (pager.currentPage - page) + pager.currentPageOffsetFraction
+      val still = LocalReducedMotion.current
       Column(
-        Modifier.fillMaxSize().padding(horizontal = 32.dp),
+        Modifier.fillMaxSize().padding(horizontal = 32.dp).graphicsLayer {
+          if (!still) {
+            alpha = 1f - kotlin.math.abs(offset).coerceIn(0f, 1f) * 0.6f
+          }
+        },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
       ) {
         Box(
-          Modifier.size(196.dp).shadow(24.dp, CircleShape, clip = false).background(colors.surface, CircleShape),
+          Modifier
+            .size(196.dp)
+            .graphicsLayer {
+              if (!still) {
+                val s = 1f - kotlin.math.abs(offset).coerceIn(0f, 1f) * 0.15f
+                scaleX = s
+                scaleY = s
+              }
+            }
+            .shadow(24.dp, CircleShape, clip = false)
+            .background(colors.surface, CircleShape),
           contentAlignment = Alignment.Center,
-        ) { SamvadMark(120.dp, describe = page == 0) }
+        ) {
+          SamvadMark(120.dp, Modifier.graphicsLayer { if (!still) rotationZ = (page + offset) * -51.43f }, describe = page == 0)
+        }
         Spacer(Modifier.height(28.dp))
         if (page == 0) {
           Text(stringResource(R.string.app_name), style = MaterialTheme.typography.displaySmall, color = colors.onSurface)
@@ -80,6 +101,7 @@ fun OnboardingScreen(onDone: () -> Unit) {
         }
         Text(
           stringResource(title),
+          modifier = Modifier.graphicsLayer { if (!still) translationX = offset * size.width * 0.25f },
           style = MaterialTheme.typography.headlineSmall,
           color = colors.onSurface,
           textAlign = TextAlign.Center,
