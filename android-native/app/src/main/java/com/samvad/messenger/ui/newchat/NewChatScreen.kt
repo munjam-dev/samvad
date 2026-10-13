@@ -105,6 +105,7 @@ fun NewChatScreen(
           }
           if (state.numberNotFound) QuietButton(stringResource(R.string.newchat_invite), invite)
           if (state.limitReached) Text(stringResource(R.string.newchat_limit), color = colors.error, style = MaterialTheme.typography.bodySmall)
+          if (state.error) Text(stringResource(R.string.error_unknown), color = colors.error, style = MaterialTheme.typography.bodySmall)
         }
       }
 
