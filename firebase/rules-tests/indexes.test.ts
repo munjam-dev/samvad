@@ -1,0 +1,41 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { assertFails, type RulesTestEnvironment } from '@firebase/rules-unit-testing';
+import { collection, getDocs } from 'firebase/firestore';
+import { createRulesEnv, phoneContext } from '../test-support/rulesEnv';
+
+const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+let env: RulesTestEnvironment;
+
+beforeAll(async () => {
+  env = await createRulesEnv();
+});
+afterAll(async () => {
+  await env.cleanup();
+});
+
+describe('indexes and list access', () => {
+  it('declares exactly the chat-list index and the members.uid collection-group override', () => {
+    const json = JSON.parse(readFileSync(join(root, 'firestore.indexes.json'), 'utf8'));
+    expect(json.indexes).toEqual([
+      {
+        collectionGroup: 'conversations',
+        queryScope: 'COLLECTION',
+        fields: [
+          { fieldPath: 'members', arrayConfig: 'CONTAINS' },
+          { fieldPath: 'lastMessageAt', order: 'DESCENDING' },
+        ],
+      },
+    ]);
+    expect(json.fieldOverrides.map((o: any) => `${o.collectionGroup}.${o.fieldPath}`)).toEqual(['members.uid']);
+  });
+
+  it('users, profiles and deletedAccounts cannot be listed; conversations only via a members filter', async () => {
+    const db = phoneContext(env, 'alice').firestore();
+    for (const name of ['users', 'profiles', 'deletedAccounts', 'conversations']) {
+      await assertFails(getDocs(collection(db, name)));
+    }
+  });
+});

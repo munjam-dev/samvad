@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Samvad</string>
+    <string name="brand_devanagari">संवाद</string>
+    <string name="cd_samvad_mark">Samvad</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_get_started">Get started</string>
+    <string name="onboarding_1_title">Your conversations, connected.</string>
+    <string name="onboarding_1_body">Chat with the people who matter — fast, calm and in your language.</string>
+    <string name="onboarding_2_title">Private by design</string>
+    <string name="onboarding_2_body">Your phone number stays private. Only the people you chat with see your name and about.</string>
+    <string name="onboarding_3_title">Made for every day</string>
+    <string name="onboarding_3_body">Light, dark and true-black themes, readable at any text size, gentle on battery and data.</string>
+    <string name="onboarding_page">Page %1$d of %2$d</string>
+
+    <!-- Phone -->
+    <string name="phone_title">Your phone number</string>
+    <string name="phone_body">We\'ll text you a 6-digit code to confirm it\'s you. Carrier rates may apply.</string>
+    <string name="phone_country">Country</string>
+    <string name="phone_number">Mobile number</string>
+    <string name="phone_valid">Valid mobile number</string>
+    <string name="phone_invalid">Enter a valid mobile number</string>
+    <string name="phone_not_mobile">This looks like a landline. Use a mobile number.</string>
+    <string name="phone_consent">I agree to the Terms of Service and acknowledge the Privacy Policy.</string>
+    <string name="phone_terms">Terms of Service</string>
+    <string name="phone_privacy">Privacy Policy</string>
+    <string name="phone_send_code">Send code</string>
+    <string name="phone_search_country">Search countries</string>
+    <string name="cd_back">Back</string>
+
+    <!-- OTP -->
+    <string name="otp_title">Enter the code</string>
+    <string name="otp_sent_to">Sent to %1$s</string>
+    <string name="otp_wrong_number">Wrong number?</string>
+    <string name="otp_label">6-digit code</string>
+    <string name="otp_auto">Waiting to read the SMS automatically…</string>
+    <string name="otp_didnt_get">Didn\'t get it?</string>
+    <string name="otp_resend">Resend code</string>
+    <string name="otp_resend_in">Resend in %1$s</string>
+    <string name="otp_resends_left">%1$d resends left</string>
+    <string name="otp_verify">Verify</string>
+    <string name="otp_attempts_left">%1$d attempts left</string>
+
+    <!-- Auth errors -->
+    <string name="error_invalid_number">That phone number isn\'t valid.</string>
+    <string name="error_invalid_code">That code isn\'t right. Check the SMS and try again.</string>
+    <string name="error_code_expired">This code has expired. Request a new one.</string>
+    <string name="error_too_many">Too many attempts. Please wait a while before trying again.</string>
+    <string name="error_network">You\'re offline. Check your connection and try again.</string>
+    <string name="error_app_verification">We couldn\'t verify this app. Update Samvad and try again.</string>
+    <string name="error_user_disabled">This account has been disabled.</string>
+    <string name="error_new_code_required">Too many wrong codes. Request a new code.</string>
+    <string name="error_unknown">Something went wrong. Please try again.</string>
+    <string name="error_hourly_limit">You\'ve asked for several codes for this number. Try again in an hour.</string>
+    <string name="error_resend_limit">Resend limit reached. Go back and request a new code.</string>
+
+    <!-- Profile setup -->
+    <string name="setup_step">Step %1$d of %2$d</string>
+    <string name="setup_name_title">What should we call you?</string>
+    <string name="setup_name_hint">Your name</string>
+    <string name="setup_name_help">Shown to people you chat with. Up to 64 characters.</string>
+    <string name="setup_about_title">Add a short about</string>
+    <string name="setup_about_hint">e.g. Tending the balcony garden</string>
+    <string name="setup_about_help">Optional · up to 140 characters</string>
+    <string name="setup_finish">Start chatting</string>
+    <string name="setup_skip">Skip</string>
+
+    <!-- Home -->
+    <string name="home_search">Search chats, people, groups</string>
+    <string name="home_headline">Your conversations, connected.</string>
+    <string name="home_all_caught_up">All caught up</string>
+    <string name="home_unread_summary">%1$d unread in %2$d chats</string>
+    <string name="home_recent">Recent chats</string>
+    <string name="home_pinned">Pinned</string>
+    <string name="filter_all">All</string>
+    <string name="filter_unread">Unread</string>
+    <string name="filter_groups">Groups</string>
+    <string name="filter_favorites">Favorites</string>
+    <string name="cd_search">Search</string>
+    <string name="cd_notifications">Notifications</string>
+    <string name="cd_profile">Your profile</string>
+    <string name="cd_new_chat">New chat</string>
+    <string name="cd_more">More options</string>
+    <string name="cd_pinned">Pinned</string>
+    <string name="cd_muted">Muted</string>
+    <string name="cd_online">Online</string>
+    <string name="cd_read">Read</string>
+    <string name="cd_unread_count">%1$d unread messages</string>
+    <string name="home_empty_title">Start your first conversation</string>
+    <string name="home_empty_body">Find friends who already use Samvad, or invite someone new.</string>
+    <string name="home_empty_cta">Find people</string>
+    <string name="home_filter_empty">Nothing here yet</string>
+    <string name="home_offline">You\'re offline. Showing saved chats.</string>
+    <string name="home_load_error">Couldn\'t load your chats.</string>
+    <string name="retry">Retry</string>
+    <string name="nav_chats">Chats</string>
+    <string name="nav_calls">Calls</string>
+    <string name="nav_communities">Communities</string>
+    <string name="nav_settings">Settings</string>
+    <string name="search_hint">Search chats</string>
+    <string name="search_no_results">No chats match \"%1$s\"</string>
+
+    <!-- Coming soon tabs (honest empty states, no mock data) -->
+    <string name="calls_title">Calls</string>
+    <string name="calls_body">Voice and video calling is being built. It will appear here when it\'s ready.</string>
+    <string name="communities_title">Communities</string>
+    <string name="communities_body">Communities and channels are on the way. Group chats arrive first.</string>
+
+    <!-- Conversation -->
+    <string name="chat_message_hint">Message</string>
+    <string name="cd_send">Send</string>
+    <string name="cd_attach">Attach</string>
+    <string name="cd_emoji">Emoji</string>
+    <string name="chat_online">online</string>
+    <string name="chat_today">Today</string>
+    <string name="chat_edited">edited</string>
+    <string name="chat_deleted">This message was deleted</string>
+    <string name="chat_reply">Reply</string>
+    <string name="chat_copy">Copy</string>
+    <string name="chat_edit">Edit</string>
+    <string name="chat_delete">Delete for everyone</string>
+    <string name="chat_react">React</string>
+    <string name="chat_retry">Not sent · Tap to retry</string>
+    <string name="chat_replying_to">Replying to %1$s</string>
+    <string name="chat_editing">Editing message</string>
+    <string name="chat_cancel">Cancel</string>
+    <string name="chat_you">You</string>
+    <string name="chat_empty">Say hello to %1$s 👋</string>
+    <string name="chat_too_long">Messages can be up to 4096 characters.</string>
+    <string name="chat_scroll_latest">Jump to latest</string>
+    <string name="chat_attachments_soon">Photos, files and voice notes arrive with the media update.</string>
+    <string name="cd_delivery_sending">Sending</string>
+    <string name="cd_delivery_sent">Sent</string>
+    <string name="cd_delivery_delivered">Delivered</string>
+    <string name="cd_delivery_read">Read</string>
+    <string name="cd_delivery_failed">Not sent</string>
+    <string name="chat_copied">Copied</string>
+    <string name="chat_mute">Mute</string>
+    <string name="chat_unmute">Unmute</string>
+    <string name="chat_pin">Pin</string>
+    <string name="chat_unpin">Unpin</string>
+    <string name="chat_archive">Archive</string>
+
+    <!-- New chat -->
+    <string name="newchat_title">New chat</string>
+    <string name="newchat_permission_title">Find friends on Samvad</string>
+    <string name="newchat_permission_body">Samvad checks your contacts\' phone numbers against Samvad accounts so you can start chatting. Numbers are sent securely for matching and are not stored or shown to anyone.</string>
+    <string name="newchat_permission_allow">Allow access to contacts</string>
+    <string name="newchat_permission_denied">Contacts access is off. You can still start a chat by number.</string>
+    <string name="newchat_by_number">Start a chat by number</string>
+    <string name="newchat_number_hint">Phone number with country code</string>
+    <string name="newchat_search">Search contacts</string>
+    <string name="newchat_on_samvad">On Samvad</string>
+    <string name="newchat_none">None of your contacts use Samvad yet.</string>
+    <string name="newchat_not_found">That number isn\'t on Samvad yet.</string>
+    <string name="newchat_invite">Invite</string>
+    <string name="newchat_invite_text">Let\'s chat on Samvad — a calm, private messenger.</string>
+    <string name="newchat_limit">Lookup limit reached for today. Try again tomorrow.</string>
+    <string name="newchat_start">Chat</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_edit_profile">Edit profile</string>
+    <string name="settings_account">Account</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_system">System default</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_theme_amoled">True black</string>
+    <string name="settings_home_layout">Home layout</string>
+    <string name="settings_layout_clean">Clean</string>
+    <string name="settings_layout_bold">Bold header</string>
+    <string name="settings_layout_bento">Card &amp; bento</string>
+    <string name="settings_privacy">Privacy &amp; security</string>
+    <string name="settings_privacy_body">Your phone number is visible only to you. Messages are protected in transit and at rest by Firebase; Samvad does not yet offer end-to-end encryption.</string>
+    <string name="settings_help">Help &amp; feedback</string>
+    <string name="settings_sign_out">Sign out</string>
+    <string name="settings_sign_out_all">Sign out of all devices</string>
+    <string name="settings_sign_out_all_body">Ends every session, including this one. Sessions on other devices may take up to an hour to expire.</string>
+    <string name="settings_signed_out_all">Signed out everywhere.</string>
+    <string name="settings_delete">Delete account</string>
+    <string name="settings_delete_body">This permanently deletes your profile and leaves all chats. Messages you sent stay with the people you sent them to. You\'ll confirm with a fresh SMS code.</string>
+    <string name="settings_delete_confirm">Delete my account</string>
+    <string name="settings_cooldown">Please wait a minute before trying again.</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="profile_name">Name</string>
+    <string name="profile_about">About</string>
+    <string name="profile_phone">Phone</string>
+    <string name="profile_saved">Profile saved</string>
+
+    <!-- Setup required -->
+    <string name="setup_required_title">Firebase setup required</string>
+    <string name="setup_required_body">This build has no Firebase configuration. Add app/google-services.json for your project, or build a debug version with -Psamvad.useEmulators=true.</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_messages">Messages</string>
+    <string name="notif_channel_messages_desc">New messages from your chats</string>
+    <string name="notif_new_message">New message</string>
+    <string name="notif_prompt_title">Turn on notifications</string>
+    <string name="notif_prompt_body">Hear about new messages even when Samvad is closed. Muted chats stay quiet.</string>
+    <string name="notif_prompt_allow">Turn on</string>
+    <string name="notif_prompt_later">Not now</string>
+    <string name="settings_notifications">Notifications</string>
+
+    <!-- Presence -->
+    <string name="chat_typing">typing…</string>
+    <string name="settings_hide_last_seen">Hide last seen &amp; online</string>
+    <string name="settings_hide_last_seen_body">Others won\'t see when you\'re online or when you were last active.</string>
+
+    <!-- Media -->
+    <string name="attach_photo">Photo</string>
+    <string name="attach_document">Document</string>
+    <string name="attach_title">Share</string>
+    <string name="media_photo">Photo</string>
+    <string name="media_uploading">Sending…</string>
+    <string name="media_upload_failed">Couldn\'t send · Tap to retry</string>
+    <string name="media_too_large">Files must be 16 MB or smaller.</string>
+    <string name="media_type_blocked">This file type can\'t be sent. Photos, PDFs, Office documents, text and ZIP files are supported.</string>
+    <string name="media_open_failed">No app on this phone can open this file.</string>
+    <string name="media_download_failed">Couldn\'t download. Check your connection.</string>
+    <string name="cd_open_photo">Open photo</string>
+    <string name="cd_close">Close</string>
+    <string name="cd_cancel_upload">Cancel</string>
+    <string name="voice_record">Record voice message</string>
+    <string name="voice_recording">Recording</string>
+    <string name="voice_cancel">Cancel recording</string>
+    <string name="voice_send">Send voice message</string>
+    <string name="voice_play">Play voice message</string>
+    <string name="voice_pause">Pause</string>
+    <string name="voice_permission">Allow microphone access to record voice messages.</string>
+    <!-- Phase 1.3: block and report -->
+    <string name="chat_block">Block</string>
+    <string name="chat_unblock">Unblock</string>
+    <string name="chat_report">Report</string>
+    <string name="block_title">Block %1$s?</string>
+    <string name="block_body">Neither of you will be able to send messages in this chat or see the other\'s online status and last seen. Samvad won\'t notify them.</string>
+    <string name="blocked_banner">You blocked %1$s.</string>
+    <string name="report_title">Report %1$s</string>
+    <string name="report_body">The last 5 messages from this contact will be sent to Samvad for review. They won\'t be notified.</string>
+    <string name="report_reason_spam">Spam or scam</string>
+    <string name="report_reason_abuse">Abusive or hateful</string>
+    <string name="report_reason_harassment">Harassment or bullying</string>
+    <string name="report_reason_impersonation">Pretending to be someone else</string>
+    <string name="report_reason_other">Something else</string>
+    <string name="report_also_block">Also block this contact</string>
+    <string name="report_sent">Thanks. Your report was sent.</string>
+    <string name="report_sent_blocked">Report sent and contact blocked.</string>
+    <string name="report_limit">You\'ve sent many reports today. Try again tomorrow.</string>
+    <string name="safety_failed">Couldn\'t update. Check your connection and try again.</string>
+    <string name="settings_blocked">Blocked contacts</string>
+    <string name="settings_blocked_body">They can\'t message you or see your last seen.</string>
+    <string name="blocked_empty">You haven\'t blocked anyone.</string>
+    <!-- Phase 1.4: security -->
+    <string name="lock_title">Samvad is locked</string>
+    <string name="lock_body">Unlock with your fingerprint, face or phone screen lock.</string>
+    <string name="lock_unlock">Unlock</string>
+    <string name="lock_prompt_title">Unlock Samvad</string>
+    <string name="lock_prompt_subtitle">Confirm it\'s you</string>
+    <string name="settings_app_lock">App lock</string>
+    <string name="settings_app_lock_body">Ask for your fingerprint, face or screen lock to open Samvad.</string>
+    <string name="settings_app_lock_unavailable">Set up a screen lock on your phone first.</string>
+    <string name="settings_lock_after">Lock automatically</string>
+    <string name="settings_lock_immediately">Immediately</string>
+    <string name="settings_lock_one_minute">After 1 minute</string>
+    <string name="settings_lock_thirty_minutes">After 30 minutes</string>
+    <string name="settings_block_screenshots">Block screenshots</string>
+    <string name="settings_block_screenshots_body">Stops screenshots and screen recordings of Samvad and hides it in recent apps.</string>
+    <string name="settings_previews">Show message preview</string>
+    <string name="settings_previews_body">Show who wrote and what they said in notifications. The lock screen never shows message text.</string>
+    <!-- Phase 1.5: two-step verification -->
+    <string name="two_step_title">Two-step verification</string>
+    <string name="two_step_verify_title">Enter your PIN</string>
+    <string name="two_step_verify_body">%1$s has two-step verification on. Enter the 6-digit PIN to continue.</string>
+    <string name="two_step_pin_label">Two-step PIN</string>
+    <string name="two_step_wrong">Wrong PIN.</string>
+    <plurals name="two_step_attempts_left">
+        <item quantity="one">Wrong PIN. %1$d try left before a short lock.</item>
+        <item quantity="other">Wrong PIN. %1$d tries left before a short lock.</item>
+    </plurals>
+    <string name="two_step_locked">Too many wrong PINs. Try again after %1$s.</string>
+    <string name="two_step_locked_plain">Too many wrong PINs. Try again later.</string>
+    <string name="two_step_network">Couldn\'t check. Check your connection and try again.</string>
+    <string name="two_step_forgot_hint">Don\'t remember your PIN?</string>
+    <string name="two_step_forgot">Forgot PIN?</string>
+    <string name="two_step_forgot_title">Reset two-step verification?</string>
+    <string name="two_step_forgot_body">For your safety the reset takes 7 days. If this account is used on another phone during that time, the reset is cancelled. Your chats are kept.</string>
+    <string name="two_step_request_reset">Request reset</string>
+    <string name="two_step_reset_pending">You can reset two-step verification after %1$s.</string>
+    <string name="two_step_reset_ready">The 7 days have passed. You can turn two-step verification off now.</string>
+    <string name="two_step_reset_now">Reset now</string>
+    <string name="two_step_reset_cancelled">The reset was cancelled because this account was used on another phone.</string>
+    <string name="two_step_sign_out">Use a different number</string>
+    <string name="two_step_settings_off">Add a 6-digit PIN that\'s needed whenever your number signs in on a new phone. It keeps your account safe even if someone gets your SMS code.</string>
+    <string name="two_step_settings_on">On. Your PIN is needed whenever your number signs in on a new phone.</string>
+    <string name="two_step_turn_on">Turn on</string>
+    <string name="two_step_change">Change PIN</string>
+    <string name="two_step_turn_off">Turn off</string>
+    <string name="two_step_create">Create a 6-digit PIN</string>
+    <string name="two_step_create_body">Avoid easy PINs like 123456 or 000000. You\'ll need it when you sign in on a new phone.</string>
+    <string name="two_step_confirm">Confirm your PIN</string>
+    <string name="two_step_disable">Enter your PIN to turn off two-step verification</string>
+    <string name="two_step_too_simple">That PIN is too easy to guess. Choose another.</string>
+    <string name="two_step_mismatch">The PINs didn\'t match. Try again.</string>
+    <string name="two_step_on_done">Two-step verification is on.</string>
+    <string name="two_step_changed">PIN changed.</string>
+    <string name="two_step_off_done">Two-step verification is off.</string>
+    <string name="settings_delete_pin">Enter your two-step PIN to delete your account</string>
+    <string name="notif_channel_security">Security alerts</string>
+    <string name="notif_channel_security_desc">Important changes to your account\'s security</string>
+    <string name="notif_security_title">Security alert</string>
+    <string name="notif_two_step_reset">Someone asked to reset your two-step verification. If it wasn\'t you, just open Samvad: that cancels it.</string>
+    <!-- Phase 1.6: export chat, read receipts -->
+    <string name="export_chat">Export chat</string>
+    <string name="export_body">Creates a text file of this chat (up to the latest 5,000 messages) that you can share or save, for example to Google Drive. Photos, voice notes and files are not included. Anyone with the file can read it.</string>
+    <string name="export_confirm">Export</string>
+    <string name="export_header">Samvad chat with %1$s. Photos, voice notes and files are not included.</string>
+    <string name="export_photo">Photo</string>
+    <string name="export_voice">Voice message</string>
+    <string name="export_file">File</string>
+    <string name="export_edited">(edited)</string>
+    <string name="export_unknown">Deleted account</string>
+    <string name="export_failed">Couldn\'t export this chat. Try again.</string>
+    <string name="export_share_title">Save or share chat</string>
+    <string name="settings_read_receipts">Read receipts</string>
+    <string name="settings_read_receipts_body">When off, others won\'t see when you\'ve read their messages, and you won\'t see theirs.</string>
+    <!-- Phase 1.6: forward -->
+    <string name="chat_forward">Forward</string>
+    <string name="forwarded">Forwarded</string>
+    <string name="forward_title">Forward to…</string>
+    <string name="forward_limit">Choose up to %1$d chats.</string>
+    <string name="forward_empty">No chats yet.</string>
+    <string name="forward_send">Send to %1$d</string>
+    <plurals name="forward_sent">
+        <item quantity="one">Forwarded to %1$d chat.</item>
+        <item quantity="other">Forwarded to %1$d chats.</item>
+    </plurals>
+    <string name="forward_partial">Forwarded to %1$d of %2$d chats. Some couldn\'t receive it.</string>
+    <!-- Phase 1.6: profile photo -->
+    <string name="settings_photo">Change profile photo</string>
+    <string name="settings_photo_choose">Choose photo</string>
+    <string name="settings_photo_remove">Remove photo</string>
+    <string name="settings_photo_note">Your photo is cropped to a square and its location data is removed. People you\'ve blocked can\'t see it.</string>
+    <string name="settings_photo_failed">Couldn\'t update your photo. Try again.</string>
+    <!-- Phase 2: groups and polls -->
+    <string name="group_info">Group info</string>
+    <string name="group_typing_one">%1$s is typing…</string>
+    <string name="group_typing_many">%1$s are typing…</string>
+    <string name="group_removed">You\'re no longer a member of this group.</string>
+    <string name="attach_poll">Poll</string>
+    <string name="poll_create">Create poll</string>
+    <string name="poll_question">Question</string>
+    <string name="poll_option">Option %1$d</string>
+    <string name="poll_add_option">Add option</string>
+    <string name="poll_remove_option">Remove option</string>
+    <string name="poll_allow_multi">Allow multiple answers</string>
+    <string name="poll_invalid">Add a question and at least two different options.</string>
+    <string name="poll_send">Send poll</string>
+    <string name="poll_single_hint">Select one</string>
+    <string name="poll_multi_hint">Select one or more</string>
+    <plurals name="poll_votes">
+        <item quantity="one">%1$d vote</item>
+        <item quantity="other">%1$d votes</item>
+    </plurals>
+    <!-- Phase 2: group screens -->
+    <string name="group_new">New group</string>
+    <string name="group_next">Next</string>
+    <string name="group_selected">%1$d of %2$d selected</string>
+    <string name="group_no_people_title">No one to add yet</string>
+    <string name="group_no_people_body">Start a chat with someone, or allow contacts access, to add them to a group.</string>
+    <string name="group_name_title">Name your group</string>
+    <string name="group_name_hint">Group name</string>
+    <string name="group_create">Create group</string>
+    <plurals name="group_members_count">
+        <item quantity="one">%1$d member</item>
+        <item quantity="other">%1$d members</item>
+    </plurals>
+    <string name="group_add_members">Add members</string>
+    <string name="group_add">Add</string>
+    <string name="group_change_photo">Change group photo</string>
+    <string name="group_rename">Edit group name</string>
+    <string name="group_description">Description</string>
+    <string name="group_add_description">Add a group description</string>
+    <string name="group_no_description">No description</string>
+    <string name="group_admin">Admin</string>
+    <string name="group_make_admin">Make group admin</string>
+    <string name="group_dismiss_admin">Dismiss as admin</string>
+    <string name="group_message_member">Message %1$s</string>
+    <string name="group_remove_member">Remove %1$s</string>
+    <string name="group_leave">Leave group</string>
+    <string name="group_leave_title">Leave %1$s?</string>
+    <string name="group_leave_body">You won\'t receive new messages from this group. If you\'re the only admin, the longest-standing member becomes admin.</string>
+    <string name="group_invite">Invite with code</string>
+    <string name="group_invite_body">Anyone with this code can join the group while it\'s active. Revoke it to stop new people joining.</string>
+    <string name="group_invite_send">Send code</string>
+    <string name="group_invite_copy">Copy code</string>
+    <string name="group_invite_revoke">Revoke code</string>
+    <string name="group_invite_share">Join my Samvad group "%1$s": open Samvad, tap New chat → Join with code, and enter %2$s</string>
+    <string name="group_join">Join with code</string>
+    <string name="group_join_hint">12-character code</string>
+    <string name="group_join_check">Check code</string>
+    <string name="group_join_preview">%1$s · %2$d members</string>
+    <string name="group_join_confirm">Join group</string>
+    <string name="group_join_invalid">That code doesn\'t work. It may have been revoked.</string>
+    <string name="group_error_no_eligible">None of the people you chose can be added.</string>
+    <string name="group_error_full">This group is full (256 members).</string>
+    <string name="group_error_limit">You\'ve reached today\'s limit. Try again tomorrow.</string>
+    <string name="group_error_not_allowed">Only group admins can do that.</string>
+    <string name="group_error_failed">Something went wrong. Check your connection and try again.</string>
+</resources>

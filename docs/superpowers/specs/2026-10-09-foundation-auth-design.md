@@ -47,6 +47,8 @@ Backend sub-projects, each with its own spec, plan, tests and approval gate:
 
 The Android app is a later phase, started only when the owner says so. Each Android feature then consumes the already-tested backend.
 
+> **Rev 4 pointer (2026-10-13):** the owner started the client phase. The Android design system and the client sub-projects A1–A7, each gated on the backend sub-project it needs, are specified in `2026-10-13-android-design-system-client.md`. Order: B1, then A1, then each later pair.
+
 ### Decisions already made
 
 - **Coexistence:** new directories next to the Flutter app. Flutter, Supabase and Node code stay untouched and are removed in a later, separate commit.

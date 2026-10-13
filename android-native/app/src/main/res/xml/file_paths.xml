@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Only private cache folders are shareable: received documents (to open them in another app) and
+     chat exports (to share or save them, for example to Google Drive). -->
+<paths>
+    <cache-path name="media" path="media/" />
+    <cache-path name="exports" path="exports/" />
+</paths>

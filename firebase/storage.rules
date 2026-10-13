@@ -1,0 +1,70 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Phase 1.5: same session check as firestore.rules verifiedSession().
+    function signedIn() {
+      let t = request.auth.token;
+      return request.auth != null
+        && ((t.firebase.sign_in_provider == 'phone' && t.get('ts', false) != true)
+            || (t.firebase.sign_in_provider == 'custom'
+                && t.get('pv', null) is string
+                && (t.get('ts', false) != true || t.get('pv', null) == t.get('tsv', null))));
+    }
+
+    // Cross-service rule: membership comes from the Firestore conversation document.
+    function isMember(cid) {
+      return signedIn()
+        && request.auth.uid in firestore.get(/databases/(default)/documents/conversations/$(cid)).data.members;
+    }
+
+    // Allow-list of content types. Executables (APK, scripts, binaries) are never accepted.
+    function allowedType(type) {
+      return type.matches('image/(jpeg|png|webp)')
+        || type.matches('audio/(mp4|aac|mpeg|ogg)')
+        || type.matches('application/pdf')
+        || type.matches('text/plain')
+        || type.matches('application/zip')
+        || type.matches('application/msword')
+        || type.matches('application/vnd[.]openxmlformats-officedocument[.](wordprocessingml[.]document|spreadsheetml[.]sheet|presentationml[.]presentation)')
+        || type.matches('application/vnd[.]ms-(excel|powerpoint)');
+    }
+
+    // avatars/{uid}/{uuid}.jpg: written only by the setProfilePhoto function (which strips metadata).
+    // Hidden from people the owner has blocked.
+    match /avatars/{uid}/{file} {
+      allow read: if signedIn()
+        && (request.auth.uid == uid
+            || !firestore.exists(/databases/(default)/documents/users/$(uid)/blocked/$(request.auth.uid)));
+      allow write: if false;
+    }
+
+    // groupPhotos/{cid}/{uuid}.jpg: written only by the setGroupPhoto function; members can see it.
+    match /groupPhotos/{cid}/{file} {
+      allow read: if isMember(cid);
+      allow write: if false;
+    }
+
+    // conversations/{cid}/{messageId}/{file}: uploaded once by a member before the message doc is written.
+    match /conversations/{cid}/{mid}/{file} {
+      allow read: if isMember(cid);
+
+      allow create: if isMember(cid)
+        && resource == null
+        && mid.matches('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
+        && file.matches('^[A-Za-z0-9._-]{1,100}$')
+        && request.resource.size > 0
+        && request.resource.size <= 16 * 1024 * 1024
+        && allowedType(request.resource.contentType)
+        && request.resource.metadata.senderId == request.auth.uid
+        && !firestore.exists(/databases/(default)/documents/conversations/$(cid)/messages/$(mid));
+
+      // Files are immutable; deletion is done by trusted code when a message is deleted.
+      allow update, delete: if false;
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

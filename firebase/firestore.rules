@@ -1,0 +1,427 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- helpers -------------------------------------------------------
+
+    // Phase 1.5: a phone sign-in is enough unless two-step verification is on (claim ts). Then only a
+    // session created from a PIN check counts: a custom-token sign-in whose per-session claim pv
+    // equals the account claim tsv. Custom tokens are minted only by the verifyTwoStepPin function.
+    function verifiedSession() {
+      let t = request.auth.token;
+      return (t.firebase.sign_in_provider == 'phone' && t.get('ts', false) != true)
+        || (t.firebase.sign_in_provider == 'custom'
+            && t.get('pv', null) is string
+            && (t.get('ts', false) != true || t.get('pv', null) == t.get('tsv', null)));
+    }
+
+    function signedIn() {
+      return request.auth != null && verifiedSession();
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function notDeleted(uid) {
+      return !exists(/databases/$(database)/documents/deletedAccounts/$(uid));
+    }
+
+    function isE164(value) {
+      return value is string && value.matches('^\\+[1-9][0-9]{6,14}$');
+    }
+
+    function validConsent(consent) {
+      return consent is map
+        && consent.keys().hasOnly(['version', 'acceptedAt'])
+        && consent.keys().hasAll(['version', 'acceptedAt'])
+        && consent.version is int
+        && consent.version >= 1
+        && consent.acceptedAt == request.time;
+    }
+
+    function validDisplayName(name) {
+      return name is string
+        && name.size() >= 1
+        && name.size() <= 64
+        && name.matches('(?s).*\\S.*');
+    }
+
+    // photoUrl holds a Storage path (avatars/{uid}/…), never a public URL. Only the setProfilePhoto
+    // function sets it: it starts null and clients cannot change it (see the update allow-list).
+    function validProfile(data) {
+      return validDisplayName(data.displayName)
+        && data.about is string
+        && data.about.size() <= 140
+        && data.updatedAt == request.time;
+    }
+
+    function shortString(value) {
+      return value is string && value.size() <= 32;
+    }
+
+    function validFcmToken(data) {
+      return !('fcmToken' in data)
+        || data.fcmToken == null
+        || (data.fcmToken is string && data.fcmToken.size() <= 4096);
+    }
+
+    // ---- users ---------------------------------------------------------
+
+    match /users/{uid} {
+      allow get: if isOwner(uid);
+
+      allow create: if isOwner(uid)
+        && notDeleted(uid)
+        && request.resource.data.keys().hasOnly(['phoneE164', 'consent', 'createdAt'])
+        && request.resource.data.keys().hasAll(['phoneE164', 'consent', 'createdAt'])
+        && isE164(request.resource.data.phoneE164)
+        && request.resource.data.phoneE164 == request.auth.token.phone_number
+        && validConsent(request.resource.data.consent)
+        && request.resource.data.createdAt == request.time;
+
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['consent'])
+        && validConsent(request.resource.data.consent)
+        && request.resource.data.consent.version > resource.data.consent.version;
+
+      match /devices/{deviceId} {
+        allow read: if isOwner(uid);
+
+        allow create: if isOwner(uid)
+          && notDeleted(uid)
+          && deviceId.matches('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
+          && request.resource.data.keys().hasOnly(['platform', 'appVersion', 'osVersion', 'createdAt', 'lastSeenAt', 'fcmToken'])
+          && request.resource.data.keys().hasAll(['platform', 'appVersion', 'osVersion', 'createdAt', 'lastSeenAt'])
+          && request.resource.data.platform == 'android'
+          && shortString(request.resource.data.appVersion)
+          && shortString(request.resource.data.osVersion)
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.lastSeenAt == request.time
+          && validFcmToken(request.resource.data);
+
+        allow update: if isOwner(uid)
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['appVersion', 'osVersion', 'lastSeenAt', 'fcmToken'])
+          && shortString(request.resource.data.appVersion)
+          && shortString(request.resource.data.osVersion)
+          && request.resource.data.lastSeenAt == request.time
+          && validFcmToken(request.resource.data);
+
+        allow delete: if isOwner(uid);
+      }
+
+      // Phase 1.3: people this user has blocked. Mirrored to RTDB blocks/{uid} by a trigger.
+      match /blocked/{otherUid} {
+        allow read: if isOwner(uid);
+
+        allow create: if isOwner(uid)
+          && otherUid != uid
+          && otherUid.matches('^[A-Za-z0-9]{1,128}$')
+          && request.resource.data.keys().hasOnly(['createdAt'])
+          && request.resource.data.createdAt == request.time;
+
+        allow delete: if isOwner(uid);
+      }
+    }
+
+    // ---- profiles ------------------------------------------------------
+
+    match /profiles/{uid} {
+      allow get: if signedIn();
+
+      allow create: if isOwner(uid)
+        && notDeleted(uid)
+        && request.resource.data.keys().hasOnly(['displayName', 'about', 'photoUrl', 'updatedAt'])
+        && request.resource.data.keys().hasAll(['displayName', 'about', 'photoUrl', 'updatedAt'])
+        && request.resource.data.photoUrl == null
+        && validProfile(request.resource.data);
+
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['displayName', 'about', 'updatedAt'])
+        && validProfile(request.resource.data);
+    }
+
+    // ---- conversations (B2) ---------------------------------------------
+
+    function isUuid(id) {
+      return id.matches('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$');
+    }
+
+    function hasProfile(uid) {
+      return exists(/databases/$(database)/documents/profiles/$(uid));
+    }
+
+    function validText(text) {
+      return text is string
+        && text.size() >= 1
+        && text.size() <= 4096
+        && text.matches('(?s).*\\S.*');
+    }
+
+    // Phase 1.2: media attached to a message. The file lives at conversations/{cid}/{mid}/{name}
+    // in Storage (uploaded first, under Storage rules); this only validates the description.
+    function validMedia(cid, mid, kind, m) {
+      return m is map
+        && m.keys().hasAll(['path', 'name', 'size', 'mime'])
+        && m.keys().hasOnly(['path', 'name', 'size', 'mime', 'width', 'height', 'durationMs', 'waveform'])
+        && m.path is string
+        && m.path.matches('^conversations/' + cid + '/' + mid + '/[A-Za-z0-9._-]{1,100}$')
+        && m.name is string && m.name.size() >= 1 && m.name.size() <= 200
+        && m.size is int && m.size > 0 && m.size <= 16 * 1024 * 1024
+        && m.mime is string && m.mime.size() <= 100
+        && (kind != 'image' || m.mime.matches('image/(jpeg|png|webp)'))
+        && (kind != 'voice' || (m.mime.matches('audio/(mp4|aac|mpeg|ogg)')
+                                && m.durationMs is int && m.durationMs > 0 && m.durationMs <= 900000))
+        && (!('waveform' in m) || (m.waveform is list && m.waveform.size() <= 64))
+        && (!('width' in m) || (m.width is int && m.width > 0 && m.width <= 10000))
+        && (!('height' in m) || (m.height is int && m.height > 0 && m.height <= 10000));
+    }
+
+    // Post-write view, so a conversation and its member docs can be created in one batch.
+    function convAfter(cid) {
+      return getAfter(/databases/$(database)/documents/conversations/$(cid)).data;
+    }
+
+    function isMemberOf(cid) {
+      return signedIn() && request.auth.uid in convAfter(cid).members;
+    }
+
+    // Phase 1.3: in a direct chat, nobody can message while either person has blocked the other.
+    function isBlocked(uid, otherUid) {
+      return exists(/databases/$(database)/documents/users/$(uid)/blocked/$(otherUid));
+    }
+
+    // Phase 2: a group member reads messages from their own joinedAt onwards (not earlier history).
+    // List queries must therefore filter createdAt >= joinedAt.
+    function canReadMessage(cid) {
+      return isMemberOf(cid)
+        && (convAfter(cid).type != 'group'
+            || resource.data.createdAt
+                 >= get(/databases/$(database)/documents/conversations/$(cid)/members/$(request.auth.uid)).data.joinedAt);
+    }
+
+    // Phase 2: optional @mentions must name members of the conversation.
+    function validMentions(cid, data) {
+      return !('mentions' in data)
+        || (data.mentions is list
+            && data.mentions.size() <= 50
+            && data.mentions.toSet().difference(convAfter(cid).members.toSet()).size() == 0);
+    }
+
+    // Phase 2: a poll. Option i is identified by ids[i] ('0'…'11'); votes refer to ids.
+    function validOption(p, i) {
+      return i >= p.options.size()
+        || (p.options[i] is string && p.options[i].size() >= 1 && p.options[i].size() <= 100);
+    }
+
+    function validOptions(p) {
+      return validOption(p, 0) && validOption(p, 1) && validOption(p, 2) && validOption(p, 3)
+        && validOption(p, 4) && validOption(p, 5) && validOption(p, 6) && validOption(p, 7)
+        && validOption(p, 8) && validOption(p, 9) && validOption(p, 10) && validOption(p, 11);
+    }
+
+    function validPoll(p) {
+      return p is map
+        && p.keys().hasOnly(['question', 'options', 'ids', 'multi'])
+        && p.keys().hasAll(['question', 'options', 'ids', 'multi'])
+        && p.question is string && p.question.size() >= 1 && p.question.size() <= 300
+        && p.options is list && p.options.size() >= 2 && p.options.size() <= 12
+        && validOptions(p)
+        && p.ids is list && p.ids.size() == p.options.size()
+        && p.ids.toSet().size() == p.ids.size()
+        && p.ids.hasOnly(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'])
+        && p.multi is bool;
+    }
+
+    function notBlocked(cid) {
+      let c = convAfter(cid);
+      return c.type != 'direct'
+        || (!isBlocked(c.members[0], c.members[1]) && !isBlocked(c.members[1], c.members[0]));
+    }
+
+    // Timestamp field that may only stay the same or move forward, never past now.
+    function forwardOnly(field) {
+      return request.resource.data[field] == resource.data[field]
+        || (request.resource.data[field] is timestamp
+            && request.resource.data[field] <= request.time
+            && (resource.data[field] == null || request.resource.data[field] >= resource.data[field]));
+    }
+
+    match /conversations/{cid} {
+      allow get, list: if signedIn() && request.auth.uid in resource.data.members;
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['type', 'members', 'createdBy', 'createdAt', 'lastMessage', 'lastMessageAt'])
+        && request.resource.data.keys().hasAll(['type', 'members', 'createdBy', 'createdAt', 'lastMessageAt'])
+        && request.resource.data.type == 'direct'
+        && request.resource.data.members is list
+        && request.resource.data.members.size() == 2
+        && request.resource.data.members[0] < request.resource.data.members[1]
+        && cid == request.resource.data.members[0] + '_' + request.resource.data.members[1]
+        && request.auth.uid in request.resource.data.members
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.lastMessageAt == request.time
+        && request.resource.data.get('lastMessage', null) == null
+        && hasProfile(request.resource.data.members[0])
+        && hasProfile(request.resource.data.members[1])
+        && notDeleted(request.resource.data.members[0])
+        && notDeleted(request.resource.data.members[1]);
+
+      match /messages/{mid} {
+        allow read: if canReadMessage(cid);
+
+        allow create: if isMemberOf(cid)
+          && isUuid(mid)
+          && request.resource.data.keys().hasOnly(['senderId', 'kind', 'text', 'replyTo', 'createdAt', 'deleted', 'reactions', 'media', 'forwarded', 'mentions', 'poll'])
+          && request.resource.data.keys().hasAll(['senderId', 'kind', 'text', 'replyTo', 'createdAt'])
+          && request.resource.data.senderId == request.auth.uid
+          && (
+            (request.resource.data.kind == 'text'
+              && validText(request.resource.data.text)
+              && !('media' in request.resource.data))
+            || (request.resource.data.kind in ['image', 'file', 'voice']
+              && request.resource.data.text is string
+              && request.resource.data.text.size() <= 4096
+              && validMedia(cid, mid, request.resource.data.kind, request.resource.data.media))
+            || (request.resource.data.kind == 'poll'
+              && request.resource.data.text == ''
+              && !('media' in request.resource.data)
+              && validPoll(request.resource.data.poll))
+          )
+          && (request.resource.data.kind == 'poll' || !('poll' in request.resource.data))
+          && validMentions(cid, request.resource.data)
+          && (request.resource.data.replyTo == null
+              || (request.resource.data.replyTo is string && isUuid(request.resource.data.replyTo)))
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.get('deleted', false) == false
+          && request.resource.data.get('reactions', {}).size() == 0
+          // Phase 1.6: a forwarded copy is labelled; the flag can only be true and never changes.
+          && request.resource.data.get('forwarded', true) == true
+          && notBlocked(cid);
+
+        function notDeletedMessage() {
+          return resource.data.get('deleted', false) == false;
+        }
+
+        function isEdit() {
+          return resource.data.senderId == request.auth.uid
+            && resource.data.kind == 'text'
+            && notDeletedMessage()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'editedAt'])
+            && validText(request.resource.data.text)
+            && request.resource.data.editedAt == request.time
+            && request.time < resource.data.createdAt + duration.value(15, 'm');
+        }
+
+        function isSoftDelete() {
+          return resource.data.senderId == request.auth.uid
+            && notDeletedMessage()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deleted', 'text'])
+            && request.resource.data.deleted == true
+            && request.resource.data.text == '';
+        }
+
+        function isOwnReaction() {
+          let after = request.resource.data.get('reactions', {});
+          return notDeletedMessage()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions'])
+            && after.diff(resource.data.get('reactions', {})).affectedKeys().hasOnly([request.auth.uid])
+            && (!(request.auth.uid in after)
+                || (after[request.auth.uid] is string
+                    && after[request.auth.uid].size() >= 1
+                    && after[request.auth.uid].size() <= 16));
+        }
+
+        allow update: if isMemberOf(cid) && (isSoftDelete() || ((isEdit() || isOwnReaction()) && notBlocked(cid)));
+
+        // Phase 2: one vote document per member on a poll; members see all votes (results).
+        match /votes/{voterId} {
+          function poll() {
+            return get(/databases/$(database)/documents/conversations/$(cid)/messages/$(mid)).data;
+          }
+
+          allow read: if isMemberOf(cid);
+
+          allow create, update: if isMemberOf(cid)
+            && voterId == request.auth.uid
+            && poll().kind == 'poll'
+            && poll().get('deleted', false) == false
+            && request.resource.data.keys().hasOnly(['choices', 'updatedAt'])
+            && request.resource.data.keys().hasAll(['choices', 'updatedAt'])
+            && request.resource.data.choices is list
+            && request.resource.data.choices.size() >= 1
+            && (poll().poll.multi || request.resource.data.choices.size() == 1)
+            && request.resource.data.choices.toSet().size() == request.resource.data.choices.size()
+            && request.resource.data.choices.hasOnly(poll().poll.ids)
+            && request.resource.data.updatedAt == request.time;
+
+          allow delete: if isMemberOf(cid) && voterId == request.auth.uid;
+        }
+      }
+
+      match /members/{memberId} {
+        allow read: if isMemberOf(cid);
+
+        // Group member documents (with joinedAt) are created only by functions.
+        allow create: if isMemberOf(cid)
+          && convAfter(cid).type == 'direct'
+          && memberId in convAfter(cid).members
+          && request.resource.data.keys().hasOnly(['uid', 'lastReadAt', 'lastDeliveredAt', 'unreadCount', 'muted', 'pinned', 'archived'])
+          && request.resource.data.keys().hasAll(['uid', 'lastReadAt', 'lastDeliveredAt', 'unreadCount', 'muted', 'pinned', 'archived'])
+          && request.resource.data.uid == memberId
+          && request.resource.data.lastReadAt == null
+          && request.resource.data.lastDeliveredAt == null
+          && request.resource.data.unreadCount == 0
+          && request.resource.data.muted == false
+          && request.resource.data.pinned == false
+          && request.resource.data.archived == false;
+
+        allow update: if isMemberOf(cid)
+          && memberId == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['lastReadAt', 'lastDeliveredAt', 'unreadCount', 'muted', 'pinned', 'archived'])
+          && forwardOnly('lastReadAt')
+          && forwardOnly('lastDeliveredAt')
+          && (request.resource.data.unreadCount == resource.data.unreadCount || request.resource.data.unreadCount == 0)
+          && request.resource.data.muted is bool
+          && request.resource.data.pinned is bool
+          && request.resource.data.archived is bool;
+      }
+    }
+
+    // ---- server-only ---------------------------------------------------
+
+    match /deletedAccounts/{uid} {
+      allow read, write: if false;
+    }
+
+    match /reports/{reportId} {
+      allow read, write: if false;
+    }
+
+    match /rateLimits/{uid} {
+      allow read, write: if false;
+    }
+
+    match /twoStep/{uid} {
+      allow read, write: if false;
+    }
+
+    match /groupInvites/{code} {
+      allow read, write: if false;
+    }
+
+    match /groupSecrets/{cid} {
+      allow read, write: if false;
+    }
+
+    // ---- default deny --------------------------------------------------
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

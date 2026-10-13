@@ -1,87 +1,19 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
+# OS / editors
 .DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
-
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
+*.swp
 .idea/
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+.vscode/
+*.iml
 
-# Gradle related
-.gradle
-.kotlin
-/local.properties
-/build
-/captures
-.externalNativeBuild
-.cxx
-
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
-.dart_tool/
-.flutter-plugins-dependencies
-.pub-cache/
-.pub/
-/build/
-/coverage/
-
-# Symbolication related
-app.*.symbols
-
-# Obfuscation related
-app.*.map.json
-
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
-
-# Production secrets and keys
+# Secrets — never commit
+.env
+.env.*
+!.env.example
 *.jks
 *.keystore
-*.p8
-*.p12
-*.key
-*.pem
-*.pfx
-*.cer
-*.crt
-debug.keystore
+*-adminsdk-*.json
+serviceAccount*.json
+google-services.json
 
-# Environment variables
-.env
-.env.local
-.env.production
-.env.staging
-
-# Node modules (for backend)
-/backend/node_modules/
-/backend/npm-debug.log*
-/backend/yarn-debug.log*
-/backend/yarn-error.log*
-
-# APK and AAB files (build artifacts)
-*.apk
-*.aab
-
-# Firebase service account files
-service-account.json
-firebase-adminsdk-*.json
+# Logs
+*.log

@@ -1,127 +1,32 @@
-# 🚀 Samvad - Premium Real-Time Messaging App
+# Samvad Messenger · संवाद
 
-संवाद - Meaningful conversations, securely connected.
+A calm, private, phone-number messenger for Android, built on Firebase.
 
-A **PRODUCTION-READY** real-time messaging application built with Flutter and Node.js, featuring secure authentication, real-time messaging, and high-end modern chat features.
+| Part | Path | Docs |
+|---|---|---|
+| Android app (Kotlin, Jetpack Compose) | [`android-native/`](android-native/) | [`android-native/README.md`](android-native/README.md) |
+| Backend (Firebase rules, Cloud Functions, Emulator Suite tests) | [`firebase/`](firebase/) | [`firebase/README.md`](firebase/README.md) |
+| Architecture, specs, status | [`docs/`](docs/) | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md) |
 
-## ✨ Features
+## Quick start
 
-### 🔐 **Secure Authentication**
-- ✅ **Firebase Phone Authentication**
-- ✅ **Global Country Code Support**
-- ✅ **Terms & Privacy Compliance**
-- ✅ **Resend OTP** with Smart Timer
-- ✅ **Automatic OTP Retrieval**
-- ✅ **JWT-based Secure Session** Management
-
-### 💬 **Elite Messaging Experience**
-- ✅ **Real-Time Engine** via Socket.IO
-- ✅ **Typing Indicators** & Presence Awareness
-- ✅ **Advanced Message Status** (Sent/Delivered/Seen)
-- ✅ **Rich Chat History** with Optimized Loading
-- ✅ **Smart Notification Badges**
-
-### 📱 **Rich Media & Sharing**
-- ✅ **HD Image Sharing** (Camera + Gallery)
-- ✅ **Crystal Clear Video Messages**
-- ✅ **High-Quality Voice Notes**
-- ✅ **Universal File Attachments** (PDF, DOC, etc.)
-- ✅ **Premium Emoji Engine** with Search
-- ✅ **Instant Media Previews**
-
-### 🔔 **Push Notifications**
-- ✅ **Firebase Cloud Messaging** (FCM) 
-- ✅ **Intelligent Background Handling**
-- ✅ **Seamless Foreground Alerts**
-- ✅ **Direct Action Notifications**
-- ✅ **Dynamic Badge Updates**
-
-### 👥 **Intelligent Contact Management**
-- ✅ **Native Device Contact Sync**
-- ✅ **Granular Permission Handling**
-- ✅ **Blazing Fast Contact Search**
-- ✅ **Dynamic Profile Management**
-- ✅ **Accurate Last Seen** Logic
-
-### 🎨 **Premium Design Language**
-- ✅ **Material 3 Engine**
-- ✅ **Elite Dark Theme** (Optimized for OLED)
-- ✅ **Glassmorphism & Depth Effects**
-- ✅ **Fluid 60FPS Animations**
-- ✅ **High-Density Layouts**
-- ✅ **Custom Premium Branding**
-
-## 🏗️ **Architecture**
-
-### **Backend (Node.js)**
-- **Express.js** Enterprise API
-- **MongoDB** Cluster Integration
-- **Socket.IO** Binary Transport
-- **JWT** Encryption
-- **Firebase Admin SDK**
-- **Cloud Storage** Integration
-- **Military-Grade Security** Headers
-
-### **Frontend (Flutter)**
-- **Flutter 3.x** Stable
-- **Riverpod** Modern State Management
-- **Socket.IO Client** (Persistent)
-- **Local Persistence** (AES Encrypted)
-- **Native Bridge** for Media & Permissions
-
-## 🚀 **Deployment Guide**
-
-### **1. Backend Environment**
+**Building and running the app on your own machine:** follow [`docs/LOCAL_BUILD.md`](docs/LOCAL_BUILD.md)
+(local Firebase emulators, Android emulator or USB phone, two-person testing, troubleshooting).
 
 ```bash
-# Update .env with production credentials:
-MONGODB_URI=your_production_mongodb_uri
-JWT_SECRET=your_long_secure_random_secret
-FIREBASE_PROJECT_ID=samvad-app
-TWILIO_ACCOUNT_SID=your_twilio_sid
-TWILIO_AUTH_TOKEN=your_twilio_token
+# Backend tests on the Firebase Emulator Suite (JDK 21, Node 24)
+cd firebase && npm install && npm --prefix functions install && npm test
+
+# Android: JVM tests anywhere; the app needs the Android SDK
+cd android-native && ./gradlew :core:test
+./gradlew :app:installDebug -Psamvad.useEmulators=true   # with `npm run emulators` running in firebase/
 ```
 
-### **2. Firebase Production Setup**
+CI (`.github/workflows/samvad-ci.yml`) runs the backend suite, the log-hygiene check, the `:core` tests and the `:app` build, unit tests and lint, and uploads a debug APK.
 
-1. **Authentication** → Enable Phone Sign-in.
-2. **Cloud Messaging** → Upload APNs (for iOS) and Server Key.
-3. **Android**: Download `google-services.json` to `android/app/`.
-4. **iOS**: Download `GoogleService-Info.plist` to `ios/Runner/`.
+## Principles
 
-### **3. Mobile App Build**
-
-```bash
-# Clean project
-flutter clean
-
-# Get dependencies
-flutter pub get
-
-# Generate Release APK
-flutter build apk --release --obfuscate --split-debug-info=debug_info
-
-# Generate App Bundle (Play Store)
-flutter build appbundle --release
-```
-
-## 🔌 **API Integration**
-
-The app is pre-configured to point to `https://api.samvad.app`. All endpoints are secured via JWT and Rate-Limiting.
-
-### **Key Events**
-- `send_message`: Encrypted payload delivery
-- `typing`: Real-time state synchronization
-- `mark_messages_seen`: Read-receipt updates
-
-## 🔐 **Security Standard**
-
-- **SSL/TLS Termination** for all traffic
-- **JWT Expiry & Refresh** mechanisms
-- **XSS & NoSQL Injection** prevention
-- **Encrypted Media Storage**
-- **OWASP Mobile Top 10** Compliance
-
----
- 
-**Made with ❤️ in India | Samvad - The Future of Premium Messaging**
+- Firebase-first; security enforced by rules and trusted functions, never by UI alone.
+- Phone numbers are visible only to their owner; no secrets or service-account keys in the repo or app.
+- No end-to-end encryption is claimed until one is implemented and verified.
+- No fake features: unbuilt capabilities are shown as "on the way", never as working.

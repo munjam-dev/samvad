@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "dev": "samvad-dev",
+    "staging": "samvad-staging",
+    "prod": "samvad-prod"
+  }
+}
