@@ -1,6 +1,5 @@
 package com.samvad.messenger.ui.chat
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -192,7 +191,12 @@ fun ConversationScreen(
             }
           }
         }
-        AnimatedVisibility(awayFromLatest, Modifier.align(Alignment.BottomEnd).padding(16.dp), enter = fadeIn(), exit = fadeOut()) {
+        androidx.compose.animation.AnimatedVisibility(
+          visible = awayFromLatest,
+          modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
+          enter = fadeIn(),
+          exit = fadeOut(),
+        ) {
           SmallFloatingActionButton(
             onClick = { scope.launch { list.animateScrollToItem(0) } },
             containerColor = colors.surface,

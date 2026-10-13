@@ -63,6 +63,9 @@ describe('end-to-end account flow', () => {
       setDoc(doc(db, `profiles/${uid}`), { displayName: 'Asha', about: '', photoUrl: null, updatedAt: serverTimestamp() }),
     );
 
+    // Give the Functions emulator a moment to flush the account_deleted log line to its output.
+    await new Promise((r) => setTimeout(r, 2000));
+
     mkdirSync('.tmp', { recursive: true });
     writeFileSync(
       '.tmp/e2e-secrets.json',

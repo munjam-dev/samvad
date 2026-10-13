@@ -39,6 +39,13 @@ jobs:
           key: firebase-emulators-${{ hashFiles('firebase/package-lock.json') }}
       - run: npm test
       - run: npm run test:e2e:logs
+      - name: Upload emulator output (for log-hygiene diagnosis)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: emulator-output
+          path: firebase/.tmp/emulator-output.log
+          if-no-files-found: ignore
 
   android:
     name: Android (core tests + app build)
