@@ -6,4 +6,5 @@ export { deleteAccount } from './deleteAccount';
 export { signOutAllDevices } from './signOutAllDevices';
 export { onMessageCreated } from './onMessageCreated';
 export { onConversationCreated } from './onConversationCreated';
+export { onMessageUpdated } from './onMessageUpdated';
 export { lookupPhoneNumbers } from './lookupPhoneNumbers';

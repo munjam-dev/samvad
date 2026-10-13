@@ -10,7 +10,28 @@ export interface CreatedMessage {
   cid: string;
   mid: string;
   eventId: string;
-  data: { senderId: string; kind: string; text: string; createdAt: Timestamp };
+  data: {
+    senderId: string;
+    kind: string;
+    text: string;
+    createdAt: Timestamp;
+    media?: { name?: string } | null;
+  };
+}
+
+/** Chat-list and notification preview: media kinds get a short label, then the caption. */
+export function previewOf(data: CreatedMessage['data']): string {
+  const caption = (data.text ?? '').trim();
+  const label = (() => {
+    switch (data.kind) {
+      case 'image': return '📷 Photo';
+      case 'voice': return '🎤 Voice message';
+      case 'file': return `📄 ${data.media?.name ?? 'File'}`;
+      default: return '';
+    }
+  })();
+  const text = label && caption ? `${label} · ${caption}` : label || caption;
+  return text.slice(0, PREVIEW_LENGTH);
 }
 
 /**
@@ -40,7 +61,7 @@ export async function applyMessageCreated(deps: Deps, msg: CreatedMessage): Prom
         lastMessage: {
           id: msg.mid,
           senderId: msg.data.senderId,
-          preview: (msg.data.text ?? '').slice(0, PREVIEW_LENGTH),
+          preview: previewOf(msg.data),
           kind: msg.data.kind,
           createdAt: msg.data.createdAt,
         },
@@ -107,7 +128,7 @@ export async function notifyRecipients(deps: Deps, msg: CreatedMessage, recipien
     mid: msg.mid,
     senderId: msg.data.senderId,
     title,
-    body: (msg.data.text ?? '').slice(0, PREVIEW_LENGTH),
+    body: previewOf(msg.data),
   });
   for (const t of invalidTokens) {
     await tokenOwners.get(t)?.update({ fcmToken: null });

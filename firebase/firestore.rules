@@ -135,6 +135,25 @@ service cloud.firestore {
         && text.matches('(?s).*\\S.*');
     }
 
+    // Phase 1.2: media attached to a message. The file lives at conversations/{cid}/{mid}/{name}
+    // in Storage (uploaded first, under Storage rules); this only validates the description.
+    function validMedia(cid, mid, kind, m) {
+      return m is map
+        && m.keys().hasAll(['path', 'name', 'size', 'mime'])
+        && m.keys().hasOnly(['path', 'name', 'size', 'mime', 'width', 'height', 'durationMs', 'waveform'])
+        && m.path is string
+        && m.path.matches('^conversations/' + cid + '/' + mid + '/[A-Za-z0-9._-]{1,100}$')
+        && m.name is string && m.name.size() >= 1 && m.name.size() <= 200
+        && m.size is int && m.size > 0 && m.size <= 16 * 1024 * 1024
+        && m.mime is string && m.mime.size() <= 100
+        && (kind != 'image' || m.mime.matches('image/(jpeg|png|webp)'))
+        && (kind != 'voice' || (m.mime.matches('audio/(mp4|aac|mpeg|ogg)')
+                                && m.durationMs is int && m.durationMs > 0 && m.durationMs <= 900000))
+        && (!('waveform' in m) || (m.waveform is list && m.waveform.size() <= 64))
+        && (!('width' in m) || (m.width is int && m.width > 0 && m.width <= 10000))
+        && (!('height' in m) || (m.height is int && m.height > 0 && m.height <= 10000));
+    }
+
     // Post-write view, so a conversation and its member docs can be created in one batch.
     function convAfter(cid) {
       return getAfter(/databases/$(database)/documents/conversations/$(cid)).data;
@@ -178,11 +197,18 @@ service cloud.firestore {
 
         allow create: if isMemberOf(cid)
           && isUuid(mid)
-          && request.resource.data.keys().hasOnly(['senderId', 'kind', 'text', 'replyTo', 'createdAt', 'deleted', 'reactions'])
+          && request.resource.data.keys().hasOnly(['senderId', 'kind', 'text', 'replyTo', 'createdAt', 'deleted', 'reactions', 'media'])
           && request.resource.data.keys().hasAll(['senderId', 'kind', 'text', 'replyTo', 'createdAt'])
           && request.resource.data.senderId == request.auth.uid
-          && request.resource.data.kind == 'text'
-          && validText(request.resource.data.text)
+          && (
+            (request.resource.data.kind == 'text'
+              && validText(request.resource.data.text)
+              && !('media' in request.resource.data))
+            || (request.resource.data.kind in ['image', 'file', 'voice']
+              && request.resource.data.text is string
+              && request.resource.data.text.size() <= 4096
+              && validMedia(cid, mid, request.resource.data.kind, request.resource.data.media))
+          )
           && (request.resource.data.replyTo == null
               || (request.resource.data.replyTo is string && isUuid(request.resource.data.replyTo)))
           && request.resource.data.createdAt == request.time
@@ -195,6 +221,7 @@ service cloud.firestore {
 
         function isEdit() {
           return resource.data.senderId == request.auth.uid
+            && resource.data.kind == 'text'
             && notDeletedMessage()
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'editedAt'])
             && validText(request.resource.data.text)

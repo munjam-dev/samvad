@@ -3,6 +3,7 @@ import { getAuth, type Auth } from 'firebase-admin/auth';
 import { getDatabaseWithUrl, type Database } from 'firebase-admin/database';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
+import { getStorage } from 'firebase-admin/storage';
 
 /** Sends one data message to many FCM tokens; reports tokens FCM says are dead. */
 export interface PushSender {
@@ -15,6 +16,8 @@ export interface Deps {
   rtdb: Database;
   nowMs: () => number;
   push: PushSender;
+  /** Deletes every Storage object under a prefix (used when a media message is deleted). */
+  deleteFiles: (prefix: string) => Promise<void>;
 }
 
 /**
@@ -54,6 +57,14 @@ export function databaseUrl(env: NodeJS.ProcessEnv = process.env): string {
   return `https://${project}-default-rtdb.firebaseio.com`;
 }
 
+/** The project's default Storage bucket. */
+export function bucketName(env: NodeJS.ProcessEnv = process.env): string {
+  const cfg = env.FIREBASE_CONFIG ? JSON.parse(env.FIREBASE_CONFIG) : {};
+  if (cfg.storageBucket) return cfg.storageBucket;
+  const project = cfg.projectId ?? env.GCLOUD_PROJECT ?? 'demo-samvad';
+  return `${project}.appspot.com`;
+}
+
 export function defaultDeps(): Deps {
   ensureAdminApp();
   return {
@@ -62,5 +73,8 @@ export function defaultDeps(): Deps {
     rtdb: getDatabaseWithUrl(databaseUrl()),
     nowMs: () => Date.now(),
     push: fcmPushSender,
+    deleteFiles: async (prefix) => {
+      await getStorage().bucket(bucketName()).deleteFiles({ prefix, force: true });
+    },
   };
 }
