@@ -10,6 +10,7 @@ export { onMessageUpdated } from './onMessageUpdated';
 export { lookupPhoneNumbers } from './lookupPhoneNumbers';
 export { onBlockWritten } from './onBlockWritten';
 export { reportContact } from './reportContact';
+export { setProfilePhoto } from './setProfilePhoto';
 export {
   setTwoStepPin,
   verifyTwoStepPin,

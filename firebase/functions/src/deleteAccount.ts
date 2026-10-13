@@ -32,6 +32,7 @@ export async function deleteAccountCore(deps: Deps, uid: string): Promise<void> 
   }
   await db.doc(`rateLimits/${uid}`).delete();
   await db.doc(`twoStep/${uid}`).delete();
+  await deps.deleteFiles(`avatars/${uid}/`);
   try {
     await auth.deleteUser(uid);
   } catch (err: any) {

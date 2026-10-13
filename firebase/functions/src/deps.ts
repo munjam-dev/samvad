@@ -18,6 +18,10 @@ export interface Deps {
   push: PushSender;
   /** Deletes every Storage object under a prefix (used when a media message is deleted). */
   deleteFiles: (prefix: string) => Promise<void>;
+  /** Writes one Storage object (profile photos are written only by the server). */
+  putFile: (path: string, bytes: Buffer, contentType: string) => Promise<void>;
+  /** Deletes one Storage object; a missing object is not an error. */
+  deleteFile: (path: string) => Promise<void>;
 }
 
 /**
@@ -75,6 +79,12 @@ export function defaultDeps(): Deps {
     push: fcmPushSender,
     deleteFiles: async (prefix) => {
       await getStorage().bucket(bucketName()).deleteFiles({ prefix, force: true });
+    },
+    putFile: async (path, bytes, contentType) => {
+      await getStorage().bucket(bucketName()).file(path).save(bytes, { contentType, resumable: false });
+    },
+    deleteFile: async (path) => {
+      await getStorage().bucket(bucketName()).file(path).delete({ ignoreNotFound: true });
     },
   };
 }

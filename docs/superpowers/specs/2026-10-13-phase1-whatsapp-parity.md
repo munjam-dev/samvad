@@ -1,6 +1,6 @@
 # Phase 1.6 — Everyday parity features (zero cost)
 
-Status: in progress on `claude/clever-pasteur-6shc8p`. Each item uses only Firebase features already in
+Status: implemented on `claude/clever-pasteur-6shc8p`. Each item uses only Firebase features already in
 use, with no new paid service.
 
 ## About "backup to Google Drive"
@@ -36,20 +36,27 @@ email or keep, through Android's share sheet. No Google sign-in, API key or OAut
   like WhatsApp. The first half is enforced by your own client not writing your own field. The second is
   a display rule.
 
-## 3. Forward messages (next)
+## 3. Forward messages
 
 Long-press → Forward → choose up to 5 chats. Text is copied as a new message marked `forwarded: true`
 (new optional field allowed by the rules). Media is re-uploaded into each target chat, because Storage
 rules tie every file to its conversation. Like WhatsApp, the limit of 5 chats slows down mass forwarding.
 
-## 4. Profile photos (next)
+## 4. Profile photos
 
-`avatars/{uid}/{uuid}.jpg` in Storage: owner-only, immutable uploads, JPEG only, at most 1 MB, readable
-by signed-in users. `profiles/{uid}.photoUrl` may then hold that path (still null by default). The app
-crops to a square, scales to 512 px and re-encodes, which strips location metadata. A trigger deletes the
-previous file when the photo changes or is removed.
+- The app crops the picked photo to a square, scales it to 512 px and re-encodes it as JPEG, then sends it
+  to the `setProfilePhoto` callable (base64, at most 512 KB; `null` removes the photo).
+- The function checks that it is a whole JPEG (markers, frame size at most 1024 px), **removes every
+  metadata segment** (EXIF with GPS, XMP, ICC, comments) itself, so a modified app cannot leak location,
+  stores it at `avatars/{uid}/{uuid}.jpg`, points `profiles/{uid}.photoUrl` at that path and deletes the
+  previous file. At most 20 changes a day per user. No orphaned files are left behind.
+- Storage rules: clients can never write `avatars/`. Signed-in users can read a photo unless its owner
+  has blocked them. `photoUrl` is a Storage path, never a public download URL, and clients cannot set it.
+- Account deletion removes the photo files.
 
 ## Tests
 
 `:core`: export format, file names (including Devanagari and Tamil), delivered-only ticks with receipts
-off. Rules and emulator tests accompany items 3 and 4.
+off, forwarding limits. Rules: forwarded flag, server-owned photoUrl, avatar reads (blocked people denied)
+and no client writes. Functions: JPEG validation and metadata stripping, set / replace / remove, size and
+daily limits, deletion cleanup.

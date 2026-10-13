@@ -110,6 +110,16 @@ describe('profiles/{uid}', () => {
     await assertFails(updateDoc(doc(db, 'profiles/alice'), { extra: 1, updatedAt: serverTimestamp() }));
   });
 
+  it('once the server has set a photo, the owner can still edit name and about but not the photo', async () => {
+    await seedProfile('alice');
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await updateDoc(doc(ctx.firestore(), 'profiles/alice'), { photoUrl: 'avatars/alice/x.jpg' });
+    });
+    const db = phoneContext(env, 'alice').firestore();
+    await assertSucceeds(updateDoc(doc(db, 'profiles/alice'), { displayName: 'Alice R', updatedAt: serverTimestamp() }));
+    await assertFails(updateDoc(doc(db, 'profiles/alice'), { photoUrl: null, updatedAt: serverTimestamp() }));
+  });
+
   it('client delete is denied', async () => {
     await seedProfile('alice');
     await assertFails(deleteDoc(doc(phoneContext(env, 'alice').firestore(), 'profiles/alice')));

@@ -30,6 +30,15 @@ service firebase.storage {
         || type.matches('application/vnd[.]ms-(excel|powerpoint)');
     }
 
+    // avatars/{uid}/{uuid}.jpg: written only by the setProfilePhoto function (which strips metadata).
+    // Hidden from people the owner has blocked.
+    match /avatars/{uid}/{file} {
+      allow read: if signedIn()
+        && (request.auth.uid == uid
+            || !firestore.exists(/databases/(default)/documents/users/$(uid)/blocked/$(request.auth.uid)));
+      allow write: if false;
+    }
+
     // conversations/{cid}/{messageId}/{file}: uploaded once by a member before the message doc is written.
     match /conversations/{cid}/{mid}/{file} {
       allow read: if isMember(cid);
