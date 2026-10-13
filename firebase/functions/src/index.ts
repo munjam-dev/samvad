@@ -12,6 +12,19 @@ export { onBlockWritten } from './onBlockWritten';
 export { reportContact } from './reportContact';
 export { setProfilePhoto } from './setProfilePhoto';
 export {
+  createGroup,
+  addGroupMembers,
+  removeGroupMember,
+  leaveGroup,
+  setGroupAdmin,
+  updateGroupInfo,
+  setGroupPhoto,
+  createGroupInvite,
+  revokeGroupInvite,
+  previewGroupInvite,
+  joinGroupWithCode,
+} from './groups';
+export {
   setTwoStepPin,
   verifyTwoStepPin,
   disableTwoStep,

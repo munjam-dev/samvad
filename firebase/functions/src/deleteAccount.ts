@@ -5,6 +5,7 @@ import { defaultDeps, type Deps } from './deps';
 import { requirePhoneAuth, requireRecentAuth } from './lib/guards';
 import { logEvent, newCorrelationId } from './lib/logger';
 import { checkPin, pinProblem } from './twoStep';
+import { leaveGroupCore } from './groups';
 
 /** Idempotent: every step tolerates having already run. */
 export async function deleteAccountCore(deps: Deps, uid: string): Promise<void> {
@@ -25,6 +26,13 @@ export async function deleteAccountCore(deps: Deps, uid: string): Promise<void> 
     if (cid) rtdbCleanup[`members/${cid}/${uid}`] = null;
   }
   await deps.rtdb.ref().update(rtdbCleanup);
+  // Phase 2: groups need a proper leave, so the member list and admins stay consistent.
+  for (const d of memberships.docs) {
+    const conv = d.ref.parent.parent;
+    if (conv && (await conv.get()).get('type') === 'group') {
+      await leaveGroupCore(deps, uid, conv.id).catch(() => undefined);
+    }
+  }
   for (let i = 0; i < memberships.docs.length; i += 400) {
     const batch = db.batch();
     memberships.docs.slice(i, i + 400).forEach((d) => batch.delete(d.ref));

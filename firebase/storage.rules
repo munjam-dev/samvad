@@ -39,6 +39,12 @@ service firebase.storage {
       allow write: if false;
     }
 
+    // groupPhotos/{cid}/{uuid}.jpg: written only by the setGroupPhoto function; members can see it.
+    match /groupPhotos/{cid}/{file} {
+      allow read: if isMember(cid);
+      allow write: if false;
+    }
+
     // conversations/{cid}/{messageId}/{file}: uploaded once by a member before the message doc is written.
     match /conversations/{cid}/{mid}/{file} {
       allow read: if isMember(cid);

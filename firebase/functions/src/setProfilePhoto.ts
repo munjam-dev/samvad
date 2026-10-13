@@ -40,6 +40,21 @@ async function consumeBudget(deps: Deps, uid: string): Promise<void> {
   });
 }
 
+/** Validates a JPEG photo and returns it without metadata; throws invalid-argument otherwise. */
+export function cleanPhoto(photo: Buffer): Buffer {
+  let clean;
+  try {
+    clean = stripJpegMetadata(photo);
+  } catch (e) {
+    if (e instanceof JpegError) throw new HttpsError('invalid-argument', 'not-a-jpeg');
+    throw e;
+  }
+  if (clean.width > MAX_PHOTO_EDGE || clean.height > MAX_PHOTO_EDGE) {
+    throw new HttpsError('invalid-argument', 'photo-too-large');
+  }
+  return clean.bytes;
+}
+
 /** Sets (or with null removes) the caller's photo; returns the new Storage path or null. */
 export async function setPhotoCore(deps: Deps, uid: string, photo: Buffer | null): Promise<string | null> {
   const profileRef = deps.db.doc(`profiles/${uid}`);
@@ -47,19 +62,10 @@ export async function setPhotoCore(deps: Deps, uid: string, photo: Buffer | null
 
   let path: string | null = null;
   if (photo) {
-    let clean;
-    try {
-      clean = stripJpegMetadata(photo);
-    } catch (e) {
-      if (e instanceof JpegError) throw new HttpsError('invalid-argument', 'not-a-jpeg');
-      throw e;
-    }
-    if (clean.width > MAX_PHOTO_EDGE || clean.height > MAX_PHOTO_EDGE) {
-      throw new HttpsError('invalid-argument', 'photo-too-large');
-    }
+    const clean = cleanPhoto(photo);
     await consumeBudget(deps, uid);
     path = `avatars/${uid}/${randomUUID()}.jpg`;
-    await deps.putFile(path, clean.bytes, 'image/jpeg');
+    await deps.putFile(path, clean, 'image/jpeg');
   } else {
     await consumeBudget(deps, uid);
   }

@@ -193,6 +193,48 @@ service cloud.firestore {
       return exists(/databases/$(database)/documents/users/$(uid)/blocked/$(otherUid));
     }
 
+    // Phase 2: a group member reads messages from their own joinedAt onwards (not earlier history).
+    // List queries must therefore filter createdAt >= joinedAt.
+    function canReadMessage(cid) {
+      return isMemberOf(cid)
+        && (convAfter(cid).type != 'group'
+            || resource.data.createdAt
+                 >= get(/databases/$(database)/documents/conversations/$(cid)/members/$(request.auth.uid)).data.joinedAt);
+    }
+
+    // Phase 2: optional @mentions must name members of the conversation.
+    function validMentions(cid, data) {
+      return !('mentions' in data)
+        || (data.mentions is list
+            && data.mentions.size() <= 50
+            && data.mentions.toSet().difference(convAfter(cid).members.toSet()).size() == 0);
+    }
+
+    // Phase 2: a poll. Option i is identified by ids[i] ('0'…'11'); votes refer to ids.
+    function validOption(p, i) {
+      return i >= p.options.size()
+        || (p.options[i] is string && p.options[i].size() >= 1 && p.options[i].size() <= 100);
+    }
+
+    function validOptions(p) {
+      return validOption(p, 0) && validOption(p, 1) && validOption(p, 2) && validOption(p, 3)
+        && validOption(p, 4) && validOption(p, 5) && validOption(p, 6) && validOption(p, 7)
+        && validOption(p, 8) && validOption(p, 9) && validOption(p, 10) && validOption(p, 11);
+    }
+
+    function validPoll(p) {
+      return p is map
+        && p.keys().hasOnly(['question', 'options', 'ids', 'multi'])
+        && p.keys().hasAll(['question', 'options', 'ids', 'multi'])
+        && p.question is string && p.question.size() >= 1 && p.question.size() <= 300
+        && p.options is list && p.options.size() >= 2 && p.options.size() <= 12
+        && validOptions(p)
+        && p.ids is list && p.ids.size() == p.options.size()
+        && p.ids.toSet().size() == p.ids.size()
+        && p.ids.hasOnly(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'])
+        && p.multi is bool;
+    }
+
     function notBlocked(cid) {
       let c = convAfter(cid);
       return c.type != 'direct'
@@ -229,11 +271,11 @@ service cloud.firestore {
         && notDeleted(request.resource.data.members[1]);
 
       match /messages/{mid} {
-        allow read: if isMemberOf(cid);
+        allow read: if canReadMessage(cid);
 
         allow create: if isMemberOf(cid)
           && isUuid(mid)
-          && request.resource.data.keys().hasOnly(['senderId', 'kind', 'text', 'replyTo', 'createdAt', 'deleted', 'reactions', 'media', 'forwarded'])
+          && request.resource.data.keys().hasOnly(['senderId', 'kind', 'text', 'replyTo', 'createdAt', 'deleted', 'reactions', 'media', 'forwarded', 'mentions', 'poll'])
           && request.resource.data.keys().hasAll(['senderId', 'kind', 'text', 'replyTo', 'createdAt'])
           && request.resource.data.senderId == request.auth.uid
           && (
@@ -244,7 +286,13 @@ service cloud.firestore {
               && request.resource.data.text is string
               && request.resource.data.text.size() <= 4096
               && validMedia(cid, mid, request.resource.data.kind, request.resource.data.media))
+            || (request.resource.data.kind == 'poll'
+              && request.resource.data.text == ''
+              && !('media' in request.resource.data)
+              && validPoll(request.resource.data.poll))
           )
+          && (request.resource.data.kind == 'poll' || !('poll' in request.resource.data))
+          && validMentions(cid, request.resource.data)
           && (request.resource.data.replyTo == null
               || (request.resource.data.replyTo is string && isUuid(request.resource.data.replyTo)))
           && request.resource.data.createdAt == request.time
@@ -288,12 +336,38 @@ service cloud.firestore {
         }
 
         allow update: if isMemberOf(cid) && (isSoftDelete() || ((isEdit() || isOwnReaction()) && notBlocked(cid)));
+
+        // Phase 2: one vote document per member on a poll; members see all votes (results).
+        match /votes/{voterId} {
+          function poll() {
+            return get(/databases/$(database)/documents/conversations/$(cid)/messages/$(mid)).data;
+          }
+
+          allow read: if isMemberOf(cid);
+
+          allow create, update: if isMemberOf(cid)
+            && voterId == request.auth.uid
+            && poll().kind == 'poll'
+            && poll().get('deleted', false) == false
+            && request.resource.data.keys().hasOnly(['choices', 'updatedAt'])
+            && request.resource.data.keys().hasAll(['choices', 'updatedAt'])
+            && request.resource.data.choices is list
+            && request.resource.data.choices.size() >= 1
+            && (poll().poll.multi || request.resource.data.choices.size() == 1)
+            && request.resource.data.choices.toSet().size() == request.resource.data.choices.size()
+            && request.resource.data.choices.hasOnly(poll().poll.ids)
+            && request.resource.data.updatedAt == request.time;
+
+          allow delete: if isMemberOf(cid) && voterId == request.auth.uid;
+        }
       }
 
       match /members/{memberId} {
         allow read: if isMemberOf(cid);
 
+        // Group member documents (with joinedAt) are created only by functions.
         allow create: if isMemberOf(cid)
+          && convAfter(cid).type == 'direct'
           && memberId in convAfter(cid).members
           && request.resource.data.keys().hasOnly(['uid', 'lastReadAt', 'lastDeliveredAt', 'unreadCount', 'muted', 'pinned', 'archived'])
           && request.resource.data.keys().hasAll(['uid', 'lastReadAt', 'lastDeliveredAt', 'unreadCount', 'muted', 'pinned', 'archived'])
@@ -333,6 +407,14 @@ service cloud.firestore {
     }
 
     match /twoStep/{uid} {
+      allow read, write: if false;
+    }
+
+    match /groupInvites/{code} {
+      allow read, write: if false;
+    }
+
+    match /groupSecrets/{cid} {
       allow read, write: if false;
     }
 
