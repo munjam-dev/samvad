@@ -1,6 +1,131 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ---- helpers -------------------------------------------------------
+
+    function signedIn() {
+      return request.auth != null
+        && request.auth.token.firebase.sign_in_provider == 'phone';
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function notDeleted(uid) {
+      return !exists(/databases/$(database)/documents/deletedAccounts/$(uid));
+    }
+
+    function isE164(value) {
+      return value is string && value.matches('^\\+[1-9][0-9]{6,14}$');
+    }
+
+    function validConsent(consent) {
+      return consent is map
+        && consent.keys().hasOnly(['version', 'acceptedAt'])
+        && consent.keys().hasAll(['version', 'acceptedAt'])
+        && consent.version is int
+        && consent.version >= 1
+        && consent.acceptedAt == request.time;
+    }
+
+    function validDisplayName(name) {
+      return name is string
+        && name.size() >= 1
+        && name.size() <= 64
+        && name.matches('(?s).*\\S.*');
+    }
+
+    function validProfile(data) {
+      return validDisplayName(data.displayName)
+        && data.about is string
+        && data.about.size() <= 140
+        && data.photoUrl == null
+        && data.updatedAt == request.time;
+    }
+
+    function shortString(value) {
+      return value is string && value.size() <= 32;
+    }
+
+    function validFcmToken(data) {
+      return !('fcmToken' in data)
+        || data.fcmToken == null
+        || (data.fcmToken is string && data.fcmToken.size() <= 4096);
+    }
+
+    // ---- users ---------------------------------------------------------
+
+    match /users/{uid} {
+      allow get: if isOwner(uid);
+
+      allow create: if isOwner(uid)
+        && notDeleted(uid)
+        && request.resource.data.keys().hasOnly(['phoneE164', 'consent', 'createdAt'])
+        && request.resource.data.keys().hasAll(['phoneE164', 'consent', 'createdAt'])
+        && isE164(request.resource.data.phoneE164)
+        && request.resource.data.phoneE164 == request.auth.token.phone_number
+        && validConsent(request.resource.data.consent)
+        && request.resource.data.createdAt == request.time;
+
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['consent'])
+        && validConsent(request.resource.data.consent)
+        && request.resource.data.consent.version > resource.data.consent.version;
+
+      match /devices/{deviceId} {
+        allow read: if isOwner(uid);
+
+        allow create: if isOwner(uid)
+          && notDeleted(uid)
+          && deviceId.matches('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
+          && request.resource.data.keys().hasOnly(['platform', 'appVersion', 'osVersion', 'createdAt', 'lastSeenAt', 'fcmToken'])
+          && request.resource.data.keys().hasAll(['platform', 'appVersion', 'osVersion', 'createdAt', 'lastSeenAt'])
+          && request.resource.data.platform == 'android'
+          && shortString(request.resource.data.appVersion)
+          && shortString(request.resource.data.osVersion)
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.lastSeenAt == request.time
+          && validFcmToken(request.resource.data);
+
+        allow update: if isOwner(uid)
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['appVersion', 'osVersion', 'lastSeenAt', 'fcmToken'])
+          && shortString(request.resource.data.appVersion)
+          && shortString(request.resource.data.osVersion)
+          && request.resource.data.lastSeenAt == request.time
+          && validFcmToken(request.resource.data);
+
+        allow delete: if isOwner(uid);
+      }
+    }
+
+    // ---- profiles ------------------------------------------------------
+
+    match /profiles/{uid} {
+      allow get: if signedIn();
+
+      allow create: if isOwner(uid)
+        && notDeleted(uid)
+        && request.resource.data.keys().hasOnly(['displayName', 'about', 'photoUrl', 'updatedAt'])
+        && request.resource.data.keys().hasAll(['displayName', 'about', 'photoUrl', 'updatedAt'])
+        && validProfile(request.resource.data);
+
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['displayName', 'about', 'updatedAt'])
+        && validProfile(request.resource.data);
+    }
+
+    // ---- server-only ---------------------------------------------------
+
+    match /deletedAccounts/{uid} {
+      allow read, write: if false;
+    }
+
+    // ---- default deny --------------------------------------------------
+
     match /{document=**} {
       allow read, write: if false;
     }
