@@ -6,6 +6,13 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.samvad.core.chat.ChatExport
 import com.samvad.core.chat.ChatList
+import com.samvad.core.chat.Conversation
+import com.samvad.core.chat.GroupRules
+import com.samvad.core.chat.MemberState
+import com.samvad.core.chat.Mentions
+import com.samvad.core.chat.Polls
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOf
 import com.samvad.core.chat.ExportLabels
 import kotlinx.coroutines.withContext
 import com.samvad.core.chat.Message
@@ -61,6 +68,21 @@ data class ConversationUiState(
   val muted: Boolean = false,
   val pinned: Boolean = false,
   val latestIncomingId: String? = null,
+  /** Phase 2: group chats. */
+  val isGroup: Boolean = false,
+  val groupPhotoPath: String? = null,
+  val memberCount: Int = 0,
+  val isAdmin: Boolean = false,
+  /** I was removed or left: the group is read-only and shows why. */
+  val removed: Boolean = false,
+)
+
+/** Group header line: who is typing, otherwise who is in the group. */
+data class GroupStatus(
+  val typing: List<String> = emptyList(),
+  val members: List<String> = emptyList(),
+  /** Everyone's names, me included, for highlighting @mentions. */
+  val allNames: List<String> = emptyList(),
 )
 
 /** An attachment being uploaded; shown as a pending bubble until its message is written. */
@@ -77,7 +99,7 @@ enum class MediaError { TOO_LARGE, TYPE_BLOCKED, UNREADABLE, DOWNLOAD, OPEN }
 enum class SafetyNotice { REPORTED, REPORTED_AND_BLOCKED, REPORT_LIMIT, FAILED }
 
 /** A chat a message can be forwarded to. */
-data class ForwardTarget(val conversationId: String, val otherUid: String, val name: String)
+data class ForwardTarget(val conversationId: String, val otherUid: String?, val name: String, val photoPath: String? = null)
 
 /** Outcome of a forward: how many chats got the copy and how many did not. */
 data class ForwardResult(val sent: Int, val failed: Int)
@@ -87,6 +109,8 @@ data class ComposerState(
   val replyTo: Message? = null,
   val editing: Message? = null,
   val tooLong: Boolean = false,
+  /** Groups: the "@query" being typed, for the member picker. */
+  val mentionQuery: String? = null,
 )
 
 class ConversationViewModel(
@@ -94,8 +118,10 @@ class ConversationViewModel(
   container: AppContainer,
   private val me: String,
   private val conversationId: String,
-  private val otherUid: String,
+  /** The other person in a direct chat; null for a group. */
+  private val otherUid: String?,
 ) : ViewModel() {
+  val isGroup = otherUid == null
   private val chats = container.chats!!
   private val mediaRepo = container.media!!
   private class Outgoing(val media: PreparedMedia, val caption: String, val replyTo: String?)
@@ -115,7 +141,7 @@ class ConversationViewModel(
   val reporting: StateFlow<Boolean> = _reporting
 
   /** True while I have blocked the other person. Rules also stop messages if they blocked me. */
-  val blocked: StateFlow<Boolean> = safety?.blocked(me)?.map { otherUid in it }
+  val blocked: StateFlow<Boolean> = safety?.blocked(me)?.map { otherUid != null && otherUid in it }
     ?.stateIn(viewModelScope, SharingStarted.Eagerly, false)
     ?: MutableStateFlow(false)
   private val throttle = TypingThrottle { System.currentTimeMillis() }
@@ -130,41 +156,103 @@ class ConversationViewModel(
   private val _composer = MutableStateFlow(ComposerState())
   val composer: StateFlow<ComposerState> = _composer
 
+  /** The group document (name, members, admins, photo); null for direct chats. */
+  val group: StateFlow<Conversation?> =
+    (if (isGroup) chats.conversation(conversationId).catch { emit(null) } else flowOf(null))
+      .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+  private val myState: StateFlow<MemberState?> = chats.memberState(conversationId, me)
+    .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+  /** Mentions picked from the member list for the message being typed (uid → name). */
+  private val picked = mutableMapOf<String, String>()
+
   init {
     // Re-read on open so a changed name or photo shows up.
-    viewModelScope.launch { chats.refreshProfiles(listOf(otherUid)) }
+    if (otherUid != null) viewModelScope.launch { chats.refreshProfiles(listOf(otherUid)) }
+    else viewModelScope.launch { group.collect { g -> g?.let { chats.loadProfiles(it.members) } } }
   }
 
+  /** Groups read from my joinedAt (the rules allow nothing earlier); null until my member doc loads. */
+  private val since: kotlinx.coroutines.flow.Flow<Long?> =
+    if (isGroup) myState.map { it?.joinedAt }.distinctUntilChanged() else flowOf(null)
+
   @OptIn(ExperimentalCoroutinesApi::class)
-  private val page = combine(limit, reload) { n, _ -> n }.flatMapLatest { n ->
-    chats.messages(conversationId, n).catch { failed.value = true }
+  private val page = combine(limit, reload, since) { n, _, from -> n to from }.flatMapLatest { (n, from) ->
+    if (isGroup && from == null) flowOf(MessagesPage(emptyList(), hasMore = false, fromCache = true))
+    else chats.messages(conversationId, n, from).catch { failed.value = true }
   }
 
   val state: StateFlow<ConversationUiState> = combine(
     page,
-    chats.memberState(conversationId, otherUid),
-    chats.memberState(conversationId, me),
-    chats.profiles.map { it[otherUid] },
+    if (otherUid != null) chats.memberState(conversationId, otherUid) else flowOf(null),
+    myState,
+    combine(chats.profiles, group) { profiles, g -> profiles to g },
     combine(failed, receipts) { f, r -> f to r },
-  ) { p: MessagesPage, other, mine, profile, (err, showRead) ->
-    val title = profile?.displayName ?: ChatList.DELETED_ACCOUNT
+  ) { p: MessagesPage, other, mine, (profiles, g), (err, showRead) ->
+    val title = if (isGroup) g?.name ?: ChatList.GROUP else profiles[otherUid]?.displayName ?: ChatList.DELETED_ACCOUNT
+    val names: ((String) -> String)? =
+      if (isGroup) { uid -> profiles[uid]?.displayName ?: ChatList.DELETED_ACCOUNT } else null
     ConversationUiState(
-      loading = false,
+      loading = isGroup && g == null,
       error = err,
       offline = p.fromCache,
       title = title,
       initials = ChatList.initials(title),
-      items = Timeline.build(p.messages, me, other, System.currentTimeMillis(), showReadReceipts = showRead).asReversed(),
+      items = Timeline.build(p.messages, me, other, System.currentTimeMillis(), showReadReceipts = showRead, groupNames = names).asReversed(),
       hasMore = p.hasMore,
       muted = mine?.muted ?: false,
       pinned = mine?.pinned ?: false,
       latestIncomingId = p.messages.lastOrNull { it.senderId != me }?.id,
+      isGroup = isGroup,
+      groupPhotoPath = g?.photoPath,
+      memberCount = g?.members?.size ?: 0,
+      isAdmin = g?.let { GroupRules.isAdmin(it, me) } ?: false,
+      removed = isGroup && g != null && me !in g.members,
     )
   }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ConversationUiState())
 
+  /** Groups: who is typing (names), otherwise the member names, me as "You" last. */
+  val groupStatus: StateFlow<GroupStatus> = run {
+    val p = presence
+    if (!isGroup || p == null) return@run MutableStateFlow(GroupStatus())
+    val ticker = flow { while (true) { emit(Unit); delay(1_000) } }
+    combine(p.typingIn(conversationId), group, chats.profiles, ticker) { typing, g, profiles, _ ->
+      val name = { uid: String -> profiles[uid]?.displayName ?: ChatList.DELETED_ACCOUNT }
+      val now = p.serverNow()
+      GroupStatus(
+        typing = typing.filter { (uid, at) -> uid != me && PresenceRules.isTyping(at, now) }.keys.map(name),
+        members = g?.members.orEmpty().filter { it != me }.map(name).sorted(),
+        allNames = g?.members.orEmpty().mapNotNull { profiles[it]?.displayName },
+      )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GroupStatus())
+  }
+
+  /** Groups: members matching the "@query" being typed (uid → name), at most 8. */
+  val mentionCandidates: StateFlow<List<Pair<String, String>>> =
+    combine(_composer, group, chats.profiles) { c, g, profiles ->
+      val query = c.mentionQuery ?: return@combine emptyList()
+      g?.members.orEmpty().filter { it != me }
+        .mapNotNull { uid -> profiles[uid]?.displayName?.let { uid to it } }
+        .filter { (_, n) -> n.contains(query, ignoreCase = true) }
+        .sortedBy { it.second }
+        .take(8)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+  /** A person's name in this chat: the other person, or a group member. */
+  fun displayName(uid: String): String =
+    chats.profiles.value[uid]?.displayName ?: if (isGroup) ChatList.DELETED_ACCOUNT else state.value.title
+
+  fun pickMention(uid: String, name: String) {
+    picked[uid] = name
+    val text = Mentions.insert(_composer.value.text, name)
+    _composer.update { it.copy(text = text, mentionQuery = null) }
+  }
+
   /** Header line: typing…, online, last seen …, or nothing when hidden. Re-evaluated every second so stale typing expires. */
   val status: StateFlow<PresenceStatus> = run {
-    val p = presence ?: return@run MutableStateFlow<PresenceStatus>(PresenceStatus.Unknown)
+    val p = presence
+    if (p == null || otherUid == null) return@run MutableStateFlow<PresenceStatus>(PresenceStatus.Unknown)
     val ticker = flow { while (true) { emit(Unit); delay(1_000) } }
     combine(p.typing(conversationId, otherUid), p.presence(otherUid), blocked, ticker) { typingAt, pres, isBlocked, _ ->
       if (isBlocked) PresenceStatus.Unknown else PresenceRules.status(typingAt, pres, p.serverNow())
@@ -277,8 +365,9 @@ class ConversationViewModel(
    * included) to the private exports cache, for the share sheet. Returns null on failure.
    */
   suspend fun exportChat(labels: ExportLabels, myName: String): File? = runCatching {
-    val messages = chats.exportMessages(conversationId, ChatExport.MAX_MESSAGES)
-    val names = mapOf(me to myName, otherUid to state.value.title)
+    val messages = chats.exportMessages(conversationId, ChatExport.MAX_MESSAGES, if (isGroup) myState.value?.joinedAt else null)
+    val names = if (otherUid != null) mapOf(me to myName, otherUid to state.value.title)
+    else chats.profiles.value.mapValues { it.value.displayName } + (me to myName)
     withContext(Dispatchers.IO) {
       val dir = File(app.cacheDir, "exports").apply { mkdirs() }
       // Keep only the latest export on the device.
@@ -290,7 +379,9 @@ class ConversationViewModel(
   }.getOrNull()
 
   fun onText(text: String) {
-    _composer.update { it.copy(text = text, tooLong = text.length > MessageRules.MAX_LENGTH) }
+    _composer.update {
+      it.copy(text = text, tooLong = text.length > MessageRules.MAX_LENGTH, mentionQuery = if (isGroup) Mentions.activeQuery(text) else null)
+    }
     onTyping(text)
   }
 
@@ -306,10 +397,12 @@ class ConversationViewModel(
     val text = (MessageRules.validate(c.text) as? TextValidation.Ok)?.text ?: return
     _composer.value = ComposerState()
     stopTyping()
+    val mentions = Mentions.resolve(text, picked)
+    picked.clear()
     viewModelScope.launch {
       runCatching {
         if (c.editing != null) chats.edit(conversationId, c.editing.id, text)
-        else chats.send(conversationId, me, text, c.replyTo?.id)
+        else chats.send(conversationId, me, text, c.replyTo?.id, mentions = mentions)
       }
     }
   }
@@ -329,12 +422,14 @@ class ConversationViewModel(
     val s = safety ?: return
     stopTyping()
     if (recorder.state.value.active) recorder.cancel()
-    viewModelScope.launch { runCatching { s.block(me, otherUid) }.onFailure { _notice.value = SafetyNotice.FAILED } }
+    val other = otherUid ?: return
+    viewModelScope.launch { runCatching { s.block(me, other) }.onFailure { _notice.value = SafetyNotice.FAILED } }
   }
 
   fun unblock() {
     val s = safety ?: return
-    viewModelScope.launch { runCatching { s.unblock(me, otherUid) }.onFailure { _notice.value = SafetyNotice.FAILED } }
+    val other = otherUid ?: return
+    viewModelScope.launch { runCatching { s.unblock(me, other) }.onFailure { _notice.value = SafetyNotice.FAILED } }
   }
 
   /** Sends a report; a retry after a failure reuses the request ID so the server stores it once. */
@@ -360,6 +455,22 @@ class ConversationViewModel(
 
   fun clearNotice() { _notice.value = null }
 
+  /** Phase 2: posts a poll; false when the question or options are not valid. */
+  fun sendPoll(question: String, options: List<String>, multi: Boolean): Boolean {
+    val poll = Polls.create(question, options, multi) ?: return false
+    viewModelScope.launch { runCatching { chats.sendPoll(conversationId, me, poll) } }
+    return true
+  }
+
+  fun votes(messageId: String): kotlinx.coroutines.flow.Flow<Map<String, List<String>>> =
+    chats.votes(conversationId, messageId).catch { emit(emptyMap()) }
+
+  fun vote(message: Message, optionId: String, current: Set<String>) {
+    val poll = message.poll ?: return
+    val next = Polls.toggle(poll, current, optionId)
+    viewModelScope.launch { runCatching { chats.vote(conversationId, message.id, me, next) } }
+  }
+
   private val _forwardResult = MutableStateFlow<ForwardResult?>(null)
   val forwardResult: StateFlow<ForwardResult?> = _forwardResult
   fun clearForwardResult() { _forwardResult.value = null }
@@ -367,11 +478,12 @@ class ConversationViewModel(
   /** My direct chats, most recent first, with the other person's name. */
   fun forwardTargets(): kotlinx.coroutines.flow.Flow<List<ForwardTarget>> =
     combine(chats.conversations(me).catch { }, chats.profiles) { snap, profiles ->
-      snap.value.filter { !it.isGroup }.mapNotNull { c ->
+      snap.value.mapNotNull { c ->
+        if (c.isGroup) return@mapNotNull ForwardTarget(c.id, null, c.name ?: ChatList.GROUP, c.photoPath)
         val other = c.members.firstOrNull { it != me } ?: return@mapNotNull null
         ForwardTarget(c.id, other, profiles[other]?.displayName ?: ChatList.DELETED_ACCOUNT)
       }
-    }.onEach { targets -> chats.loadProfiles(targets.map { it.otherUid }) }
+    }.onEach { targets -> chats.loadProfiles(targets.mapNotNull { it.otherUid }) }
 
   /**
    * Sends a copy of [message] to up to [MessageRules.MAX_FORWARD_TARGETS] chats, labelled forwarded.
@@ -420,7 +532,7 @@ class ConversationViewModel(
 
   companion object {
     const val PAGE = 30L
-    fun factory(app: Application, container: AppContainer, me: String, cid: String, other: String) =
+    fun factory(app: Application, container: AppContainer, me: String, cid: String, other: String?) =
       viewModelFactory { initializer { ConversationViewModel(app, container, me, cid, other) } }
   }
 }

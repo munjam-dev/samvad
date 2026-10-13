@@ -29,6 +29,7 @@ object Notifications {
   private const val SECURITY_ID = 0x5EC
   const val EXTRA_CONVERSATION = "samvad.conversationId"
   const val EXTRA_OTHER = "samvad.otherUid"
+  const val EXTRA_GROUP = "samvad.group"
 
   fun createChannels(context: Context) {
     val channel = NotificationChannel(
@@ -88,12 +89,14 @@ object Notifications {
     title: String,
     body: String,
     showPreview: Boolean = true,
+    group: Boolean = false,
   ) {
     if (!canPost(context) || ActiveChat.id.value == conversationId) return
     val open = Intent(context, MainActivity::class.java)
       .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
       .putExtra(EXTRA_CONVERSATION, conversationId)
       .putExtra(EXTRA_OTHER, senderId)
+      .putExtra(EXTRA_GROUP, group)
     val pending = PendingIntent.getActivity(
       context,
       conversationId.hashCode(),

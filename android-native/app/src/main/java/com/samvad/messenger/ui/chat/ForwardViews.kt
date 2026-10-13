@@ -34,6 +34,7 @@ import com.samvad.core.chat.ChatList
 import com.samvad.core.chat.MessageRules
 import com.samvad.messenger.R
 import com.samvad.messenger.ui.components.Avatar
+import com.samvad.messenger.ui.components.LocalPhotoSource
 import com.samvad.messenger.ui.components.PrimaryButton
 import com.samvad.messenger.ui.theme.SamvadTheme
 
@@ -76,7 +77,12 @@ internal fun ForwardSheet(targets: List<ForwardTarget>?, onSend: (List<ForwardTa
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
           ) {
-            Avatar(ChatList.initials(t.name), t.otherUid, size = 40.dp)
+            Avatar(
+              ChatList.initials(t.name),
+              t.otherUid ?: t.conversationId,
+              size = 40.dp,
+              photoPath = if (t.otherUid == null) t.photoPath else LocalPhotoSource.current?.pathFor(t.otherUid),
+            )
             Text(t.name, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             Checkbox(checked = checked, onCheckedChange = null, enabled = checked || !full, colors = CheckboxDefaults.colors(checkedColor = colors.primary))
           }

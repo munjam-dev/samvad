@@ -19,8 +19,15 @@ sealed interface TimelineItem {
     /** True when the previous message is from the same sender within 2 minutes (tighter spacing). */
     val groupedWithPrevious: Boolean,
     val timeLabel: String,
+    /** Groups: the sender's name above the first incoming bubble of a run; null otherwise. */
+    val senderName: String? = null,
   ) : TimelineItem {
     override val key: String get() = message.id
+  }
+
+  /** A centred group event line ("Asha added Ravi"). */
+  data class SystemLine(val id: String, val text: String) : TimelineItem {
+    override val key: String get() = id
   }
 }
 
@@ -35,6 +42,8 @@ object Timeline {
     nowMs: Long,
     zone: ZoneId = ZoneId.systemDefault(),
     showReadReceipts: Boolean = true,
+    /** Groups: names for sender labels and event lines; null for direct chats. */
+    groupNames: ((String) -> String)? = null,
   ): List<TimelineItem> {
     val out = ArrayList<TimelineItem>(messages.size + 8)
     var lastDay: String? = null
@@ -46,14 +55,22 @@ object Timeline {
         lastDay = day
         previous = null
       }
+      val system = m.system
+      if (m.kind == "system" && system != null) {
+        out += TimelineItem.SystemLine(m.id, SystemText.describe(system, m.senderId, me, groupNames ?: { it }))
+        previous = null
+        continue
+      }
       val mine = m.senderId == me
+      val grouped = previous != null && previous.senderId == m.senderId && m.createdAt - previous.createdAt < GROUP_WINDOW_MS
       out += TimelineItem.Bubble(
         message = m,
         mine = mine,
-        delivery = if (mine) MessageRules.deliveryState(m, other, showReadReceipts) else null,
-        groupedWithPrevious = previous != null && previous.senderId == m.senderId &&
-          m.createdAt - previous.createdAt < GROUP_WINDOW_MS,
+        // Groups show sent/sending only: per-member receipts are not tracked.
+        delivery = if (mine) MessageRules.deliveryState(m, if (groupNames != null) null else other, showReadReceipts) else null,
+        groupedWithPrevious = grouped,
         timeLabel = TimeLabels.clock(m.createdAt, zone),
+        senderName = if (groupNames != null && !mine && !grouped) groupNames(m.senderId) else null,
       )
       previous = m
     }

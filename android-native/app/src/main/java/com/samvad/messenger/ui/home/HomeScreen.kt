@@ -113,7 +113,8 @@ private enum class Tab { CHATS, CALLS, COMMUNITIES }
 fun HomeScreen(
   container: AppContainer,
   me: String,
-  onOpenChat: (conversationId: String, otherUid: String) -> Unit,
+  /** otherUid is null for a group. */
+  onOpenChat: (conversationId: String, otherUid: String?) -> Unit,
   onNewChat: () -> Unit,
   onOpenSettings: () -> Unit,
 ) {
@@ -173,12 +174,12 @@ private fun ChatsTab(
   container: AppContainer,
   state: HomeUiState,
   vm: HomeViewModel,
-  onOpenChat: (String, String) -> Unit,
+  onOpenChat: (String, String?) -> Unit,
   onNewChat: () -> Unit,
   onOpenSettings: () -> Unit,
 ) {
   val colors = SamvadTheme.colors
-  val open: (ChatRow) -> Unit = { row -> onOpenChat(row.conversationId, vm.otherOf(row)) }
+  val open: (ChatRow) -> Unit = { row -> onOpenChat(row.conversationId, if (row.isGroup) null else vm.otherOf(row)) }
   val seen = remember { mutableSetOf<Any>() }
   LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 128.dp)) {
     item(key = "header") {
@@ -573,7 +574,12 @@ fun ChatRowItem(row: ChatRow, highlight: Boolean, onClick: () -> Unit) {
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.spacedBy(13.dp),
   ) {
-    Avatar(row.initials, row.otherUid ?: row.conversationId, size = 50.dp)
+    Avatar(
+      row.initials,
+      row.otherUid ?: row.conversationId,
+      size = 50.dp,
+      photoPath = if (row.isGroup) row.photoPath else com.samvad.messenger.ui.components.LocalPhotoSource.current?.pathFor(row.otherUid.orEmpty()),
+    )
     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
       Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(row.title, style = MaterialTheme.typography.titleMedium, color = colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))

@@ -110,6 +110,7 @@ import androidx.compose.animation.togetherWith
 import com.samvad.messenger.AppContainer
 import com.samvad.messenger.R
 import com.samvad.core.chat.ExportLabels
+import com.samvad.messenger.ui.components.LocalPhotoSource
 import com.samvad.messenger.push.ActiveChat
 import com.samvad.messenger.push.Notifications
 import com.samvad.messenger.ui.components.Avatar
@@ -125,14 +126,20 @@ fun ConversationScreen(
   container: AppContainer,
   me: String,
   conversationId: String,
-  otherUid: String,
+  /** Null for a group. */
+  otherUid: String?,
   onBack: () -> Unit,
+  /** Groups: opens group info; null hides the entry points. */
+  onOpenGroupInfo: (() -> Unit)? = null,
 ) {
   val appCtx = LocalContext.current.applicationContext as android.app.Application
   val vm: ConversationViewModel = viewModel(factory = ConversationViewModel.factory(appCtx, container, me, conversationId, otherUid))
   val state = vm.state.collectAsStateWithLifecycle().value
   val composer = vm.composer.collectAsStateWithLifecycle().value
   val presence = vm.status.collectAsStateWithLifecycle().value
+  val groupStatus = vm.groupStatus.collectAsStateWithLifecycle().value
+  val mentionCandidates = vm.mentionCandidates.collectAsStateWithLifecycle().value
+  var composingPoll by remember { mutableStateOf(false) }
   val colors = SamvadTheme.colors
   val list = rememberLazyListState()
   val scope = rememberCoroutineScope()
@@ -296,8 +303,19 @@ fun ConversationScreen(
         verticalAlignment = Alignment.CenterVertically,
       ) {
         IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, stringResource(R.string.cd_back), tint = colors.onSurface) }
-        Avatar(state.initials, otherUid, size = 40.dp)
-        Column(Modifier.weight(1f).padding(start = 12.dp)) {
+        Avatar(
+          state.initials,
+          otherUid ?: conversationId,
+          size = 40.dp,
+          photoPath = if (state.isGroup) state.groupPhotoPath else LocalPhotoSource.current?.pathFor(otherUid.orEmpty()),
+        )
+        val groupInfoLabel = stringResource(R.string.group_info)
+        Column(
+          Modifier
+            .weight(1f)
+            .then(if (state.isGroup && onOpenGroupInfo != null) Modifier.clickable(onClickLabel = groupInfoLabel, onClick = onOpenGroupInfo) else Modifier)
+            .padding(start = 12.dp),
+        ) {
           Text(
             state.title,
             style = MaterialTheme.typography.titleMedium,
@@ -305,12 +323,19 @@ fun ConversationScreen(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
           )
-          val subtitle = when (presence) {
-            PresenceStatus.Typing -> stringResource(R.string.chat_typing)
-            PresenceStatus.Online -> stringResource(R.string.chat_online)
-            is PresenceStatus.LastSeen -> presence.label
-            PresenceStatus.Unknown -> null
+          val you = stringResource(R.string.chat_you)
+          val subtitle = when {
+            state.isGroup && groupStatus.typing.size == 1 -> stringResource(R.string.group_typing_one, groupStatus.typing[0])
+            state.isGroup && groupStatus.typing.size > 1 -> stringResource(R.string.group_typing_many, groupStatus.typing.joinToString(", "))
+            state.isGroup -> (groupStatus.members + you).joinToString(", ")
+            else -> when (presence) {
+              PresenceStatus.Typing -> stringResource(R.string.chat_typing)
+              PresenceStatus.Online -> stringResource(R.string.chat_online)
+              is PresenceStatus.LastSeen -> presence.label
+              PresenceStatus.Unknown -> null
+            }
           }
+          val highlight = presence == PresenceStatus.Typing || presence == PresenceStatus.Online || groupStatus.typing.isNotEmpty()
           androidx.compose.animation.AnimatedContent(
             targetState = subtitle,
             transitionSpec = { fadeIn() togetherWith fadeOut() },
@@ -320,8 +345,9 @@ fun ConversationScreen(
               Text(
                 line,
                 style = MaterialTheme.typography.labelMedium,
-                color = if (presence == PresenceStatus.Typing || presence == PresenceStatus.Online) colors.primary else colors.onSurfaceVariant,
+                color = if (highlight) colors.primary else colors.onSurfaceVariant,
                 maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
               )
             }
           }
@@ -329,6 +355,9 @@ fun ConversationScreen(
         Box {
           IconButton(onClick = { menu = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.cd_more), tint = colors.onSurface) }
           DropdownMenu(menu, onDismissRequest = { menu = false }) {
+            if (state.isGroup && onOpenGroupInfo != null) {
+              DropdownMenuItem(text = { Text(stringResource(R.string.group_info)) }, onClick = { menu = false; onOpenGroupInfo() })
+            }
             DropdownMenuItem(
               text = { Text(stringResource(if (state.pinned) R.string.chat_unpin else R.string.chat_pin)) },
               onClick = { vm.toggle("pinned", !state.pinned); menu = false },
@@ -343,6 +372,7 @@ fun ConversationScreen(
               enabled = !exporting,
               onClick = { menu = false; confirmExport = true },
             )
+            if (!state.isGroup) {
             HorizontalDivider(color = colors.outlineVariant)
             DropdownMenuItem(
               text = { Text(stringResource(if (blocked) R.string.chat_unblock else R.string.chat_block)) },
@@ -355,6 +385,7 @@ fun ConversationScreen(
               text = { Text(stringResource(R.string.chat_report), color = colors.error) },
               onClick = { menu = false; reportOpen = true },
             )
+            }
           }
         }
       }
@@ -381,14 +412,16 @@ fun ConversationScreen(
               Box(Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null, placementSpec = Motion.offsetSpring)) {
               when (item) {
                 is TimelineItem.DateSeparator -> DateChip(item.label)
+                is TimelineItem.SystemLine -> SystemLineChip(item.text)
                 is TimelineItem.Bubble -> MessageBubble(
                   item = item,
                   animateIn = initialIds?.contains(item.key) == false,
                   replied = item.message.replyTo?.let { id -> state.items.firstOrNull { it.key == id } as? TimelineItem.Bubble },
-                  otherName = state.title,
+                  otherName = item.message.replyTo?.let { id -> (state.items.firstOrNull { it.key == id } as? TimelineItem.Bubble)?.message?.senderId }?.let(vm::displayName) ?: state.title,
                   onLongPress = { selected = item.message },
                   onRetry = { vm.retry(item.message) },
                   onReact = { emoji -> vm.react(item.message, emoji) },
+                  mentionNames = groupStatus.allNames,
                   mediaContent = {
                     val media = item.message.media
                     if (media != null) {
@@ -397,6 +430,12 @@ fun ConversationScreen(
                         "voice" -> VoiceNote(item.message.id, media, playback, item.mine) { vm.togglePlayback(item.message) }
                         else -> FileCard(media) { openFile(media) }
                       }
+                    }
+                    val poll = item.message.poll
+                    if (item.message.kind == "poll" && poll != null && !item.message.deleted) {
+                      val votes = remember(item.message.id) { vm.votes(item.message.id) }.collectAsStateWithLifecycle(emptyMap()).value
+                      val result = remember(votes, poll) { com.samvad.core.chat.Polls.tally(poll, votes, me) }
+                      PollCard(item.message, result, item.mine) { id -> vm.vote(item.message, id, result.mine) }
                     }
                   },
                 )
@@ -422,15 +461,18 @@ fun ConversationScreen(
       uploads.forEach { up ->
         PendingUploadRow(up, onRetry = { vm.retryUpload(up.id) }, onCancel = { vm.cancelUpload(up.id) })
       }
-      if (blocked) {
+      if (state.removed) {
+        RemovedBar()
+      } else if (blocked) {
         BlockedBar(state.title, onUnblock = vm::unblock)
       } else if (recording.active) {
         RecorderBar(recording, onCancel = vm::cancelRecording, onSend = vm::finishRecording)
       } else {
+        if (mentionCandidates.isNotEmpty()) MentionSuggestions(mentionCandidates, vm::pickMention)
         Composer(
           state = composer,
           me = me,
-          otherName = state.title,
+          otherName = composer.replyTo?.let { vm.displayName(it.senderId) } ?: state.title,
           onText = vm::onText,
           onSend = vm::submit,
           onCancel = vm::cancelContext,
@@ -460,10 +502,17 @@ fun ConversationScreen(
           container.appLock.expectExternal()
           pickDocument.launch(com.samvad.core.media.MediaRules.pickableDocuments)
         },
+        onPoll = { attaching = false; composingPoll = true },
       )
     }
   }
   viewing?.let { path -> MediaViewer(path, vm::bitmap) { viewing = null } }
+
+  if (composingPoll) {
+    ModalBottomSheet(onDismissRequest = { composingPoll = false }) {
+      PollComposer(onCreate = vm::sendPoll, onClose = { composingPoll = false })
+    }
+  }
 
   forwarding?.let { msg ->
     ModalBottomSheet(onDismissRequest = { forwarding = null }) {
@@ -551,6 +600,7 @@ private fun MessageBubble(
   onRetry: () -> Unit,
   onReact: (String) -> Unit,
   mediaContent: @Composable () -> Unit = {},
+  mentionNames: List<String> = emptyList(),
 ) {
   val colors = SamvadTheme.colors
   val m = item.message
@@ -589,6 +639,7 @@ private fun MessageBubble(
         )
         .padding(horizontal = 12.dp, vertical = 8.dp),
     ) {
+      item.senderName?.let { SenderLabel(it, m.senderId) }
       if (m.forwarded && !m.deleted) ForwardedLabel(tint = meta)
       if (replied != null && !m.deleted) {
         Column(
@@ -611,7 +662,7 @@ private fun MessageBubble(
       }
       if (m.deleted || m.text.isNotBlank()) {
         Text(
-          if (m.deleted) stringResource(R.string.chat_deleted) else m.text,
+          if (m.deleted) AnnotatedString(stringResource(R.string.chat_deleted)) else mentionText(m.text, mentionNames),
           style = MaterialTheme.typography.bodyLarge,
           color = if (m.deleted) colors.onSurfaceVariant else colors.onBubble,
         )

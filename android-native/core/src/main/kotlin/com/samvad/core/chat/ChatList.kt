@@ -18,12 +18,15 @@ data class ChatRow(
   val muted: Boolean,
   val isGroup: Boolean,
   val lastMessageMine: Boolean,
+  /** Group photo (Storage path); people's photos come from their profiles. */
+  val photoPath: String? = null,
 )
 
 object ChatList {
   const val DELETED_ACCOUNT = "Deleted account"
   const val DELETED_MESSAGE = "Message deleted"
   const val NEW_CHAT = "Say hello 👋"
+  const val GROUP = "Group"
 
   fun build(
     me: String,
@@ -33,33 +36,45 @@ object ChatList {
     filter: ChatFilter,
     nowMs: Long,
     zone: ZoneId = ZoneId.systemDefault(),
+    /** Groups: unread counts computed on the device (the server keeps no per-member counter). */
+    unreadOverride: Map<String, Int> = emptyMap(),
   ): List<ChatRow> = conversations
     .mapNotNull { c ->
       val state = memberStates[c.id] ?: MemberState(me)
       if (state.archived) return@mapNotNull null
-      val other = ConversationIds.otherMember(c, me)
-      val title = other?.let { profiles[it]?.displayName } ?: DELETED_ACCOUNT
+      val other = if (c.isGroup) null else ConversationIds.otherMember(c, me)
+      val title = if (c.isGroup) c.name?.takeIf { it.isNotBlank() } ?: GROUP else other?.let { profiles[it]?.displayName } ?: DELETED_ACCOUNT
       val last = c.lastMessage
       val mine = last?.senderId == me
+      val nameOf = { uid: String -> profiles[uid]?.displayName ?: DELETED_ACCOUNT }
+      val system = last?.system
       val body = when {
         last == null -> NEW_CHAT
+        system != null -> SystemText.describe(system, last.senderId, me, nameOf)
         last.preview.isEmpty() -> DELETED_MESSAGE
         else -> last.preview
+      }
+      val preview = when {
+        last == null || system != null -> body
+        mine -> "You: $body"
+        c.isGroup -> "${nameOf(last.senderId)}: $body"
+        else -> body
       }
       ChatRow(
         conversationId = c.id,
         title = title,
         initials = initials(title),
         otherUid = other,
-        preview = if (mine) "You: $body" else body,
+        preview = preview,
         previewIsMine = mine,
         timeLabel = TimeLabels.chatListTime(last?.createdAt ?: c.lastMessageAt, nowMs, zone),
         sortKey = last?.createdAt ?: c.lastMessageAt,
-        unreadCount = state.unreadCount,
+        unreadCount = unreadOverride[c.id] ?: state.unreadCount,
         pinned = state.pinned,
         muted = state.muted,
         isGroup = c.isGroup,
         lastMessageMine = mine,
+        photoPath = if (c.isGroup) c.photoPath else null,
       )
     }
     .filter { row ->

@@ -94,7 +94,8 @@ private fun SignedInNav(
   val nav = rememberNavController()
   LaunchedEffect(link) {
     if (link != null) {
-      nav.navigate("chat/${link.conversationId}/${link.otherUid}") { popUpTo("home") }
+      val route = link.otherUid?.let { "chat/${link.conversationId}/$it" } ?: "group/${link.conversationId}"
+      nav.navigate(route) { popUpTo("home") }
       onLinkHandled()
     }
   }
@@ -111,7 +112,7 @@ private fun SignedInNav(
       HomeScreen(
         container = container,
         me = uid,
-        onOpenChat = { cid, other -> nav.navigate("chat/$cid/$other") },
+        onOpenChat = { cid, other -> nav.navigate(if (other == null) "group/$cid" else "chat/$cid/$other") },
         onNewChat = { nav.navigate("newchat") },
         onOpenSettings = { nav.navigate("settings") },
       )
@@ -125,6 +126,15 @@ private fun SignedInNav(
         me = uid,
         conversationId = entry.arguments!!.getString("cid")!!,
         otherUid = entry.arguments!!.getString("other")!!,
+        onBack = { nav.popBackStack() },
+      )
+    }
+    composable("group/{cid}", arguments = listOf(navArgument("cid") { type = NavType.StringType })) { entry ->
+      ConversationScreen(
+        container = container,
+        me = uid,
+        conversationId = entry.arguments!!.getString("cid")!!,
+        otherUid = null,
         onBack = { nav.popBackStack() },
       )
     }

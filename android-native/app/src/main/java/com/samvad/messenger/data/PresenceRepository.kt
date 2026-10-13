@@ -55,6 +55,11 @@ class PresenceRepository(private val rtdb: FirebaseDatabase) {
   fun typing(conversationId: String, uid: String): Flow<Long?> =
     valueFlow("typing/$conversationId/$uid") { it.getValue(Long::class.java) }
 
+  /** Group chats: everyone currently marked typing (uid → server time of the mark). */
+  fun typingIn(conversationId: String): Flow<Map<String, Long>> =
+    valueFlow("typing/$conversationId") { s -> s.children.mapNotNull { c -> c.getValue(Long::class.java)?.let { c.key!! to it } }.toMap() }
+      .map { it ?: emptyMap() }
+
   suspend fun setTyping(conversationId: String, uid: String) {
     runCatching {
       val ref = rtdb.getReference("typing/$conversationId/$uid")

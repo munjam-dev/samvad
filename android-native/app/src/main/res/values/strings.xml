@@ -347,4 +347,24 @@
     <string name="settings_photo_remove">Remove photo</string>
     <string name="settings_photo_note">Your photo is cropped to a square and its location data is removed. People you\'ve blocked can\'t see it.</string>
     <string name="settings_photo_failed">Couldn\'t update your photo. Try again.</string>
+    <!-- Phase 2: groups and polls -->
+    <string name="group_info">Group info</string>
+    <string name="group_typing_one">%1$s is typing…</string>
+    <string name="group_typing_many">%1$s are typing…</string>
+    <string name="group_removed">You\'re no longer a member of this group.</string>
+    <string name="attach_poll">Poll</string>
+    <string name="poll_create">Create poll</string>
+    <string name="poll_question">Question</string>
+    <string name="poll_option">Option %1$d</string>
+    <string name="poll_add_option">Add option</string>
+    <string name="poll_remove_option">Remove option</string>
+    <string name="poll_allow_multi">Allow multiple answers</string>
+    <string name="poll_invalid">Add a question and at least two different options.</string>
+    <string name="poll_send">Send poll</string>
+    <string name="poll_single_hint">Select one</string>
+    <string name="poll_multi_hint">Select one or more</string>
+    <plurals name="poll_votes">
+        <item quantity="one">%1$d vote</item>
+        <item quantity="other">%1$d votes</item>
+    </plurals>
 </resources>

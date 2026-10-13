@@ -27,7 +27,7 @@ class SamvadMessagingService : FirebaseMessagingService() {
     // onMessageReceived runs on a background thread, so a short blocking read of the settings is fine.
     val prefs = (application as SamvadApplication).container.preferences
     val showPreview = runCatching { runBlocking { prefs.preferences.first().notificationPreviews } }.getOrDefault(false)
-    Notifications.showMessage(this, cid, sender, data["title"].orEmpty(), data["body"].orEmpty(), showPreview)
+    Notifications.showMessage(this, cid, sender, data["title"].orEmpty(), data["body"].orEmpty(), showPreview, group = data["group"] == "1")
   }
 
   override fun onNewToken(token: String) {

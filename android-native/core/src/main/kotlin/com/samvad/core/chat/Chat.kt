@@ -13,6 +13,8 @@ data class LastMessage(
   val preview: String,
   val kind: String,
   val createdAt: Long,
+  /** Set when the last message is a group event ("added", "left"…). */
+  val system: SystemInfo? = null,
 )
 
 data class Conversation(
@@ -21,6 +23,11 @@ data class Conversation(
   val lastMessage: LastMessage?,
   val lastMessageAt: Long,
   val isGroup: Boolean = false,
+  /** Groups only (Phase 2). */
+  val name: String? = null,
+  val admins: List<String> = emptyList(),
+  val description: String = "",
+  val photoPath: String? = null,
 )
 
 data class MemberState(
@@ -28,6 +35,8 @@ data class MemberState(
   val lastReadAt: Long? = null,
   val lastDeliveredAt: Long? = null,
   val unreadCount: Int = 0,
+  /** Groups: when this member joined; earlier messages are not readable. */
+  val joinedAt: Long? = null,
   val muted: Boolean = false,
   val pinned: Boolean = false,
   val archived: Boolean = false,
@@ -51,6 +60,10 @@ data class Message(
   val media: Media? = null,
   /** A copy forwarded from another chat (Phase 1.6). */
   val forwarded: Boolean = false,
+  /** Phase 2: @mentioned members, a server-written group event, or a poll. */
+  val mentions: List<String> = emptyList(),
+  val system: SystemInfo? = null,
+  val poll: Poll? = null,
 )
 
 enum class DeliveryState { SENDING, SENT, DELIVERED, READ, FAILED }
@@ -72,6 +85,11 @@ object ConversationIds {
    * Whether [conversationId] is a well-formed direct chat ID that includes [otherUid]. Used to
    * validate chat links arriving in intents before navigating (rules still guard the data).
    */
+  private val GROUP_ID = Regex("^[A-Za-z0-9]{20}$")
+
+  /** Group IDs are Firestore auto IDs (20 letters and digits). */
+  fun isGroupId(conversationId: String): Boolean = GROUP_ID.matches(conversationId)
+
   fun isDirectWith(conversationId: String, otherUid: String): Boolean {
     val parts = conversationId.split('_')
     return parts.size == 2 && parts[0] < parts[1] && parts.all(UID::matches) && otherUid in parts

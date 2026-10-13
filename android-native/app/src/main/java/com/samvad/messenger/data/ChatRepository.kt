@@ -1,5 +1,7 @@
 package com.samvad.messenger.data
 
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.AggregateSource
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -10,8 +12,11 @@ import com.samvad.core.chat.ConversationIds
 import com.samvad.core.chat.LastMessage
 import com.samvad.core.chat.MemberState
 import com.samvad.core.chat.Message
+import com.samvad.core.chat.Poll
+import com.samvad.core.chat.SystemInfo
 import com.samvad.core.chat.Profile
 import com.samvad.core.media.Media
+import java.util.Date
 import java.util.UUID
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
@@ -119,13 +124,19 @@ class ChatRepository(private val db: FirebaseFirestore) {
   }
 
   /** Newest [limit] messages, ascending. Growing [limit] pages back through history. */
-  fun messages(conversationId: String, limit: Long): Flow<MessagesPage> =
-    combine(rawMessages(conversationId, limit), failed) { page, failedIds ->
+  /**
+   * Newest [limit] messages. In groups pass [since] = my joinedAt: the rules only let members read
+   * messages from when they joined, so the query must say so.
+   */
+  fun messages(conversationId: String, limit: Long, since: Long? = null): Flow<MessagesPage> =
+    combine(rawMessages(conversationId, limit, since), failed) { page, failedIds ->
       page.copy(messages = page.messages.map { if (it.id in failedIds) it.copy(failed = true) else it })
     }
 
-  private fun rawMessages(conversationId: String, limit: Long): Flow<MessagesPage> = callbackFlow {
-    val reg = db.collection("conversations/$conversationId/messages")
+  private fun rawMessages(conversationId: String, limit: Long, since: Long?): Flow<MessagesPage> = callbackFlow {
+    var query: Query = db.collection("conversations/$conversationId/messages")
+    if (since != null) query = query.whereGreaterThanOrEqualTo("createdAt", Timestamp(Date(since)))
+    val reg = query
       .orderBy("createdAt", Query.Direction.DESCENDING)
       .limit(limit)
       .addSnapshotListener(MetadataChanges.INCLUDE) { snap, err ->
@@ -149,6 +160,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
     replyTo: String?,
     id: String = UUID.randomUUID().toString(),
     forwarded: Boolean = false,
+    mentions: List<String> = emptyList(),
   ) {
     failed.update { it - id }
     try {
@@ -159,6 +171,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
         put("replyTo", replyTo)
         put("createdAt", FieldValue.serverTimestamp())
         if (forwarded) put("forwarded", true)
+        if (mentions.isNotEmpty()) put("mentions", mentions)
       }
       db.document("conversations/$conversationId/messages/$id").set(doc).await()
     } catch (e: Exception) {
@@ -236,9 +249,58 @@ class ChatRepository(private val db: FirebaseFirestore) {
     }
   }
 
-  /** Up to [limit] newest messages, oldest first, for a chat export (one read per message). */
-  suspend fun exportMessages(conversationId: String, limit: Int): List<Message> =
+  /** Phase 2: posts a poll (validated by Polls.create and again by the rules). */
+  suspend fun sendPoll(conversationId: String, me: String, poll: Poll) {
+    db.document("conversations/$conversationId/messages/${UUID.randomUUID()}").set(
+      mapOf(
+        "senderId" to me,
+        "kind" to "poll",
+        "text" to "",
+        "replyTo" to null,
+        "createdAt" to FieldValue.serverTimestamp(),
+        "poll" to mapOf("question" to poll.question, "options" to poll.options, "ids" to poll.ids, "multi" to poll.multi),
+      ),
+    ).await()
+  }
+
+  /** Everyone's votes on a poll: voter → chosen option ids. */
+  fun votes(conversationId: String, messageId: String): Flow<Map<String, List<String>>> = callbackFlow {
+    val reg = db.collection("conversations/$conversationId/messages/$messageId/votes").addSnapshotListener { snap, _ ->
+      if (snap != null) {
+        trySend(snap.documents.associate { d -> d.id to ((d.get("choices") as? List<*>)?.filterIsInstance<String>() ?: emptyList()) })
+      }
+    }
+    awaitClose { reg.remove() }
+  }
+
+  /** Sets my vote; an empty choice set withdraws it. */
+  suspend fun vote(conversationId: String, messageId: String, me: String, choices: Set<String>) {
+    val ref = db.document("conversations/$conversationId/messages/$messageId/votes/$me")
+    if (choices.isEmpty()) ref.delete().await()
+    else ref.set(mapOf("choices" to choices.sorted(), "updatedAt" to FieldValue.serverTimestamp())).await()
+  }
+
+  /**
+   * Group unread count: messages after [since] (one aggregation read per 1,000 matches) instead of a
+   * server counter per member.
+   */
+  suspend fun countSince(conversationId: String, since: Long): Int =
     db.collection("conversations/$conversationId/messages")
+      .whereGreaterThan("createdAt", Timestamp(Date(since)))
+      .count().get(AggregateSource.SERVER).await().count.toInt()
+
+  /** One conversation document, live (group name, members, admins, photo). */
+  fun conversation(conversationId: String): Flow<Conversation?> = callbackFlow {
+    val reg = db.document("conversations/$conversationId").addSnapshotListener { snap, _ ->
+      trySend(snap?.takeIf { it.exists() }?.let(::toConversation))
+    }
+    awaitClose { reg.remove() }
+  }
+
+  /** Up to [limit] newest messages, oldest first, for a chat export (one read per message). */
+  suspend fun exportMessages(conversationId: String, limit: Int, since: Long? = null): List<Message> =
+    db.collection("conversations/$conversationId/messages")
+      .let { if (since != null) it.whereGreaterThanOrEqualTo("createdAt", Timestamp(Date(since))) else it }
       .orderBy("createdAt", Query.Direction.DESCENDING)
       .limit(limit.toLong())
       .get().await()
@@ -272,11 +334,29 @@ class ChatRepository(private val db: FirebaseFirestore) {
           preview = it["preview"] as? String ?: "",
           kind = it["kind"] as? String ?: "text",
           createdAt = (it["createdAt"] as? com.google.firebase.Timestamp)?.toDate()?.time ?: 0L,
+          system = (it["system"] as? Map<*, *>)?.let(::toSystem),
         )
       },
       lastMessageAt = d.millis("lastMessageAt") ?: 0L,
       isGroup = d.getString("type") == "group",
+      name = d.getString("name"),
+      admins = (d.get("admins") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+      description = d.getString("description") ?: "",
+      photoPath = d.getString("photoUrl"),
     )
+  }
+
+  private fun toSystem(m: Map<*, *>): SystemInfo? {
+    val event = m["event"] as? String ?: return null
+    return SystemInfo(event, (m["targets"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(), m["name"] as? String)
+  }
+
+  private fun toPoll(m: Map<*, *>): Poll? {
+    val question = m["question"] as? String ?: return null
+    val options = (m["options"] as? List<*>)?.filterIsInstance<String>() ?: return null
+    val ids = (m["ids"] as? List<*>)?.filterIsInstance<String>() ?: return null
+    if (options.size != ids.size) return null
+    return Poll(question, options, ids, m["multi"] == true)
   }
 
   private fun toMemberState(d: DocumentSnapshot) = MemberState(
@@ -287,6 +367,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
     muted = d.getBoolean("muted") ?: false,
     pinned = d.getBoolean("pinned") ?: false,
     archived = d.getBoolean("archived") ?: false,
+    joinedAt = d.millis("joinedAt"),
   )
 
   private fun toMedia(m: Map<*, *>): Media? {
@@ -319,6 +400,9 @@ class ChatRepository(private val db: FirebaseFirestore) {
       kind = d.getString("kind") ?: "text",
       media = (d.get("media") as? Map<*, *>)?.let(::toMedia),
       forwarded = d.getBoolean("forwarded") ?: false,
+      mentions = (d.get("mentions") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+      system = (d.get("system") as? Map<*, *>)?.let(::toSystem),
+      poll = (d.get("poll") as? Map<*, *>)?.let(::toPoll),
     )
   }
 }

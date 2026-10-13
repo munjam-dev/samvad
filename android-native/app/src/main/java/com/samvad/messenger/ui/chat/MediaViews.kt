@@ -28,6 +28,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.Poll
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Pause
@@ -288,7 +289,7 @@ fun PendingUploadRow(upload: PendingUpload, onRetry: () -> Unit, onCancel: () ->
 }
 
 @Composable
-fun AttachOptions(onPhoto: () -> Unit, onDocument: () -> Unit) {
+fun AttachOptions(onPhoto: () -> Unit, onDocument: () -> Unit, onPoll: (() -> Unit)? = null) {
   val colors = com.samvad.messenger.ui.theme.SamvadTheme.colors
   Column(Modifier.fillMaxWidth().padding(bottom = 28.dp)) {
     Text(
@@ -300,6 +301,9 @@ fun AttachOptions(onPhoto: () -> Unit, onDocument: () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
       AttachTile(Icons.Outlined.Image, stringResource(R.string.attach_photo), colors.primaryContainer, colors.onPrimaryContainer, onPhoto)
       AttachTile(Icons.Outlined.Description, stringResource(R.string.attach_document), colors.tertiaryContainer, colors.onTertiaryContainer, onDocument)
+      if (onPoll != null) {
+        AttachTile(Icons.Outlined.Poll, stringResource(R.string.attach_poll), colors.secondaryContainer, colors.onSecondaryContainer, onPoll)
+      }
     }
   }
 }

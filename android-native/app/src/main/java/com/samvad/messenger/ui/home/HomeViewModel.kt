@@ -49,6 +49,7 @@ private data class Inputs(
   val states: Map<String, MemberState>,
   val profiles: Map<String, Profile>,
   val failed: Boolean,
+  val groupUnread: Map<String, Int>,
 )
 
 class HomeViewModel(private val container: AppContainer, private val me: String) : ViewModel() {
@@ -76,19 +77,43 @@ class HomeViewModel(private val container: AppContainer, private val me: String)
   }
 
   private val ids = conversations.map { it?.value?.map(Conversation::id) ?: emptyList() }.distinctUntilChanged()
-  private val states = chats.memberStates(me, ids).onEach(::markDelivered)
+  private val states = chats.memberStates(me, ids).onEach(::markDelivered).onEach(::refreshGroupUnread)
+
+  /** Groups keep no unread counter on the server; it is counted here, once per new message. */
+  private val groupUnread = MutableStateFlow<Map<String, Int>>(emptyMap())
+  private val counted = mutableMapOf<String, String>()
+
+  private fun refreshGroupUnread(states: Map<String, MemberState>) {
+    val convs = conversations.value?.value ?: return
+    for (c in convs.filter { it.isGroup }) {
+      val last = c.lastMessage
+      val mine = states[c.id] ?: continue
+      val since = maxOf(mine.lastReadAt ?: 0L, mine.joinedAt ?: 0L)
+      // Nothing new, or my own message is the latest (sending implies I have seen the chat).
+      if (last == null || last.senderId == me || last.createdAt <= since) {
+        if ((groupUnread.value[c.id] ?: 0) != 0) groupUnread.update { it + (c.id to 0) }
+        continue
+      }
+      val key = "${last.id}:$since"
+      if (counted[c.id] == key) continue
+      counted[c.id] = key
+      viewModelScope.launch {
+        runCatching { chats.countSince(c.id, since) }.onSuccess { n -> groupUnread.update { it + (c.id to n) } }
+      }
+    }
+  }
 
   val state: StateFlow<HomeUiState> =
     combine(
-      combine(conversations, states, chats.profiles, failed) { c, s, p, f -> Inputs(c, s, p, f) },
+      combine(conversations, states, chats.profiles, failed, groupUnread) { c, s, p, f, g -> Inputs(c, s, p, f, g) },
       combine(filter, query, searching) { f, q, s -> Triple(f, q, s) },
       container.preferences.preferences,
       container.accounts!!.profile(me),
     ) { inputs, (f, q, s), prefs, myProfile ->
       val now = System.currentTimeMillis()
       val convs = inputs.conversations?.value.orEmpty()
-      val all = ChatList.build(me, convs, inputs.states, inputs.profiles, ChatFilter.ALL, now)
-      val filtered = ChatList.build(me, convs, inputs.states, inputs.profiles, f, now)
+      val all = ChatList.build(me, convs, inputs.states, inputs.profiles, ChatFilter.ALL, now, unreadOverride = inputs.groupUnread)
+      val filtered = ChatList.build(me, convs, inputs.states, inputs.profiles, f, now, unreadOverride = inputs.groupUnread)
         .filter { q.isBlank() || it.title.contains(q.trim(), ignoreCase = true) }
       HomeUiState(
         loading = inputs.conversations == null && !inputs.failed,
