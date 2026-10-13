@@ -25,6 +25,8 @@ object ActiveChat {
 
 object Notifications {
   const val CHANNEL_MESSAGES = "messages"
+  const val CHANNEL_SECURITY = "security"
+  private const val SECURITY_ID = 0x5EC
   const val EXTRA_CONVERSATION = "samvad.conversationId"
   const val EXTRA_OTHER = "samvad.otherUid"
 
@@ -34,7 +36,39 @@ object Notifications {
       context.getString(R.string.notif_channel_messages),
       NotificationManager.IMPORTANCE_HIGH,
     ).apply { description = context.getString(R.string.notif_channel_messages_desc) }
-    context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+    val security = NotificationChannel(
+      CHANNEL_SECURITY,
+      context.getString(R.string.notif_channel_security),
+      NotificationManager.IMPORTANCE_HIGH,
+    ).apply { description = context.getString(R.string.notif_channel_security_desc) }
+    context.getSystemService(NotificationManager::class.java).createNotificationChannels(listOf(channel, security))
+  }
+
+  /**
+   * Someone asked to reset two-step verification. Only the owner's verified devices receive this;
+   * opening the app records activity, which cancels the reset.
+   */
+  fun showSecurityAlert(context: Context) {
+    if (!canPost(context)) return
+    val open = Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+    val pending = PendingIntent.getActivity(context, SECURITY_ID, open, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+    val body = context.getString(R.string.notif_two_step_reset)
+    val notification = NotificationCompat.Builder(context, CHANNEL_SECURITY)
+      .setSmallIcon(R.drawable.ic_notification)
+      .setColor(ContextCompat.getColor(context, R.color.notification_accent))
+      .setContentTitle(context.getString(R.string.notif_security_title))
+      .setContentText(body)
+      .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+      .setCategory(NotificationCompat.CATEGORY_STATUS)
+      .setPriority(NotificationCompat.PRIORITY_HIGH)
+      .setAutoCancel(true)
+      .setContentIntent(pending)
+      .build()
+    try {
+      NotificationManagerCompat.from(context).notify(SECURITY_ID, notification)
+    } catch (_: SecurityException) {
+      // Permission revoked between the check and the post.
+    }
   }
 
   fun canPost(context: Context): Boolean =

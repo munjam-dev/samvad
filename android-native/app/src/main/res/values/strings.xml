@@ -273,4 +273,46 @@
     <string name="settings_block_screenshots_body">Stops screenshots and screen recordings of Samvad and hides it in recent apps.</string>
     <string name="settings_previews">Show message preview</string>
     <string name="settings_previews_body">Show who wrote and what they said in notifications. The lock screen never shows message text.</string>
+    <!-- Phase 1.5: two-step verification -->
+    <string name="two_step_title">Two-step verification</string>
+    <string name="two_step_verify_title">Enter your PIN</string>
+    <string name="two_step_verify_body">%1$s has two-step verification on. Enter the 6-digit PIN to continue.</string>
+    <string name="two_step_pin_label">Two-step PIN</string>
+    <string name="two_step_wrong">Wrong PIN.</string>
+    <plurals name="two_step_attempts_left">
+        <item quantity="one">Wrong PIN. %1$d try left before a short lock.</item>
+        <item quantity="other">Wrong PIN. %1$d tries left before a short lock.</item>
+    </plurals>
+    <string name="two_step_locked">Too many wrong PINs. Try again after %1$s.</string>
+    <string name="two_step_locked_plain">Too many wrong PINs. Try again later.</string>
+    <string name="two_step_network">Couldn\'t check. Check your connection and try again.</string>
+    <string name="two_step_forgot_hint">Don\'t remember your PIN?</string>
+    <string name="two_step_forgot">Forgot PIN?</string>
+    <string name="two_step_forgot_title">Reset two-step verification?</string>
+    <string name="two_step_forgot_body">For your safety the reset takes 7 days. If this account is used on another phone during that time, the reset is cancelled. Your chats are kept.</string>
+    <string name="two_step_request_reset">Request reset</string>
+    <string name="two_step_reset_pending">You can reset two-step verification after %1$s.</string>
+    <string name="two_step_reset_ready">The 7 days have passed. You can turn two-step verification off now.</string>
+    <string name="two_step_reset_now">Reset now</string>
+    <string name="two_step_reset_cancelled">The reset was cancelled because this account was used on another phone.</string>
+    <string name="two_step_sign_out">Use a different number</string>
+    <string name="two_step_settings_off">Add a 6-digit PIN that\'s needed whenever your number signs in on a new phone. It keeps your account safe even if someone gets your SMS code.</string>
+    <string name="two_step_settings_on">On. Your PIN is needed whenever your number signs in on a new phone.</string>
+    <string name="two_step_turn_on">Turn on</string>
+    <string name="two_step_change">Change PIN</string>
+    <string name="two_step_turn_off">Turn off</string>
+    <string name="two_step_create">Create a 6-digit PIN</string>
+    <string name="two_step_create_body">Avoid easy PINs like 123456 or 000000. You\'ll need it when you sign in on a new phone.</string>
+    <string name="two_step_confirm">Confirm your PIN</string>
+    <string name="two_step_disable">Enter your PIN to turn off two-step verification</string>
+    <string name="two_step_too_simple">That PIN is too easy to guess. Choose another.</string>
+    <string name="two_step_mismatch">The PINs didn\'t match. Try again.</string>
+    <string name="two_step_on_done">Two-step verification is on.</string>
+    <string name="two_step_changed">PIN changed.</string>
+    <string name="two_step_off_done">Two-step verification is off.</string>
+    <string name="settings_delete_pin">Enter your two-step PIN to delete your account</string>
+    <string name="notif_channel_security">Security alerts</string>
+    <string name="notif_channel_security_desc">Important changes to your account\'s security</string>
+    <string name="notif_security_title">Security alert</string>
+    <string name="notif_two_step_reset">Someone asked to reset your two-step verification. If it wasn\'t you, just open Samvad: that cancels it.</string>
 </resources>

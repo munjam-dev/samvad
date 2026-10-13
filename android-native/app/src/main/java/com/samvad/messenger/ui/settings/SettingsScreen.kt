@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -32,7 +33,9 @@ import androidx.compose.material.icons.outlined.Devices
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.VerifiedUser
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -51,7 +54,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -72,6 +77,7 @@ import com.samvad.messenger.AppContainer
 import com.samvad.messenger.BuildConfig
 import com.samvad.messenger.R
 import com.samvad.messenger.data.AccountException
+import com.samvad.messenger.ui.security.PinInput
 import com.samvad.messenger.data.AppPreferences
 import com.samvad.messenger.ui.auth.AuthStep
 import com.samvad.messenger.ui.auth.AuthViewModel
@@ -84,7 +90,14 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(container: AppContainer, me: String, onBack: () -> Unit, onSignOut: () -> Unit, onOpenBlocked: () -> Unit = {}) {
+fun SettingsScreen(
+  container: AppContainer,
+  me: String,
+  onBack: () -> Unit,
+  onSignOut: () -> Unit,
+  onOpenBlocked: () -> Unit = {},
+  onOpenTwoStep: () -> Unit = {},
+) {
   val colors = SamvadTheme.colors
   val scope = rememberCoroutineScope()
   val snackbar = remember { SnackbarHostState() }
@@ -96,6 +109,9 @@ fun SettingsScreen(container: AppContainer, me: String, onBack: () -> Unit, onSi
   var confirmSignOutAll by remember { mutableStateOf(false) }
   var confirmDelete by remember { mutableStateOf(false) }
   var reauthing by remember { mutableStateOf(false) }
+  var deletingWithPin by remember { mutableStateOf(false) }
+  // With two-step on, deletion is confirmed with the PIN instead of a fresh SMS code.
+  val twoStepOn = produceState(false) { value = runCatching { container.twoStep?.session()?.enabled == true }.getOrDefault(false) }.value
   var busy by remember { mutableStateOf(false) }
   val msgSignedOutAll = stringResource(R.string.settings_signed_out_all)
   val msgCooldown = stringResource(R.string.settings_cooldown)
@@ -226,6 +242,9 @@ fun SettingsScreen(container: AppContainer, me: String, onBack: () -> Unit, onSi
 
       Group(stringResource(R.string.settings_account)) {
         ActionRow(Icons.AutoMirrored.Outlined.Logout, stringResource(R.string.settings_sign_out), onClick = onSignOut)
+        if (container.twoStep != null) {
+          ActionRow(Icons.Outlined.VerifiedUser, stringResource(R.string.two_step_title), onClick = onOpenTwoStep)
+        }
         ActionRow(Icons.Outlined.Devices, stringResource(R.string.settings_sign_out_all), onClick = { confirmSignOutAll = true })
         ActionRow(Icons.Outlined.DeleteForever, stringResource(R.string.settings_delete), danger = true, onClick = { confirmDelete = true })
       }
@@ -290,12 +309,28 @@ fun SettingsScreen(container: AppContainer, me: String, onBack: () -> Unit, onSi
         Text(stringResource(R.string.settings_delete_body))
       },
       confirmButton = {
-        TextButton({ confirmDelete = false; reauthing = true }) {
+        TextButton({
+          confirmDelete = false
+          if (twoStepOn) deletingWithPin = true else reauthing = true
+        }) {
           Text(stringResource(R.string.settings_delete_confirm), color = colors.error)
         }
       },
       dismissButton = { TextButton({ confirmDelete = false }) { Text(stringResource(R.string.cancel)) } },
     )
+  }
+
+  if (deletingWithPin) {
+    ModalBottomSheet(onDismissRequest = { deletingWithPin = false }) {
+      DeleteWithPin(
+        container = container,
+        onDeleted = {
+          deletingWithPin = false
+          scope.launch { container.preferences.clearDeviceId() }
+          container.auth?.signOut()
+        },
+      )
+    }
   }
 
   if (reauthing) {
@@ -426,5 +461,53 @@ private fun ObscuredTouchGuard() {
     val previous = root.filterTouchesWhenObscured
     root.filterTouchesWhenObscured = true
     onDispose { root.filterTouchesWhenObscured = previous }
+  }
+}
+
+/** Account deletion with two-step on: the PIN replaces the SMS re-authentication (see deleteAccount). */
+@Composable
+private fun DeleteWithPin(container: AppContainer, onDeleted: () -> Unit) {
+  val colors = SamvadTheme.colors
+  val scope = rememberCoroutineScope()
+  var pin by remember { mutableStateOf("") }
+  var busy by remember { mutableStateOf(false) }
+  var error by remember { mutableStateOf<Int?>(null) }
+  var errorKey by remember { mutableIntStateOf(0) }
+  ObscuredTouchGuard()
+  Column(
+    Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp).imePadding(),
+    verticalArrangement = Arrangement.spacedBy(14.dp),
+  ) {
+    Text(stringResource(R.string.settings_delete_pin), style = MaterialTheme.typography.titleMedium, color = colors.onSurface)
+    PinInput(
+      value = pin,
+      onValueChange = { value ->
+        if (busy) return@PinInput
+        pin = value
+        if (value.length == 6) {
+          busy = true
+          scope.launch {
+            try {
+              container.accounts!!.deleteAccount(value)
+              onDeleted()
+            } catch (e: AccountException.WrongPin) {
+              error = R.string.two_step_wrong
+              errorKey++
+            } catch (e: Exception) {
+              error = R.string.error_unknown
+              errorKey++
+            }
+            pin = ""
+            busy = false
+          }
+        }
+      },
+      label = stringResource(R.string.two_step_pin_label),
+      error = error != null,
+      errorKey = errorKey,
+      enabled = !busy,
+    )
+    error?.let { Text(stringResource(it), color = colors.error, style = MaterialTheme.typography.bodyMedium) }
+    if (busy) CircularProgressIndicator(Modifier.size(24.dp), color = colors.brand, strokeWidth = 2.5.dp)
   }
 }

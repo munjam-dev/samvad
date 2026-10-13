@@ -43,6 +43,8 @@ import com.samvad.messenger.ui.components.SamvadMark
 import com.samvad.messenger.ui.home.HomeScreen
 import com.samvad.messenger.ui.newchat.NewChatScreen
 import com.samvad.messenger.ui.onboarding.OnboardingScreen
+import com.samvad.messenger.ui.security.TwoStepSettingsScreen
+import com.samvad.messenger.ui.security.TwoStepVerifyScreen
 import com.samvad.messenger.ui.settings.BlockedContactsScreen
 import com.samvad.messenger.ui.settings.SettingsScreen
 import com.samvad.messenger.ui.setup.ProfileSetupScreen
@@ -73,6 +75,7 @@ fun SamvadRoot(
         }
         Destination.ONBOARDING -> OnboardingScreen(onDone = session::finishOnboarding)
         Destination.SIGN_IN -> AuthFlow(container)
+        Destination.TWO_STEP -> TwoStepVerifyScreen(container, state.phone.orEmpty(), onSignOut = session::signOut)
         Destination.PROFILE_SETUP -> ProfileSetupScreen(container, state.uid!!, state.phone.orEmpty(), session::profileCreated)
         Destination.HOME -> SignedInNav(container, session, state.uid!!, link, onLinkHandled)
       }
@@ -142,7 +145,11 @@ private fun SignedInNav(
         onBack = { nav.popBackStack() },
         onSignOut = session::signOut,
         onOpenBlocked = { nav.navigate("blocked") },
+        onOpenTwoStep = { nav.navigate("twostep") },
       )
+    }
+    composable("twostep") {
+      TwoStepSettingsScreen(container = container, onBack = { nav.popBackStack() })
     }
     composable("blocked") {
       BlockedContactsScreen(container = container, me = uid, onBack = { nav.popBackStack() })

@@ -36,6 +36,16 @@ class AuthRepository(private val auth: FirebaseAuth) {
     awaitClose { auth.removeAuthStateListener(listener) }
   }
 
+  /**
+   * Like [userChanges], but also fires when the ID token changes: a PIN-session sign-in, new claims
+   * after two-step changes, or an hourly refresh that shows this session is no longer verified.
+   */
+  fun idTokenChanges(): Flow<FirebaseUser?> = callbackFlow {
+    val listener = FirebaseAuth.IdTokenListener { trySend(it.currentUser) }
+    auth.addIdTokenListener(listener)
+    awaitClose { auth.removeIdTokenListener(listener) }
+  }
+
   fun verify(
     activity: Activity,
     e164: String,

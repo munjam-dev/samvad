@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-enum class Destination { LOADING, SETUP_REQUIRED, ONBOARDING, SIGN_IN, PROFILE_SETUP, HOME }
+enum class Destination { LOADING, SETUP_REQUIRED, ONBOARDING, SIGN_IN, TWO_STEP, PROFILE_SETUP, HOME }
 
 data class SessionState(
   val loading: Boolean = true,
@@ -35,7 +35,7 @@ class SessionViewModel(private val container: AppContainer) : ViewModel() {
   @OptIn(ExperimentalCoroutinesApi::class)
   val state: StateFlow<SessionState> = run {
     val auth = container.auth
-    val users = auth?.userChanges() ?: flowOf(null)
+    val users = auth?.idTokenChanges() ?: flowOf(null)
     combine(container.preferences.preferences, users, refresh) { prefs, user, _ -> prefs to user }
       .flatMapLatest { (prefs, user) ->
         flow {
@@ -43,6 +43,9 @@ class SessionViewModel(private val container: AppContainer) : ViewModel() {
             !container.isConfigured -> emit(SessionState(false, Destination.SETUP_REQUIRED, preferences = prefs))
             !prefs.onboardingDone -> emit(SessionState(false, Destination.ONBOARDING, preferences = prefs))
             user == null -> emit(SessionState(false, Destination.SIGN_IN, preferences = prefs))
+            // Two-step on and this session has not entered the PIN: the server refuses everything else.
+            runCatching { container.twoStep?.session() }.getOrNull()?.verified == false ->
+              emit(SessionState(false, Destination.TWO_STEP, uid = user.uid, phone = user.phoneNumber, preferences = prefs))
             else -> {
               val hasAccount = runCatching { container.accounts!!.hasAccount(user.uid) }
               val dest = if (hasAccount.getOrDefault(true)) Destination.HOME else Destination.PROFILE_SETUP

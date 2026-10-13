@@ -17,6 +17,10 @@ class SamvadMessagingService : FirebaseMessagingService() {
 
   override fun onMessageReceived(message: RemoteMessage) {
     val data = message.data
+    if (data["type"] == "security" && data["event"] == "two_step_reset_requested") {
+      Notifications.showSecurityAlert(this)
+      return
+    }
     if (data["type"] != "message") return
     val cid = data["cid"] ?: return
     val sender = data["senderId"] ?: return

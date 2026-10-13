@@ -17,6 +17,8 @@ import kotlinx.coroutines.tasks.await
 sealed class AccountException(message: String) : Exception(message) {
   class Cooldown : AccountException("cooldown")
   class RecentLoginRequired : AccountException("recent-login-required")
+  /** Two-step PIN wrong or locked (account deletion with two-step on). */
+  class WrongPin : AccountException("wrong-pin")
   class Failed(cause: Throwable) : AccountException(cause.message ?: "failed")
 }
 
@@ -94,13 +96,16 @@ class AccountRepository(
 
   suspend fun signOutAllDevices() = call("signOutAllDevices")
 
-  suspend fun deleteAccount() = call("deleteAccount")
+  /** With two-step on, [pin] replaces the fresh SMS sign-in the server otherwise requires. */
+  suspend fun deleteAccount(pin: String? = null) = call("deleteAccount", pin?.let { mapOf("pin" to it) })
 
-  private suspend fun call(name: String) {
+  private suspend fun call(name: String, data: Map<String, Any>? = null) {
     try {
-      functions.getHttpsCallable(name, limitedUse).call().await()
+      val callable = functions.getHttpsCallable(name, limitedUse)
+      if (data == null) callable.call().await() else callable.call(data).await()
     } catch (e: FirebaseFunctionsException) {
       throw when {
+        e.message == "wrong-pin" || e.message == "pin-locked" -> AccountException.WrongPin()
         e.code == FirebaseFunctionsException.Code.FAILED_PRECONDITION && e.message == "cooldown" -> AccountException.Cooldown()
         e.code == FirebaseFunctionsException.Code.FAILED_PRECONDITION -> AccountException.RecentLoginRequired()
         else -> AccountException.Failed(e)
