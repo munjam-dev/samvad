@@ -7,6 +7,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.functions.FirebaseFunctions
+import com.google.firebase.storage.FirebaseStorage
 import com.samvad.messenger.BuildConfig
 import com.samvad.messenger.firebase.installAppCheck
 
@@ -21,6 +22,7 @@ class FirebaseServices private constructor(
   val db: FirebaseFirestore,
   val rtdb: FirebaseDatabase,
   val functions: FirebaseFunctions,
+  val storage: FirebaseStorage,
 ) {
   companion object {
     private const val DEMO_PROJECT = "demo-samvad"
@@ -35,6 +37,7 @@ class FirebaseServices private constructor(
             .setApplicationId("1:000000000000:android:0000000000000000")
             .setApiKey("demo-api-key-for-emulators-only")
             .setDatabaseUrl("https://$DEMO_PROJECT-default-rtdb.firebaseio.com")
+            .setStorageBucket("$DEMO_PROJECT.appspot.com")
             .build(),
         )
       } else {
@@ -45,6 +48,7 @@ class FirebaseServices private constructor(
       val db = FirebaseFirestore.getInstance(app)
       val functions = FirebaseFunctions.getInstance(app, BuildConfig.FUNCTIONS_REGION)
       val rtdb = FirebaseDatabase.getInstance(app)
+      val storage = FirebaseStorage.getInstance(app)
 
       if (BuildConfig.USE_EMULATORS) {
         val host = BuildConfig.EMULATOR_HOST
@@ -52,10 +56,11 @@ class FirebaseServices private constructor(
         db.useEmulator(host, 8080)
         functions.useEmulator(host, 5001)
         rtdb.useEmulator(host, 9000)
+        storage.useEmulator(host, 9199)
       } else {
         installAppCheck(app)
       }
-      return FirebaseServices(app, auth, db, rtdb, functions)
+      return FirebaseServices(app, auth, db, rtdb, functions, storage)
     }
   }
 }

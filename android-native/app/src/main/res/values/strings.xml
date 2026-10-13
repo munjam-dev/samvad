@@ -212,4 +212,26 @@
     <string name="chat_typing">typing…</string>
     <string name="settings_hide_last_seen">Hide last seen &amp; online</string>
     <string name="settings_hide_last_seen_body">Others won\'t see when you\'re online or when you were last active.</string>
+
+    <!-- Media -->
+    <string name="attach_photo">Photo</string>
+    <string name="attach_document">Document</string>
+    <string name="attach_title">Share</string>
+    <string name="media_photo">Photo</string>
+    <string name="media_uploading">Sending…</string>
+    <string name="media_upload_failed">Couldn\'t send · Tap to retry</string>
+    <string name="media_too_large">Files must be 16 MB or smaller.</string>
+    <string name="media_type_blocked">This file type can\'t be sent. Photos, PDFs, Office documents, text and ZIP files are supported.</string>
+    <string name="media_open_failed">No app on this phone can open this file.</string>
+    <string name="media_download_failed">Couldn\'t download. Check your connection.</string>
+    <string name="cd_open_photo">Open photo</string>
+    <string name="cd_close">Close</string>
+    <string name="cd_cancel_upload">Cancel</string>
+    <string name="voice_record">Record voice message</string>
+    <string name="voice_recording">Recording</string>
+    <string name="voice_cancel">Cancel recording</string>
+    <string name="voice_send">Send voice message</string>
+    <string name="voice_play">Play voice message</string>
+    <string name="voice_pause">Pause</string>
+    <string name="voice_permission">Allow microphone access to record voice messages.</string>
 </resources>

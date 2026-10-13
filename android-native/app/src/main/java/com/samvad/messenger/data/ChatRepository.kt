@@ -11,6 +11,7 @@ import com.samvad.core.chat.LastMessage
 import com.samvad.core.chat.MemberState
 import com.samvad.core.chat.Message
 import com.samvad.core.chat.Profile
+import com.samvad.core.media.Media
 import java.util.UUID
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
@@ -155,6 +156,38 @@ class ChatRepository(private val db: FirebaseFirestore) {
     }
   }
 
+  /** Writes a media message after its file is uploaded (same client ID as the Storage folder). */
+  suspend fun sendMedia(
+    conversationId: String,
+    me: String,
+    id: String,
+    kind: String,
+    media: Media,
+    caption: String,
+    replyTo: String?,
+  ) {
+    val map = buildMap<String, Any> {
+      put("path", media.path)
+      put("name", media.name)
+      put("size", media.size)
+      put("mime", media.mime)
+      media.width?.let { put("width", it) }
+      media.height?.let { put("height", it) }
+      media.durationMs?.let { put("durationMs", it) }
+      if (media.waveform.isNotEmpty()) put("waveform", media.waveform)
+    }
+    db.document("conversations/$conversationId/messages/$id").set(
+      mapOf(
+        "senderId" to me,
+        "kind" to kind,
+        "text" to caption,
+        "replyTo" to replyTo,
+        "createdAt" to FieldValue.serverTimestamp(),
+        "media" to map,
+      ),
+    ).await()
+  }
+
   suspend fun retry(conversationId: String, me: String, message: Message) {
     val existing = runCatching { db.document("conversations/$conversationId/messages/${message.id}").get().await() }.getOrNull()
     if (existing?.exists() == true && existing.metadata.hasPendingWrites().not()) {
@@ -236,6 +269,20 @@ class ChatRepository(private val db: FirebaseFirestore) {
     archived = d.getBoolean("archived") ?: false,
   )
 
+  private fun toMedia(m: Map<*, *>): Media? {
+    val path = m["path"] as? String ?: return null
+    return Media(
+      path = path,
+      name = m["name"] as? String ?: "file",
+      size = (m["size"] as? Number)?.toLong() ?: 0L,
+      mime = m["mime"] as? String ?: "",
+      width = (m["width"] as? Number)?.toInt(),
+      height = (m["height"] as? Number)?.toInt(),
+      durationMs = (m["durationMs"] as? Number)?.toLong(),
+      waveform = (m["waveform"] as? List<*>)?.mapNotNull { (it as? Number)?.toInt() } ?: emptyList(),
+    )
+  }
+
   private fun toMessage(d: DocumentSnapshot): Message {
     @Suppress("UNCHECKED_CAST")
     val reactions = (d.get("reactions") as? Map<String, Any?>)?.mapNotNull { (k, v) -> (v as? String)?.let { k to it } }?.toMap()
@@ -249,6 +296,8 @@ class ChatRepository(private val db: FirebaseFirestore) {
       deleted = d.getBoolean("deleted") ?: false,
       reactions = reactions ?: emptyMap(),
       pending = d.metadata.hasPendingWrites(),
+      kind = d.getString("kind") ?: "text",
+      media = (d.get("media") as? Map<*, *>)?.let(::toMedia),
     )
   }
 }

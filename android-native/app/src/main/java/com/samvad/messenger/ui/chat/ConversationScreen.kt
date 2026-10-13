@@ -1,6 +1,10 @@
 package com.samvad.messenger.ui.chat
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.Crossfade
+import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
@@ -122,7 +126,8 @@ fun ConversationScreen(
   otherUid: String,
   onBack: () -> Unit,
 ) {
-  val vm: ConversationViewModel = viewModel(factory = ConversationViewModel.factory(container, me, conversationId, otherUid))
+  val appCtx = LocalContext.current.applicationContext as android.app.Application
+  val vm: ConversationViewModel = viewModel(factory = ConversationViewModel.factory(appCtx, container, me, conversationId, otherUid))
   val state = vm.state.collectAsStateWithLifecycle().value
   val composer = vm.composer.collectAsStateWithLifecycle().value
   val presence = vm.status.collectAsStateWithLifecycle().value
@@ -135,7 +140,47 @@ fun ConversationScreen(
   var selected by remember { mutableStateOf<Message?>(null) }
   var menu by remember { mutableStateOf(false) }
   val copied = stringResource(R.string.chat_copied)
-  val mediaSoon = stringResource(R.string.chat_attachments_soon)
+  val uploads = vm.uploads.collectAsStateWithLifecycle().value
+  val recording = vm.recorder.state.collectAsStateWithLifecycle().value
+  val playback = vm.player.state.collectAsStateWithLifecycle().value
+  val mediaError = vm.mediaError.collectAsStateWithLifecycle().value
+  var attaching by remember { mutableStateOf(false) }
+  var viewing by remember { mutableStateOf<String?>(null) }
+  val context = LocalContext.current
+  val pickPhoto = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri -> uri?.let(vm::sendImage) }
+  val pickDocument = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let(vm::sendDocument) }
+  val micPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+    if (granted) vm.startRecording() else vm.reportMediaError(MediaError.OPEN)
+  }
+  val errorText = mediaError?.let {
+    stringResource(
+      when (it) {
+        MediaError.TOO_LARGE -> R.string.media_too_large
+        MediaError.TYPE_BLOCKED -> R.string.media_type_blocked
+        MediaError.UNREADABLE -> R.string.error_unknown
+        MediaError.DOWNLOAD -> R.string.media_download_failed
+        MediaError.OPEN -> R.string.voice_permission
+      },
+    )
+  }
+  LaunchedEffect(errorText) {
+    if (errorText != null) {
+      snackbar.showSnackbar(errorText)
+      vm.clearMediaError()
+    }
+  }
+  val openFile: (com.samvad.core.media.Media) -> Unit = { media ->
+    scope.launch {
+      val file = vm.localFile(media.path) ?: return@launch vm.reportMediaError(MediaError.DOWNLOAD)
+      val uri = androidx.core.content.FileProvider.getUriForFile(context, context.packageName + ".files", file)
+      val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
+        .setDataAndType(uri, media.mime)
+        .addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+      runCatching { context.startActivity(intent) }.onFailure {
+        snackbar.showSnackbar(context.getString(R.string.media_open_failed))
+      }
+    }
+  }
 
   // While this chat is on screen, its notifications are suppressed and cleared.
   val appContext = LocalContext.current.applicationContext
@@ -255,6 +300,16 @@ fun ConversationScreen(
                   onLongPress = { selected = item.message },
                   onRetry = { vm.retry(item.message) },
                   onReact = { emoji -> vm.react(item.message, emoji) },
+                  mediaContent = {
+                    val media = item.message.media
+                    if (media != null) {
+                      when (item.message.kind) {
+                        "image" -> MediaImage(media, vm::bitmap) { viewing = media.path }
+                        "voice" -> VoiceNote(item.message.id, media, playback, item.mine) { vm.togglePlayback(item.message) }
+                        else -> FileCard(media) { openFile(media) }
+                      }
+                    }
+                  },
                 )
               }
               }
@@ -275,18 +330,47 @@ fun ConversationScreen(
         }
       }
 
-      Composer(
-        state = composer,
-        me = me,
-        otherName = state.title,
-        onText = vm::onText,
-        onSend = vm::submit,
-        onCancel = vm::cancelContext,
-        onAttach = { scope.launch { snackbar.showSnackbar(mediaSoon) } },
-      )
+      uploads.forEach { up ->
+        PendingUploadRow(up, onRetry = { vm.retryUpload(up.id) }, onCancel = { vm.cancelUpload(up.id) })
+      }
+      if (recording.active) {
+        RecorderBar(recording, onCancel = vm::cancelRecording, onSend = vm::finishRecording)
+      } else {
+        Composer(
+          state = composer,
+          me = me,
+          otherName = state.title,
+          onText = vm::onText,
+          onSend = vm::submit,
+          onCancel = vm::cancelContext,
+          onAttach = { attaching = true },
+          onMic = {
+            val granted = androidx.core.content.ContextCompat.checkSelfPermission(
+              context, android.Manifest.permission.RECORD_AUDIO,
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            if (granted) vm.startRecording() else micPermission.launch(android.Manifest.permission.RECORD_AUDIO)
+          },
+        )
+      }
     }
     SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 88.dp))
   }
+
+  if (attaching) {
+    ModalBottomSheet(onDismissRequest = { attaching = false }) {
+      AttachOptions(
+        onPhoto = {
+          attaching = false
+          pickPhoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+        },
+        onDocument = {
+          attaching = false
+          pickDocument.launch(com.samvad.core.media.MediaRules.pickableDocuments)
+        },
+      )
+    }
+  }
+  viewing?.let { path -> MediaViewer(path, vm::bitmap) { viewing = null } }
 
   selected?.let { msg ->
     ModalBottomSheet(onDismissRequest = { selected = null }) {
@@ -296,6 +380,7 @@ fun ConversationScreen(
         canEdit = vm.canEdit(msg),
         onReact = { vm.react(msg, it); selected = null },
         onReply = { vm.reply(msg); selected = null },
+        canCopy = msg.kind == "text",
         onCopy = {
           clipboard.setText(AnnotatedString(msg.text))
           selected = null
@@ -331,6 +416,7 @@ private fun MessageBubble(
   onLongPress: () -> Unit,
   onRetry: () -> Unit,
   onReact: (String) -> Unit,
+  mediaContent: @Composable () -> Unit = {},
 ) {
   val colors = SamvadTheme.colors
   val m = item.message
@@ -384,11 +470,17 @@ private fun MessageBubble(
           Text(replied.message.text, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
       }
-      Text(
-        if (m.deleted) stringResource(R.string.chat_deleted) else m.text,
-        style = MaterialTheme.typography.bodyLarge,
-        color = if (m.deleted) colors.onSurfaceVariant else colors.onBubble,
-      )
+      if (!m.deleted && m.media != null) {
+        mediaContent()
+        if (m.text.isNotBlank()) Spacer(Modifier.size(6.dp))
+      }
+      if (m.deleted || m.text.isNotBlank()) {
+        Text(
+          if (m.deleted) stringResource(R.string.chat_deleted) else m.text,
+          style = MaterialTheme.typography.bodyLarge,
+          color = if (m.deleted) colors.onSurfaceVariant else colors.onBubble,
+        )
+      }
       Row(
         Modifier.align(Alignment.End).padding(top = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -455,6 +547,7 @@ private fun Composer(
   onSend: () -> Unit,
   onCancel: () -> Unit,
   onAttach: () -> Unit,
+  onMic: () -> Unit,
 ) {
   val colors = SamvadTheme.colors
   val hint = stringResource(R.string.chat_message_hint)
@@ -495,29 +588,41 @@ private fun Composer(
         }
         IconButton(onClick = onAttach) { Icon(Icons.Outlined.AttachFile, stringResource(R.string.cd_attach), tint = colors.onSurfaceVariant) }
       }
-      val canSend = state.text.isNotBlank() && !state.tooLong
-      val sendBg by animateColorAsState(if (canSend) colors.primary else colors.surfaceContainer, motionSpec(Motion.standard()), label = "sendBg")
-      val sendTint by animateColorAsState(if (canSend) colors.onPrimary else colors.onSurfaceVariant, motionSpec(Motion.standard()), label = "sendTint")
-      val sendScale by animateFloatAsState(if (canSend) 1f else 0.9f, motionSpec(Motion.lively()), label = "sendScale")
-      val sendPress = remember { MutableInteractionSource() }
-      IconButton(
-        onClick = onSend,
-        enabled = canSend,
-        interactionSource = sendPress,
-        modifier = Modifier
-          .size(48.dp)
-          .graphicsLayer { scaleX = sendScale; scaleY = sendScale }
-          .pressScale(sendPress, 0.88f)
-          .background(sendBg, CircleShape),
-      ) {
-        Crossfade(targetState = state.editing != null, label = "sendIcon") { editing ->
-          Icon(
-            if (editing) Icons.Outlined.Done else Icons.AutoMirrored.Outlined.Send,
-            stringResource(R.string.cd_send),
-            tint = sendTint,
-          )
-        }
+      if (state.text.isEmpty() && state.editing == null) {
+        IconButton(
+          onClick = onMic,
+          modifier = Modifier.size(48.dp).background(colors.primary, CircleShape),
+        ) { Icon(Icons.Outlined.Mic, stringResource(R.string.voice_record), tint = colors.onPrimary) }
+      } else {
+        SendButton(canSend = state.text.isNotBlank() && !state.tooLong, editing = state.editing != null, onSend = onSend)
       }
+    }
+  }
+}
+
+@Composable
+private fun SendButton(canSend: Boolean, editing: Boolean, onSend: () -> Unit) {
+  val colors = SamvadTheme.colors
+  val sendBg by animateColorAsState(if (canSend) colors.primary else colors.surfaceContainer, motionSpec(Motion.standard()), label = "sendBg")
+  val sendTint by animateColorAsState(if (canSend) colors.onPrimary else colors.onSurfaceVariant, motionSpec(Motion.standard()), label = "sendTint")
+  val sendScale by animateFloatAsState(if (canSend) 1f else 0.9f, motionSpec(Motion.lively()), label = "sendScale")
+  val sendPress = remember { MutableInteractionSource() }
+  IconButton(
+    onClick = onSend,
+    enabled = canSend,
+    interactionSource = sendPress,
+    modifier = Modifier
+      .size(48.dp)
+      .graphicsLayer { scaleX = sendScale; scaleY = sendScale }
+      .pressScale(sendPress, 0.88f)
+      .background(sendBg, CircleShape),
+  ) {
+    Crossfade(targetState = editing, label = "sendIcon") { isEditing ->
+      Icon(
+        if (isEditing) Icons.Outlined.Done else Icons.AutoMirrored.Outlined.Send,
+        stringResource(R.string.cd_send),
+        tint = sendTint,
+      )
     }
   }
 }
@@ -527,6 +632,7 @@ private fun MessageActions(
   message: Message,
   mine: Boolean,
   canEdit: Boolean,
+  canCopy: Boolean,
   onReact: (String) -> Unit,
   onReply: () -> Unit,
   onCopy: () -> Unit,
@@ -550,7 +656,7 @@ private fun MessageActions(
     }
     Spacer(Modifier.size(8.dp))
     ActionRow(Icons.AutoMirrored.Outlined.Reply, stringResource(R.string.chat_reply), onReply)
-    ActionRow(Icons.Outlined.ContentCopy, stringResource(R.string.chat_copy), onCopy)
+    if (canCopy) ActionRow(Icons.Outlined.ContentCopy, stringResource(R.string.chat_copy), onCopy)
     if (canEdit) ActionRow(Icons.Outlined.Edit, stringResource(R.string.chat_edit), onEdit)
     if (mine) ActionRow(Icons.Outlined.Delete, stringResource(R.string.chat_delete), onDelete, danger = true)
   }

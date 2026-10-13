@@ -1,5 +1,7 @@
 package com.samvad.core.chat
 
+import com.samvad.core.media.Media
+
 /** Domain models shared by the data layer and the UI. Times are epoch milliseconds. */
 
 data class Profile(val uid: String, val displayName: String, val about: String = "")
@@ -43,6 +45,9 @@ data class Message(
   val pending: Boolean = false,
   /** True when the local write was rejected and needs a retry. */
   val failed: Boolean = false,
+  /** "text", "image", "file" or "voice". */
+  val kind: String = "text",
+  val media: Media? = null,
 )
 
 enum class DeliveryState { SENDING, SENT, DELIVERED, READ, FAILED }
@@ -80,7 +85,8 @@ object MessageRules {
   }
 
   fun canEdit(message: Message, me: String, nowMs: Long): Boolean =
-    message.senderId == me && !message.deleted && !message.pending && nowMs - message.createdAt < EDIT_WINDOW_MS
+    message.kind == "text" && message.senderId == me && !message.deleted && !message.pending &&
+      nowMs - message.createdAt < EDIT_WINDOW_MS
 
   /** Delivery state of one of my messages, from the other member's read/delivered marks. */
   fun deliveryState(message: Message, other: MemberState?): DeliveryState = when {

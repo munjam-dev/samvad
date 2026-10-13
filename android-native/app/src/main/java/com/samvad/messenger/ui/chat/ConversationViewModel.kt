@@ -17,7 +17,17 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import android.app.Application
+import android.net.Uri
+import com.samvad.core.media.Media
+import com.samvad.core.media.MediaKind
 import com.samvad.messenger.AppContainer
+import com.samvad.messenger.data.MediaException
+import com.samvad.messenger.data.PreparedMedia
+import com.samvad.messenger.media.VoicePlayer
+import com.samvad.messenger.media.VoiceRecorder
+import java.io.File
+import java.util.UUID
 import com.samvad.messenger.data.MessagesPage
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,6 +55,16 @@ data class ConversationUiState(
   val latestIncomingId: String? = null,
 )
 
+/** An attachment being uploaded; shown as a pending bubble until its message is written. */
+data class PendingUpload(
+  val id: String,
+  val kind: MediaKind,
+  val label: String,
+  val failed: Boolean = false,
+)
+
+enum class MediaError { TOO_LARGE, TYPE_BLOCKED, UNREADABLE, DOWNLOAD, OPEN }
+
 data class ComposerState(
   val text: String = "",
   val replyTo: Message? = null,
@@ -53,12 +73,22 @@ data class ComposerState(
 )
 
 class ConversationViewModel(
+  private val app: Application,
   container: AppContainer,
   private val me: String,
   private val conversationId: String,
   private val otherUid: String,
 ) : ViewModel() {
   private val chats = container.chats!!
+  private val mediaRepo = container.media!!
+  private class Outgoing(val media: PreparedMedia, val caption: String, val replyTo: String?)
+  private val prepared = mutableMapOf<String, Outgoing>()
+  private val _uploads = MutableStateFlow<List<PendingUpload>>(emptyList())
+  val uploads: StateFlow<List<PendingUpload>> = _uploads
+  private val _mediaError = MutableStateFlow<MediaError?>(null)
+  val mediaError: StateFlow<MediaError?> = _mediaError
+  val recorder = VoiceRecorder(app, viewModelScope)
+  val player = VoicePlayer(viewModelScope)
   private val presence = container.presence
   private val throttle = TypingThrottle { System.currentTimeMillis() }
   private val limit = MutableStateFlow(PAGE)
@@ -123,7 +153,79 @@ class ConversationViewModel(
     presence?.let { p -> viewModelScope.launch { p.clearTyping(conversationId, me) } }
   }
 
+  fun sendImage(uri: Uri) = prepareAndSend { mediaRepo.prepareImage(uri) }
+  fun sendDocument(uri: Uri) = prepareAndSend { mediaRepo.prepareDocument(uri) }
+
+  fun startRecording(): Boolean = recorder.start()
+  fun cancelRecording() = recorder.cancel()
+  fun finishRecording() {
+    val voice = recorder.stop() ?: return
+    prepareAndSend { mediaRepo.prepareVoice(voice.file, voice.durationMs, voice.waveform) }
+  }
+
+  private fun prepareAndSend(prepare: suspend () -> PreparedMedia) = viewModelScope.launch {
+    val media = try {
+      prepare()
+    } catch (e: MediaException.TooLarge) {
+      _mediaError.value = MediaError.TOO_LARGE; return@launch
+    } catch (e: MediaException.TypeBlocked) {
+      _mediaError.value = MediaError.TYPE_BLOCKED; return@launch
+    } catch (e: Exception) {
+      _mediaError.value = MediaError.UNREADABLE; return@launch
+    }
+    val id = UUID.randomUUID().toString()
+    val caption = _composer.value.text.trim().takeIf { media.kind != MediaKind.VOICE && it.length <= MessageRules.MAX_LENGTH }.orEmpty()
+    val replyTo = _composer.value.replyTo?.id
+    if (caption.isNotEmpty() || replyTo != null) _composer.value = ComposerState()
+    prepared[id] = Outgoing(media, caption, replyTo)
+    _uploads.update { it + PendingUpload(id, media.kind, media.displayName) }
+    upload(id)
+  }
+
+  private suspend fun upload(id: String) {
+    val out = prepared[id] ?: return
+    val media = out.media
+    val caption = out.caption
+    val replyTo = out.replyTo
+    try {
+      val path = mediaRepo.upload(conversationId, id, me, media)
+      chats.sendMedia(
+        conversationId, me, id, media.kind.wire,
+        Media(path, media.displayName, media.bytes.size.toLong(), media.mime, media.width, media.height, media.durationMs, media.waveform),
+        caption, replyTo,
+      )
+      prepared.remove(id)
+      _uploads.update { list -> list.filterNot { it.id == id } }
+    } catch (e: Exception) {
+      _uploads.update { list -> list.map { if (it.id == id) it.copy(failed = true) else it } }
+    }
+  }
+
+  fun retryUpload(id: String) = viewModelScope.launch {
+    _uploads.update { list -> list.map { if (it.id == id) it.copy(failed = false) else it } }
+    upload(id)
+  }
+
+  fun cancelUpload(id: String) {
+    prepared.remove(id)
+    _uploads.update { list -> list.filterNot { it.id == id } }
+  }
+
+  fun clearMediaError() { _mediaError.value = null }
+  fun reportMediaError(e: MediaError) { _mediaError.value = e }
+
+  suspend fun localFile(path: String): File? = runCatching { mediaRepo.localFile(path) }.getOrNull()
+  suspend fun bitmap(path: String, maxEdgePx: Int) = mediaRepo.loadBitmap(path, maxEdgePx)
+
+  fun togglePlayback(message: Message) = viewModelScope.launch {
+    val path = message.media?.path ?: return@launch
+    val file = localFile(path) ?: return@launch reportMediaError(MediaError.DOWNLOAD)
+    player.toggle(message.id, file)
+  }
+
   override fun onCleared() {
+    recorder.cancel()
+    player.release()
     // viewModelScope is already cancelled here, so clear the typing mark on a short-lived scope.
     presence?.let { p -> CoroutineScope(Dispatchers.IO).launch { p.clearTyping(conversationId, me) } }
     super.onCleared()
@@ -179,7 +281,7 @@ class ConversationViewModel(
 
   companion object {
     const val PAGE = 30L
-    fun factory(container: AppContainer, me: String, cid: String, other: String) =
-      viewModelFactory { initializer { ConversationViewModel(container, me, cid, other) } }
+    fun factory(app: Application, container: AppContainer, me: String, cid: String, other: String) =
+      viewModelFactory { initializer { ConversationViewModel(app, container, me, cid, other) } }
   }
 }
