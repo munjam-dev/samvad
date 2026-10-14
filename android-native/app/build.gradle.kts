@@ -24,8 +24,8 @@ android {
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     buildConfigField("String", "FUNCTIONS_REGION", "\"asia-south1\"")
     buildConfigField("int", "CONSENT_VERSION", "1")
-    buildConfigField("String", "TERMS_URL", "\"https://samvad.example/terms\"")
-    buildConfigField("String", "PRIVACY_URL", "\"https://samvad.example/privacy\"")
+    buildConfigField("String", "TERMS_URL", "\"https://samvad-messenger.web.app/terms\"")
+    buildConfigField("String", "PRIVACY_URL", "\"https://samvad-messenger.web.app/privacy\"")
   }
 
   buildTypes {
