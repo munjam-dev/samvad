@@ -436,4 +436,21 @@
     <string name="chat_theme_monsoon">Monsoon</string>
     <string name="chat_theme_marigold">Marigold</string>
     <string name="chat_theme_night_garden">Night Garden</string>
+    <string name="close">Close</string>
+    <string name="privacy_notice_title">Your messages are protected</string>
+    <string name="privacy_notice_body">Messages are encrypted while they travel and stored securely on Google Cloud. End-to-end encryption is coming to Samvad.</string>
+    <string name="privacy_notice_title_e2ee">Your conversations are private</string>
+    <string name="privacy_notice_body_e2ee">Messages and calls are end-to-end encrypted. Only the people in this chat can read, listen to or share them.</string>
+    <string name="privacy_learn_more">Learn more</string>
+    <string name="privacy_sheet_title">How Samvad protects your chats</string>
+    <string name="privacy_sheet_now_title">Protected today</string>
+    <string name="privacy_sheet_now">• Messages, photos, voice notes and files are encrypted while they travel and while stored on Google Cloud.\n• Only the people in a chat can open it: our servers check every request.\n• Two-step PIN, app lock, screenshot blocking and private notifications are in Settings.</string>
+    <string name="privacy_sheet_not_title">Not protected yet</string>
+    <string name="privacy_sheet_not">• Until end-to-end encryption arrives, Samvad\'s servers could technically read message content.\n• If you report someone, their last 5 messages are shared with Samvad\'s safety team.\n• Exported chats are plain text files that you control.</string>
+    <string name="privacy_sheet_next_title">Coming next</string>
+    <string name="privacy_sheet_next">End-to-end encryption, so only the people in a chat can read or listen to it. Not even Samvad will be able to.</string>
+    <string name="privacy_sheet_depends">Your privacy also depends on your account security, the devices you are signed in on and how you share your chats.</string>
+    <string name="home_footer_tag">#SamvadBeginsHere</string>
+    <string name="home_footer_line1">Proudly built in Hyderabad, India.</string>
+    <string name="home_footer_line2">Designed for meaningful connections, wherever life takes you.</string>
 </resources>

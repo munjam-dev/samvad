@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.graphics.graphicsLayer
 import com.samvad.messenger.ui.theme.LocalReducedMotion
 import com.samvad.messenger.ui.theme.Motion
@@ -249,6 +251,7 @@ private fun ChatsTab(
           }
         }
         if (carded) item(key = "card-bottom") { CardEdge(top = false) }
+        item(key = "footer") { HomeFooter() }
       }
     }
   }
@@ -699,5 +702,26 @@ private fun NotificationPrompt(container: AppContainer) {
         })
       }
     }
+  }
+}
+
+/** A quiet signature at the end of the chat list (US-010); read as one line by screen readers. */
+@Composable
+private fun HomeFooter() {
+  val colors = SamvadTheme.colors
+  val tag = stringResource(R.string.home_footer_tag)
+  val line1 = stringResource(R.string.home_footer_line1)
+  val line2 = stringResource(R.string.home_footer_line2)
+  Column(
+    Modifier
+      .fillMaxWidth()
+      // Extra bottom space so the new-chat button never covers it at the end of the list.
+      .padding(start = 32.dp, end = 32.dp, top = 28.dp, bottom = 88.dp)
+      .clearAndSetSemantics { contentDescription = "$tag. $line1 $line2" },
+    horizontalAlignment = Alignment.CenterHorizontally,
+  ) {
+    Text(tag, style = MaterialTheme.typography.labelLarge, color = colors.primary)
+    Text(line1, style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 4.dp))
+    Text(line2, style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant, textAlign = TextAlign.Center)
   }
 }

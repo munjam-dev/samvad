@@ -161,6 +161,7 @@ fun ConversationScreen(
   val lifecycle = LocalLifecycleOwner.current.lifecycle
   var selected by remember { mutableStateOf<Message?>(null) }
   var person by remember { mutableStateOf<String?>(null) }
+  var privacyInfo by remember { mutableStateOf(false) }
   var menu by remember { mutableStateOf(false) }
   val copied = stringResource(R.string.chat_copied)
   val uploads = vm.uploads.collectAsStateWithLifecycle().value
@@ -412,12 +413,16 @@ fun ConversationScreen(
         if (themeSettings != null) ChatBackdrop(backdrop, themeSettings, container.chatThemes, dark, Modifier.fillMaxSize())
         when {
           state.loading -> CircularProgressIndicator(Modifier.align(Alignment.Center), color = colors.brand)
-          state.items.isEmpty() -> Text(
-            stringResource(R.string.chat_empty, state.title),
-            style = MaterialTheme.typography.bodyLarge,
-            color = colors.onSurfaceVariant,
-            modifier = Modifier.align(Alignment.Center).padding(32.dp),
-          )
+          state.items.isEmpty() -> Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
+            PrivacyNotice(onLearnMore = { privacyInfo = true })
+            Text(
+              stringResource(R.string.chat_empty, state.title),
+              style = MaterialTheme.typography.bodyLarge,
+              color = colors.onChip,
+              textAlign = TextAlign.Center,
+              modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp),
+            )
+          }
           else -> LazyColumn(
             state = list,
             reverseLayout = true,
@@ -459,6 +464,7 @@ fun ConversationScreen(
               }
               }
             }
+            if (!state.hasMore) item(key = "privacy-notice") { PrivacyNotice(onLearnMore = { privacyInfo = true }) }
           }
         }
         androidx.compose.animation.AnimatedVisibility(
@@ -524,6 +530,10 @@ fun ConversationScreen(
     }
   }
   viewing?.let { path -> MediaViewer(path, vm::bitmap) { viewing = null } }
+
+  if (privacyInfo) {
+    ModalBottomSheet(onDismissRequest = { privacyInfo = false }) { PrivacyInfoSheet(onClose = { privacyInfo = false }) }
+  }
 
   person?.let { uid ->
     ModalBottomSheet(onDismissRequest = { person = null }) {
