@@ -167,6 +167,9 @@ fun ConversationScreen(
   var selected by remember { mutableStateOf<Message?>(null) }
   var person by remember { mutableStateOf<String?>(null) }
   var privacyInfo by remember { mutableStateOf(false) }
+  var scheduling by remember { mutableStateOf(false) }
+  var scheduledList by remember { mutableStateOf(false) }
+  val scheduledHere = vm.scheduledHere.collectAsStateWithLifecycle().value
   var menu by remember { mutableStateOf(false) }
   val copied = stringResource(R.string.chat_copied)
   val uploads = vm.uploads.collectAsStateWithLifecycle().value
@@ -499,6 +502,7 @@ fun ConversationScreen(
         RecorderBar(recording, onCancel = vm::cancelRecording, onSend = vm::finishRecording)
       } else {
         if (mentionCandidates.isNotEmpty()) MentionSuggestions(mentionCandidates, vm::pickMention)
+        ScheduledBanner(scheduledHere, onOpen = { scheduledList = true })
         Composer(
           state = composer,
           me = me,
@@ -507,6 +511,7 @@ fun ConversationScreen(
           onSend = vm::submit,
           onCancel = vm::cancelContext,
           onAttach = { attaching = true },
+          onSchedule = { scheduling = true },
           onMic = {
             val granted = androidx.core.content.ContextCompat.checkSelfPermission(
               context, android.Manifest.permission.RECORD_AUDIO,
@@ -537,6 +542,27 @@ fun ConversationScreen(
     }
   }
   viewing?.let { path -> MediaViewer(path, vm::bitmap) { viewing = null } }
+
+  if (scheduling) {
+    ModalBottomSheet(onDismissRequest = { scheduling = false }) {
+      ScheduleSheet(stringResource(R.string.schedule_title), onPick = vm::schedule, onDone = {
+        scheduling = false
+        scheduledList = false
+      })
+    }
+  }
+  if (scheduledList && scheduledHere.isNotEmpty()) {
+    ModalBottomSheet(onDismissRequest = { scheduledList = false }) {
+      ScheduledListSheet(
+        scheduledHere,
+        onSendNow = { vm.sendScheduledNow(it) },
+        onEdit = { item, text -> vm.editScheduled(item, text) },
+        onReschedule = vm::reschedule,
+        onCancel = { vm.cancelScheduled(it) },
+        onRemove = { vm.removeScheduled(it) },
+      )
+    }
+  }
 
   if (privacyInfo) {
     ModalBottomSheet(onDismissRequest = { privacyInfo = false }) { PrivacyInfoSheet(onClose = { privacyInfo = false }) }
@@ -809,6 +835,7 @@ private fun Composer(
   onCancel: () -> Unit,
   onAttach: () -> Unit,
   onMic: () -> Unit,
+  onSchedule: (() -> Unit)? = null,
 ) {
   val colors = SamvadTheme.colors
   val hint = stringResource(R.string.chat_message_hint)
@@ -862,28 +889,38 @@ private fun Composer(
           modifier = Modifier.size(48.dp).background(colors.primary, CircleShape),
         ) { Icon(Icons.Outlined.Mic, stringResource(R.string.voice_record), tint = colors.onPrimary) }
       } else {
-        SendButton(canSend = state.text.isNotBlank() && !state.tooLong, editing = state.editing != null, onSend = onSend)
+        SendButton(canSend = state.text.isNotBlank() && !state.tooLong, editing = state.editing != null, onSend = onSend, onSchedule = onSchedule)
       }
     }
   }
 }
 
 @Composable
-private fun SendButton(canSend: Boolean, editing: Boolean, onSend: () -> Unit) {
+private fun SendButton(canSend: Boolean, editing: Boolean, onSend: () -> Unit, onSchedule: (() -> Unit)? = null) {
   val colors = SamvadTheme.colors
   val sendBg by animateColorAsState(if (canSend) colors.primary else colors.surfaceContainer, motionSpec(Motion.standard()), label = "sendBg")
   val sendTint by animateColorAsState(if (canSend) colors.onPrimary else colors.onSurfaceVariant, motionSpec(Motion.standard()), label = "sendTint")
   val sendScale by animateFloatAsState(if (canSend) 1f else 0.9f, motionSpec(Motion.lively()), label = "sendScale")
   val sendPress = remember { MutableInteractionSource() }
-  IconButton(
-    onClick = onSend,
-    enabled = canSend,
-    interactionSource = sendPress,
-    modifier = Modifier
+  val scheduleLabel = stringResource(R.string.cd_schedule)
+  // Tap sends; touch and hold schedules (not while editing a sent message).
+  Box(
+    Modifier
       .size(48.dp)
       .graphicsLayer { scaleX = sendScale; scaleY = sendScale }
       .pressScale(sendPress, 0.88f)
-      .background(sendBg, CircleShape),
+      .background(sendBg, CircleShape)
+      .clip(CircleShape)
+      .combinedClickable(
+        interactionSource = sendPress,
+        indication = androidx.compose.material3.ripple(bounded = true),
+        enabled = canSend,
+        role = androidx.compose.ui.semantics.Role.Button,
+        onClick = onSend,
+        onLongClickLabel = if (onSchedule != null && !editing) scheduleLabel else null,
+        onLongClick = if (onSchedule != null && !editing) onSchedule else null,
+      ),
+    contentAlignment = Alignment.Center,
   ) {
     Crossfade(targetState = editing, label = "sendIcon") { isEditing ->
       Icon(

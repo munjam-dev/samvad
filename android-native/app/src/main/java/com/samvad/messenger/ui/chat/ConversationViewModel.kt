@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.samvad.core.chat.ScheduleRules
+import com.samvad.core.chat.ScheduleCheck
 import com.samvad.core.chat.Profile
 import com.samvad.core.chat.ChatExport
 import com.samvad.core.chat.ChatList
@@ -32,6 +34,7 @@ import android.app.Application
 import android.net.Uri
 import com.samvad.core.media.Media
 import com.samvad.core.media.MediaKind
+import com.samvad.messenger.data.ScheduledItem
 import com.samvad.messenger.AppContainer
 import com.samvad.messenger.data.MediaException
 import com.samvad.messenger.data.PreparedMedia
@@ -434,6 +437,50 @@ class ConversationViewModel(
     runCatching {
       if (message.id in starredIds.value) chats.unstar(me, conversationId, message.id)
       else chats.star(me, conversationId, message.id)
+    }
+  }
+
+  /** This chat's scheduled messages still waiting to send, or that could not be sent. */
+  val scheduledHere: StateFlow<List<ScheduledItem>> = chats.scheduled(me)
+    .map { all -> all.filter { it.conversationId == conversationId && (it.status == "pending" || it.status == "failed") } }
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+  /**
+   * Schedules the composer's text for [sendAtMs]. Returns the check result; on OK the composer is
+   * cleared. The server sends it at that time (sendScheduledMessages).
+   */
+  fun schedule(sendAtMs: Long): ScheduleCheck {
+    val c = _composer.value
+    val text = (MessageRules.validate(c.text) as? TextValidation.Ok)?.text ?: return ScheduleCheck.TOO_SOON
+    val check = ScheduleRules.check(sendAtMs, System.currentTimeMillis())
+    if (check != ScheduleCheck.OK) return check
+    _composer.value = ComposerState()
+    stopTyping()
+    picked.clear()
+    viewModelScope.launch { runCatching { chats.schedule(me, conversationId, text, c.replyTo?.id, sendAtMs) } }
+    return check
+  }
+
+  fun reschedule(item: ScheduledItem, sendAtMs: Long): ScheduleCheck {
+    val check = ScheduleRules.check(sendAtMs, System.currentTimeMillis())
+    if (check == ScheduleCheck.OK) viewModelScope.launch { runCatching { chats.updateScheduled(item.id, sendAtMs = sendAtMs) } }
+    return check
+  }
+
+  fun editScheduled(item: ScheduledItem, text: String) {
+    val valid = (MessageRules.validate(text) as? TextValidation.Ok)?.text ?: return
+    viewModelScope.launch { runCatching { chats.updateScheduled(item.id, text = valid) } }
+  }
+
+  fun cancelScheduled(item: ScheduledItem) = viewModelScope.launch { runCatching { chats.cancelScheduled(item.id) } }
+
+  fun removeScheduled(item: ScheduledItem) = viewModelScope.launch { runCatching { chats.deleteScheduled(item.id) } }
+
+  /** Cancels the scheduled copy first, so it can never also be sent by the server, then sends now. */
+  fun sendScheduledNow(item: ScheduledItem) = viewModelScope.launch {
+    runCatching {
+      chats.cancelScheduled(item.id)
+      chats.send(conversationId, me, item.text, null)
     }
   }
 

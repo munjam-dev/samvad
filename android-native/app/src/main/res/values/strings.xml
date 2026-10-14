@@ -465,4 +465,35 @@
     <string name="starred_kind_voice">Voice message</string>
     <string name="starred_kind_file">File</string>
     <string name="starred_kind_poll">Poll</string>
+    <string name="cd_schedule">Schedule message</string>
+    <string name="schedule_title">Schedule message</string>
+    <string name="schedule_body">Samvad sends it at the time you choose, even if your phone is off.</string>
+    <string name="schedule_tonight">Tonight</string>
+    <string name="schedule_tomorrow_morning">Tomorrow morning</string>
+    <string name="schedule_pick">Pick date and time</string>
+    <string name="schedule_next">Next</string>
+    <string name="schedule_set">Schedule</string>
+    <string name="schedule_save">Save</string>
+    <string name="schedule_too_soon">Choose a time at least a minute from now.</string>
+    <string name="schedule_too_far">Choose a time within the next 30 days.</string>
+    <plurals name="scheduled_banner">
+        <item quantity="one">%1$d scheduled message</item>
+        <item quantity="other">%1$d scheduled messages</item>
+    </plurals>
+    <plurals name="scheduled_failed_banner">
+        <item quantity="one">%1$d scheduled message couldn\'t be sent</item>
+        <item quantity="other">%1$d scheduled messages couldn\'t be sent</item>
+    </plurals>
+    <string name="scheduled_list_title">Scheduled messages</string>
+    <string name="scheduled_at">Sends %1$s</string>
+    <string name="scheduled_send_now">Send now</string>
+    <string name="scheduled_edit">Edit</string>
+    <string name="scheduled_change_time">Change time</string>
+    <string name="scheduled_cancel">Cancel</string>
+    <string name="scheduled_remove">Remove</string>
+    <string name="scheduled_failed">Couldn\'t send: %1$s</string>
+    <string name="scheduled_failed_not_member">you\'re no longer in this chat</string>
+    <string name="scheduled_failed_blocked">this chat is blocked</string>
+    <string name="scheduled_failed_account">the account was deleted</string>
+    <string name="scheduled_failed_invalid">the message was empty or too long</string>
 </resources>

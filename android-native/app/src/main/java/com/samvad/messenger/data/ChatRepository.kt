@@ -38,6 +38,16 @@ data class MessagesPage(val messages: List<Message>, val hasMore: Boolean, val f
 
 data class StarredRef(val conversationId: String, val messageId: String, val savedAt: Long)
 
+/** [status]: pending, sent, failed or cancelled. [failure]: not_member, blocked, account_deleted or invalid. */
+data class ScheduledItem(
+  val id: String,
+  val conversationId: String,
+  val text: String,
+  val sendAt: Long,
+  val status: String,
+  val failure: String?,
+)
+
 /** Conversations, member state and messages (B2). Firestore's offline cache provides offline mode. */
 class ChatRepository(private val db: FirebaseFirestore) {
 
@@ -372,6 +382,62 @@ class ChatRepository(private val db: FirebaseFirestore) {
 
   suspend fun unstar(me: String, conversationId: String, messageId: String) {
     db.document("users/$me/savedMessages/${conversationId}_$messageId").delete().await()
+  }
+
+  /** My scheduled messages, soonest first (Phase 3). The server sends them; see sendScheduledMessages. */
+  fun scheduled(me: String): Flow<List<ScheduledItem>> = callbackFlow {
+    val reg = db.collection("scheduledMessages")
+      .whereEqualTo("senderId", me)
+      .orderBy("sendAt")
+      .limit(300)
+      .addSnapshotListener { snap, err ->
+        if (err != null) {
+          trySend(emptyList())
+          return@addSnapshotListener
+        }
+        if (snap != null) {
+          trySend(
+            snap.documents.mapNotNull { d ->
+              ScheduledItem(
+                id = d.id,
+                conversationId = d.getString("conversationId") ?: return@mapNotNull null,
+                text = d.getString("text").orEmpty(),
+                sendAt = d.millis("sendAt") ?: return@mapNotNull null,
+                status = d.getString("status") ?: "pending",
+                failure = d.getString("failure"),
+              )
+            },
+          )
+        }
+      }
+    awaitClose { reg.remove() }
+  }
+
+  suspend fun schedule(me: String, conversationId: String, text: String, replyTo: String?, sendAtMs: Long) {
+    db.collection("scheduledMessages").document().set(
+      mapOf(
+        "senderId" to me, "conversationId" to conversationId, "text" to text, "replyTo" to replyTo,
+        "sendAt" to Timestamp(Date(sendAtMs)), "status" to "pending",
+        "createdAt" to FieldValue.serverTimestamp(), "updatedAt" to FieldValue.serverTimestamp(),
+      ),
+    ).await()
+  }
+
+  suspend fun updateScheduled(id: String, text: String? = null, sendAtMs: Long? = null) {
+    val changes = buildMap<String, Any> {
+      text?.let { put("text", it) }
+      sendAtMs?.let { put("sendAt", Timestamp(Date(it))) }
+      put("updatedAt", FieldValue.serverTimestamp())
+    }
+    db.document("scheduledMessages/$id").update(changes).await()
+  }
+
+  suspend fun cancelScheduled(id: String) {
+    db.document("scheduledMessages/$id").update(mapOf("status" to "cancelled", "updatedAt" to FieldValue.serverTimestamp())).await()
+  }
+
+  suspend fun deleteScheduled(id: String) {
+    db.document("scheduledMessages/$id").delete().await()
   }
 
   /** One message, or null when it no longer exists or I may no longer read it (e.g. left the group). */
