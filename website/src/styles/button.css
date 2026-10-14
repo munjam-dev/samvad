@@ -2,9 +2,9 @@
 NextSaaS Buttons Styles
 =========================== */
 @utility btn {
-  @apply relative overflow-hidden border rounded-full cursor-pointer inline-block text-center transition-all duration-500 ease-in-out font-normal text-nowrap hover:scale-102 lowercase;
+  @apply relative overflow-hidden border rounded-full cursor-pointer inline-block text-center transition-all duration-500 ease-in-out font-normal text-nowrap hover:scale-102;
   span {
-    @apply inline-block transition-transform duration-300 ease-in-out first-letter:uppercase;
+    @apply inline-block transition-transform duration-300 ease-in-out;
   }
   &::before {
     content: '';

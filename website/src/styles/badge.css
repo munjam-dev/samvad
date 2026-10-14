@@ -2,7 +2,7 @@
 Site Badges Styles
 =========================== */
 @utility badge {
-  @apply inline-block text-nowrap text-tagline-2 font-normal text-secondary backdrop-blur-ns-badge-blur rounded-full px-5 py-1.5 first-letter:uppercase lowercase;
+  @apply inline-block text-nowrap text-tagline-2 font-normal text-secondary backdrop-blur-ns-badge-blur rounded-full px-5 py-1.5;
 }
 
 @utility badge-green {
