@@ -2,7 +2,9 @@
 
 import { motion, useMotionValue, useMotionValueEvent, useReducedMotion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { useRef, useState } from 'react';
+import { EASE } from './motion';
 import FamilyChatDemo, { type DemoMode } from './FamilyChatDemo';
+import Parallax from './Parallax';
 import PhoneMockup from './PhoneMockup';
 
 interface Feature {
@@ -34,8 +36,8 @@ const FeatureCard = ({ f, active, onSelect, from }: { f: Feature; active: boolea
   const reduce = useReducedMotion();
   const rx = useMotionValue(0);
   const ry = useMotionValue(0);
-  const srx = useSpring(rx, { stiffness: 200, damping: 20 });
-  const sry = useSpring(ry, { stiffness: 200, damping: 20 });
+  const srx = useSpring(rx, { stiffness: 220, damping: 34 });
+  const sry = useSpring(ry, { stiffness: 220, damping: 34 });
   return (
     <motion.button
       type="button"
@@ -56,7 +58,7 @@ const FeatureCard = ({ f, active, onSelect, from }: { f: Feature; active: boolea
       initial={reduce ? false : { opacity: 0, x: from === 'left' ? -40 : 40 }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true, amount: 0.4 }}
-      transition={{ type: 'spring', stiffness: 120, damping: 18 }}
+      transition={{ duration: 0.3, ease: EASE }}
       style={{ rotateX: srx, rotateY: sry, transformPerspective: 800 }}
       className={`relative w-[78vw] max-w-[320px] shrink-0 snap-center rounded-[22px] p-[1.5px] text-left transition-shadow duration-300 lg:w-full lg:max-w-none ${active ? 'bg-gradient-to-br from-primary-400 via-emerald-300 to-lime-300 shadow-[0_0_40px_-6px_rgba(22,123,82,0.55)]' : 'bg-primary-100/80 dark:bg-white/10'}`}>
       <span className="dark:bg-background-6 flex h-full flex-col gap-2 rounded-[21px] bg-white p-5">
@@ -98,7 +100,7 @@ const FeatureShowcase = () => {
   return (
     <section ref={ref} id="showcase" className="relative overflow-hidden py-20 lg:py-[120px]" aria-labelledby="showcase-title">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-primary-50 via-[#e6f4ec] to-primary-50 dark:from-background-8 dark:via-background-7 dark:to-background-8" />
-      <div aria-hidden="true" className="pointer-events-none absolute top-1/4 left-1/2 -z-10 size-[520px] -translate-x-1/2 rounded-full bg-primary-300/30 blur-3xl" />
+      <Parallax distance={160} className="pointer-events-none absolute inset-0 -z-10"><div aria-hidden="true" className="mx-auto mt-24 size-[520px] rounded-full bg-primary-300/30 blur-3xl" /></Parallax>
       <div className="main-container">
         <div className="mx-auto mb-12 max-w-[700px] space-y-3 text-center">
           <span className="badge badge-green">Samvad in action</span>
@@ -113,7 +115,7 @@ const FeatureShowcase = () => {
             <Connector side="left" active />
           </div>
           <motion.div style={{ y: phoneY, rotateZ: rotate }} className="order-1 lg:order-2">
-            <motion.div initial={reduce ? false : { opacity: 0, scale: 0.85 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true, amount: 0.3 }} transition={{ type: 'spring', stiffness: 90, damping: 16 }}>
+            <motion.div initial={reduce ? false : { opacity: 0, scale: 0.85 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.3, ease: EASE }}>
               <PhoneMockup>
                 <FamilyChatDemo mode={ALL[active].id} />
               </PhoneMockup>

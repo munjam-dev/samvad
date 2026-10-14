@@ -2,15 +2,16 @@
 
 import { AnimatePresence, motion, useInView, useReducedMotion, type Variants } from 'framer-motion';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { EASE } from './motion';
 
 const container: Variants = { hidden: {}, show: { transition: { staggerChildren: 0.09 } } };
-const item: Variants = { hidden: { opacity: 0, y: 28 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 110, damping: 18 } } };
+const item: Variants = { hidden: { opacity: 0, y: 28 }, show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: EASE } } };
 
 const Card = ({ className = '', title, body, children, tag }: { className?: string; title: string; body: string; children: ReactNode; tag?: string }) => (
   <motion.article
     variants={item}
     whileHover={{ y: -6, scale: 1.01 }}
-    transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+    transition={{ duration: 0.3, ease: EASE }}
     className={`group dark:bg-background-6 relative flex flex-col justify-between gap-5 overflow-hidden rounded-[24px] border border-primary-100 bg-white p-6 shadow-sm dark:border-white/10 ${className}`}>
     <div aria-hidden="true" className="pointer-events-none absolute -top-24 -right-24 size-56 rounded-full bg-primary-200/40 blur-3xl transition-opacity duration-500 group-hover:opacity-100 dark:bg-primary-500/20" />
     <div className="relative min-h-0 flex-1">{children}</div>
@@ -48,7 +49,7 @@ const Typewriter = () => {
         {[0, 1, 2].map((i) => (
           <motion.span key={i} className="size-1.5 rounded-full bg-primary-400" animate={{ y: [0, -4, 0] }} transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.15 }} />
         ))}
-        <motion.span initial={{ scale: 0 }} whileInView={{ scale: 1 }} transition={{ delay: 0.6, type: 'spring' }} className="ml-2 rounded-full bg-white px-2 py-0.5 text-sm shadow">👍</motion.span>
+        <motion.span initial={{ scale: 0 }} whileInView={{ scale: 1 }} transition={{ delay: 0.6, duration: 0.3, ease: EASE }} className="ml-2 rounded-full bg-white px-2 py-0.5 text-sm shadow">👍</motion.span>
       </div>
     </div>
   );
@@ -57,9 +58,9 @@ const Typewriter = () => {
 const VideoTiles = () => (
   <div className="relative grid grid-cols-2 gap-2">
     {['#a7e3c1', '#f4d9a8', '#c9bff0', '#bfe3f0'].map((c, i) => (
-      <motion.div key={c} className="relative h-20 rounded-xl" style={{ background: c }} animate={{ opacity: [0.85, 1, 0.85] }} transition={{ duration: 3, repeat: Infinity, delay: i * 0.5 }}>
+      <div key={c} className="relative h-20 rounded-xl" style={{ background: c }}>
         <span className="absolute bottom-1.5 left-2 text-[11px] font-medium text-secondary/70">{['Amma', 'Rohan', 'Priya', 'You'][i]}</span>
-      </motion.div>
+      </div>
     ))}
     <div className="col-span-2 flex items-center gap-3 rounded-xl bg-secondary/90 px-3 py-2" aria-hidden="true">
       <motion.span className="size-2.5 rounded-full bg-emerald-400" animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }} transition={{ duration: 1.4, repeat: Infinity }} />
@@ -75,7 +76,7 @@ const VideoTiles = () => (
 const Lock = () => (
   <svg viewBox="0 0 120 120" className="mx-auto h-28 w-28" fill="none" aria-hidden="true">
     <motion.path d="M38 54V40a22 22 0 0144 0v14" stroke="#167b52" strokeWidth="7" strokeLinecap="round" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ duration: 1.2 }} />
-    <motion.rect x="28" y="54" width="64" height="46" rx="12" fill="#167b52" initial={{ scale: 0.8, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }} viewport={{ once: true }} style={{ originX: '60px', originY: '77px' }} transition={{ type: 'spring', delay: 0.3 }} />
+    <motion.rect x="28" y="54" width="64" height="46" rx="12" fill="#167b52" initial={{ scale: 0.8, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }} viewport={{ once: true }} style={{ originX: '60px', originY: '77px' }} transition={{ duration: 0.3, ease: EASE, delay: 0.3 }} />
     <circle cx="60" cy="74" r="6" fill="#fff" />
     <rect x="57" y="76" width="6" height="12" rx="3" fill="#fff" />
   </svg>
@@ -84,7 +85,7 @@ const Lock = () => (
 const Avatars = () => (
   <div className="relative h-28">
     {[['A', '#167b52'], ['R', '#d97706'], ['P', '#7c3aed'], ['S', '#0891b2'], ['M', '#e11d48']].map(([l, c], i) => (
-      <motion.span key={l} initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1, type: 'spring' }} className="absolute top-6 flex size-14 items-center justify-center rounded-full border-4 border-white text-lg font-semibold text-white shadow" style={{ left: i * 38, background: c }}>
+      <motion.span key={l} initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.3, ease: EASE }} className="absolute top-6 flex size-14 items-center justify-center rounded-full border-4 border-white text-lg font-semibold text-white shadow" style={{ left: i * 38, background: c }}>
         {l}
       </motion.span>
     ))}
@@ -128,7 +129,7 @@ const LanguageSwap = () => {
 const Gallery = () => (
   <div className="grid grid-cols-3 gap-2">
     {['#a7e3c1', '#f4d9a8', '#c9bff0', '#bfe3f0', '#fbc4c4', '#d8e8a8'].map((c, i) => (
-      <motion.div key={c} initial={{ opacity: 0, scale: 0.7 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} whileHover={{ scale: 1.08, rotate: i % 2 ? 2 : -2 }} transition={{ delay: i * 0.07, type: 'spring' }} className={`rounded-xl ${i === 0 ? 'col-span-2 row-span-2 h-[104px]' : 'h-[48px]'}`} style={{ background: c }} />
+      <motion.div key={c} initial={{ opacity: 0, scale: 0.7 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} whileHover={{ scale: 1.08, rotate: i % 2 ? 2 : -2 }} transition={{ delay: i * 0.07, duration: 0.3, ease: EASE }} className={`rounded-xl ${i === 0 ? 'col-span-2 row-span-2 h-[104px]' : 'h-[48px]'}`} style={{ background: c }} />
     ))}
   </div>
 );

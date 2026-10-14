@@ -1,5 +1,6 @@
 import heroDotVectorBg from '@public/images/ns-img-161.svg';
 import Image from 'next/image';
+import Parallax from '../home-motion/Parallax';
 import RevealAnimation from '../animation/RevealAnimation';
 import LinkButton from '../ui/button/LinkButton';
 
@@ -42,7 +43,7 @@ const Hero = () => {
                 </div>
                 <RevealAnimation delay={0.9}>
                   <figure className="w-full max-w-[643px]">
-                    <Image src="/samvad-mark.png" alt="Samvad logo" width={512} height={512} priority className="mx-auto size-full max-w-[420px] object-contain pb-10" />
+                    <Parallax distance={90} scale={0.06}><Image src="/samvad-mark.png" alt="Samvad logo" width={512} height={512} priority className="mx-auto size-full max-w-[420px] object-contain pb-10 drop-shadow-[0_30px_40px_rgba(11,69,48,0.25)]" /></Parallax>
                   </figure>
                 </RevealAnimation>
               </div>

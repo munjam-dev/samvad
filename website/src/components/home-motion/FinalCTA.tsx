@@ -4,6 +4,7 @@ import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion
 import Link from 'next/link';
 import { useRef } from 'react';
 import FamilyChatDemo from './FamilyChatDemo';
+import Parallax from './Parallax';
 import PhoneMockup from './PhoneMockup';
 
 const FinalCTA = () => {
@@ -17,10 +18,11 @@ const FinalCTA = () => {
     <section ref={ref} className="relative mt-10 overflow-hidden rounded-t-[60px] bg-gradient-to-br from-[#0b4530] via-[#0f6a47] to-[#167b52] py-20 text-white lg:rounded-t-[100px] lg:py-[120px]" aria-labelledby="cta-title">
       <motion.span style={{ y: orbY }} aria-hidden="true" className="pointer-events-none absolute -top-20 -left-20 size-80 rounded-full bg-lime-300/25 blur-3xl" />
       <motion.span style={{ y: orbY }} aria-hidden="true" className="pointer-events-none absolute -right-24 bottom-0 size-96 rounded-full bg-emerald-300/25 blur-3xl" />
-      {!reduce &&
-        [0, 1, 2].map((n) => (
-          <motion.span key={n} aria-hidden="true" className="pointer-events-none absolute rounded-3xl border border-white/15" style={{ width: 80 + n * 40, height: 80 + n * 40, left: `${10 + n * 28}%`, top: `${15 + n * 20}%` }} animate={{ rotate: [0, 90, 0], y: [0, -20, 0] }} transition={{ duration: 14 + n * 3, repeat: Infinity, ease: 'easeInOut' }} />
-        ))}
+      {[0, 1, 2].map((n) => (
+        <Parallax key={n} distance={120 + n * 60} className="pointer-events-none absolute" >
+          <span aria-hidden="true" className="block rounded-3xl border border-white/15" style={{ width: 80 + n * 40, height: 80 + n * 40, marginLeft: `${10 + n * 28}vw`, marginTop: `${6 + n * 12}vh` }} />
+        </Parallax>
+      ))}
       <div className="main-container relative grid items-center gap-12 lg:grid-cols-2">
         <div className="space-y-6 text-center lg:text-left">
           <h2 id="cta-title" className="text-white">Your next favorite conversation starts here.</h2>

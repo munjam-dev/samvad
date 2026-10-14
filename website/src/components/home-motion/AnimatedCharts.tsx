@@ -2,6 +2,7 @@
 
 import { animate, motion, useInView, useReducedMotion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
+import { EASE } from './motion';
 
 const WEEK = [
   ['Mon', 42],
@@ -65,7 +66,7 @@ const AnimatedCharts = () => {
               <div className="mt-4 flex items-end justify-between gap-2" role="img" aria-label="Demo bar chart of messages per day">
                 {WEEK.map(([day, v], i) => (
                   <div key={day} className="flex flex-1 flex-col items-center gap-1">
-                    <motion.div className="w-full max-w-[34px] rounded-t-lg bg-gradient-to-t from-emerald-500 to-lime-300" initial={{ height: 0 }} whileInView={{ height: v * 0.9 }} viewport={{ once: true }} transition={{ delay: i * 0.08, type: 'spring', stiffness: 90, damping: 16 }} />
+                    <motion.div className="w-full max-w-[34px] rounded-t-lg bg-gradient-to-t from-emerald-500 to-lime-300" initial={{ height: 0 }} whileInView={{ height: v * 0.9 }} viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.3, ease: EASE }} />
                     <span className="text-[11px] text-white/60">{day}</span>
                   </div>
                 ))}

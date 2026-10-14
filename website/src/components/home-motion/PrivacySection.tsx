@@ -2,6 +2,8 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { EASE } from './motion';
+import Parallax from './Parallax';
 
 const PRINCIPLES = [
   ['Collect little', 'No ads and no analytics. Contact numbers are matched on your phone and never stored on our servers.'],
@@ -30,10 +32,10 @@ const PrivacySection = () => (
         </Link>
       </div>
       <div className="relative mx-auto flex size-[300px] items-center justify-center sm:size-[380px]" aria-hidden="true">
-        <motion.span className="absolute inset-0 rounded-full bg-primary-200/50" animate={{ scale: [1, 1.08, 1] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} />
-        <motion.span className="absolute inset-8 rounded-full bg-primary-300/40" animate={{ scale: [1, 1.06, 1] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }} />
+        <span className="absolute inset-0 rounded-full bg-primary-200/50" />
+        <Parallax distance={50} className="absolute inset-8"><span className="block size-full rounded-full bg-primary-300/40" /></Parallax>
         <svg viewBox="0 0 120 140" className="relative h-52 w-44">
-          <motion.path d="M60 8l46 18v36c0 34-20 56-46 68C34 118 14 96 14 62V26L60 8z" fill="#167b52" initial={{ scale: 0.7, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }} viewport={{ once: true }} style={{ originX: '60px', originY: '70px' }} transition={{ type: 'spring', stiffness: 90, damping: 14 }} />
+          <motion.path d="M60 8l46 18v36c0 34-20 56-46 68C34 118 14 96 14 62V26L60 8z" fill="#167b52" initial={{ scale: 0.7, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }} viewport={{ once: true }} style={{ originX: '60px', originY: '70px' }} transition={{ duration: 0.3, ease: EASE }} />
           <motion.path d="M38 70l16 16 30-34" fill="none" stroke="#fff" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ delay: 0.5, duration: 0.8 }} />
         </svg>
       </div>

@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useId, useRef, useState, type KeyboardEvent } from 'react';
+import { EASE } from './motion';
 import FamilyChatDemo, { type DemoMode } from './FamilyChatDemo';
 import PhoneMockup from './PhoneMockup';
 
@@ -53,7 +54,7 @@ const FeatureExplorer = () => {
               tabIndex={i === n ? 0 : -1}
               onClick={() => setI(n)}
               className={`text-tagline-2 relative min-h-11 rounded-full px-5 py-2 font-medium transition-colors focus-visible:outline-2 focus-visible:outline-primary-500 ${i === n ? 'text-white' : 'text-secondary/70 dark:text-accent/70'}`}>
-              {i === n && <motion.span layoutId={`${uid}-pill`} className="absolute inset-0 rounded-full bg-primary-500" transition={reduce ? { duration: 0 } : { type: 'spring', stiffness: 380, damping: 30 }} />}
+              {i === n && <motion.span layoutId={`${uid}-pill`} className="absolute inset-0 rounded-full bg-primary-500" transition={reduce ? { duration: 0 } : { duration: 0.3, ease: EASE }} />}
               <span className="relative">{x.label}</span>
             </button>
           ))}
@@ -66,7 +67,7 @@ const FeatureExplorer = () => {
             </motion.div>
           </AnimatePresence>
           <AnimatePresence mode="wait">
-            <motion.div key={t.id + 'phone'} initial={reduce ? false : { opacity: 0, scale: 0.92, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={reduce ? undefined : { opacity: 0, scale: 0.92 }} transition={{ type: 'spring', stiffness: 220, damping: 24 }} className="mx-auto w-[240px] md:w-[270px]">
+            <motion.div key={t.id + 'phone'} initial={reduce ? false : { opacity: 0, scale: 0.92, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={reduce ? undefined : { opacity: 0, scale: 0.92 }} transition={{ duration: 0.3, ease: EASE }} className="mx-auto w-[240px] md:w-[270px]">
               <PhoneMockup float={false}>
                 <FamilyChatDemo mode={t.id} />
               </PhoneMockup>

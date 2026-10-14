@@ -7,7 +7,7 @@ import type { ReactNode } from 'react';
  * A CSS-built phone: thin metallic frame, rounded screen, dynamic island, soft shadow.
  * It floats gently unless the visitor prefers reduced motion.
  */
-const PhoneMockup = ({ children, className = '', float = true, label = 'Samvad app preview' }: { children: ReactNode; className?: string; float?: boolean; label?: string }) => {
+const PhoneMockup = ({ children, className = '', float = false, label = 'Samvad app preview' }: { children: ReactNode; className?: string; float?: boolean; label?: string }) => {
   const reduce = useReducedMotion();
   return (
     <motion.div

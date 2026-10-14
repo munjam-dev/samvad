@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion, useInView, useReducedMotion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
+import { EASE } from './motion';
 
 export type DemoMode = 'chat' | 'privacy' | 'languages' | 'calls' | 'moments' | 'groups';
 
@@ -162,13 +163,13 @@ const FamilyChatDemo = ({ mode = 'chat' }: { mode?: DemoMode }) => {
               layout
               initial={{ opacity: 0, y: 14, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+              transition={{ duration: 0.3, ease: EASE }}
               className={`relative max-w-[78%] rounded-2xl px-3 py-1.5 text-[12px] leading-snug shadow-sm ${m.mine ? 'self-end rounded-br-sm bg-primary-500 text-white' : 'self-start rounded-bl-sm bg-white text-secondary'}`}>
               {!m.mine && <span className="block text-[10px] font-semibold text-primary-600">{m.who}</span>}
               {m.text}
               {m.mine && <span className="ml-1 text-[9px] text-white/80" aria-label="Delivered">✓✓</span>}
               {m.reaction && (
-                <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5, type: 'spring', stiffness: 500, damping: 18 }} className="absolute -right-2 -bottom-3 rounded-full bg-white px-1 text-[11px] shadow">
+                <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5, duration: 0.3, ease: EASE }} className="absolute -right-2 -bottom-3 rounded-full bg-white px-1 text-[11px] shadow">
                   {m.reaction}
                 </motion.span>
               )}
