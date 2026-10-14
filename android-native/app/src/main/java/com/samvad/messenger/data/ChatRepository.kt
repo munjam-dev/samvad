@@ -36,6 +36,8 @@ data class Snapshot<T>(val value: T, val fromCache: Boolean)
 
 data class MessagesPage(val messages: List<Message>, val hasMore: Boolean, val fromCache: Boolean)
 
+data class StarredRef(val conversationId: String, val messageId: String, val savedAt: Long)
+
 /** Conversations, member state and messages (B2). Firestore's offline cache provides offline mode. */
 class ChatRepository(private val db: FirebaseFirestore) {
 
@@ -338,6 +340,44 @@ class ChatRepository(private val db: FirebaseFirestore) {
         .update("lastDeliveredAt", FieldValue.serverTimestamp()).await()
     }
   }
+
+  /** My starred messages, newest first (Phase 3). References only; the message is read on demand. */
+  fun starred(me: String): Flow<List<StarredRef>> = callbackFlow {
+    val reg = db.collection("users/$me/savedMessages")
+      .orderBy("savedAt", Query.Direction.DESCENDING)
+      .limit(500)
+      .addSnapshotListener { snap, err ->
+        if (err != null) {
+          trySend(emptyList())
+          return@addSnapshotListener
+        }
+        if (snap != null) {
+          trySend(
+            snap.documents.mapNotNull { d ->
+              val cid = d.getString("conversationId") ?: return@mapNotNull null
+              val mid = d.getString("messageId") ?: return@mapNotNull null
+              StarredRef(cid, mid, d.millis("savedAt") ?: System.currentTimeMillis())
+            },
+          )
+        }
+      }
+    awaitClose { reg.remove() }
+  }
+
+  suspend fun star(me: String, conversationId: String, messageId: String) {
+    db.document("users/$me/savedMessages/${conversationId}_$messageId").set(
+      mapOf("conversationId" to conversationId, "messageId" to messageId, "savedAt" to FieldValue.serverTimestamp()),
+    ).await()
+  }
+
+  suspend fun unstar(me: String, conversationId: String, messageId: String) {
+    db.document("users/$me/savedMessages/${conversationId}_$messageId").delete().await()
+  }
+
+  /** One message, or null when it no longer exists or I may no longer read it (e.g. left the group). */
+  suspend fun message(conversationId: String, messageId: String): Message? =
+    runCatching { db.document("conversations/$conversationId/messages/$messageId").get().await() }
+      .getOrNull()?.takeIf { it.exists() }?.let(::toMessage)
 
   suspend fun setFlag(conversationId: String, me: String, field: String, value: Boolean) {
     require(field in setOf("muted", "pinned", "archived"))

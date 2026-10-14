@@ -453,4 +453,16 @@
     <string name="home_footer_tag">#SamvadBeginsHere</string>
     <string name="home_footer_line1">Proudly built in Hyderabad, India.</string>
     <string name="home_footer_line2">Designed for meaningful connections, wherever life takes you.</string>
+    <string name="chat_star">Star</string>
+    <string name="chat_unstar">Unstar</string>
+    <string name="cd_starred">Starred</string>
+    <string name="starred_title">Starred messages</string>
+    <string name="starred_empty">Touch and hold a message, then tap Star to keep it here.</string>
+    <string name="starred_unavailable">This message is no longer available.</string>
+    <string name="starred_remove">Remove star</string>
+    <string name="starred_you">You: %1$s</string>
+    <string name="starred_kind_photo">Photo</string>
+    <string name="starred_kind_voice">Voice message</string>
+    <string name="starred_kind_file">File</string>
+    <string name="starred_kind_poll">Poll</string>
 </resources>

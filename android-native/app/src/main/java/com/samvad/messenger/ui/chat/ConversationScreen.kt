@@ -4,6 +4,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.Crossfade
+import androidx.compose.material.icons.outlined.StarOutline
+import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
@@ -140,6 +143,7 @@ fun ConversationScreen(
   /** Groups: opens group info; null hides the entry points. */
   onOpenGroupInfo: (() -> Unit)? = null,
   onOpenChatTheme: () -> Unit = {},
+  onOpenStarred: () -> Unit = {},
 ) {
   val appCtx = LocalContext.current.applicationContext as android.app.Application
   val vm: ConversationViewModel = viewModel(factory = ConversationViewModel.factory(appCtx, container, me, conversationId, otherUid))
@@ -148,6 +152,7 @@ fun ConversationScreen(
   val presence = vm.status.collectAsStateWithLifecycle().value
   val groupStatus = vm.groupStatus.collectAsStateWithLifecycle().value
   val mentionCandidates = vm.mentionCandidates.collectAsStateWithLifecycle().value
+  val starredIds = vm.starredIds.collectAsStateWithLifecycle().value
   var composingPoll by remember { mutableStateOf(false) }
   val themeSettings = container.chatThemes.settings.collectAsStateWithLifecycle(null).value
   val backdrop = themeSettings?.backgroundFor(conversationId) ?: ChatBackground.Theme(ChatThemes.DEFAULT.id)
@@ -387,6 +392,7 @@ fun ConversationScreen(
               enabled = !exporting,
               onClick = { menu = false; confirmExport = true },
             )
+            DropdownMenuItem(text = { Text(stringResource(R.string.starred_title)) }, onClick = { menu = false; onOpenStarred() })
             DropdownMenuItem(text = { Text(stringResource(R.string.chat_theme_title)) }, onClick = { menu = false; onOpenChatTheme() })
             if (!state.isGroup) {
             HorizontalDivider(color = colors.outlineVariant)
@@ -441,6 +447,7 @@ fun ConversationScreen(
                   otherName = item.message.replyTo?.let { id -> (state.items.firstOrNull { it.key == id } as? TimelineItem.Bubble)?.message?.senderId }?.let(vm::displayName) ?: state.title,
                   onLongPress = { selected = item.message },
                   onOpenSender = { person = item.message.senderId },
+                  starred = item.message.id in starredIds,
                   onRetry = { vm.retry(item.message) },
                   onReact = { emoji -> vm.react(item.message, emoji) },
                   mentionNames = groupStatus.allNames,
@@ -604,6 +611,9 @@ fun ConversationScreen(
         onDelete = { vm.delete(msg); selected = null },
         canForward = com.samvad.core.chat.MessageRules.canForward(msg),
         onForward = { forwarding = msg; selected = null },
+        starred = msg.id in starredIds,
+        canStar = !msg.deleted && msg.kind != "system",
+        onStar = { vm.toggleStar(msg); selected = null },
       )
     }
   }
@@ -637,6 +647,7 @@ private fun MessageBubble(
   mentionNames: List<String> = emptyList(),
   /** Opens the sender's info (incoming messages: avatar and name). */
   onOpenSender: () -> Unit = {},
+  starred: Boolean = false,
 ) {
   val colors = SamvadTheme.colors
   val m = item.message
@@ -731,7 +742,8 @@ private fun MessageBubble(
           verticalAlignment = Alignment.CenterVertically,
           horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-          if (m.editedAt != null && !m.deleted) Text(stringResource(R.string.chat_edited), style = MaterialTheme.typography.labelSmall, color = meta)
+          if (starred && !m.deleted) Icon(Icons.Filled.Star, stringResource(R.string.cd_starred), tint = meta, modifier = Modifier.size(13.dp))
+        if (m.editedAt != null && !m.deleted) Text(stringResource(R.string.chat_edited), style = MaterialTheme.typography.labelSmall, color = meta)
           Text(item.timeLabel, style = MaterialTheme.typography.labelSmall, color = meta)
           item.delivery?.let { DeliveryIcon(it) }
         }
@@ -896,6 +908,9 @@ private fun MessageActions(
   onDelete: () -> Unit,
   canForward: Boolean = false,
   onForward: () -> Unit = {},
+  starred: Boolean = false,
+  canStar: Boolean = false,
+  onStar: () -> Unit = {},
 ) {
   val colors = SamvadTheme.colors
   Column(Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
@@ -915,6 +930,7 @@ private fun MessageActions(
     Spacer(Modifier.size(8.dp))
     ActionRow(Icons.AutoMirrored.Outlined.Reply, stringResource(R.string.chat_reply), onReply)
     if (canForward) ActionRow(Icons.AutoMirrored.Outlined.Forward, stringResource(R.string.chat_forward), onForward)
+    if (canStar) ActionRow(if (starred) Icons.Outlined.StarOutline else Icons.Outlined.Star, stringResource(if (starred) R.string.chat_unstar else R.string.chat_star), onStar)
     if (canCopy) ActionRow(Icons.Outlined.ContentCopy, stringResource(R.string.chat_copy), onCopy)
     if (canEdit) ActionRow(Icons.Outlined.Edit, stringResource(R.string.chat_edit), onEdit)
     if (mine) ActionRow(Icons.Outlined.Delete, stringResource(R.string.chat_delete), onDelete, danger = true)

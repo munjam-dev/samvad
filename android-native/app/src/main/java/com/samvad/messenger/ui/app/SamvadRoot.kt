@@ -37,6 +37,7 @@ import com.samvad.messenger.AppContainer
 import com.samvad.messenger.ChatLink
 import com.samvad.messenger.R
 import com.samvad.messenger.ui.auth.AuthFlow
+import com.samvad.messenger.ui.chat.StarredScreen
 import com.samvad.messenger.ui.chat.ConversationScreen
 import com.samvad.messenger.ui.components.EmptyState
 import com.samvad.messenger.ui.components.SamvadMark
@@ -132,6 +133,7 @@ private fun SignedInNav(
         otherUid = entry.arguments!!.getString("other")!!,
         onBack = { nav.popBackStack() },
         onOpenChatTheme = { nav.navigate("chattheme/${entry.arguments!!.getString("cid")}") },
+        onOpenStarred = { nav.navigate("starred/${entry.arguments!!.getString("cid")}") },
       )
     }
     composable("group/{cid}", arguments = listOf(navArgument("cid") { type = NavType.StringType })) { entry ->
@@ -143,6 +145,7 @@ private fun SignedInNav(
         onBack = { nav.popBackStack() },
         onOpenGroupInfo = { nav.navigate("groupinfo/${entry.arguments!!.getString("cid")}") },
         onOpenChatTheme = { nav.navigate("chattheme/${entry.arguments!!.getString("cid")}") },
+        onOpenStarred = { nav.navigate("starred/${entry.arguments!!.getString("cid")}") },
       )
     }
     composable("groupinfo/{cid}", arguments = listOf(navArgument("cid") { type = NavType.StringType })) { entry ->
@@ -189,7 +192,18 @@ private fun SignedInNav(
         onOpenBlocked = { nav.navigate("blocked") },
         onOpenTwoStep = { nav.navigate("twostep") },
         onOpenChatTheme = { nav.navigate("chattheme") },
+        onOpenStarred = { nav.navigate("starred") },
       )
+    }
+    composable("starred") {
+      StarredScreen(container, uid, onlyChat = null, onBack = { nav.popBackStack() }, onOpenChat = { cid, other ->
+        nav.navigate(if (other == null) "group/$cid" else "chat/$cid/$other")
+      })
+    }
+    composable("starred/{cid}", arguments = listOf(navArgument("cid") { type = NavType.StringType })) { entry ->
+      StarredScreen(container, uid, onlyChat = entry.arguments!!.getString("cid")!!, onBack = { nav.popBackStack() }, onOpenChat = { _, _ ->
+        nav.popBackStack()
+      })
     }
     composable("chattheme") {
       ChatThemeScreen(container = container, conversationId = null, onBack = { nav.popBackStack() })

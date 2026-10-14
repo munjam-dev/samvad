@@ -425,6 +425,18 @@ class ConversationViewModel(
     runCatching { chats.react(conversationId, message.id, me, if (current == emoji) null else emoji) }
   }
 
+  /** IDs of my starred messages in this chat (Phase 3). */
+  val starredIds: StateFlow<Set<String>> = chats.starred(me)
+    .map { refs -> refs.filter { it.conversationId == conversationId }.map { it.messageId }.toSet() }
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
+
+  fun toggleStar(message: Message) = viewModelScope.launch {
+    runCatching {
+      if (message.id in starredIds.value) chats.unstar(me, conversationId, message.id)
+      else chats.star(me, conversationId, message.id)
+    }
+  }
+
   fun toggle(field: String, value: Boolean) = viewModelScope.launch { runCatching { chats.setFlag(conversationId, me, field, value) } }
 
   fun block() {
