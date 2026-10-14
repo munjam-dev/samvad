@@ -11,16 +11,15 @@ const Services = () => {
       <div className="main-container">
         <div className="mb-[70px] space-y-5 text-center">
           <RevealAnimation delay={0.1}>
-            <span className="badge badge-green">Our services</span>
+            <span className="badge badge-green">Ways to get help</span>
           </RevealAnimation>
           <div className="space-y-3">
             <RevealAnimation delay={0.2}>
-              <h2 className="mx-auto max-w-[810px]">Leading companies around the globe rely on NextSaaS.</h2>
+              <h2 className="mx-auto max-w-[810px]">Get the help you need, your way.</h2>
             </RevealAnimation>
             <RevealAnimation delay={0.3}>
               <p className="mx-auto max-w-[542px]">
-                Until recently, the prevailing view assumed lorem ipsum was born as a nonsense text. It&apos;s not
-                Latin, though it looks like it
+                Start with the answers below, or write to us and we will reply by email.
               </p>
             </RevealAnimation>
           </div>
@@ -39,17 +38,16 @@ const Services = () => {
                   </div>
                 </div>
                 <div className="space-y-2 text-center">
-                  <h3 className="text-heading-5">Live chat</h3>
+                  <h3 className="text-heading-5">Email us</h3>
                   <p className="line-clamp-2">
-                    Instant help for pre-sales queries reach us through our live chat for any pre-sale or general
-                    inquiries.
+                    Write to our support team for help with your account, a bug or a feature idea.
                   </p>
                 </div>
                 <div className="text-center">
                   <LinkButton
-                    href="/services"
+                    href="/contact-us"
                     className="btn btn-white hover:btn-secondary dark:btn-transparent dark:hover:btn-accent btn-md">
-                    Check bottom-right
+                    Contact us
                   </LinkButton>
                 </div>
               </div>
@@ -67,17 +65,17 @@ const Services = () => {
                   </div>
                 </div>
                 <div className="space-y-2 text-center">
-                  <h3 className="text-heading-5">Support ticket</h3>
+                  <h3 className="text-heading-5">Report a problem</h3>
                   <p className="line-clamp-2">
-                    In-depth technical assistance submit a ticket for a personalized and detailed solution to your
+                    Found a bug or something unsafe? Tell us what happened and we will look into it. For abuse, use Report inside the app. For complaints, contact the Grievance Officer.
                     issue.
                   </p>
                 </div>
                 <div className="text-center">
                   <LinkButton
-                    href="/services"
+                    href="/contact-us"
                     className="btn btn-white hover:btn-secondary dark:btn-transparent dark:hover:btn-accent btn-md">
-                    Submit a ticket
+                    Send a report
                   </LinkButton>
                 </div>
               </div>
@@ -95,17 +93,17 @@ const Services = () => {
                   </div>
                 </div>
                 <div className="space-y-2 text-center">
-                  <h3 className="text-heading-5">Knowledge base</h3>
+                  <h3 className="text-heading-5">FAQ and policies</h3>
                   <p className="line-clamp-2">
-                    Comprehensive guides and documentation find step-by-step instructions and solutions for the most
+                    Read the FAQ and the Legal centre for how Samvad works, how we handle your data and how to delete your account.
                     common topics.
                   </p>
                 </div>
                 <div className="text-center">
                   <LinkButton
-                    href="/services"
+                    href="/faq"
                     className="btn btn-white hover:btn-secondary dark:btn-transparent dark:hover:btn-accent btn-md">
-                    Visit knowledge base
+                    Read the FAQ
                   </LinkButton>
                 </div>
               </div>

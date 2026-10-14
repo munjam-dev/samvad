@@ -1,15 +1,20 @@
-import { PageHero, Shell } from '@/components/site/Page';
-import { generateMetadata as buildMetadata } from '@/utils/generateMetaData';
+import Content from '@/components/download/Content';
+import Hero from '@/components/download/Hero';
+import { defaultMetadata } from '@/utils/generateMetaData';
+import { Metadata } from 'next';
 
-export const metadata = buildMetadata('Download | Samvad', 'Samvad for Android is coming soon to Google Play.', '/download');
+export const metadata: Metadata = {
+  ...defaultMetadata,
+  title: 'Download | Samvad',
+};
 
-const Download = () => (
-  <Shell>
-    <PageHero badge="Android" title="Coming soon to Google Play" lead="Samvad for Android is almost ready. Check back here for the Play Store link." />
-    <div className="pb-24 text-center">
-      <span className="badge badge-green">Requires Android 8.0 or newer</span>
-    </div>
-  </Shell>
-);
+const page = () => {
+  return (
+    <main className="dark:bg-background-7 bg-white">
+      <Hero />
+      <Content />
+    </main>
+  );
+};
 
-export default Download;
+export default page;

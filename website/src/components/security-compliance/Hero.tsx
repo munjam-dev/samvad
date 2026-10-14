@@ -5,7 +5,7 @@ const Hero = () => {
     <section className="xl:pt-[200px] pt-[140px] xl:pb-28 lg:pb-20 pb-16">
       <div className="main-container">
         <RevealAnimation delay={0.1}>
-          <h1 className="font-normal text-center">Security and compliance at NextSaaS</h1>
+          <h1 className="font-normal text-center">Security at Samvad</h1>
         </RevealAnimation>
       </div>
     </section>

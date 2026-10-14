@@ -3,39 +3,33 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '..
 export const faqData = [
   {
     id: 1,
-    question: 'What is a changelog?',
+    question: 'How do I schedule a message?',
     answer:
-      'We diligently update the changelog each time we roll out new features, implement enhancements, or address bugs. This process usually occurs on a biweekly or monthly schedule, ensuring that our users are always informed about the latest improvements and fixes.',
+      "Type your message, touch and hold send, then choose tonight, tomorrow morning or a date up to 30 days ahead. You can cancel it from the chat before it sends.",
   },
   {
     id: 2,
-    question: 'How often is the changelog updated?',
+    question: 'What are starred messages?',
     answer:
-      'We diligently update the changelog each time we roll out new features, implement enhancements, or address bugs. This process usually occurs on a biweekly or monthly schedule, ensuring that our users are always informed about the latest improvements and fixes.',
+      "A private list of messages you want to find again. Touch and hold any message and choose Star.",
   },
   {
     id: 3,
-    question: 'Where can I view the latest changelog?',
+    question: 'Can I edit or delete a message?',
     answer:
-      'We diligently update the changelog each time we roll out new features, implement enhancements, or address bugs. This process usually occurs on a biweekly or monthly schedule, ensuring that our users are always informed about the latest improvements and fixes.',
+      "You can edit a message within the time limit and delete it for everyone. Deleted photos are removed from our storage.",
   },
   {
     id: 4,
-    question: 'Am I get notified when something changes?',
+    question: 'Can I change how chats look?',
     answer:
-      'We diligently update the changelog each time we roll out new features, implement enhancements, or address bugs. This process usually occurs on a biweekly or monthly schedule, ensuring that our users are always informed about the latest improvements and fixes.',
+      "Yes. Pick one of five themes, each with a soft India-inspired doodle, or use your own photo as the wallpaper.",
   },
   {
     id: 5,
-    question: 'What types of updates are included?',
+    question: 'What is Calm mode?',
     answer:
-      'We diligently update the changelog each time we roll out new features, implement enhancements, or address bugs. This process usually occurs on a biweekly or monthly schedule, ensuring that our users are always informed about the latest improvements and fixes.',
-  },
-  {
-    id: 6,
-    question: 'Are minor fixes always included in the changelog?',
-    answer:
-      'We diligently update the changelog each time we roll out new features, implement enhancements, or address bugs. This process usually occurs on a biweekly or monthly schedule, ensuring that our users are always informed about the latest improvements and fixes.',
+      "Calm mode hides unread counts and the unread summary on your home screen. Messages still arrive as usual.",
   },
 ];
 

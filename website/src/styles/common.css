@@ -372,11 +372,11 @@ Common Styles all over the sites
 }
 
 .hero-text-color-1 {
-  background-image: linear-gradient(45deg, #a585ff, #ffc2ad, #a585ff);
+  background-image: linear-gradient(45deg, #7dd3a8, #e9f5c9, #7dd3a8);
 }
 
 .hero-text-color-2 {
-  background-image: linear-gradient(45deg, #83e7ee, #f9eb57, #83e7ee);
+  background-image: linear-gradient(45deg, #a7e3c1, #f4f0b5, #a7e3c1);
 }
 
 @keyframes textAnimate {
@@ -419,4 +419,16 @@ Common Styles all over the sites
 }
 .slider-handle.no-transition .handle-circle {
   transition: none !important;
+}
+
+/* Marquee carousels (languages, built on). Transform only; paused on hover and for reduced motion. */
+@keyframes samvad-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-track { animation: samvad-marquee 45s linear infinite; }
+.marquee-reverse { animation-direction: reverse; }
+.marquee-track:hover { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track { animation: none; }
 }

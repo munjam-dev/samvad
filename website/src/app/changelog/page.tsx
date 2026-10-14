@@ -1,18 +1,20 @@
-import { PageHero, Prose, Shell } from '@/components/site/Page';
-import { generateMetadata as buildMetadata } from '@/utils/generateMetaData';
+import Content from '@/components/change-log/content';
+import Hero from '@/components/change-log/hero';
+import { defaultMetadata } from '@/utils/generateMetaData';
+import { Metadata } from 'next';
 
-export const metadata = buildMetadata('Changelog | Samvad', 'What is new in Samvad.', '/changelog');
+export const metadata: Metadata = {
+  ...defaultMetadata,
+  title: 'Changelog | Samvad',
+};
 
-const Changelog = () => (
-  <Shell>
-    <PageHero badge="Changelog" title="What is new" lead="Recent changes to Samvad." />
-    <Prose>
-      <h2>Schedule send and starred messages</h2>
-      <p>Write a message now and send it later, and star messages to find them again.</p>
-      <h2>Chat themes</h2>
-      <p>Five themes with a soft India-inspired doodle, in light and dark.</p>
-    </Prose>
-  </Shell>
-);
+const Changelog = () => {
+  return (
+    <main className="bg-background-3 dark:bg-background-7">
+      <Hero />
+      <Content />
+    </main>
+  );
+};
 
 export default Changelog;

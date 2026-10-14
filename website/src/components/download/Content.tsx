@@ -1,7 +1,5 @@
-import { AndroidIcon, ChromeExtensionIcon, DownloadIcon, IphoneIcon, SafariIcon, WindowsIcon } from '@/icons';
-import iosIcon from '@public/images/ns-img-384.png';
+import { AndroidIcon } from '@/icons';
 import Image, { StaticImageData } from 'next/image';
-import Link from 'next/link';
 import { FC } from 'react';
 import RevealAnimation from '../animation/RevealAnimation';
 
@@ -19,59 +17,9 @@ interface DownloadItem {
 const downloadItems: DownloadItem[] = [
   {
     id: '1',
-    title: 'MacOS intel',
-    description: 'Download for macOS intel processor',
-    icon: IphoneIcon,
-    iconClassName: 'fill-secondary dark:fill-accent size-6',
-    instant: true,
-  },
-  {
-    id: '2',
-    title: 'MacOS apple silicon',
-    description: 'Download for macOS intel processor',
-    icon: IphoneIcon,
-    iconClassName: 'fill-secondary dark:fill-accent size-6',
-  },
-  {
-    id: '3',
-    title: 'macOS apple silicon',
-    description: 'Download for macOS Apple silicon Processor (M series).',
-    icon: IphoneIcon,
-    iconClassName: 'fill-secondary dark:fill-accent size-6',
-  },
-  {
-    id: '4',
-    title: 'iPhone app',
-    description: 'Download for macOS intel processor',
-    image: iosIcon,
-    imageAlt: 'iPhone app',
-  },
-  {
-    id: '5',
     title: 'Android',
-    description: 'Get the app for Android devices.',
+    description: 'Samvad for Android is coming soon to Google Play. Requires Android 8.0 or newer.',
     icon: AndroidIcon,
-    iconClassName: 'size-6',
-  },
-  {
-    id: '6',
-    title: 'Windows',
-    description: 'Get the installer for Windows operating systems.',
-    icon: WindowsIcon,
-    iconClassName: 'size-6',
-  },
-  {
-    id: '7',
-    title: 'Chrome extension',
-    description: 'Install our chrome extension to clip web content and sync your kindle library',
-    icon: ChromeExtensionIcon,
-    iconClassName: 'size-6',
-  },
-  {
-    id: '8',
-    title: 'Safari extension',
-    description: 'Install our safari extension to clip web content and sync your kindle library.',
-    icon: SafariIcon,
     iconClassName: 'size-6',
   },
 ];
@@ -98,15 +46,7 @@ const Content = () => {
                       <p className="text-tagline-2">{item.description}</p>
                     </div>
                   </div>
-                  <div>
-                    <Link
-                      download
-                      href="#"
-                      className="flex size-10 shrink-0 items-center justify-center p-2.5 sm:size-11">
-                      <span className="sr-only">Download</span>
-                      <DownloadIcon className="fill-secondary dark:fill-accent size-6" />
-                    </Link>
-                  </div>
+                  <span className="badge badge-green text-tagline-3 shrink-0">Coming soon</span>
                 </div>
               </RevealAnimation>
             );

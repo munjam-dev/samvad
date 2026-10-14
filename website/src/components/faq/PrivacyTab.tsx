@@ -3,39 +3,33 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '..
 const faqData = [
   {
     id: 1,
-    question: 'What is privacy in the digital world?',
+    question: 'Are my messages end-to-end encrypted?',
     answer:
-      'Your online presence can disclose a wealth of personal information—your habits, whereabouts, and even your identity. Safeguarding your privacy is crucial in thwarting identity theft, avoiding unwanted surveillance, and preventing the misuse of your private information.',
+      "Not yet. They are encrypted in transit and protected by access rules, but our systems can technically read them. We will announce clearly when this changes.",
   },
   {
     id: 2,
-    question: 'Why is online privacy important?',
+    question: 'Do you store my contacts?',
     answer:
-      'Your online presence can disclose a wealth of personal information—your habits, whereabouts, and even your identity. Safeguarding your privacy is crucial in thwarting identity theft, avoiding unwanted surveillance, and preventing the misuse of your private information.',
+      "No. Contact numbers are matched on your phone and are never stored on our servers.",
   },
   {
     id: 3,
-    question: 'How can I protect my privacy online?',
+    question: 'Do you show ads or track me?',
     answer:
-      'Your online presence can disclose a wealth of personal information—your habits, whereabouts, and even your identity. Safeguarding your privacy is crucial in thwarting identity theft, avoiding unwanted surveillance, and preventing the misuse of your private information.',
+      "No. Samvad has no ads and no analytics.",
   },
   {
     id: 4,
-    question: 'Are my messages really private?',
+    question: 'How do I report someone?',
     answer:
-      'Your online presence can disclose a wealth of personal information—your habits, whereabouts, and even your identity. Safeguarding your privacy is crucial in thwarting identity theft, avoiding unwanted surveillance, and preventing the misuse of your private information.',
+      "Open the chat menu and choose Report. A report includes the last five messages and is kept for 90 days.",
   },
   {
     id: 5,
-    question: 'What data do websites collect about me?',
+    question: 'Can I hide my last seen?',
     answer:
-      'Your online presence can disclose a wealth of personal information—your habits, whereabouts, and even your identity. Safeguarding your privacy is crucial in thwarting identity theft, avoiding unwanted surveillance, and preventing the misuse of your private information.',
-  },
-  {
-    id: 6,
-    question: 'What is a privacy policy?',
-    answer:
-      'Your online presence can disclose a wealth of personal information—your habits, whereabouts, and even your identity. Safeguarding your privacy is crucial in thwarting identity theft, avoiding unwanted surveillance, and preventing the misuse of your private information.',
+      "Yes. In Settings you can hide your last seen and turn read receipts off.",
   },
 ];
 

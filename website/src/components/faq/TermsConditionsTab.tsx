@@ -3,39 +3,27 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '..
 const faqData = [
   {
     id: 1,
-    question: 'What are terms & conditions?',
+    question: 'How do I delete my account?',
     answer:
-      'Accepting the Terms & Conditions ensures that you understand your rights, responsibilities, and our policies while using our services. It protects both you and our platform.',
+      "Settings, then Delete account. This removes your account and data. You can also follow the steps on the Account deletion page in the Legal centre.",
   },
   {
     id: 2,
-    question: 'Why do i need to accept the terms & conditions?',
+    question: 'How do I turn on two-step verification?',
     answer:
-      'Accepting the Terms & Conditions ensures that you understand your rights, responsibilities, and our policies while using our services. It protects both you and our platform.',
+      "Settings, then Two-step verification. You set a PIN that is asked for when you sign in on a new phone.",
   },
   {
     id: 3,
-    question: 'Can the terms & conditions change?',
+    question: 'What if I lose my phone?',
     answer:
-      'Accepting the Terms & Conditions ensures that you understand your rights, responsibilities, and our policies while using our services. It protects both you and our platform.',
+      "Install Samvad on your new phone and verify your number. If you use two-step verification you will also need your PIN.",
   },
   {
     id: 4,
-    question: 'What happens if I violate the terms & conditions?',
+    question: 'Who do I contact for a complaint?',
     answer:
-      'Accepting the Terms & Conditions ensures that you understand your rights, responsibilities, and our policies while using our services. It protects both you and our platform.',
-  },
-  {
-    id: 5,
-    question: 'Where can I read the full terms & conditions?',
-    answer:
-      'Accepting the Terms & Conditions ensures that you understand your rights, responsibilities, and our policies while using our services. It protects both you and our platform.',
-  },
-  {
-    id: 6,
-    question: 'What kind of activities are prohibited under your terms?',
-    answer:
-      'Accepting the Terms & Conditions ensures that you understand your rights, responsibilities, and our policies while using our services. It protects both you and our platform.',
+      "Our Grievance Officer. Details are in the Legal centre, and complaints are acknowledged within 24 hours.",
   },
 ];
 

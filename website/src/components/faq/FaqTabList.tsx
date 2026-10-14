@@ -10,13 +10,13 @@ const FaqTabList = () => {
           General
         </Tab>
         <Tab index={1} variant="desktop">
-          Changelog
+          Features
         </Tab>
         <Tab index={2} variant="desktop">
-          Privacy
+          Privacy &amp; safety
         </Tab>
         <Tab index={3} variant="desktop">
-          Terms & Conditions
+          Account
         </Tab>
       </TabList>
       <TabList variant="mobile">
@@ -24,13 +24,13 @@ const FaqTabList = () => {
           General
         </Tab>
         <Tab index={1} variant="mobile">
-          Changelog
+          Features
         </Tab>
         <Tab index={2} variant="mobile">
-          Privacy
+          Privacy &amp; safety
         </Tab>
         <Tab index={3} variant="mobile" className="text-nowrap">
-          Terms & Conditions
+          Account
         </Tab>
       </TabList>
     </Fragment>

@@ -1,130 +1,39 @@
 [
   {
-    "id": "june-2025",
-    "dataMonth": "june 2025",
-    "title": "June 2025 UI & performance improvements",
-    "tag": "UX Refresh",
+    "id": "october-2026",
+    "dataMonth": "october 2026",
+    "title": "October 2026 Schedule, star, themes and calm",
+    "tag": "New features",
     "status": "Released",
-    "summary": "Small but impactful changes across the app to improve speed and clarity.",
+    "summary": "Plan ahead, keep what matters and make Samvad feel like home.",
     "highlights": [
-      "Redesigned navigation with grouped pages to reduce clicks.",
-      "Faster dashboard load times (reduced first-load by ~30%).",
-      "New helper text and microcopy across onboarding flows.",
-      "Fixed several styling inconsistencies on small screens."
+      "Schedule send: write now and send later, up to 30 days ahead.",
+      "Starred messages: a private list of messages you want to find again.",
+      "Chat themes: five themes with an India-inspired doodle, light and dark, plus photo wallpapers.",
+      "Hide unread counts and Calm mode for a quieter home screen.",
+      "A new Samvad logo, launcher icon and splash screen."
     ],
     "image": {
-      "src": "/images/ns-img-381.jpg",
-      "alt": "changelog"
+      "src": "/samvad-mark-256.png",
+      "alt": "Samvad"
     }
   },
   {
-    "id": "july-2025",
-    "dataMonth": "july 2025",
-    "title": "July 2025 Integrations & API",
-    "tag": "API v2.0",
-    "status": "Beta",
-    "summary": "New integration endpoints and Webhook controls to simplify automation.",
-    "highlights": [
-      "Public API v2",
-      "OAuth2 flow tightened with token rotation support.",
-      "New integration for common call storage providers.",
-      "Expanded webhook retry policy and dead-letter queue."
-    ],
-    "migration": ["v1 endpoints remain available for 90 days plan migration for automated exports."],
-    "image": {
-      "src": "/images/ns-img-382.jpg",
-      "alt": "changelog"
-    }
-  },
-  {
-    "id": "august-2025",
-    "dataMonth": "august 2025",
-    "title": "August 2025 security & reliability",
-    "tag": "Security update",
+    "id": "march-2026",
+    "dataMonth": "march 2026",
+    "title": "March 2026 The first Samvad",
+    "tag": "Launch",
     "status": "Released",
-    "summary": "Focused on hardening and reliability.",
+    "summary": "The foundations of a private messenger.",
     "highlights": [
-      "Emergency patch for session timeout edge-case.",
-      "Improved database failover testing and monitoring.",
-      "New account recovery flow with device verification.",
-      "Expanded SSO logging for enterprise customers."
+      "Sign in with your phone number and a one-time code.",
+      "One to one chats and groups with replies, reactions, edit and delete for everyone.",
+      "Photos in chat, blocking and reporting, and read receipts you control.",
+      "App lock, secure screen and optional two-step verification."
     ],
     "image": {
-      "src": "/images/ns-img-383.jpg",
-      "alt": "changelog"
-    }
-  },
-  {
-    "id": "september-2025",
-    "dataMonth": "september 2025",
-    "title": "September 2025 UI & performance improvements",
-    "tag": "UX Refresh",
-    "status": "Released",
-    "summary": "Small but impactful changes across the app to improve speed and clarity.",
-    "highlights": [
-      "Redesigned navigation with grouped pages to reduce clicks.",
-      "Faster dashboard load times (reduced first-load by ~30%).",
-      "New helper text and microcopy across onboarding flows.",
-      "Fixed several styling inconsistencies on small screens."
-    ],
-    "image": {
-      "src": "/images/ns-img-381.jpg",
-      "alt": "changelog"
-    }
-  },
-  {
-    "id": "october-2025",
-    "dataMonth": "october 2025",
-    "title": "October 2025 Integrations & API",
-    "tag": "API v2.0",
-    "status": "Beta",
-    "summary": "New integration endpoints and Webhook controls to simplify automation.",
-    "highlights": [
-      "Public API v2",
-      "OAuth2 flow tightened with token rotation support.",
-      "New integration for common call storage providers.",
-      "Expanded webhook retry policy and dead-letter queue."
-    ],
-    "migration": ["v1 endpoints remain available for 90 days plan migration for automated exports."],
-    "image": {
-      "src": "/images/ns-img-382.jpg",
-      "alt": "changelog"
-    }
-  },
-  {
-    "id": "november-2025",
-    "dataMonth": "november 2025",
-    "title": "November 2025 security & reliability",
-    "tag": "Security update",
-    "status": "Released",
-    "summary": "Focused on hardening and reliability.",
-    "highlights": [
-      "Emergency patch for session timeout edge-case.",
-      "Improved database failover testing and monitoring.",
-      "New account recovery flow with device verification.",
-      "Expanded SSO logging for enterprise customers."
-    ],
-    "image": {
-      "src": "/images/ns-img-383.jpg",
-      "alt": "changelog"
-    }
-  },
-  {
-    "id": "january-2026",
-    "dataMonth": "january 2026",
-    "title": "December 2025 UI & performance improvements",
-    "tag": "UX Refresh",
-    "status": "Released",
-    "summary": "Small but impactful changes across the app to improve speed and clarity.",
-    "highlights": [
-      "Redesigned navigation with grouped pages to reduce clicks.",
-      "Faster dashboard load times (reduced first-load by ~30%).",
-      "New helper text and microcopy across onboarding flows.",
-      "Fixed several styling inconsistencies on small screens."
-    ],
-    "image": {
-      "src": "/images/ns-img-381.jpg",
-      "alt": "changelog"
+      "src": "/samvad-mark-256.png",
+      "alt": "Samvad"
     }
   }
 ]

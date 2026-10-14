@@ -13,12 +13,11 @@ const FaqTab = () => {
           </RevealAnimation>
           <div className="space-y-3 text-center">
             <RevealAnimation delay={0.3}>
-              <h2>Commonly asked questions</h2>
+              <h2>Questions, answered</h2>
             </RevealAnimation>
             <RevealAnimation delay={0.4}>
               <p className="mx-auto max-w-[600px]">
-                By offering concise and informative responses, this section helps users find solutions without the need
-                to contact customer support, saving time
+                Short answers about Samvad, your privacy and your account.
               </p>
             </RevealAnimation>
           </div>

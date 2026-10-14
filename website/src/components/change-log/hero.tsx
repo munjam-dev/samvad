@@ -10,9 +10,7 @@ const Hero = () => {
           </RevealAnimation>
           <RevealAnimation delay={0.2}>
             <p className="mx-auto max-w-full sm:max-w-[550px] lg:mx-0 lg:max-w-full">
-              Automatically track product updates, bug fixes, and release notes so your team
-              <br className="hidden lg:block" />
-              and customers stay informed.
+              What is new in Samvad, release by release.
             </p>
           </RevealAnimation>
         </div>

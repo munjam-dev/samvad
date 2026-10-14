@@ -1,3 +1,6 @@
+'use client';
+
+import { submitMailto } from '@/utils/mailto';
 import Link from 'next/link';
 import RevealAnimation from '../animation/RevealAnimation';
 
@@ -17,8 +20,7 @@ const Contact = () => {
               </RevealAnimation>
               <RevealAnimation delay={0.4}>
                 <p className="mx-auto max-w-[442px] sm:w-full">
-                  If your question isn&apos;t listed here, feel free to contact us or start a live chat with our team.
-                  We&apos;re happy to help!
+                  If your question is not listed here, write to us and we will reply by email.
                 </p>
               </RevealAnimation>
             </div>
@@ -26,7 +28,7 @@ const Contact = () => {
           {/* form */}
           <RevealAnimation delay={0.5}>
             <div className="contact-form dark:bg-background-6 mx-auto max-w-[850px] rounded-[20px] bg-white p-5 sm:p-[42px] md:w-full">
-              <form action="/" method="POST">
+              <form onSubmit={(e) => submitMailto(e, 'Samvad question')}>
                 {/* full name */}
                 <div className="mb-8 space-y-2">
                   <label
@@ -87,7 +89,7 @@ const Contact = () => {
                     htmlFor="terms"
                     className="text-tagline-3 text-secondary/60 dark:text-accent/60 cursor-pointer">
                     I agree with the
-                    <Link href="/terms-conditions" className="text-primary-500 text-tagline-3 underline">
+                    <Link href="/legal/terms-of-service" className="text-primary-500 text-tagline-3 underline">
                       terms and conditions
                     </Link>
                   </label>

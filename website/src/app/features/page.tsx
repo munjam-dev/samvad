@@ -1,39 +1,32 @@
-import { CardGrid, Cta, PageHero, Shell } from '@/components/site/Page';
-import { generateMetadata as buildMetadata } from '@/utils/generateMetaData';
+import Feature from '@/components/features/Feature';
+import Features from '@/components/features/Features';
+import WhyChooseUs from '@/components/features/WhyChooseUs';
+import CTA from '@/components/shared/cta/CTA';
+import { defaultMetadata } from '@/utils/generateMetaData';
+import { Metadata } from 'next';
 
-export const metadata = buildMetadata('Features | Samvad', 'Everything in Samvad: messaging, groups, scheduled and starred messages, themes and safety tools.', '/features');
+export const metadata: Metadata = {
+  ...defaultMetadata,
+  title: 'Features | Samvad',
+};
 
-const Features = () => (
-  <Shell>
-    <PageHero badge="Features" title="Built for everyday conversations" lead="The things you use daily, done carefully." />
-    <CardGrid
-      heading="Messaging"
-      cards={[
-        { title: 'One to one and groups', body: 'Text, photos and replies, with delivery and read ticks.' },
-        { title: 'Edit and delete', body: 'Fix a typo within the time limit, or delete a message for everyone.' },
-        { title: 'Reactions', body: 'Answer with an emoji without adding another message.' },
-      ]}
-    />
-    <CardGrid
-      heading="Make it yours"
-      cards={[
-        { title: 'Schedule send', body: 'Quick choices for tonight and tomorrow morning, or pick a date within 30 days.' },
-        { title: 'Starred messages', body: 'Save any message and find it again in one list.' },
-        { title: 'Themes and wallpapers', body: 'Five themes with an India-inspired doodle, light and dark, plus your own photo wallpaper.' },
-      ]}
-    />
-    <CardGrid
-      heading="Safety"
-      cards={[
-        { title: 'Block and report', body: 'Reports include the last five messages and are kept for 90 days.' },
-        { title: 'Two-step verification', body: 'An extra PIN on top of your phone number.' },
-        { title: 'Delete your account', body: 'Remove your account and data from Settings or from the web.' },
-      ]}
-    />
-    <div className="flex justify-center pb-20">
-      <Cta href="/download">Get Samvad</Cta>
-    </div>
-  </Shell>
-);
+const page = () => {
+  return (
+    <main className="bg-background-3 dark:bg-background-7">
+      <Features />
+      <Feature />
+      <WhyChooseUs />
+      <CTA
+        className="dark:bg-background-6 bg-white"
+        badgeClass="hidden"
+        ctaHeading="Get Samvad and start"
+        spanText="talking"
+        description="Samvad for Android is coming soon to Google Play."
+        btnClass="hover:btn-secondary dark:hover:btn-accent"
+        ctaBtnText="Download"
+      />
+    </main>
+  );
+};
 
-export default Features;
+export default page;

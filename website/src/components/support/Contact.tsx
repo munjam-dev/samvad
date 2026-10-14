@@ -1,5 +1,8 @@
+'use client';
+
 import supportContact from '@public/images/ns-img-402.jpg';
 import Image from 'next/image';
+import { submitMailto } from '@/utils/mailto';
 import Link from 'next/link';
 import RevealAnimation from '../animation/RevealAnimation';
 
@@ -11,16 +14,15 @@ const Contact = () => {
           <div className="col-span-12 lg:col-span-6">
             <div className="mb-[70px] space-y-5 text-left">
               <RevealAnimation delay={0.1}>
-                <span className="badge badge-green">Our services</span>
+                <span className="badge badge-green">Support</span>
               </RevealAnimation>
               <div className="space-y-3">
                 <RevealAnimation delay={0.2}>
-                  <h2>Create a support ticket</h2>
+                  <h2>Write to support</h2>
                 </RevealAnimation>
                 <RevealAnimation delay={0.3}>
                   <p className="max-w-[550px]">
-                    Have a question, feedback, or feature request? We’d love to hear from you! Please fill out the form
-                    below, and our support team will get back to you as soon as possible.
+                    Have a question, feedback or a feature idea? Fill in the form and your email app will open with the message ready to send.
                   </p>
                 </RevealAnimation>
               </div>
@@ -33,7 +35,7 @@ const Contact = () => {
           </div>
           <div className="col-span-12 lg:col-span-6">
             <RevealAnimation delay={0.5}>
-              <form className="dark:bg-background-8 rounded-[20px] bg-white p-6 lg:p-[42px]">
+              <form onSubmit={(e) => submitMailto(e, 'Samvad support')} className="dark:bg-background-8 rounded-[20px] bg-white p-6 lg:p-[42px]">
                 <fieldset className="mb-8 space-y-2">
                   <label htmlFor="name" className="text-tagline-1 text-secondary dark:text-accent block font-medium">
                     Your name
@@ -82,7 +84,7 @@ const Contact = () => {
                     htmlFor="agree-terms"
                     className="text-tagline-3 text-secondary/60 dark:text-accent/60 cursor-pointer">
                     I agree with the
-                    <Link href="/terms-conditions" className="text-primary-500 text-tagline-3 underline">
+                    <Link href="/legal/terms-of-service" className="text-primary-500 text-tagline-3 underline">
                       terms and conditions
                     </Link>
                   </label>

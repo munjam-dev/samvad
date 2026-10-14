@@ -18,12 +18,11 @@ const Features = () => {
           {/* feature heading  */}
           <div className="space-y-3 text-center">
             <RevealAnimation delay={0.3}>
-              <h2 className="mx-auto max-w-[814px]">Everything you need to manage money smarter</h2>
+              <h2 className="mx-auto max-w-[814px]">Everything you need for everyday conversations</h2>
             </RevealAnimation>
             <RevealAnimation delay={0.4}>
               <p className="mx-auto max-w-[734px]">
-                NextSaaS simplifies finance with powerful tools designed for clarity, speed, and growth. Whether you’re
-                budgeting, forecasting, or tracking cash flow—our platform keeps you in control.
+                Samvad keeps messaging simple, private and yours. Chat one to one or in groups, plan ahead and keep what matters.
               </p>
             </RevealAnimation>
           </div>
@@ -53,8 +52,8 @@ const Features = () => {
                 </div>
                 {/* card content  */}
                 <div className="space-y-1">
-                  <h3 className="text-heading-5">Fast &amp; secure cloud upload</h3>
-                  <p>Store, access, and manage data from anywhere.</p>
+                  <h3 className="text-heading-5">Schedule send</h3>
+                  <p>Write now and send later, up to 30 days ahead.</p>
                 </div>
               </div>
             </RevealAnimation>
@@ -66,13 +65,13 @@ const Features = () => {
                   <figure className="bg-background-3 dark:bg-background-7 overflow-hidden rounded-2xl p-4">
                     <Image
                       src={cardTwoImg}
-                      alt="Automated workflows feature"
+                      alt="Starred messages feature"
                       className="h-full w-full object-cover dark:hidden"
                       loading="lazy"
                     />
                     <Image
                       src={cardTwoImgDark}
-                      alt="Automated workflows feature"
+                      alt="Starred messages feature"
                       className="hidden h-full w-full object-cover dark:block"
                       loading="lazy"
                     />
@@ -80,8 +79,8 @@ const Features = () => {
                 </div>
                 {/* card content  */}
                 <div className="space-y-1">
-                  <h3 className="text-heading-5">Automated workflows</h3>
-                  <p>Store, access, and manage data from anywhere.</p>
+                  <h3 className="text-heading-5">Starred messages</h3>
+                  <p>Save any message and find it again in one list.</p>
                 </div>
               </div>
             </RevealAnimation>
@@ -107,8 +106,8 @@ const Features = () => {
                 </div>
                 {/* card content  */}
                 <div className="space-y-1">
-                  <h3 className="text-heading-5">Smart search &amp; AI insights</h3>
-                  <p>Store, access, and manage data from anywhere.</p>
+                  <h3 className="text-heading-5">Chat themes</h3>
+                  <p>Five themes with an India-inspired doodle, light and dark.</p>
                 </div>
               </div>
             </RevealAnimation>
@@ -138,8 +137,8 @@ const Features = () => {
                 </div>
                 {/* card content  */}
                 <div className="space-y-1">
-                  <h3 className="text-heading-5">Teamwork &amp; leadership</h3>
-                  <p>Store, access, and manage data from anywhere.</p>
+                  <h3 className="text-heading-5">Groups and replies</h3>
+                  <p>Reply, react, edit within the time limit, delete for everyone.</p>
                 </div>
               </div>
             </RevealAnimation>
@@ -151,13 +150,13 @@ const Features = () => {
                   <figure className="bg-background-3 dark:bg-background-7 overflow-hidden rounded-2xl p-4">
                     <Image
                       src={cardFiveImg}
-                      alt="Custom dashboards feature"
+                      alt="Safety tools feature"
                       className="h-full w-full object-cover dark:hidden"
                       loading="lazy"
                     />
                     <Image
                       src={cardFiveImgDark}
-                      alt="Custom dashboards feature"
+                      alt="Safety tools feature"
                       className="hidden h-full w-full object-cover dark:block"
                       loading="lazy"
                     />
@@ -165,8 +164,8 @@ const Features = () => {
                 </div>
                 {/* card content  */}
                 <div className="space-y-1">
-                  <h3 className="text-heading-5">Custom dashboards</h3>
-                  <p>Store, access, and manage data from anywhere.</p>
+                  <h3 className="text-heading-5">Safety tools</h3>
+                  <p>Block, report, two-step verification and app lock.</p>
                 </div>
               </div>
             </RevealAnimation>

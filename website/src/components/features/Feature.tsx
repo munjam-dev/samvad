@@ -11,19 +11,19 @@ interface FeatureItem {
 const features: FeatureItem[] = [
   {
     id: 'innovative-startups',
-    text: 'Innovative startups and ambitious scale-ups are redefining',
+    text: 'Schedule messages for tonight, tomorrow morning or any time up to 30 days ahead',
   },
   {
     id: 'enterprise-teams',
-    text: 'Enterprise teams are the backbone of large organizations',
+    text: 'Make every chat yours with themes and wallpapers',
   },
   {
     id: 'agencies-consultants',
-    text: 'Agencies and consultants play a crucial role in helping businesses',
+    text: 'Keep a private list of starred messages',
   },
   {
     id: 'finance-marketing',
-    text: 'Finance, marketing, and product teams collaborate to create',
+    text: 'Delete your account and data whenever you like',
   },
 ];
 
@@ -39,10 +39,10 @@ const Feature = () => {
             <div className="grid grid-cols-2 gap-5 px-6 py-14 max-lg:grid-cols-1 max-sm:gap-10 lg:px-11">
               <div className="max-w-[500px]">
                 <h2 className="text-accent sm:text-heading-5 text-heading-6 mb-8">
-                  We appreciate our valued clients and strive to provide them with the best service possible.
+                  Messaging that respects you, with the tools you actually use.
                 </h2>
-                <LinkButton href="/services" className="btn-accent dark:btn-dark hover:btn-primary btn-md btn border-0">
-                  Get started
+                <LinkButton href="/download" className="btn-accent dark:btn-dark hover:btn-primary btn-md btn border-0">
+                  Get Samvad
                 </LinkButton>
               </div>
               <div>

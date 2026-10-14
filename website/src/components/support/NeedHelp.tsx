@@ -10,12 +10,11 @@ const NeedHelp = () => {
         <div className="mb-[70px] space-y-14 text-center">
           <div className="space-y-3">
             <RevealAnimation delay={0.3}>
-              <h2>Need help with NextSaaS?</h2>
+              <h2>Need help with Samvad?</h2>
             </RevealAnimation>
             <RevealAnimation delay={0.4}>
               <p>
-                Welcome to the NextSaaS Support Center! We&apos;re ready to assist you if you have an issue or a
-                question.
+                Welcome to Samvad Support. If you have a question or an issue, we are ready to help.
               </p>
             </RevealAnimation>
           </div>
@@ -24,7 +23,7 @@ const NeedHelp = () => {
               <LinkButton
                 href="/contact-us"
                 className="btn btn-xl hover:btn-secondary dark:hover:btn-accent btn-primary">
-                Get help
+                Contact us
               </LinkButton>
             </div>
           </RevealAnimation>

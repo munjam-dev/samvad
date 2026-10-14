@@ -148,7 +148,7 @@ Custome Swiper js styles
 }
 
 .reviews-fade-in-pagination .swiper-pagination-bullet {
-  @apply dark:bg-background-7 size-1 shrink-0 cursor-pointer rounded-full !bg-[#b6c6e6];
+  @apply dark:bg-background-7 size-1 shrink-0 cursor-pointer rounded-full !bg-[#b9dcc8];
 }
 
 .reviews-fade-in-pagination .swiper-pagination-bullet-active {

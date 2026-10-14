@@ -2,8 +2,6 @@
 'use client';
 import { useMobileMenuContext } from '@/context/MobileMenuContext';
 import { cn } from '@/utils/cn';
-import logoDark from '@public/images/shared/logo-dark.svg';
-import logoIcon from '@public/images/shared/logo.svg';
 import Image from 'next/image';
 import Link from 'next/link';
 import MenuCloseButton from './MenuCloseButton';
@@ -34,8 +32,7 @@ const MobileMenu = ({ menuData }: { menuData: MobileMenuGroup[] }) => {
           <Link href="/">
             <span className="sr-only">Home</span>
             <figure className="max-w-[44px]">
-              <Image src={logoIcon} alt="NextSaaS" className="block w-full dark:hidden" />
-              <Image src={logoDark} alt="NextSaaS" className="hidden w-full dark:block" />
+              <Image src="/samvad-mark-256.png" alt="Samvad" width={44} height={44} className="block w-full" />
             </figure>
           </Link>
           {/* close btn  */}

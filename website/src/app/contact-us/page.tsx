@@ -1,18 +1,27 @@
-import { LEGAL_DETAILS } from '@/config/legal';
-import { PageHero, Shell } from '@/components/site/Page';
-import { generateMetadata as buildMetadata } from '@/utils/generateMetaData';
+import ContactInfo from '@/components/contact-page/ContactInfo';
+import CTA from '@/components/shared/cta/CTA';
+import { defaultMetadata } from '@/utils/generateMetaData';
+import { Metadata } from 'next';
 
-export const metadata = buildMetadata('Contact us | Samvad', 'How to reach the Samvad team.', '/contact-us');
+export const metadata: Metadata = {
+  ...defaultMetadata,
+  title: 'Contact us | Samvad',
+};
 
-const ContactUs = () => (
-  <Shell>
-    <PageHero badge="Contact" title="Get in touch" lead="For help, feedback or press, write to us. For complaints, see the Grievance Officer in the Legal centre." />
-    <section className="pb-24 text-center">
-      <a className="text-primary-500 dark:text-primary-300 text-tagline-1 underline underline-offset-4" href={`mailto:${LEGAL_DETAILS.CONTACT_EMAIL}`}>
-        {LEGAL_DETAILS.CONTACT_EMAIL}
-      </a>
-    </section>
-  </Shell>
-);
+const ContactUs = () => {
+  return (
+    <main className="bg-background-3 dark:bg-background-7">
+      <ContactInfo />
+      <CTA
+        className="dark:bg-background-5 bg-white"
+        badgeClass="badge-yellow-v2"
+        badgeText="Samvad"
+        ctaBtnText="Contact us"
+        ctaHeading="Get in touch"
+        description="Questions, feedback or ideas? We would love to hear from you."
+      />
+    </main>
+  );
+};
 
 export default ContactUs;
