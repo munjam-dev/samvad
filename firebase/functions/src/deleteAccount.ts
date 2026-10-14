@@ -13,6 +13,13 @@ export async function deleteAccountCore(deps: Deps, uid: string): Promise<void> 
   await db.doc(`deletedAccounts/${uid}`).set({ deletedAt: FieldValue.serverTimestamp() });
   await db.recursiveDelete(db.doc(`users/${uid}`));
   await db.doc(`profiles/${uid}`).delete();
+  // Phase 3: the account's scheduled messages, so nothing is sent after deletion.
+  const scheduled = await db.collection('scheduledMessages').where('senderId', '==', uid).get();
+  for (let i = 0; i < scheduled.docs.length; i += 400) {
+    const batch = db.batch();
+    scheduled.docs.slice(i, i + 400).forEach((d) => batch.delete(d.ref));
+    await batch.commit();
+  }
   // B2: leave every conversation (sent messages stay so the other member's history is intact).
   const memberships = await db.collectionGroup('members').where('uid', '==', uid).get();
   // Phase 1.1/1.3: clear presence, privacy, the block mirror and the RTDB membership mirror for this user.

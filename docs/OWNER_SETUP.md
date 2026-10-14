@@ -99,6 +99,19 @@ New projects don't give the build account permission to build functions, so ever
 
 **Tell Claude:** `Build role done`
 
+### Step 5c: Raise the Cloud Run CPU quota (5 minutes, then Google approves)
+
+New projects start with a very small CPU allowance per region, so some functions fail to deploy with
+"Quota exceeded for total allowable CPU per project per region".
+
+1. Open https://console.cloud.google.com/iam-admin/quotas?project=samvad-messenger
+2. In the **Filter** box type `Total CPU allocation` and pick the one for **Cloud Run Admin API**.
+3. Tick the row whose dimension is **region: asia-south1** → **Edit quotas** (top right).
+4. New value: **20** (vCPU). Reason: `Production messaging app backend (Cloud Functions 2nd gen), India launch.`
+5. **Submit**. Approval usually takes from a few minutes to a day; Google e-mails you.
+
+**Tell Claude:** `Quota requested` (and later `Quota approved`)
+
 ---
 
 ## Step 6: App Check (5 minutes, after I deploy and you run a debug build once)

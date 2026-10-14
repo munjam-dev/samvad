@@ -111,6 +111,22 @@ service cloud.firestore {
         allow delete: if isOwner(uid);
       }
 
+      // Phase 3: starred messages. Private to their owner; a reference only (never a copy of the
+      // message), so delete-for-everyone and group rules still decide what can be read.
+      match /savedMessages/{key} {
+        allow read, delete: if isOwner(uid);
+
+        allow create: if isOwner(uid)
+          && request.resource.data.keys().hasOnly(['conversationId', 'messageId', 'savedAt'])
+          && request.resource.data.keys().hasAll(['conversationId', 'messageId', 'savedAt'])
+          && request.resource.data.conversationId is string
+          && request.resource.data.messageId is string
+          && key == request.resource.data.conversationId + '_' + request.resource.data.messageId
+          && request.resource.data.savedAt == request.time
+          && isMemberOf(request.resource.data.conversationId)
+          && exists(/databases/$(database)/documents/conversations/$(request.resource.data.conversationId)/messages/$(request.resource.data.messageId));
+      }
+
       // Phase 1.3: people this user has blocked. Mirrored to RTDB blocks/{uid} by a trigger.
       match /blocked/{otherUid} {
         allow read: if isOwner(uid);
@@ -412,6 +428,46 @@ service cloud.firestore {
 
     match /groupInvites/{code} {
       allow read, write: if false;
+    }
+
+    // ---- scheduled messages (Phase 3) -------------------------------
+    // Written by the sender while pending; sent, or failed, only by the sendScheduledMessages function.
+
+    function validSendAt(t) {
+      return t is timestamp
+        && t >= request.time + duration.value(50, 's')
+        && t <= request.time + duration.value(30, 'd');
+    }
+
+    match /scheduledMessages/{id} {
+      allow read: if signedIn() && resource.data.senderId == request.auth.uid;
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['senderId', 'conversationId', 'text', 'replyTo', 'sendAt', 'status', 'createdAt', 'updatedAt'])
+        && request.resource.data.keys().hasAll(['senderId', 'conversationId', 'text', 'replyTo', 'sendAt', 'status', 'createdAt', 'updatedAt'])
+        && request.resource.data.senderId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.conversationId is string
+        && validText(request.resource.data.text)
+        && (request.resource.data.replyTo == null
+            || (request.resource.data.replyTo is string && isUuid(request.resource.data.replyTo)))
+        && validSendAt(request.resource.data.sendAt)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && notDeleted(request.auth.uid)
+        && isMemberOf(request.resource.data.conversationId)
+        && notBlocked(request.resource.data.conversationId);
+
+      allow update: if signedIn()
+        && resource.data.senderId == request.auth.uid
+        && resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'sendAt', 'status', 'updatedAt'])
+        && request.resource.data.status in ['pending', 'cancelled']
+        && validText(request.resource.data.text)
+        && (request.resource.data.sendAt == resource.data.sendAt || validSendAt(request.resource.data.sendAt))
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if signedIn() && resource.data.senderId == request.auth.uid;
     }
 
     match /groupSecrets/{cid} {

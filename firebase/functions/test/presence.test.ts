@@ -17,6 +17,11 @@ describe('RTDB membership mirror', () => {
     expect(databaseUrl({ FIREBASE_CONFIG: JSON.stringify({ databaseURL: 'https://x.firebasedatabase.app' }) })).toBe(
       'https://x.firebasedatabase.app',
     );
+    // Tests talk to the Database emulator too, so they must agree with the triggers.
+    expect(databaseUrl({
+      FIREBASE_DATABASE_EMULATOR_HOST: '127.0.0.1:9000',
+      FIREBASE_CONFIG: JSON.stringify({ projectId: 'demo-samvad', databaseURL: 'https://demo-samvad.firebaseio.com' }),
+    })).toBe('https://demo-samvad-default-rtdb.firebaseio.com');
   });
 
   it('uses the default instance in the Functions emulator, where clients and rules live', () => {

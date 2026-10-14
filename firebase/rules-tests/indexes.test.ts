@@ -17,7 +17,7 @@ afterAll(async () => {
 });
 
 describe('indexes and list access', () => {
-  it('declares exactly the chat-list index and the members.uid collection-group override', () => {
+  it('declares exactly the chat-list and scheduled-message indexes and the members.uid override', () => {
     const json = JSON.parse(readFileSync(join(root, 'firestore.indexes.json'), 'utf8'));
     expect(json.indexes).toEqual([
       {
@@ -26,6 +26,23 @@ describe('indexes and list access', () => {
         fields: [
           { fieldPath: 'members', arrayConfig: 'CONTAINS' },
           { fieldPath: 'lastMessageAt', order: 'DESCENDING' },
+        ],
+      },
+      // Phase 3: the sender function's due query, and the sender's own list.
+      {
+        collectionGroup: 'scheduledMessages',
+        queryScope: 'COLLECTION',
+        fields: [
+          { fieldPath: 'status', order: 'ASCENDING' },
+          { fieldPath: 'sendAt', order: 'ASCENDING' },
+        ],
+      },
+      {
+        collectionGroup: 'scheduledMessages',
+        queryScope: 'COLLECTION',
+        fields: [
+          { fieldPath: 'senderId', order: 'ASCENDING' },
+          { fieldPath: 'sendAt', order: 'ASCENDING' },
         ],
       },
     ]);

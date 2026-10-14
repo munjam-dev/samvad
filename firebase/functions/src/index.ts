@@ -1,3 +1,4 @@
+import './globalOptions';
 import { ensureAdminApp } from './deps';
 
 ensureAdminApp();
@@ -11,6 +12,7 @@ export { lookupPhoneNumbers } from './lookupPhoneNumbers';
 export { onBlockWritten } from './onBlockWritten';
 export { reportContact } from './reportContact';
 export { setProfilePhoto } from './setProfilePhoto';
+export { sendScheduledMessages } from './scheduled';
 export {
   createGroup,
   addGroupMembers,
