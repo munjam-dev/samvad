@@ -1,0 +1,122 @@
+[
+  {
+    "id": 1,
+    "name": "John Smith",
+    "location": "New York",
+    "image": "/images/ns-avatar-1.png",
+    "social": {
+      "facebook": "https://www.facebook.com",
+      "dribble": "https://dribbble.com",
+      "github": "https://github.com",
+      "linkedin": "https://bd.linkedin.com/company"
+    }
+  },
+  {
+    "id": 2,
+    "name": "Michael Johnson",
+    "location": "Los Angeles",
+    "image": "/images/ns-avatar-2.png",
+    "social": {
+      "facebook": "https://www.facebook.com",
+      "dribble": "https://dribbble.com",
+      "github": "https://github.com",
+      "linkedin": "https://bd.linkedin.com/company"
+    }
+  },
+  {
+    "id": 3,
+    "name": "David Williams",
+    "location": "Chicago",
+    "image": "/images/ns-avatar-3.png",
+    "social": {
+      "facebook": "https://www.facebook.com",
+      "dribble": "https://dribbble.com",
+      "github": "https://github.com",
+      "linkedin": "https://bd.linkedin.com/company"
+    }
+  },
+  {
+    "id": 4,
+    "name": "Robert Brown",
+    "location": "Houston",
+    "image": "/images/ns-avatar-4.png",
+    "social": {
+      "facebook": "https://www.facebook.com",
+      "dribble": "https://dribbble.com",
+      "github": "https://github.com",
+      "linkedin": "https://bd.linkedin.com/company"
+    }
+  },
+  {
+    "id": 5,
+    "name": "James Davis",
+    "location": "Phoenix",
+    "image": "/images/ns-avatar-5.png",
+    "social": {
+      "facebook": "https://www.facebook.com",
+      "dribble": "https://dribbble.com",
+      "github": "https://github.com",
+      "linkedin": "https://bd.linkedin.com/company"
+    }
+  },
+  {
+    "id": 6,
+    "name": "Christopher Miller",
+    "location": "Philadelphia",
+    "image": "/images/ns-avatar-6.png",
+    "social": {
+      "facebook": "https://www.facebook.com",
+      "dribble": "https://dribbble.com",
+      "github": "https://github.com",
+      "linkedin": "https://bd.linkedin.com/company"
+    }
+  },
+  {
+    "id": 7,
+    "name": "Daniel Wilson",
+    "location": "San Antonio",
+    "image": "/images/ns-avatar-7.png",
+    "social": {
+      "facebook": "https://www.facebook.com",
+      "dribble": "https://dribbble.com",
+      "github": "https://github.com",
+      "linkedin": "https://bd.linkedin.com/company"
+    }
+  },
+  {
+    "id": 8,
+    "name": "Matthew Taylor",
+    "location": "San Diego",
+    "image": "/images/ns-avatar-8.png",
+    "social": {
+      "facebook": "https://www.facebook.com",
+      "dribble": "https://dribbble.com",
+      "github": "https://github.com",
+      "linkedin": "https://bd.linkedin.com/company"
+    }
+  },
+  {
+    "id": 9,
+    "name": "Anthony Anderson",
+    "location": "Dallas",
+    "image": "/images/ns-avatar-9.png",
+    "social": {
+      "facebook": "https://www.facebook.com",
+      "dribble": "https://dribbble.com",
+      "github": "https://github.com",
+      "linkedin": "https://bd.linkedin.com/company"
+    }
+  },
+  {
+    "id": 10,
+    "name": "Mark Thomas",
+    "location": "San Jose",
+    "image": "/images/ns-avatar-10.png",
+    "social": {
+      "facebook": "https://www.facebook.com",
+      "dribble": "https://dribbble.com",
+      "github": "https://github.com",
+      "linkedin": "https://bd.linkedin.com/company"
+    }
+  }
+]
