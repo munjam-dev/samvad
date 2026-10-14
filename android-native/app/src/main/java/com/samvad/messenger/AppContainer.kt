@@ -4,6 +4,7 @@ import android.content.Context
 import com.samvad.messenger.data.AccountRepository
 import com.samvad.messenger.data.AuthRepository
 import com.samvad.messenger.data.ChatRepository
+import com.samvad.messenger.data.ChatThemeRepository
 import com.samvad.messenger.data.ContactsRepository
 import com.samvad.messenger.data.FirebaseServices
 import com.samvad.messenger.data.GroupRepository
@@ -25,6 +26,7 @@ import kotlinx.coroutines.SupervisorJob
  */
 class AppContainer(context: Context) {
   val preferences = PreferencesRepository(context)
+  val chatThemes = ChatThemeRepository(context)
   val appLock = AppLock(preferences, CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate))
   val firebase: FirebaseServices? = FirebaseServices.create(context)
 

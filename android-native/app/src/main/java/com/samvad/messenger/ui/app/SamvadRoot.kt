@@ -48,6 +48,7 @@ import com.samvad.messenger.ui.groups.GroupInfoScreen
 import com.samvad.messenger.ui.groups.NewGroupScreen
 import com.samvad.messenger.ui.security.TwoStepSettingsScreen
 import com.samvad.messenger.ui.security.TwoStepVerifyScreen
+import com.samvad.messenger.ui.settings.ChatThemeScreen
 import com.samvad.messenger.ui.settings.BlockedContactsScreen
 import com.samvad.messenger.ui.settings.SettingsScreen
 import com.samvad.messenger.ui.setup.ProfileSetupScreen
@@ -130,6 +131,7 @@ private fun SignedInNav(
         conversationId = entry.arguments!!.getString("cid")!!,
         otherUid = entry.arguments!!.getString("other")!!,
         onBack = { nav.popBackStack() },
+        onOpenChatTheme = { nav.navigate("chattheme/${entry.arguments!!.getString("cid")}") },
       )
     }
     composable("group/{cid}", arguments = listOf(navArgument("cid") { type = NavType.StringType })) { entry ->
@@ -140,6 +142,7 @@ private fun SignedInNav(
         otherUid = null,
         onBack = { nav.popBackStack() },
         onOpenGroupInfo = { nav.navigate("groupinfo/${entry.arguments!!.getString("cid")}") },
+        onOpenChatTheme = { nav.navigate("chattheme/${entry.arguments!!.getString("cid")}") },
       )
     }
     composable("groupinfo/{cid}", arguments = listOf(navArgument("cid") { type = NavType.StringType })) { entry ->
@@ -185,7 +188,14 @@ private fun SignedInNav(
         onSignOut = session::signOut,
         onOpenBlocked = { nav.navigate("blocked") },
         onOpenTwoStep = { nav.navigate("twostep") },
+        onOpenChatTheme = { nav.navigate("chattheme") },
       )
+    }
+    composable("chattheme") {
+      ChatThemeScreen(container = container, conversationId = null, onBack = { nav.popBackStack() })
+    }
+    composable("chattheme/{cid}", arguments = listOf(navArgument("cid") { type = NavType.StringType })) { entry ->
+      ChatThemeScreen(container = container, conversationId = entry.arguments!!.getString("cid")!!, onBack = { nav.popBackStack() })
     }
     composable("twostep") {
       TwoStepSettingsScreen(container = container, onBack = { nav.popBackStack() })

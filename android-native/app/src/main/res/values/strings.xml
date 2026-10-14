@@ -419,4 +419,21 @@
     <string name="group_error_limit">You\'ve reached today\'s limit. Try again tomorrow.</string>
     <string name="group_error_not_allowed">Only group admins can do that.</string>
     <string name="group_error_failed">Something went wrong. Check your connection and try again.</string>
+    <string name="chat_theme_title">Chat theme</string>
+    <string name="chat_theme_title_one">Theme for this chat</string>
+    <string name="chat_theme_apply">Apply</string>
+    <string name="chat_theme_use_default">Use default</string>
+    <string name="chat_theme_photo">My photo</string>
+    <string name="chat_theme_photo_error">We couldn\'t open that photo. Try another one.</string>
+    <string name="chat_theme_preview">Preview</string>
+    <string name="chat_theme_preview_in">This is how your messages will look.</string>
+    <string name="chat_theme_preview_out">Looks lovely</string>
+    <string name="chat_theme_drag">Drag the preview to choose which part of your photo shows.</string>
+    <string name="chat_theme_dim">Dim photo</string>
+    <string name="cd_chat_theme_selected">%1$s, selected</string>
+    <string name="chat_theme_ivory">Ivory</string>
+    <string name="chat_theme_sage">Sage</string>
+    <string name="chat_theme_monsoon">Monsoon</string>
+    <string name="chat_theme_marigold">Marigold</string>
+    <string name="chat_theme_night_garden">Night Garden</string>
 </resources>

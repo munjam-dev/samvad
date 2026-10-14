@@ -6,6 +6,7 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.outlined.Wallpaper
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material.icons.outlined.PhotoLibrary
@@ -108,6 +109,7 @@ fun SettingsScreen(
   onSignOut: () -> Unit,
   onOpenBlocked: () -> Unit = {},
   onOpenTwoStep: () -> Unit = {},
+  onOpenChatTheme: () -> Unit = {},
 ) {
   val colors = SamvadTheme.colors
   val scope = rememberCoroutineScope()
@@ -210,6 +212,7 @@ fun SettingsScreen(
         ).forEach { (layout, label) ->
           RadioRow(stringResource(label), prefs.homeLayout == layout) { scope.launch { container.preferences.setHomeLayout(layout) } }
         }
+        ActionRow(Icons.Outlined.Wallpaper, stringResource(R.string.chat_theme_title), onClick = onOpenChatTheme)
       }
 
       Group(stringResource(R.string.settings_notifications)) {

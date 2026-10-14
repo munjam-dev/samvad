@@ -14,6 +14,9 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import com.samvad.messenger.ui.theme.ProvideChatTheme
+import com.samvad.core.design.ChatThemes
+import com.samvad.core.design.ChatBackground
 import com.samvad.messenger.ui.theme.LocalReducedMotion
 import com.samvad.messenger.ui.theme.Motion
 import com.samvad.messenger.ui.theme.motionSpec
@@ -136,6 +139,7 @@ fun ConversationScreen(
   onBack: () -> Unit,
   /** Groups: opens group info; null hides the entry points. */
   onOpenGroupInfo: (() -> Unit)? = null,
+  onOpenChatTheme: () -> Unit = {},
 ) {
   val appCtx = LocalContext.current.applicationContext as android.app.Application
   val vm: ConversationViewModel = viewModel(factory = ConversationViewModel.factory(appCtx, container, me, conversationId, otherUid))
@@ -145,6 +149,10 @@ fun ConversationScreen(
   val groupStatus = vm.groupStatus.collectAsStateWithLifecycle().value
   val mentionCandidates = vm.mentionCandidates.collectAsStateWithLifecycle().value
   var composingPoll by remember { mutableStateOf(false) }
+  val themeSettings = container.chatThemes.settings.collectAsStateWithLifecycle(null).value
+  val backdrop = themeSettings?.backgroundFor(conversationId) ?: ChatBackground.Theme(ChatThemes.DEFAULT.id)
+  val dark = SamvadTheme.colors.isDark
+  ProvideChatTheme(chatThemeColors(backdrop, dark)) {
   val colors = SamvadTheme.colors
   val list = rememberLazyListState()
   val scope = rememberCoroutineScope()
@@ -378,6 +386,7 @@ fun ConversationScreen(
               enabled = !exporting,
               onClick = { menu = false; confirmExport = true },
             )
+            DropdownMenuItem(text = { Text(stringResource(R.string.chat_theme_title)) }, onClick = { menu = false; onOpenChatTheme() })
             if (!state.isGroup) {
             HorizontalDivider(color = colors.outlineVariant)
             DropdownMenuItem(
@@ -400,6 +409,7 @@ fun ConversationScreen(
       StatusBanner(state.error, stringResource(R.string.home_load_error), isError = true, actionLabel = stringResource(R.string.retry), onAction = vm::retryLoad)
 
       Box(Modifier.weight(1f)) {
+        if (themeSettings != null) ChatBackdrop(backdrop, themeSettings, container.chatThemes, dark, Modifier.fillMaxSize())
         when {
           state.loading -> CircularProgressIndicator(Modifier.align(Alignment.Center), color = colors.brand)
           state.items.isEmpty() -> Text(
@@ -587,6 +597,7 @@ fun ConversationScreen(
       )
     }
   }
+  } // ProvideChatTheme
 }
 
 @Composable
