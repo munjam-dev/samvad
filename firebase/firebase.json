@@ -52,7 +52,7 @@
     }
   },
   "hosting": {
-    "public": "../website/out",
+    "public": "site",
     "cleanUrls": true,
     "trailingSlash": false,
     "ignore": [

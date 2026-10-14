@@ -8,3 +8,4 @@ functions/.env.*
 *-adminsdk-*.json
 serviceAccount*.json
 .emulator-data/
+site/
