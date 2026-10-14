@@ -88,7 +88,7 @@ export async function sendDueScheduled(deps: Deps, nowMs: number = deps.nowMs())
 }
 
 export const sendScheduledMessages = onSchedule(
-  { schedule: 'every 1 minutes', region: REGION, timeZone: 'Asia/Kolkata', retryCount: 0 },
+  { schedule: 'every 1 minutes', region: REGION, timeZone: 'Asia/Kolkata', retryCount: 0, maxInstances: 1 },
   async () => {
     await sendDueScheduled(defaultDeps());
   },

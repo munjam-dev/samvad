@@ -5,6 +5,7 @@ import { MobileMenuProvider } from '@/context/MobileMenuContext';
 import { mobileMenuData, primaryNav } from '@/data/navbar-data';
 import { useNavbarScroll } from '@/hooks/useScrollHeader';
 import { cn } from '@/utils/cn';
+import Image from 'next/image';
 import Link from 'next/link';
 import MobileMenu from '../mobile-menu/MobileMenu';
 import MobileMenuButton from '../mobile-menu/MobileMenuButton';
@@ -22,6 +23,7 @@ const Navbar = () => {
         <RevealAnimation direction="up" offset={100} delay={0.1} instant>
           <div className="border-stroke-2 dark:border-stroke-6 bg-accent dark:bg-background-9 mx-auto flex items-center justify-between rounded-full border px-4 py-2.5 xl:py-2">
             <Link href="/" className="text-heading-6 text-secondary dark:text-accent inline-flex min-h-11 items-center font-semibold">
+              <Image src="/samvad-mark-256.png" alt="" width={32} height={32} className="mr-2 size-8" priority />
               Samvad
             </Link>
             <nav aria-label="Main" className="hidden xl:block">

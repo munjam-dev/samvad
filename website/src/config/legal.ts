@@ -6,14 +6,14 @@
  * prints a warning while any remain, so the site is never published with them by accident.
  */
 export const LEGAL_DETAILS = {
-  OPERATOR: 'TO CONFIRM: legal name of the business',
-  ADDRESS: 'TO CONFIRM: registered address, Hyderabad, Telangana, India',
-  GRIEVANCE_NAME: 'TO CONFIRM: Grievance Officer name',
-  GRIEVANCE_EMAIL: 'grievance@samvad.example',
-  CONTACT_EMAIL: 'hello@samvad.example',
-  CHILD_SAFETY_EMAIL: 'childsafety@samvad.example',
-  LEGAL_EMAIL: 'legal@samvad.example',
-  SECURITY_EMAIL: 'security@samvad.example',
+  OPERATOR: 'Arlo Technologies',
+  ADDRESS: 'H No: 11, 13-746, Road No. 5, Dwarka Nagar, Kothapet, Hyderabad, Telangana 500102',
+  GRIEVANCE_NAME: 'Durgam Vincent',
+  GRIEVANCE_EMAIL: 'vincent@arlotechnologies.in',
+  CONTACT_EMAIL: 'samvad@arlotechnologies.in',
+  CHILD_SAFETY_EMAIL: 'contact@arlotechnologies.in',
+  LEGAL_EMAIL: 'contact@arlotechnologies.in',
+  SECURITY_EMAIL: 'contact@arlotechnologies.in',
 } as const;
 
 export type LegalToken = keyof typeof LEGAL_DETAILS;

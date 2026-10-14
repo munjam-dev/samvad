@@ -21,7 +21,7 @@ import com.samvad.messenger.ui.theme.SamvadTheme
 @Composable
 fun SamvadMark(size: Dp, modifier: Modifier = Modifier, describe: Boolean = false) {
   Image(
-    painter = painterResource(R.drawable.ic_samvad_mark),
+    painter = painterResource(R.drawable.samvad_mark),
     contentDescription = if (describe) stringResource(R.string.cd_samvad_mark) else null,
     modifier = modifier.size(size),
   )

@@ -1,6 +1,7 @@
 import RevealAnimation from '@/components/animation/RevealAnimation';
 import { footerLinks } from '@/data/footer-data';
 import { cn } from '@/utils/cn';
+import Image from 'next/image';
 import Link from 'next/link';
 import ThemeToggle from '../ThemeToggle';
 import FooterDivider from './FooterDivider';
@@ -13,7 +14,10 @@ const Footer = ({ className }: { className?: string }) => {
           <RevealAnimation delay={0.1}>
             <div className="col-span-12 xl:col-span-4">
               <div className="max-w-[306px]">
-                <p className="text-heading-5 text-primary-50 font-semibold">Samvad</p>
+                <p className="text-heading-5 text-primary-50 flex items-center gap-2 font-semibold">
+                  <Image src="/samvad-mark-256.png" alt="" width={32} height={32} className="size-8" />
+                  Samvad
+                </p>
                 <p className="text-accent/60 text-tagline-1 mt-4 font-normal">
                   A private messenger made in India. Calm, fast and honest about your data.
                 </p>
