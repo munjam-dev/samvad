@@ -27,6 +27,10 @@ data class AppPreferences(
   val secureScreen: Boolean = false,
   val notificationPreviews: Boolean = true,
   val readReceipts: Boolean = true,
+  /** Chat rows show a dot instead of a number. */
+  val hideUnreadCounts: Boolean = false,
+  /** Quiet home: no counts, no unread summary. */
+  val calmMode: Boolean = false,
 )
 
 /** Local, non-sensitive preferences. Never stores verification IDs, codes or tokens. */
@@ -41,6 +45,8 @@ class PreferencesRepository(private val context: Context) {
   private val secure = booleanPreferencesKey("secure_screen")
   private val previews = booleanPreferencesKey("notification_previews")
   private val receipts = booleanPreferencesKey("read_receipts")
+  private val hideCounts = booleanPreferencesKey("hide_unread_counts")
+  private val calm = booleanPreferencesKey("calm_mode")
 
   val preferences: Flow<AppPreferences> = context.dataStore.data.map { p ->
     AppPreferences(
@@ -53,6 +59,8 @@ class PreferencesRepository(private val context: Context) {
       secureScreen = p[secure] ?: false,
       notificationPreviews = p[previews] ?: true,
       readReceipts = p[receipts] ?: true,
+      hideUnreadCounts = p[hideCounts] ?: false,
+      calmMode = p[calm] ?: false,
     )
   }
 
@@ -65,6 +73,8 @@ class PreferencesRepository(private val context: Context) {
   suspend fun setSecureScreen(enabled: Boolean) = context.dataStore.edit { it[secure] = enabled }
   suspend fun setNotificationPreviews(enabled: Boolean) = context.dataStore.edit { it[previews] = enabled }
   suspend fun setReadReceipts(enabled: Boolean) = context.dataStore.edit { it[receipts] = enabled }
+  suspend fun setHideUnreadCounts(enabled: Boolean) = context.dataStore.edit { it[hideCounts] = enabled }
+  suspend fun setCalmMode(enabled: Boolean) = context.dataStore.edit { it[calm] = enabled }
 
   /** Random per-install ID (lowercase UUID); no hardware identifiers. */
   suspend fun deviceId(): String {

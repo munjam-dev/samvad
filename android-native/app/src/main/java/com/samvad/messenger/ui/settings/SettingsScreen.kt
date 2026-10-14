@@ -252,6 +252,18 @@ fun SettingsScreen(
           onChange = { v -> scope.launch { container.preferences.setReadReceipts(v) } },
         )
         SwitchRow(
+          title = stringResource(R.string.settings_hide_unread),
+          body = stringResource(R.string.settings_hide_unread_body),
+          checked = prefs.hideUnreadCounts,
+          onChange = { v -> scope.launch { container.preferences.setHideUnreadCounts(v) } },
+        )
+        SwitchRow(
+          title = stringResource(R.string.settings_calm_mode),
+          body = stringResource(R.string.settings_calm_mode_body),
+          checked = prefs.calmMode,
+          onChange = { v -> scope.launch { container.preferences.setCalmMode(v) } },
+        )
+        SwitchRow(
           title = stringResource(R.string.settings_app_lock),
           body = stringResource(R.string.settings_app_lock_body),
           checked = prefs.appLockEnabled,

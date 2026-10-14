@@ -334,6 +334,12 @@
     <string name="export_unknown">Deleted account</string>
     <string name="export_failed">Couldn\'t export this chat. Try again.</string>
     <string name="export_share_title">Save or share chat</string>
+    <string name="settings_hide_unread">Hide unread counts</string>
+    <string name="settings_hide_unread_body">Chats with new messages show a dot instead of a number.</string>
+    <string name="settings_calm_mode">Calm mode</string>
+    <string name="settings_calm_mode_body">A quieter home screen: no counts and no unread summary. Messages still arrive as usual.</string>
+    <string name="home_calm_line">Calm mode is on</string>
+    <string name="cd_unread_dot">New messages</string>
     <string name="settings_read_receipts">Read receipts</string>
     <string name="settings_read_receipts_body">When off, others won\'t see when you\'ve read their messages, and you won\'t see theirs.</string>
     <!-- Phase 1.6: forward -->

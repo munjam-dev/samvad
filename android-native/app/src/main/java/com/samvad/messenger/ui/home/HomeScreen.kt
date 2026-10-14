@@ -100,6 +100,7 @@ import com.samvad.core.chat.ChatList
 import com.samvad.core.chat.ChatRow
 import com.samvad.core.design.HomeLayout
 import com.samvad.messenger.AppContainer
+import com.samvad.messenger.data.AppPreferences
 import com.samvad.messenger.R
 import com.samvad.messenger.ui.components.Avatar
 import com.samvad.messenger.ui.components.EmptyState
@@ -123,6 +124,9 @@ fun HomeScreen(
 ) {
   val vm: HomeViewModel = viewModel(factory = HomeViewModel.factory(container, me))
   val state = vm.state.collectAsStateWithLifecycle().value
+  val appPrefs = container.preferences.preferences.collectAsStateWithLifecycle(AppPreferences()).value
+  val quiet = QuietHome(hideCounts = appPrefs.hideUnreadCounts || appPrefs.calmMode, calm = appPrefs.calmMode)
+  androidx.compose.runtime.CompositionLocalProvider(LocalQuietHome provides quiet) {
   val colors = SamvadTheme.colors
   val reduced = LocalReducedMotion.current
   var tab by rememberSaveable { mutableIntStateOf(0) }
@@ -162,6 +166,7 @@ fun HomeScreen(
       onSelect = { i -> if (i == 3) onOpenSettings() else tab = i },
       modifier = Modifier.align(Alignment.BottomCenter),
     )
+  }
   }
 }
 
@@ -349,7 +354,9 @@ private fun Greeting(state: HomeUiState, onDark: Boolean, compact: Boolean = fal
 
 @Composable
 private fun SummaryLine(state: HomeUiState, accent: androidx.compose.ui.graphics.Color, dot: androidx.compose.ui.graphics.Color) {
-  val text = if (state.summary.allCaughtUp) stringResource(R.string.home_all_caught_up)
+  val calm = LocalQuietHome.current.calm
+  val text = if (calm) stringResource(R.string.home_calm_line)
+  else if (state.summary.allCaughtUp) stringResource(R.string.home_all_caught_up)
   else pluralStringResource(R.plurals.home_unread_summary, state.summary.chats, state.summary.messages, state.summary.chats)
   Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
     Box(Modifier.size(7.dp).background(dot, CircleShape))
@@ -564,6 +571,7 @@ private fun SegmentedFilters(state: HomeUiState, onSelect: (ChatFilter) -> Unit)
 
 @Composable
 fun ChatRowItem(row: ChatRow, highlight: Boolean, onClick: () -> Unit) {
+  val unreadDot = stringResource(R.string.cd_unread_dot)
   val colors = SamvadTheme.colors
   val press = remember { MutableInteractionSource() }
   Row(
@@ -604,7 +612,11 @@ fun ChatRowItem(row: ChatRow, highlight: Boolean, onClick: () -> Unit) {
         )
         if (row.muted) Icon(Icons.Outlined.NotificationsOff, stringResource(R.string.cd_muted), tint = colors.onSurfaceVariant, modifier = Modifier.size(16.dp))
         if (row.pinned) Icon(Icons.Outlined.PushPin, stringResource(R.string.cd_pinned), tint = colors.onSurfaceVariant, modifier = Modifier.size(16.dp))
-        if (row.unreadCount > 0) UnreadBadge(row.unreadCount, pluralStringResource(R.plurals.cd_unread_count, row.unreadCount, row.unreadCount))
+        if (row.unreadCount > 0) {
+          if (LocalQuietHome.current.hideCounts) {
+            Box(Modifier.size(10.dp).background(colors.primary, CircleShape).semantics { contentDescription = unreadDot })
+          } else UnreadBadge(row.unreadCount, pluralStringResource(R.plurals.cd_unread_count, row.unreadCount, row.unreadCount))
+        }
       }
     }
   }
@@ -725,3 +737,8 @@ private fun HomeFooter() {
     Text(line2, style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant, textAlign = TextAlign.Center)
   }
 }
+
+/** Home-screen quiet settings, read by the chat rows and the summary line. */
+data class QuietHome(val hideCounts: Boolean = false, val calm: Boolean = false)
+
+val LocalQuietHome = androidx.compose.runtime.compositionLocalOf { QuietHome() }
