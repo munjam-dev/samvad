@@ -59,6 +59,8 @@ export async function applyMessageCreated(deps: Deps, msg: CreatedMessage): Prom
     if (marker.exists || !conv.exists) return;
 
     const isGroup = conv.get('type') === 'group';
+    // Disappearing messages: the timer in force right now decides this message's expiry (written below).
+    const timer = Number(conv.get('disappearAfterSec') ?? 0);
     if (isGroup) group = { name: String(conv.get('name') ?? '') };
     const members: string[] = conv.get('members') ?? [];
     const others = members.filter((m) => m !== msg.data.senderId);
@@ -96,6 +98,13 @@ export async function applyMessageCreated(deps: Deps, msg: CreatedMessage): Prom
         });
       }
     });
+
+    // The server alone stamps the expiry; clients cannot (rules). Written after all reads in this transaction.
+    if (timer > 0) {
+      tx.update(convRef.collection('messages').doc(msg.mid), {
+        expiresAt: Timestamp.fromMillis(msg.data.createdAt.toMillis() + timer * 1000),
+      });
+    }
 
     tx.set(markerRef, { at: FieldValue.serverTimestamp() });
   });

@@ -13,6 +13,7 @@ export { onBlockWritten } from './onBlockWritten';
 export { reportContact } from './reportContact';
 export { setProfilePhoto } from './setProfilePhoto';
 export { sendScheduledMessages } from './scheduled';
+export { setDisappearingTimer, onMessageDeleted } from './disappearing';
 export {
   createGroup,
   addGroupMembers,

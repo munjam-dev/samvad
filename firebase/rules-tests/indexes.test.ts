@@ -46,7 +46,7 @@ describe('indexes and list access', () => {
         ],
       },
     ]);
-    expect(json.fieldOverrides.map((o: any) => `${o.collectionGroup}.${o.fieldPath}`)).toEqual(['members.uid']);
+    expect(json.fieldOverrides.map((o: any) => `${o.collectionGroup}.${o.fieldPath}`)).toEqual(['members.uid', 'messages.expiresAt', 'savedMessages.messageId']);
   });
 
   it('users, profiles and deletedAccounts cannot be listed; conversations only via a members filter', async () => {
