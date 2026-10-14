@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.samvad.core.design.HomeLayout
 import com.samvad.core.design.ThemeMode
+import com.samvad.core.media.AutoDownload
 import com.samvad.core.security.LockTimeout
 import java.util.UUID
 import kotlinx.coroutines.flow.Flow
@@ -31,6 +32,10 @@ data class AppPreferences(
   val hideUnreadCounts: Boolean = false,
   /** Quiet home: no counts, no unread summary. */
   val calmMode: Boolean = false,
+  /** When chat photos download by themselves. */
+  val autoDownload: AutoDownload = AutoDownload.ALWAYS,
+  /** Smaller uploads, and photos wait for Wi-Fi unless the setting is stricter. */
+  val dataSaver: Boolean = false,
 )
 
 /** Local, non-sensitive preferences. Never stores verification IDs, codes or tokens. */
@@ -47,6 +52,8 @@ class PreferencesRepository(private val context: Context) {
   private val receipts = booleanPreferencesKey("read_receipts")
   private val hideCounts = booleanPreferencesKey("hide_unread_counts")
   private val calm = booleanPreferencesKey("calm_mode")
+  private val autoDl = stringPreferencesKey("auto_download")
+  private val saver = booleanPreferencesKey("data_saver")
 
   val preferences: Flow<AppPreferences> = context.dataStore.data.map { p ->
     AppPreferences(
@@ -61,6 +68,8 @@ class PreferencesRepository(private val context: Context) {
       readReceipts = p[receipts] ?: true,
       hideUnreadCounts = p[hideCounts] ?: false,
       calmMode = p[calm] ?: false,
+      autoDownload = AutoDownload.parse(p[autoDl]),
+      dataSaver = p[saver] ?: false,
     )
   }
 
@@ -75,6 +84,8 @@ class PreferencesRepository(private val context: Context) {
   suspend fun setReadReceipts(enabled: Boolean) = context.dataStore.edit { it[receipts] = enabled }
   suspend fun setHideUnreadCounts(enabled: Boolean) = context.dataStore.edit { it[hideCounts] = enabled }
   suspend fun setCalmMode(enabled: Boolean) = context.dataStore.edit { it[calm] = enabled }
+  suspend fun setAutoDownload(value: AutoDownload) = context.dataStore.edit { it[autoDl] = value.name }
+  suspend fun setDataSaver(enabled: Boolean) = context.dataStore.edit { it[saver] = enabled }
 
   /** Random per-install ID (lowercase UUID); no hardware identifiers. */
   suspend fun deviceId(): String {

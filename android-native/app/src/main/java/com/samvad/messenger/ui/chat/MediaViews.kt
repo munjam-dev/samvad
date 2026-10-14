@@ -74,14 +74,27 @@ import com.samvad.messenger.media.RecordingState
 import com.samvad.messenger.ui.theme.Motion
 import com.samvad.messenger.ui.theme.motionSpec
 
-/** Photo bubble: reserves its aspect ratio, then shows the cached, rules-checked download. */
+/**
+ * Photo bubble: reserves its aspect ratio, then shows the cached, rules-checked download. When auto-download
+ * is off for this connection and the photo is not on the phone yet, it waits for a tap and shows its size.
+ */
 @Composable
-fun MediaImage(media: Media, load: suspend (String, Int) -> Bitmap?, onOpen: () -> Unit) {
+fun MediaImage(
+  media: Media,
+  load: suspend (String, Int) -> Bitmap?,
+  autoLoad: Boolean = true,
+  isCached: (String) -> Boolean = { true },
+  onOpen: () -> Unit,
+) {
   val colors = com.samvad.messenger.ui.theme.SamvadTheme.colors
   var bitmap by remember(media.path) { mutableStateOf<Bitmap?>(null) }
-  LaunchedEffect(media.path) { bitmap = load(media.path, 900) }
+  var requested by remember(media.path) { mutableStateOf(false) }
+  val go = autoLoad || requested || remember(media.path) { isCached(media.path) }
+  LaunchedEffect(media.path, go) { if (go) bitmap = load(media.path, 900) }
   val ratio = if ((media.width ?: 0) > 0 && (media.height ?: 0) > 0) media.width!!.toFloat() / media.height!! else 4f / 3f
   val label = stringResource(R.string.cd_open_photo)
+  val size = android.text.format.Formatter.formatShortFileSize(androidx.compose.ui.platform.LocalContext.current, media.size)
+  val downloadLabel = stringResource(R.string.media_download_photo, size)
   val alpha by animateFloatAsState(if (bitmap != null) 1f else 0f, motionSpec(Motion.standard()), label = "img")
   Box(
     Modifier
@@ -90,18 +103,25 @@ fun MediaImage(media: Media, load: suspend (String, Int) -> Bitmap?, onOpen: () 
       .aspectRatio(ratio.coerceIn(0.5f, 2f))
       .clip(RoundedCornerShape(14.dp))
       .background(colors.surfaceContainer)
-      .clickable(onClickLabel = label, role = Role.Image, onClick = onOpen),
+      .clickable(
+        onClickLabel = if (go) label else downloadLabel,
+        role = if (go) Role.Image else Role.Button,
+        onClick = { if (go) onOpen() else requested = true },
+      ),
     contentAlignment = Alignment.Center,
   ) {
-    if (bitmap == null) {
-      Icon(Icons.Outlined.Image, null, tint = colors.onSurfaceVariant)
-    } else {
-      Image(
+    when {
+      bitmap != null -> Image(
         bitmap!!.asImageBitmap(),
         contentDescription = stringResource(R.string.media_photo),
         contentScale = ContentScale.Crop,
         modifier = Modifier.fillMaxSize().graphicsLayer { this.alpha = alpha },
       )
+      !go -> Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Icon(Icons.Outlined.Image, null, tint = colors.onSurfaceVariant)
+        Text(downloadLabel, style = MaterialTheme.typography.labelLarge, color = colors.primary)
+      }
+      else -> Icon(Icons.Outlined.Image, null, tint = colors.onSurfaceVariant)
     }
   }
 }

@@ -234,6 +234,23 @@ fun SettingsScreen(
         )
       }
 
+      Group(stringResource(R.string.settings_data)) {
+        SwitchRow(
+          title = stringResource(R.string.settings_data_saver),
+          body = stringResource(R.string.settings_data_saver_body),
+          checked = prefs.dataSaver,
+          onChange = { v -> scope.launch { container.preferences.setDataSaver(v) } },
+        )
+        Text(stringResource(R.string.settings_auto_download), style = MaterialTheme.typography.titleSmall, color = colors.onSurfaceVariant, modifier = Modifier.padding(start = 16.dp, top = 4.dp))
+        listOf(
+          com.samvad.core.media.AutoDownload.ALWAYS to R.string.settings_auto_always,
+          com.samvad.core.media.AutoDownload.WIFI_ONLY to R.string.settings_auto_wifi,
+          com.samvad.core.media.AutoDownload.NEVER to R.string.settings_auto_never,
+        ).forEach { (value, label) ->
+          RadioRow(stringResource(label), prefs.autoDownload == value) { scope.launch { container.preferences.setAutoDownload(value) } }
+        }
+      }
+
       Group(stringResource(R.string.settings_privacy)) {
         val presenceRepo = container.presence
         if (presenceRepo != null) {

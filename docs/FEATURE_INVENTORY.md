@@ -60,7 +60,7 @@ payments and commerce.
 | Playback speed, pause and resume recording, multiple selection, captions | Missing | |
 | Video send, trimming, image crop and overlays | Missing | |
 | Media gallery per chat, storage management | Missing | |
-| Auto-download settings, data saver | Missing | Next to build |
+| Auto-download settings, data saver | Partial | Built 2026-10-15: setting (always / Wi-Fi only / never), Data saver switch (1024 px, JPEG 70 uploads), tap-to-download photo placeholder. 8 unit tests pass, lint 0 errors, settings screen and persistence checked on the emulator. The placeholder and metered-network behaviour are **not yet checked on a device** |
 | View-once media | Missing | |
 
 ## Groups

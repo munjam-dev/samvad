@@ -347,6 +347,14 @@
     <string name="cd_search_close">Close search</string>
     <string name="cd_search_previous">Previous match</string>
     <string name="cd_search_next">Next match</string>
+    <string name="settings_data">Data and storage</string>
+    <string name="settings_data_saver">Data saver</string>
+    <string name="settings_data_saver_body">Sends smaller photos, and waits for Wi-Fi before downloading photos.</string>
+    <string name="settings_auto_download">Download photos automatically</string>
+    <string name="settings_auto_always">On any connection</string>
+    <string name="settings_auto_wifi">On Wi-Fi only</string>
+    <string name="settings_auto_never">Never</string>
+    <string name="media_download_photo">Download photo · %1$s</string>
     <string name="settings_read_receipts">Read receipts</string>
     <string name="settings_read_receipts_body">When off, others won\'t see when you\'ve read their messages, and you won\'t see theirs.</string>
     <!-- Phase 1.6: forward -->

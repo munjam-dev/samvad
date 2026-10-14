@@ -175,6 +175,8 @@ fun ConversationScreen(
   var scheduledList by remember { mutableStateOf(false) }
   val scheduledHere = vm.scheduledHere.collectAsStateWithLifecycle().value
   var menu by remember { mutableStateOf(false) }
+  val appPrefs = container.preferences.preferences.collectAsStateWithLifecycle(com.samvad.messenger.data.AppPreferences()).value
+  val autoLoadPhotos = com.samvad.core.media.DownloadPolicy.shouldAutoDownload(appPrefs.autoDownload, appPrefs.dataSaver, vm.isMetered(), cached = false)
   var searching by rememberSaveable { mutableStateOf(false) }
   var query by rememberSaveable { mutableStateOf("") }
   var matchIdx by rememberSaveable { mutableStateOf(0) }
@@ -487,7 +489,7 @@ fun ConversationScreen(
                     val media = item.message.media
                     if (media != null) {
                       when (item.message.kind) {
-                        "image" -> MediaImage(media, vm::bitmap) { viewing = media.path }
+                        "image" -> MediaImage(media, vm::bitmap, autoLoad = autoLoadPhotos, isCached = vm::isCached) { viewing = media.path }
                         "voice" -> VoiceNote(item.message.id, media, playback, item.mine) { vm.togglePlayback(item.message) }
                         else -> FileCard(media) { openFile(media) }
                       }
@@ -798,7 +800,7 @@ private fun MessageBubble(
           horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
           if (starred && !m.deleted) Icon(Icons.Filled.Star, stringResource(R.string.cd_starred), tint = meta, modifier = Modifier.size(13.dp))
-        if (m.editedAt != null && !m.deleted) Text(stringResource(R.string.chat_edited), style = MaterialTheme.typography.labelSmall, color = meta)
+          if (m.editedAt != null && !m.deleted) Text(stringResource(R.string.chat_edited), style = MaterialTheme.typography.labelSmall, color = meta)
           Text(item.timeLabel, style = MaterialTheme.typography.labelSmall, color = meta)
           item.delivery?.let { DeliveryIcon(it) }
         }
@@ -1046,7 +1048,7 @@ private fun ChatSearchBar(
   modifier: Modifier = Modifier,
 ) {
   val colors = SamvadTheme.colors
-  val focus = androidx.compose.ui.focus.FocusRequester()
+  val focus = remember { androidx.compose.ui.focus.FocusRequester() }
   LaunchedEffect(Unit) { focus.requestFocus() }
   Row(
     modifier.fillMaxWidth().background(colors.surface).statusBarsPadding().padding(horizontal = 4.dp, vertical = 6.dp),

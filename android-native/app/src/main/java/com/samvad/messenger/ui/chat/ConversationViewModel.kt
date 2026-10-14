@@ -15,6 +15,7 @@ import com.samvad.core.chat.MemberState
 import com.samvad.core.chat.Mentions
 import com.samvad.core.chat.Polls
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import com.samvad.core.chat.ExportLabels
 import kotlinx.coroutines.withContext
@@ -119,7 +120,7 @@ data class ComposerState(
 
 class ConversationViewModel(
   private val app: Application,
-  container: AppContainer,
+  private val container: AppContainer,
   private val me: String,
   private val conversationId: String,
   /** The other person in a direct chat; null for a group. */
@@ -287,7 +288,7 @@ class ConversationViewModel(
     presence?.let { p -> viewModelScope.launch { p.clearTyping(conversationId, me) } }
   }
 
-  fun sendImage(uri: Uri) = prepareAndSend { mediaRepo.prepareImage(uri) }
+  fun sendImage(uri: Uri) = prepareAndSend { mediaRepo.prepareImage(uri, container.preferences.preferences.first().dataSaver) }
   fun sendDocument(uri: Uri) = prepareAndSend { mediaRepo.prepareDocument(uri) }
 
   fun startRecording(): Boolean = recorder.start()
@@ -351,6 +352,8 @@ class ConversationViewModel(
 
   suspend fun localFile(path: String): File? = runCatching { mediaRepo.localFile(path) }.getOrNull()
   suspend fun bitmap(path: String, maxEdgePx: Int) = mediaRepo.loadBitmap(path, maxEdgePx)
+  fun isCached(path: String) = mediaRepo.isCached(path)
+  fun isMetered() = container.network.isMetered()
 
   fun togglePlayback(message: Message) = viewModelScope.launch {
     val path = message.media?.path ?: return@launch

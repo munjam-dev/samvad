@@ -9,6 +9,7 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageMetadata
 import com.samvad.core.media.Media
 import com.samvad.core.media.MediaKind
+import com.samvad.core.media.DownloadPolicy
 import com.samvad.core.media.MediaRules
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -64,12 +65,13 @@ class MediaRepository(private val context: Context, private val storage: Firebas
   }
 
   /** Upright, downscaled to 1600 px and re-encoded as JPEG, which also strips EXIF data such as GPS location. */
-  suspend fun prepareImage(uri: Uri): PreparedMedia = withContext(Dispatchers.Default) {
-    val decoded = ImageCodec.decodeUpright(context.contentResolver, uri, MediaRules.MAX_IMAGE_EDGE) ?: throw MediaException.Unreadable()
-    val (w, h) = MediaRules.fitWithin(decoded.width, decoded.height)
+  suspend fun prepareImage(uri: Uri, dataSaver: Boolean = false): PreparedMedia = withContext(Dispatchers.Default) {
+    val edge = DownloadPolicy.uploadEdgePx(dataSaver)
+    val decoded = ImageCodec.decodeUpright(context.contentResolver, uri, edge) ?: throw MediaException.Unreadable()
+    val (w, h) = MediaRules.fitWithin(decoded.width, decoded.height, edge)
     val scaled = if (w == decoded.width && h == decoded.height) decoded else Bitmap.createScaledBitmap(decoded, w, h, true)
     val out = ByteArrayOutputStream()
-    scaled.compress(Bitmap.CompressFormat.JPEG, MediaRules.JPEG_QUALITY, out)
+    scaled.compress(Bitmap.CompressFormat.JPEG, DownloadPolicy.uploadQuality(dataSaver), out)
     if (scaled !== decoded) scaled.recycle()
     decoded.recycle()
     val bytes = out.toByteArray()
@@ -140,6 +142,9 @@ class MediaRepository(private val context: Context, private val storage: Firebas
     val ext = path.substringAfterLast('.', "bin").take(8)
     return File(cacheDir, "$digest.$ext")
   }
+
+  /** True when the attachment is already on the phone, so showing it costs no data. */
+  fun isCached(path: String): Boolean = cacheFile(path).let { it.exists() && it.length() > 0L }
 
   /** Local copy of an attachment, downloaded once through the SDK (rules-checked) and cached. */
   suspend fun localFile(path: String): File = withContext(Dispatchers.IO) {
