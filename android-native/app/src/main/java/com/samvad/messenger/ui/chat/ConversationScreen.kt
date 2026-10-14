@@ -89,6 +89,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material.icons.outlined.KeyboardArrowUp
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.zIndex
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -171,6 +175,15 @@ fun ConversationScreen(
   var scheduledList by remember { mutableStateOf(false) }
   val scheduledHere = vm.scheduledHere.collectAsStateWithLifecycle().value
   var menu by remember { mutableStateOf(false) }
+  var searching by rememberSaveable { mutableStateOf(false) }
+  var query by rememberSaveable { mutableStateOf("") }
+  var matchIdx by rememberSaveable { mutableStateOf(0) }
+  val matches = remember(state.items, query) { com.samvad.core.chat.ChatSearch.matches(state.items, query) }
+  val currentMatch = if (searching) matches.getOrNull(matchIdx.coerceIn(0, (matches.size - 1).coerceAtLeast(0))) else null
+  LaunchedEffect(currentMatch) {
+    val at = currentMatch?.let { key -> state.items.indexOfFirst { it.key == key } } ?: -1
+    if (at >= 0) list.animateScrollToItem(at)
+  }
   val copied = stringResource(R.string.chat_copied)
   val uploads = vm.uploads.collectAsStateWithLifecycle().value
   val recording = vm.recorder.state.collectAsStateWithLifecycle().value
@@ -319,6 +332,17 @@ fun ConversationScreen(
   }
 
   Box(Modifier.fillMaxSize().background(colors.background)) {
+    if (searching) {
+      ChatSearchBar(
+        query = query,
+        onQuery = { query = it; matchIdx = 0 },
+        position = matchIdx.coerceIn(0, (matches.size - 1).coerceAtLeast(0)),
+        total = matches.size,
+        onStep = { fwd -> matchIdx = com.samvad.core.chat.ChatSearch.step(matchIdx, matches.size, fwd) },
+        onClose = { searching = false; query = ""; matchIdx = 0 },
+        modifier = Modifier.align(Alignment.TopCenter).zIndex(1f),
+      )
+    }
     Column(Modifier.fillMaxSize().imePadding()) {
       // Header
       Row(
@@ -395,6 +419,7 @@ fun ConversationScreen(
               enabled = !exporting,
               onClick = { menu = false; confirmExport = true },
             )
+            DropdownMenuItem(text = { Text(stringResource(R.string.chat_search)) }, onClick = { menu = false; searching = true })
             DropdownMenuItem(text = { Text(stringResource(R.string.starred_title)) }, onClick = { menu = false; onOpenStarred() })
             DropdownMenuItem(text = { Text(stringResource(R.string.chat_theme_title)) }, onClick = { menu = false; onOpenChatTheme() })
             if (!state.isGroup) {
@@ -439,7 +464,11 @@ fun ConversationScreen(
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
           ) {
             items(state.items, key = { it.key }, contentType = { it::class }) { item ->
-              Box(Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null, placementSpec = Motion.offsetSpring)) {
+              Box(
+                Modifier
+                  .animateItem(fadeInSpec = null, fadeOutSpec = null, placementSpec = Motion.offsetSpring)
+                  .then(if (item.key == currentMatch) Modifier.background(colors.primary.copy(alpha = 0.14f), RoundedCornerShape(14.dp)) else Modifier),
+              ) {
               when (item) {
                 is TimelineItem.DateSeparator -> DateChip(item.label)
                 is TimelineItem.SystemLine -> SystemLineChip(item.text)
@@ -1001,6 +1030,58 @@ private fun PersonSheet(uid: String, name: String, about: String) {
     if (about.isNotBlank()) {
       Spacer(Modifier.size(6.dp))
       Text(about, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, textAlign = TextAlign.Center)
+    }
+  }
+}
+
+/** Search within this chat: type, then step through matches. Everything happens on the device. */
+@Composable
+private fun ChatSearchBar(
+  query: String,
+  onQuery: (String) -> Unit,
+  position: Int,
+  total: Int,
+  onStep: (Boolean) -> Unit,
+  onClose: () -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  val colors = SamvadTheme.colors
+  val focus = androidx.compose.ui.focus.FocusRequester()
+  LaunchedEffect(Unit) { focus.requestFocus() }
+  Row(
+    modifier.fillMaxWidth().background(colors.surface).statusBarsPadding().padding(horizontal = 4.dp, vertical = 6.dp),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    IconButton(onClick = onClose) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, stringResource(R.string.cd_search_close), tint = colors.onSurface) }
+    androidx.compose.material3.TextField(
+      value = query,
+      onValueChange = onQuery,
+      singleLine = true,
+      placeholder = { Text(stringResource(R.string.chat_search_hint)) },
+      keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
+      keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { onStep(true) }),
+      colors = androidx.compose.material3.TextFieldDefaults.colors(
+        focusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+        unfocusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+        focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+        unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+      ),
+      modifier = Modifier.weight(1f).focusRequester(focus),
+    )
+    val tooShort = query.trim().length < com.samvad.core.chat.ChatSearch.MIN_QUERY
+    if (!tooShort) {
+      Text(
+        if (total == 0) stringResource(R.string.chat_search_none) else stringResource(R.string.chat_search_count, position + 1, total),
+        style = MaterialTheme.typography.labelMedium,
+        color = colors.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = 4.dp),
+      )
+    }
+    IconButton(onClick = { onStep(false) }, enabled = total > 1) {
+      Icon(Icons.Outlined.KeyboardArrowUp, stringResource(R.string.cd_search_previous), tint = colors.onSurface)
+    }
+    IconButton(onClick = { onStep(true) }, enabled = total > 1) {
+      Icon(Icons.Outlined.KeyboardArrowDown, stringResource(R.string.cd_search_next), tint = colors.onSurface)
     }
   }
 }
