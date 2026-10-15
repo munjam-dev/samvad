@@ -121,7 +121,11 @@ private fun SignedInNav(
         onNewChat = { nav.navigate("newchat") },
         onOpenSettings = { nav.navigate("settings") },
         onOpenStatus = { author -> nav.navigate("status/view/$author") },
-        onNewStatus = { nav.navigate("status/new") },
+        onNewStatus = { nav.navigate("status/new?photo=false") },
+        onNewPhotoStatus = { nav.navigate("status/new?photo=true") },
+        onNewGroup = { nav.navigate("newgroup") },
+        onOpenStarred = { nav.navigate("starred") },
+        onOpenChatTheme = { nav.navigate("chattheme") },
       )
     }
     composable(
@@ -197,8 +201,11 @@ private fun SignedInNav(
         onOpenStarred = { nav.navigate("starred") },
       )
     }
-    composable("status/new") {
-      com.samvad.messenger.ui.status.StatusComposerScreen(container, uid, onBack = { nav.popBackStack() })
+    composable(
+      "status/new?photo={photo}",
+      arguments = listOf(navArgument("photo") { type = NavType.BoolType; defaultValue = false }),
+    ) { entry ->
+      com.samvad.messenger.ui.status.StatusComposerScreen(container, uid, startWithPhoto = entry.arguments?.getBoolean("photo") ?: false, onBack = { nav.popBackStack() })
     }
     composable("status/view/{author}", arguments = listOf(navArgument("author") { type = NavType.StringType })) { entry ->
       com.samvad.messenger.ui.status.StatusViewerScreen(container, uid, entry.arguments!!.getString("author")!!, onBack = { nav.popBackStack() })

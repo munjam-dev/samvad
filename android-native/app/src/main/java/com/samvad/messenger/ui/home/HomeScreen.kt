@@ -55,6 +55,8 @@ import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Call
+import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.DonutLarge
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.NotificationsOff
@@ -71,6 +73,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -111,7 +114,10 @@ import com.samvad.messenger.ui.components.UnreadBadge
 import com.samvad.messenger.ui.components.Wordmark
 import com.samvad.messenger.ui.theme.SamvadTheme
 
-private enum class Tab { CHATS, CALLS, COMMUNITIES }
+private enum class Tab { CHATS, STATUS, COMMUNITIES, CALLS }
+
+/** What the three-dot menu at the top of every tab does. Settings is the last entry. */
+class HomeMenu(val newGroup: () -> Unit, val starred: () -> Unit, val chatTheme: () -> Unit, val settings: () -> Unit)
 
 @Composable
 fun HomeScreen(
@@ -123,7 +129,12 @@ fun HomeScreen(
   onOpenSettings: () -> Unit,
   onOpenStatus: (String) -> Unit = {},
   onNewStatus: () -> Unit = {},
+  onNewPhotoStatus: () -> Unit = {},
+  onNewGroup: () -> Unit = {},
+  onOpenStarred: () -> Unit = {},
+  onOpenChatTheme: () -> Unit = {},
 ) {
+  val menu = HomeMenu(onNewGroup, onOpenStarred, onOpenChatTheme, onOpenSettings)
   val vm: HomeViewModel = viewModel(factory = HomeViewModel.factory(container, me))
   val state = vm.state.collectAsStateWithLifecycle().value
   val appPrefs = container.preferences.preferences.collectAsStateWithLifecycle(AppPreferences()).value
@@ -140,9 +151,17 @@ fun HomeScreen(
       label = "tab",
     ) { t ->
       when (t) {
-        Tab.CHATS -> ChatsTab(container, me, state, vm, onOpenChat, onNewChat, onOpenSettings, onOpenStatus, onNewStatus)
-        Tab.CALLS -> ComingSoon(Icons.Outlined.Call, R.string.calls_title, R.string.calls_body)
-        Tab.COMMUNITIES -> ComingSoon(Icons.Outlined.Groups, R.string.communities_title, R.string.communities_body)
+        Tab.CHATS -> ChatsTab(container, me, state, vm, onOpenChat, onNewChat, menu)
+        Tab.STATUS -> com.samvad.messenger.ui.status.StatusTab(
+          container = container,
+          me = me,
+          topBar = { TabTopBar(R.string.nav_status, menu) },
+          onOpen = onOpenStatus,
+          onNewText = onNewStatus,
+          onNewPhoto = onNewPhotoStatus,
+        )
+        Tab.COMMUNITIES -> ComingSoon(Icons.Outlined.Groups, R.string.communities_title, R.string.communities_body, menu, R.string.nav_communities)
+        Tab.CALLS -> ComingSoon(Icons.Outlined.Call, R.string.calls_title, R.string.calls_body, menu, R.string.nav_calls)
       }
     }
     if (Tab.entries[tab] == Tab.CHATS) {
@@ -165,7 +184,7 @@ fun HomeScreen(
     }
     FloatingNavBar(
       selected = tab,
-      onSelect = { i -> if (i == 3) onOpenSettings() else tab = i },
+      onSelect = { i -> tab = i },
       modifier = Modifier.align(Alignment.BottomCenter),
     )
   }
@@ -173,9 +192,46 @@ fun HomeScreen(
 }
 
 @Composable
-private fun ComingSoon(icon: ImageVector, title: Int, body: Int) {
-  Box(Modifier.fillMaxSize().statusBarsPadding(), contentAlignment = Alignment.Center) {
-    EmptyState(icon, stringResource(title), stringResource(body))
+private fun ComingSoon(icon: ImageVector, title: Int, body: Int, menu: HomeMenu, heading: Int) {
+  Column(Modifier.fillMaxSize()) {
+    TabTopBar(heading, menu)
+    Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+      EmptyState(icon, stringResource(title), stringResource(body))
+    }
+  }
+}
+
+/** Title row for tabs without the big header: the tab name and the three-dot menu. */
+@Composable
+internal fun TabTopBar(title: Int, menu: HomeMenu) {
+  val colors = SamvadTheme.colors
+  Row(Modifier.fillMaxWidth().statusBarsPadding().padding(start = 20.dp, end = 8.dp, top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+    Text(stringResource(title), style = MaterialTheme.typography.headlineSmall, color = colors.onSurface, modifier = Modifier.weight(1f))
+    MoreMenu(menu, tint = colors.onSurface, circled = false)
+  }
+}
+
+/** The three dots: a few shortcuts, then Settings. */
+@Composable
+internal fun MoreMenu(menu: HomeMenu, tint: androidx.compose.ui.graphics.Color, circled: Boolean) {
+  val colors = SamvadTheme.colors
+  var open by remember { mutableStateOf(false) }
+  Box {
+    IconButton(
+      onClick = { open = true },
+      modifier = if (circled) Modifier.padding(4.dp).size(40.dp).border(1.dp, colors.outlineVariant, CircleShape).background(colors.surface, CircleShape) else Modifier,
+    ) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.cd_more), tint = tint) }
+    androidx.compose.material3.DropdownMenu(open, onDismissRequest = { open = false }) {
+      androidx.compose.material3.DropdownMenuItem(text = { Text(stringResource(R.string.group_new)) }, onClick = { open = false; menu.newGroup() })
+      androidx.compose.material3.DropdownMenuItem(text = { Text(stringResource(R.string.starred_title)) }, onClick = { open = false; menu.starred() })
+      androidx.compose.material3.DropdownMenuItem(text = { Text(stringResource(R.string.chat_theme_title)) }, onClick = { open = false; menu.chatTheme() })
+      androidx.compose.material3.HorizontalDivider(color = colors.outlineVariant)
+      androidx.compose.material3.DropdownMenuItem(
+        text = { Text(stringResource(R.string.settings_title)) },
+        leadingIcon = { Icon(Icons.Outlined.Settings, null) },
+        onClick = { open = false; menu.settings() },
+      )
+    }
   }
 }
 
@@ -187,34 +243,23 @@ private fun ChatsTab(
   vm: HomeViewModel,
   onOpenChat: (String, String?) -> Unit,
   onNewChat: () -> Unit,
-  onOpenSettings: () -> Unit,
-  onOpenStatus: (String) -> Unit,
-  onNewStatus: () -> Unit,
+  menu: HomeMenu,
 ) {
   val colors = SamvadTheme.colors
-  val statusVm: com.samvad.messenger.ui.status.StatusViewModel? = container.status?.let {
-    androidx.lifecycle.viewmodel.compose.viewModel(factory = com.samvad.messenger.ui.status.StatusViewModel.factory(container, me))
-  }
   val open: (ChatRow) -> Unit = { row -> onOpenChat(row.conversationId, if (row.isGroup) null else vm.otherOf(row)) }
   val seen = remember { mutableSetOf<Any>() }
   LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 128.dp)) {
     item(key = "header") {
       when (state.layout) {
-        HomeLayout.CLEAN -> CleanHeader(state, vm, onOpenSettings)
-        HomeLayout.BOLD -> BoldHeader(state, vm, onOpenSettings)
-        HomeLayout.BENTO -> BentoHeader(state, vm, onOpenSettings)
+        HomeLayout.CLEAN -> CleanHeader(state, vm, menu)
+        HomeLayout.BOLD -> BoldHeader(state, vm, menu)
+        HomeLayout.BENTO -> BentoHeader(state, vm, menu)
       }
     }
     item(key = "notif-prompt") { NotificationPrompt(container) }
     item(key = "banners") {
       StatusBanner(state.offline, stringResource(R.string.home_offline))
       StatusBanner(state.error, stringResource(R.string.home_load_error), isError = true, actionLabel = stringResource(R.string.retry), onAction = vm::retry)
-    }
-    if (statusVm != null && !state.searching) {
-      item(key = "status") {
-        val statusState = statusVm.state.collectAsStateWithLifecycle().value
-        com.samvad.messenger.ui.status.StatusStrip(statusState, onOpenMine = { onOpenStatus(me) }, onCompose = onNewStatus, onOpenPerson = onOpenStatus)
-      }
     }
     if (state.recentPeople.isNotEmpty() && !state.searching) {
       item(key = "people") {
@@ -292,7 +337,7 @@ private fun CardEdge(top: Boolean, heading: String? = null) {
 }
 
 @Composable
-private fun HeaderActions(state: HomeUiState, vm: HomeViewModel, onProfile: () -> Unit, onDark: Boolean, circled: Boolean) {
+private fun HeaderActions(state: HomeUiState, vm: HomeViewModel, menu: HomeMenu, onDark: Boolean, circled: Boolean) {
   val colors = SamvadTheme.colors
   val tint = if (onDark) colors.onDeep else colors.onSurface
   Row(verticalAlignment = Alignment.CenterVertically) {
@@ -302,17 +347,7 @@ private fun HeaderActions(state: HomeUiState, vm: HomeViewModel, onProfile: () -
     ) {
       Icon(if (state.searching) Icons.Outlined.Close else Icons.Outlined.Search, stringResource(R.string.cd_search), tint = tint)
     }
-    val initials = ChatList.initials(state.me?.displayName ?: "")
-    Box(
-      Modifier
-        .size(48.dp)
-        .clip(CircleShape)
-        .clickable(onClickLabel = stringResource(R.string.cd_profile), onClick = onProfile)
-        .semantics { role = Role.Button },
-      contentAlignment = Alignment.Center,
-    ) {
-      Avatar(initials, seed = state.me?.uid ?: "me", size = 34.dp, photoPath = state.me?.photoPath)
-    }
+    MoreMenu(menu, tint = tint, circled = circled)
   }
 }
 
@@ -379,12 +414,12 @@ private fun SummaryLine(state: HomeUiState, accent: androidx.compose.ui.graphics
 }
 
 @Composable
-private fun CleanHeader(state: HomeUiState, vm: HomeViewModel, onProfile: () -> Unit) {
+private fun CleanHeader(state: HomeUiState, vm: HomeViewModel, menu: HomeMenu) {
   val colors = SamvadTheme.colors
   Column(Modifier.statusBarsPadding()) {
     Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
       Wordmark(Modifier.weight(1f))
-      HeaderActions(state, vm, onProfile, onDark = false, circled = false)
+      HeaderActions(state, vm, menu, onDark = false, circled = false)
     }
     SearchField(state, vm)
     if (!state.searching) {
@@ -397,7 +432,7 @@ private fun CleanHeader(state: HomeUiState, vm: HomeViewModel, onProfile: () -> 
 }
 
 @Composable
-private fun BoldHeader(state: HomeUiState, vm: HomeViewModel, onProfile: () -> Unit) {
+private fun BoldHeader(state: HomeUiState, vm: HomeViewModel, menu: HomeMenu) {
   val colors = SamvadTheme.colors
   Box(
     Modifier
@@ -409,7 +444,7 @@ private fun BoldHeader(state: HomeUiState, vm: HomeViewModel, onProfile: () -> U
     Column(Modifier.statusBarsPadding().padding(bottom = 18.dp)) {
       Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Wordmark(Modifier.weight(1f), color = colors.onDeep)
-        HeaderActions(state, vm, onProfile, onDark = true, circled = false)
+        HeaderActions(state, vm, menu, onDark = true, circled = false)
       }
       Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Greeting(state, onDark = true)
@@ -421,12 +456,12 @@ private fun BoldHeader(state: HomeUiState, vm: HomeViewModel, onProfile: () -> U
 }
 
 @Composable
-private fun BentoHeader(state: HomeUiState, vm: HomeViewModel, onProfile: () -> Unit) {
+private fun BentoHeader(state: HomeUiState, vm: HomeViewModel, menu: HomeMenu) {
   val colors = SamvadTheme.colors
   Column(Modifier.statusBarsPadding()) {
     Row(Modifier.fillMaxWidth().padding(start = 18.dp, end = 8.dp, top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
       Wordmark(Modifier.weight(1f), markSize = 26.dp)
-      HeaderActions(state, vm, onProfile, onDark = false, circled = true)
+      HeaderActions(state, vm, menu, onDark = false, circled = true)
     }
     SearchField(state, vm)
     if (!state.searching) {
@@ -641,9 +676,9 @@ private fun FloatingNavBar(selected: Int, onSelect: (Int) -> Unit, modifier: Mod
   val colors = SamvadTheme.colors
   val items = listOf(
     Triple(R.string.nav_chats, Icons.AutoMirrored.Outlined.Chat, Icons.Filled.ChatBubble),
-    Triple(R.string.nav_calls, Icons.Outlined.Call, Icons.Outlined.Call),
+    Triple(R.string.nav_status, Icons.Outlined.DonutLarge, Icons.Outlined.DonutLarge),
     Triple(R.string.nav_communities, Icons.Outlined.Groups, Icons.Outlined.Groups),
-    Triple(R.string.nav_settings, Icons.Outlined.Settings, Icons.Outlined.Settings),
+    Triple(R.string.nav_calls, Icons.Outlined.Call, Icons.Outlined.Call),
   )
   Box(
     modifier

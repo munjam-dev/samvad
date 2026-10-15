@@ -96,41 +96,105 @@ private fun styleColors(style: String?): Pair<Color, Color> {
   return Color(t.background) to Color(t.text)
 }
 
-// ---- Home strip ------------------------------------------------------------------------------
+// ---- Status tab ------------------------------------------------------------------------------
 
-/** "My status" followed by one ring per person with something live. Rings are filled until I have seen it all. */
+/** One person (or me) in the Status list: ring, name and a line underneath. */
 @Composable
-fun StatusStrip(state: StatusUiState, onOpenMine: () -> Unit, onCompose: () -> Unit, onOpenPerson: (String) -> Unit) {
+private fun StatusRow(name: String, seed: String, line: String, unread: Boolean, onClick: () -> Unit, initials: String = ChatList.initials(name), trailing: @Composable () -> Unit = {}) {
   val colors = SamvadTheme.colors
-  if (state.loading) return
-  LazyRow(
-    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-    horizontalArrangement = Arrangement.spacedBy(14.dp),
+  Row(
+    Modifier.fillMaxWidth().defaultMinSize(minHeight = 72.dp).clickable(role = Role.Button, onClickLabel = name, onClick = onClick).padding(horizontal = 16.dp, vertical = 8.dp),
+    verticalAlignment = Alignment.CenterVertically,
   ) {
-    item(key = "mine") {
-      val label = stringResource(if (state.mine.isEmpty()) R.string.status_add else R.string.status_my)
-      Column(
-        Modifier.width(68.dp).clickable(role = Role.Button, onClickLabel = label, onClick = if (state.mine.isEmpty()) onCompose else onOpenMine),
-        horizontalAlignment = Alignment.CenterHorizontally,
-      ) {
-        Box(contentAlignment = Alignment.BottomEnd) {
-          StoryAvatar("+", "me", unread = state.mine.isNotEmpty(), size = 60.dp)
-          Box(Modifier.size(22.dp).clip(CircleShape).background(colors.primary).clickable(onClick = onCompose), contentAlignment = Alignment.Center) {
-            Icon(Icons.Outlined.Add, stringResource(R.string.status_new), tint = colors.onPrimary, modifier = Modifier.size(16.dp))
+    StoryAvatar(initials, seed, unread = unread, size = 56.dp)
+    Column(Modifier.weight(1f).padding(start = 14.dp)) {
+      Text(name, style = MaterialTheme.typography.titleMedium, color = colors.onSurface, maxLines = 1)
+      Text(line, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1)
+    }
+    trailing()
+  }
+}
+
+@Composable
+private fun SectionLabel(text: String) {
+  Text(
+    text,
+    style = MaterialTheme.typography.labelLarge,
+    color = SamvadTheme.colors.onSurfaceVariant,
+    modifier = Modifier.padding(start = 20.dp, top = 16.dp, bottom = 4.dp),
+  )
+}
+
+/**
+ * The Status tab: my status, then recent updates (something unseen), viewed updates, and muted people.
+ * Two buttons start a new post: a pencil for text and a camera-style button for a photo.
+ */
+@Composable
+fun StatusTab(
+  container: AppContainer,
+  me: String,
+  topBar: @Composable () -> Unit,
+  onOpen: (String) -> Unit,
+  onNewText: () -> Unit,
+  onNewPhoto: () -> Unit,
+) {
+  val vm: StatusViewModel = viewModel(factory = StatusViewModel.factory(container, me))
+  val state = vm.state.collectAsStateWithLifecycle().value
+  val colors = SamvadTheme.colors
+  val recent = state.groups.filter { !it.allSeen }
+  val viewed = state.groups.filter { it.allSeen }
+  fun nameOf(uid: String) = state.names[uid] ?: ChatList.DELETED_ACCOUNT
+  fun lineOf(g: StatusGroup) = StatusRules.ago(g.latestAt, state.now)
+
+  Box(Modifier.fillMaxSize()) {
+    androidx.compose.foundation.lazy.LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 190.dp)) {
+      item(key = "top") { topBar() }
+      item(key = "mine") {
+        val mine = state.mine
+        StatusRow(
+          name = stringResource(R.string.status_my),
+          seed = me,
+          line = if (mine.isEmpty()) stringResource(R.string.status_tap_to_add) else stringResource(R.string.status_updates_count, mine.size, StatusRules.ago(mine.maxOf { it.createdAt }, state.now)),
+          unread = mine.isNotEmpty(),
+          onClick = if (mine.isEmpty()) onNewText else ({ onOpen(me) }),
+          initials = ChatList.initials(state.names[me] ?: "Me"),
+        )
+      }
+      if (recent.isNotEmpty()) {
+        item(key = "recent-label") { SectionLabel(stringResource(R.string.status_recent)) }
+        items(recent, key = { "r-" + it.authorId }) { g -> StatusRow(nameOf(g.authorId), g.authorId, lineOf(g), unread = true, onClick = { onOpen(g.authorId) }) }
+      }
+      if (viewed.isNotEmpty()) {
+        item(key = "viewed-label") { SectionLabel(stringResource(R.string.status_viewed)) }
+        items(viewed, key = { "v-" + it.authorId }) { g -> StatusRow(nameOf(g.authorId), g.authorId, lineOf(g), unread = false, onClick = { onOpen(g.authorId) }) }
+      }
+      if (state.mutedGroups.isNotEmpty()) {
+        item(key = "muted-label") { SectionLabel(stringResource(R.string.status_muted)) }
+        items(state.mutedGroups, key = { "m-" + it.authorId }) { g ->
+          StatusRow(nameOf(g.authorId), g.authorId, lineOf(g), unread = false, onClick = { onOpen(g.authorId) }) {
+            TextButton(onClick = { vm.mute(g.authorId, false) }) { Text(stringResource(R.string.status_unmute)) }
           }
         }
-        Text(label, style = MaterialTheme.typography.labelSmall, color = colors.onSurface, maxLines = 1, modifier = Modifier.padding(top = 4.dp))
+      }
+      if (recent.isEmpty() && viewed.isEmpty() && state.mutedGroups.isEmpty() && !state.loading) {
+        item(key = "empty") {
+          Column(Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 40.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(stringResource(R.string.status_empty_title), style = MaterialTheme.typography.titleMedium, color = colors.onSurface, textAlign = TextAlign.Center)
+            Text(stringResource(R.string.status_empty_body), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 6.dp))
+          }
+        }
       }
     }
-    items(state.groups, key = { it.authorId }) { g ->
-      val name = state.names[g.authorId] ?: ChatList.DELETED_ACCOUNT
-      val description = stringResource(if (g.allSeen) R.string.cd_status_seen else R.string.cd_status_new, name)
-      Column(
-        Modifier.width(68.dp).clickable(role = Role.Button, onClickLabel = description) { onOpenPerson(g.authorId) },
-        horizontalAlignment = Alignment.CenterHorizontally,
-      ) {
-        StoryAvatar(ChatList.initials(name), g.authorId, unread = !g.allSeen, size = 60.dp)
-        Text(name, style = MaterialTheme.typography.labelSmall, color = colors.onSurface, maxLines = 1, modifier = Modifier.padding(top = 4.dp))
+    Column(
+      Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(end = 20.dp, bottom = 104.dp),
+      horizontalAlignment = Alignment.End,
+      verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+      androidx.compose.material3.SmallFloatingActionButton(onClick = onNewText, containerColor = colors.primaryContainer, contentColor = colors.primary) {
+        Icon(Icons.Outlined.TextFields, stringResource(R.string.status_new_text))
+      }
+      androidx.compose.material3.FloatingActionButton(onClick = onNewPhoto, containerColor = colors.primary, contentColor = colors.onPrimary, shape = RoundedCornerShape(20.dp)) {
+        Icon(Icons.Outlined.Image, stringResource(R.string.status_new_photo))
       }
     }
   }
@@ -210,7 +274,7 @@ fun StatusViewerScreen(container: AppContainer, me: String, authorId: String, on
     }
 
     Column(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 10.dp, vertical = 8.dp)) {
-      Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Status ${i + 1} of ${items.size}" }) {
+      Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Moment ${i + 1} of ${items.size}" }) {
         items.forEachIndexed { n, _ ->
           Box(Modifier.weight(1f).height(3.dp).clip(RoundedCornerShape(2.dp)).background(Color.White.copy(alpha = 0.35f))) {
             Box(Modifier.fillMaxSize(if (n < i) 1f else if (n == i) progress.value else 0f).background(Color.White))
@@ -294,14 +358,14 @@ fun StatusViewerScreen(container: AppContainer, me: String, authorId: String, on
 // ---- Composer --------------------------------------------------------------------------------
 
 @Composable
-fun StatusComposerScreen(container: AppContainer, me: String, onBack: () -> Unit) {
+fun StatusComposerScreen(container: AppContainer, me: String, startWithPhoto: Boolean = false, onBack: () -> Unit) {
   val vm: StatusViewModel = viewModel(factory = StatusViewModel.factory(container, me))
   val colors = SamvadTheme.colors
   val post = vm.post.collectAsStateWithLifecycle().value
   val people = vm.people.collectAsStateWithLifecycle().value
   val context = LocalContext.current
 
-  var photoMode by remember { mutableStateOf(false) }
+  var photoMode by remember { mutableStateOf(startWithPhoto) }
   var text by remember { mutableStateOf("") }
   var caption by remember { mutableStateOf("") }
   var style by remember { mutableStateOf(StatusRules.DEFAULT_STYLE) }

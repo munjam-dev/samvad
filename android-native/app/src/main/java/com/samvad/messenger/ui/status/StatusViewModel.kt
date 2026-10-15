@@ -34,6 +34,7 @@ data class StatusUiState(
   val mine: List<StatusItem> = emptyList(),
   val seen: Set<String> = emptySet(),
   val muted: Set<String> = emptySet(),
+  val mutedGroups: List<StatusGroup> = emptyList(),
   val names: Map<String, String> = emptyMap(),
   val now: Long = System.currentTimeMillis(),
 )
@@ -83,6 +84,7 @@ class StatusViewModel(private val container: AppContainer, private val me: Strin
       mine = StatusRules.mine(mine, me, now),
       seen = prefs.statusSeen,
       muted = prefs.statusMuted,
+      mutedGroups = StatusRules.feed(feed, prefs.statusSeen, me, now).filter { it.authorId in prefs.statusMuted },
       names = profiles.mapValues { it.value.displayName },
       now = now,
     )
