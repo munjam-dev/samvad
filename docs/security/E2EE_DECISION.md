@@ -58,7 +58,12 @@ The owner instructed that libsignal be added. Done so far:
 - `:core` declares the JVM artifact `compileOnly` and for tests only, so the protocol API is available to pure Kotlin logic without shipping desktop binaries in the app.
 - `core/src/test/.../SignalSpikeTest.kt`: 5 tests pass. Two parties establish a session (PQXDH with a one-time pre-key and a Kyber pre-key) and exchange messages both ways; a third party cannot decrypt; each ciphertext differs; out-of-order delivery works; a replayed message is refused.
 
-**Not done yet:** the app module does not depend on `libsignal-android` yet (the dependency line is still to be added and the build checked), and no app code uses the protocol. No message is encrypted. The website, app notice and policies still say messages are not end-to-end encrypted, and they must until the full flow is built and tested.
+**App module:** now depends on `libsignal-android` (with core-library desugaring, which the library requires). The debug app builds and
+the real native libraries are packaged for all four CPU types. **Open item before release:** the debug APK grew from 28 MB to 132 MB and still
+contains Signal's test-only `libsignal_jni_testing.so`; the `packaging { jniLibs.excludes }` lines in `app/build.gradle.kts` did not remove
+it. Fix this (or confirm the release App Bundle strips it) and check the release size per CPU type.
+
+**Not done yet:** no app code uses the protocol. No message is encrypted. The website, app notice and policies still say messages are not end-to-end encrypted, and they must until the full flow is built and tested.
 
 ## RELEASE GATE (do not skip)
 

@@ -43,9 +43,16 @@ android {
     }
   }
 
+  packaging {
+    // Signal ships test-only native builds next to the real ones; they must never be in the app.
+    jniLibs.excludes += "**/libsignal_jni_testing.so"
+    jniLibs.excludes += "/lib/*/libsignal_jni_testing.so"
+  }
+
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
+    isCoreLibraryDesugaringEnabled = true
   }
 
   buildFeatures {
@@ -76,6 +83,9 @@ dependencies {
   implementation(libs.androidx.lifecycle.viewmodel.compose)
   implementation(libs.androidx.lifecycle.process)
   implementation(libs.androidx.navigation.compose)
+  // Signal Protocol, AGPL-3.0: read docs/security/E2EE_DECISION.md (release gate) before any distribution
+  implementation(libs.libsignal.android)
+  coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
   implementation(libs.androidx.datastore.preferences)
   implementation(libs.androidx.exifinterface)
   implementation(libs.androidx.biometric)
