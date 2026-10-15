@@ -79,9 +79,7 @@ SFU plus TURN). Cost must be evaluated before production.
 ## Phase 8: Moments
 
 Largely Have: Moments tab, text/photo/video/voice composer, audience (all, except, only), viewer with reactions and
-private replies, viewers list, mute, delete, 24 h expiry, server-set audience and expiry. Open: **photo and voice
-uploads are refused by production Storage (403)** while the emulator accepts them; likely a Google Cloud setting
-(service-agent role for cross-service rules), awaiting the owner. Missing: voice replies, "disable replies",
+private replies, viewers list, mute, delete, 24 h expiry, server-set audience and expiry. Production uploads work (the 403 was a missing Google Cloud service-agent role; photo moment verified on 2026-10-15, voice and video still to be re-checked). Missing: voice replies, "disable replies",
 editing the audience after posting, report from the viewer, and a plain note that recipients can capture content.
 
 ## Phase 9: Scam Shield
@@ -106,4 +104,3 @@ airplane-mode tests, accessibility and font-scale audit, cost audit, release bui
 - Licence answer on publishing the Android source (blocks shipping libsignal).
 - Calling: managed service or self-hosted.
 - Google Drive scope for Vault backup (see Phase 4).
-- The Google Cloud setting for production Storage uploads (see Phase 8).
