@@ -6,11 +6,13 @@ import { requirePhoneAuth, requireRecentAuth } from './lib/guards';
 import { logEvent, newCorrelationId } from './lib/logger';
 import { checkPin, pinProblem } from './twoStep';
 import { leaveGroupCore } from './groups';
+import { releaseUsername } from './username';
 
 /** Idempotent: every step tolerates having already run. */
 export async function deleteAccountCore(deps: Deps, uid: string): Promise<void> {
   const { db, auth } = deps;
   await db.doc(`deletedAccounts/${uid}`).set({ deletedAt: FieldValue.serverTimestamp() });
+  await releaseUsername(deps, uid); // before the profile goes: the profile says which name to free
   await db.recursiveDelete(db.doc(`users/${uid}`));
   await db.doc(`profiles/${uid}`).delete();
   // Phase 3: the account's scheduled messages, so nothing is sent after deletion.
