@@ -42,6 +42,9 @@ data class StatusUiState(
 /** A person I could pick when sharing with "only" or "everyone except". */
 data class StatusPerson(val uid: String, val name: String)
 
+/** Why a moment could not be posted, so the screen can say something useful. */
+enum class PostError { GENERIC, VIDEO_TOO_LONG, VIDEO_TOO_BIG, VIDEO_UNREADABLE }
+
 sealed interface PostState {
   data object Idle : PostState
   data object Posting : PostState
@@ -100,25 +103,64 @@ class StatusViewModel(private val container: AppContainer, private val me: Strin
 
   private val _post = MutableStateFlow<PostState>(PostState.Idle)
   val post: StateFlow<PostState> = _post
+  private val _progress = MutableStateFlow(0f)
+  /** Upload progress 0..1 while a photo, video or voice moment is going up. */
+  val progress: StateFlow<Float> = _progress
+  private val _error = MutableStateFlow(PostError.GENERIC)
+  val error: StateFlow<PostError> = _error
+
+  private fun fail(e: Throwable) {
+    _error.value = when ((e as? com.samvad.messenger.data.MediaRepository.VideoProblemException)?.problem) {
+      com.samvad.core.status.VideoProblem.TOO_LONG -> PostError.VIDEO_TOO_LONG
+      com.samvad.core.status.VideoProblem.TOO_BIG -> PostError.VIDEO_TOO_BIG
+      com.samvad.core.status.VideoProblem.UNREADABLE -> PostError.VIDEO_UNREADABLE
+      null -> PostError.GENERIC
+    }
+    _post.value = PostState.Failed
+  }
+
+  private fun start(): Boolean {
+    if (_post.value == PostState.Posting) return false
+    _progress.value = 0f
+    _post.value = PostState.Posting
+    return true
+  }
 
   fun postText(text: String, style: String, audience: StatusAudience, list: List<String>) {
-    if (!StatusRules.validText(text) || _post.value == PostState.Posting) return
-    _post.value = PostState.Posting
+    if (!StatusRules.validText(text) || !start()) return
     viewModelScope.launch {
-      _post.value = runCatching { repo.postText(me, text, StatusRules.style(style), audience, list) }
-        .fold({ PostState.Done }, { PostState.Failed })
+      runCatching { repo.postText(me, text, StatusRules.style(style), audience, list) }.fold({ _post.value = PostState.Done }, ::fail)
     }
   }
 
   fun postPhoto(uri: Uri, caption: String, audience: StatusAudience, list: List<String>) {
-    if (_post.value == PostState.Posting) return
-    _post.value = PostState.Posting
+    if (!start()) return
     viewModelScope.launch {
-      _post.value = runCatching {
+      runCatching {
         val saver = container.preferences.preferences.first().dataSaver
         val prepared: PreparedMedia = container.media!!.prepareImage(uri, saver)
-        repo.postImage(me, prepared, caption.take(StatusRules.MAX_TEXT), audience, list)
-      }.fold({ PostState.Done }, { PostState.Failed })
+        repo.postImage(me, prepared, caption.take(StatusRules.MAX_TEXT), audience, list) { _progress.value = it }
+      }.fold({ _post.value = PostState.Done }, ::fail)
+    }
+  }
+
+  fun postVideo(uri: Uri, caption: String, audience: StatusAudience, list: List<String>) {
+    if (!start()) return
+    viewModelScope.launch {
+      runCatching {
+        val video = container.media!!.prepareVideo(uri)
+        repo.postVideo(me, video, caption.take(StatusRules.MAX_TEXT), audience, list) { _progress.value = it }
+      }.fold({ _post.value = PostState.Done }, ::fail)
+    }
+  }
+
+  fun postVoice(voice: com.samvad.messenger.media.RecordedVoice, audience: StatusAudience, list: List<String>) {
+    if (!start()) return
+    viewModelScope.launch {
+      runCatching {
+        val bytes = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { voice.file.readBytes().also { voice.file.delete() } }
+        repo.postVoice(me, bytes, voice.durationMs, voice.waveform, audience, list) { _progress.value = it }
+      }.fold({ _post.value = PostState.Done }, ::fail)
     }
   }
 
@@ -159,6 +201,9 @@ class StatusViewModel(private val container: AppContainer, private val me: Strin
   fun viewers(id: String): Flow<List<StatusViewer>> = repo.viewers(me, id).catch { emit(emptyList()) }
 
   suspend fun photo(path: String) = container.media?.loadBitmap(path, 1280)
+
+  /** Local copy of a video or voice file, downloaded through the rules-checked path and cached. */
+  suspend fun localFile(path: String): java.io.File? = runCatching { container.media?.localFile(path) }.getOrNull()
 
   companion object {
     fun factory(container: AppContainer, me: String) = object : ViewModelProvider.Factory {

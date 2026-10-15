@@ -143,6 +143,40 @@ class MediaRepository(private val context: Context, private val storage: Firebas
     return File(cacheDir, "$digest.$ext")
   }
 
+  /** A video chosen for a moment, already checked against the length and size limits. */
+  class PreparedVideo(val bytes: ByteArray, val width: Int, val height: Int, val durationMs: Long)
+
+  class VideoProblemException(val problem: com.samvad.core.status.VideoProblem) : Exception(problem.name)
+
+  /** Reads a chosen video. Throws [VideoProblemException] when it is longer than 30 seconds, over 16 MB, or unreadable. */
+  suspend fun prepareVideo(uri: Uri): PreparedVideo = withContext(Dispatchers.IO) {
+    var durationMs = 0L
+    var width = 0
+    var height = 0
+    val retriever = android.media.MediaMetadataRetriever()
+    try {
+      retriever.setDataSource(context, uri)
+      durationMs = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L
+      width = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull() ?: 0
+      height = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull() ?: 0
+      val rotation = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)?.toIntOrNull() ?: 0
+      if (rotation == 90 || rotation == 270) { val t = width; width = height; height = t }
+    } catch (_: Exception) {
+      throw VideoProblemException(com.samvad.core.status.VideoProblem.UNREADABLE)
+    } finally {
+      runCatching { retriever.release() }
+    }
+    var size = -1L
+    context.contentResolver.query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)?.use { c ->
+      if (c.moveToFirst() && !c.isNull(0)) size = c.getLong(0)
+    }
+    com.samvad.core.status.StatusRules.videoProblem(if (size < 0) 1L else size, durationMs)?.let { throw VideoProblemException(it) }
+    val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+      ?: throw VideoProblemException(com.samvad.core.status.VideoProblem.UNREADABLE)
+    com.samvad.core.status.StatusRules.videoProblem(bytes.size.toLong(), durationMs)?.let { throw VideoProblemException(it) }
+    PreparedVideo(bytes, width, height, durationMs)
+  }
+
   /** True when the attachment is already on the phone, so showing it costs no data. */
   fun isCached(path: String): Boolean = cacheFile(path).let { it.exists() && it.length() > 0L }
 

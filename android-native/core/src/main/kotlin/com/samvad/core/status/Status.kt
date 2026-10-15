@@ -21,12 +21,18 @@ data class StatusItem(
   val mediaPath: String?,
   val createdAt: Long,
   val expiresAt: Long?,
+  /** Video and voice moments: how long they play. */
+  val durationMs: Long? = null,
+  /** Voice moments: bar heights for the waveform. */
+  val waveform: List<Int> = emptyList(),
 )
 
 /** Everything one person has posted that is still live, oldest first, with whether I have seen it all. */
 data class StatusGroup(val authorId: String, val items: List<StatusItem>, val allSeen: Boolean) {
   val latestAt: Long get() = items.maxOf { it.createdAt }
 }
+
+enum class VideoProblem { UNREADABLE, TOO_LONG, TOO_BIG }
 
 object StatusRules {
   const val MAX_TEXT = 700
@@ -70,6 +76,32 @@ object StatusRules {
   /** The next moment the feed changes by itself (a status expiring), or null. */
   fun nextExpiry(items: List<StatusItem>, nowMs: Long): Long? =
     items.mapNotNull { it.expiresAt ?: (it.createdAt + LIFETIME_MS) }.filter { it > nowMs }.minOrNull()
+
+  const val MAX_VIDEO_MS = 30_000L
+  const val MAX_VOICE_MS = 60_000L
+  const val MAX_VIDEO_BYTES = 16L * 1024 * 1024
+  const val MAX_VOICE_BYTES = 4L * 1024 * 1024
+  const val STILL_MS = 5_000L
+
+  /** How long the viewer stays on one moment: five seconds for text and photos, the real length for video and voice. */
+  fun playbackMs(item: StatusItem): Long = when (item.kind) {
+    "video" -> (item.durationMs ?: STILL_MS).coerceIn(1_000L, MAX_VIDEO_MS)
+    "voice" -> (item.durationMs ?: STILL_MS).coerceIn(1_000L, MAX_VOICE_MS)
+    else -> STILL_MS
+  }
+
+  /** Why a chosen video cannot be posted, or null when it can. */
+  fun videoProblem(sizeBytes: Long, durationMs: Long): VideoProblem? = when {
+    durationMs <= 0L -> VideoProblem.UNREADABLE
+    durationMs > MAX_VIDEO_MS -> VideoProblem.TOO_LONG
+    sizeBytes <= 0L -> VideoProblem.UNREADABLE
+    sizeBytes > MAX_VIDEO_BYTES -> VideoProblem.TOO_BIG
+    else -> null
+  }
+
+  /** Link in a text moment: the web addresses it contains, in order. */
+  fun links(text: String): List<String> =
+    Regex("""https?://[^\s<>"']+""").findAll(text).map { it.value.trimEnd('.', ',', ')', '!', '?') }.toList()
 
   /** "Just now", "12 min ago", "3 h ago": how long ago a status was posted. */
   fun ago(createdAt: Long, nowMs: Long): String {

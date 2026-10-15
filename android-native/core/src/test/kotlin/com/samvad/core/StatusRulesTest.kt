@@ -3,6 +3,7 @@ package com.samvad.core
 import com.samvad.core.status.StatusAudience
 import com.samvad.core.status.StatusItem
 import com.samvad.core.status.StatusRules
+import com.samvad.core.status.VideoProblem
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -93,5 +94,39 @@ class StatusRulesTest {
     assertEquals("12 min ago", StatusRules.ago(now - 12 * 60_000, now))
     assertEquals("3 h ago", StatusRules.ago(now - 3 * hour - 5 * 60_000, now))
     assertEquals("Just now", StatusRules.ago(now + 5_000, now))
+  }
+
+  private fun media(kind: String, durationMs: Long?) =
+    StatusItem("m", "asha", kind, "", null, "statuses/asha/m/x", now, now + hour, durationMs = durationMs)
+
+  @Test fun `text and photos stay five seconds`() {
+    assertEquals(5_000L, StatusRules.playbackMs(item("a", "x", 1)))
+    assertEquals(5_000L, StatusRules.playbackMs(media("image", null)))
+  }
+
+  @Test fun `a video plays for its real length, capped at 30 seconds`() {
+    assertEquals(12_000L, StatusRules.playbackMs(media("video", 12_000)))
+    assertEquals(30_000L, StatusRules.playbackMs(media("video", 90_000)))
+    assertEquals(1_000L, StatusRules.playbackMs(media("video", 200)))
+  }
+
+  @Test fun `a voice moment plays for its real length, capped at 60 seconds`() {
+    assertEquals(20_000L, StatusRules.playbackMs(media("voice", 20_000)))
+    assertEquals(60_000L, StatusRules.playbackMs(media("voice", 300_000)))
+  }
+
+  @Test fun `a video is refused when too long, too big or unreadable`() {
+    assertNull(StatusRules.videoProblem(5_000_000, 20_000))
+    assertEquals(VideoProblem.TOO_LONG, StatusRules.videoProblem(5_000_000, 31_000))
+    assertEquals(VideoProblem.TOO_BIG, StatusRules.videoProblem(17L * 1024 * 1024, 10_000))
+    assertEquals(VideoProblem.UNREADABLE, StatusRules.videoProblem(5_000_000, 0))
+    assertEquals(VideoProblem.UNREADABLE, StatusRules.videoProblem(0, 10_000))
+    assertNull(StatusRules.videoProblem(16L * 1024 * 1024, 30_000))
+  }
+
+  @Test fun `web addresses are found in text without trailing punctuation`() {
+    assertEquals(listOf("https://samvad-messenger.web.app/legal"), StatusRules.links("Read https://samvad-messenger.web.app/legal."))
+    assertEquals(listOf("http://a.com", "https://b.org/x?y=1"), StatusRules.links("(http://a.com) and https://b.org/x?y=1!"))
+    assertTrue(StatusRules.links("no links here, just example.com").isEmpty())
   }
 }

@@ -57,19 +57,55 @@ class StatusRepository(private val db: FirebaseFirestore, private val storage: F
     ).await()
   }
 
-  /** Uploads the photo first (the rules tie the file to the post id), then writes the post. */
-  suspend fun postImage(me: String, media: PreparedMedia, caption: String, audience: StatusAudience, list: List<String>) {
+  /** Uploads one file with progress (0..1) reported as it goes. The rules tie the file to the post id. */
+  private suspend fun upload(path: String, bytes: ByteArray, contentType: String, onProgress: (Float) -> Unit) {
+    val meta = StorageMetadata.Builder().setContentType(contentType).build()
+    val task = storage.reference.child(path).putBytes(bytes, meta)
+    task.addOnProgressListener { snap -> if (snap.totalByteCount > 0) onProgress(snap.bytesTransferred.toFloat() / snap.totalByteCount) }
+    task.await()
+  }
+
+  private suspend fun publish(me: String, id: String, fields: Map<String, Any?>) {
+    db.document("statuses/$me/items/$id").set(fields + ("createdAt" to FieldValue.serverTimestamp())).await()
+  }
+
+  suspend fun postImage(me: String, media: PreparedMedia, caption: String, audience: StatusAudience, list: List<String>, onProgress: (Float) -> Unit = {}) {
     val id = UUID.randomUUID().toString()
     val path = "statuses/$me/$id/photo.jpg"
-    val meta = StorageMetadata.Builder().setContentType("image/jpeg").build()
-    storage.reference.child(path).putBytes(media.bytes, meta).await()
-    db.document("statuses/$me/items/$id").set(
+    upload(path, media.bytes, "image/jpeg", onProgress)
+    publish(
+      me, id,
       mapOf(
         "kind" to "image", "text" to caption.trim(), "audience" to audience.wire, "list" to list,
         "media" to mapOf("path" to path, "width" to (media.width ?: 0), "height" to (media.height ?: 0), "size" to media.bytes.size),
-        "createdAt" to FieldValue.serverTimestamp(),
       ),
-    ).await()
+    )
+  }
+
+  suspend fun postVideo(me: String, video: MediaRepository.PreparedVideo, caption: String, audience: StatusAudience, list: List<String>, onProgress: (Float) -> Unit = {}) {
+    val id = UUID.randomUUID().toString()
+    val path = "statuses/$me/$id/video.mp4"
+    upload(path, video.bytes, "video/mp4", onProgress)
+    publish(
+      me, id,
+      mapOf(
+        "kind" to "video", "text" to caption.trim(), "audience" to audience.wire, "list" to list,
+        "media" to mapOf("path" to path, "width" to video.width, "height" to video.height, "size" to video.bytes.size, "durationMs" to video.durationMs),
+      ),
+    )
+  }
+
+  suspend fun postVoice(me: String, bytes: ByteArray, durationMs: Long, waveform: List<Int>, audience: StatusAudience, list: List<String>, onProgress: (Float) -> Unit = {}) {
+    val id = UUID.randomUUID().toString()
+    val path = "statuses/$me/$id/voice.m4a"
+    upload(path, bytes, "audio/mp4", onProgress)
+    publish(
+      me, id,
+      mapOf(
+        "kind" to "voice", "text" to "", "audience" to audience.wire, "list" to list,
+        "media" to mapOf("path" to path, "size" to bytes.size, "durationMs" to durationMs, "waveform" to waveform.take(64)),
+      ),
+    )
   }
 
   suspend fun delete(me: String, id: String) {
@@ -114,6 +150,8 @@ class StatusRepository(private val db: FirebaseFirestore, private val storage: F
       mediaPath = media?.get("path") as? String,
       createdAt = created,
       expiresAt = (d.get("expiresAt") as? Timestamp)?.toDate()?.time,
+      durationMs = (media?.get("durationMs") as? Number)?.toLong(),
+      waveform = (media?.get("waveform") as? List<*>)?.mapNotNull { (it as? Number)?.toInt() } ?: emptyList(),
     )
   }
 }
