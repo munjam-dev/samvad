@@ -33,6 +33,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import com.samvad.messenger.AppContainer
 import com.samvad.messenger.ChatLink
 import com.samvad.messenger.R
@@ -52,6 +56,7 @@ import com.samvad.messenger.ui.security.TwoStepVerifyScreen
 import com.samvad.messenger.ui.settings.ChatThemeScreen
 import com.samvad.messenger.ui.settings.BlockedContactsScreen
 import com.samvad.messenger.ui.settings.SettingsScreen
+import com.samvad.messenger.ui.language.LanguageScreen
 import com.samvad.messenger.ui.setup.ProfileSetupScreen
 import com.samvad.messenger.ui.theme.SamvadTheme
 
@@ -81,7 +86,12 @@ fun SamvadRoot(
         Destination.ONBOARDING -> OnboardingScreen(onDone = session::finishOnboarding)
         Destination.SIGN_IN -> AuthFlow(container)
         Destination.TWO_STEP -> TwoStepVerifyScreen(container, state.phone.orEmpty(), onSignOut = session::signOut)
-        Destination.PROFILE_SETUP -> ProfileSetupScreen(container, state.uid!!, state.phone.orEmpty(), session::profileCreated)
+        Destination.PROFILE_SETUP -> {
+          // The account exists once the last question is answered; the language comes before home.
+          var chooseLanguage by rememberSaveable { mutableStateOf(false) }
+          if (chooseLanguage) LanguageScreen(onContinue = session::profileCreated)
+          else ProfileSetupScreen(container, state.uid!!, state.phone.orEmpty(), onDone = { chooseLanguage = true })
+        }
         Destination.HOME -> SignedInNav(container, session, state.uid!!, link, onLinkHandled)
       }
     }

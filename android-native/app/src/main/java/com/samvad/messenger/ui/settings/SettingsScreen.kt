@@ -44,6 +44,7 @@ import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.Devices
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.VerifiedUser
@@ -93,6 +94,8 @@ import com.samvad.messenger.data.AccountException
 import com.samvad.messenger.data.AccountRepository
 import com.samvad.messenger.data.UsernameResult
 import com.samvad.core.profile.Usernames
+import com.samvad.messenger.ui.language.AppLanguage
+import com.samvad.messenger.ui.language.LanguageList
 import com.samvad.messenger.ui.setup.UsernameField
 import com.samvad.messenger.ui.setup.usernameStatus
 import com.samvad.messenger.ui.security.PinInput
@@ -126,6 +129,7 @@ fun SettingsScreen(
   val phone = container.auth?.currentUser?.phoneNumber.orEmpty()
   val context = androidx.compose.ui.platform.LocalContext.current
   var editing by remember { mutableStateOf(false) }
+  var choosingLanguage by remember { mutableStateOf(false) }
   var confirmSignOutAll by remember { mutableStateOf(false) }
   var confirmDelete by remember { mutableStateOf(false) }
   var reauthing by remember { mutableStateOf(false) }
@@ -222,6 +226,7 @@ fun SettingsScreen(
           RadioRow(stringResource(label), prefs.homeLayout == layout) { scope.launch { container.preferences.setHomeLayout(layout) } }
         }
         ActionRow(Icons.Outlined.Wallpaper, stringResource(R.string.chat_theme_title), onClick = onOpenChatTheme)
+        ActionRow(Icons.Outlined.Language, stringResource(R.string.settings_language), onClick = { choosingLanguage = true })
         ActionRow(Icons.Outlined.StarOutline, stringResource(R.string.starred_title), onClick = onOpenStarred)
       }
 
@@ -354,6 +359,20 @@ fun SettingsScreen(
     }
   }
   SnackbarHost(snackbar, Modifier.fillMaxSize().navigationBarsPadding().padding(16.dp).wrapContentSize(Alignment.BottomCenter))
+
+  if (choosingLanguage) {
+    val activity = androidx.activity.compose.LocalActivity.current!!
+    ModalBottomSheet(onDismissRequest = { choosingLanguage = false }) {
+      Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(stringResource(R.string.settings_language), style = MaterialTheme.typography.titleLarge, color = SamvadTheme.colors.onSurface)
+        LanguageList(
+          selected = AppLanguage.current(activity),
+          onSelect = { tag -> choosingLanguage = false; AppLanguage.apply(activity, tag) },
+        )
+        Spacer(Modifier.height(16.dp))
+      }
+    }
+  }
 
   if (editing) {
     EditProfileSheet(

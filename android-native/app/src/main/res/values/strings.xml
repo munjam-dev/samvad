@@ -82,6 +82,10 @@
     <string name="username_unknown">Could not check right now. Check your connection</string>
     <string name="username_too_many_checks">Too many checks today. Try again tomorrow</string>
     <string name="username_save_failed">Could not save the username. Your other changes were saved</string>
+    <string name="language_title">Choose your language</string>
+    <string name="language_body">You can change this any time in Settings.</string>
+    <string name="language_continue">Continue</string>
+    <string name="settings_language">Language</string>
     <string name="setup_finish">Start chatting</string>
     <string name="setup_skip">Skip</string>
 

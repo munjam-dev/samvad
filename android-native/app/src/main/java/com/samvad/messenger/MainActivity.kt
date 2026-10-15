@@ -36,6 +36,10 @@ data class ChatLink(val conversationId: String, val otherUid: String?)
 class MainActivity : FragmentActivity() {
   private val pendingLink = mutableStateOf<ChatLink?>(null)
 
+  override fun attachBaseContext(newBase: android.content.Context) {
+    super.attachBaseContext(com.samvad.messenger.ui.language.AppLanguage.wrap(newBase))
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     val splash = installSplashScreen()
     super.onCreate(savedInstanceState)
