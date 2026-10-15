@@ -434,7 +434,20 @@ service cloud.firestore {
             || (d.kind == 'image'
                 && d.media is map
                 && d.media.keys().hasOnly(['path', 'width', 'height', 'size'])
-                && d.media.path == 'statuses/' + uid + '/' + sid + '/photo.jpg'));
+                && d.media.path == 'statuses/' + uid + '/' + sid + '/photo.jpg')
+            // A short video (at most 30 seconds, 16 MB; the Storage rules enforce the size).
+            || (d.kind == 'video'
+                && d.media is map
+                && d.media.keys().hasOnly(['path', 'width', 'height', 'size', 'durationMs'])
+                && d.media.path == 'statuses/' + uid + '/' + sid + '/video.mp4'
+                && d.media.durationMs is int && d.media.durationMs >= 1 && d.media.durationMs <= 30000)
+            // A voice note (at most 60 seconds; the Storage rules enforce the size).
+            || (d.kind == 'voice'
+                && d.media is map
+                && d.media.keys().hasOnly(['path', 'size', 'durationMs', 'waveform'])
+                && d.media.path == 'statuses/' + uid + '/' + sid + '/voice.m4a'
+                && d.media.durationMs is int && d.media.durationMs >= 1 && d.media.durationMs <= 60000
+                && d.media.waveform is list && d.media.waveform.size() <= 64));
     }
 
     match /statuses/{author}/items/{sid} {

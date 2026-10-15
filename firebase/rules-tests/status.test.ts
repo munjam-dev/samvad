@@ -83,6 +83,22 @@ describe('creating a status', () => {
     await assertFails(setDoc(item(A), newText({ extra: 1 })));
   });
 
+  it('lets the author post a video of 30 seconds or less, and a voice note of 60 seconds or less', async () => {
+    await assertSucceeds(setDoc(item(A), newText({ kind: 'video', text: '', media: { path: `statuses/${A}/${SID}/video.mp4`, width: 720, height: 1280, size: 5_000_000, durationMs: 20_000 } })));
+    await assertSucceeds(setDoc(item(A, A, SID2), newText({ kind: 'voice', text: '', media: { path: `statuses/${A}/${SID2}/voice.m4a`, size: 80_000, durationMs: 40_000, waveform: [1, 5, 9] } })));
+  });
+
+  it('rejects a video over 30 seconds or with no duration, and a voice note over 60 seconds', async () => {
+    await assertFails(setDoc(item(A), newText({ kind: 'video', text: '', media: { path: `statuses/${A}/${SID}/video.mp4`, width: 720, height: 1280, size: 5_000_000, durationMs: 31_000 } })));
+    await assertFails(setDoc(item(A), newText({ kind: 'video', text: '', media: { path: `statuses/${A}/${SID}/video.mp4`, width: 720, height: 1280, size: 5_000_000 } })));
+    await assertFails(setDoc(item(A), newText({ kind: 'voice', text: '', media: { path: `statuses/${A}/${SID}/voice.m4a`, size: 80_000, durationMs: 61_000, waveform: [] } })));
+  });
+
+  it('rejects a video or voice note pointing at the wrong file name', async () => {
+    await assertFails(setDoc(item(A), newText({ kind: 'video', text: '', media: { path: `statuses/${A}/${SID}/photo.jpg`, width: 1, height: 1, size: 1, durationMs: 1000 } })));
+    await assertFails(setDoc(item(A), newText({ kind: 'voice', text: '', media: { path: `statuses/${A}/${SID}/video.mp4`, size: 1, durationMs: 1000, waveform: [] } })));
+  });
+
   it('rejects an image whose media path is not under the author and status id', async () => {
     await assertFails(
       setDoc(item(A), newText({ kind: 'image', text: '', media: { path: `statuses/${C}/${SID}/photo.jpg`, width: 10, height: 10, size: 100 } })),

@@ -63,7 +63,7 @@ service firebase.storage {
       allow update, delete: if false;
     }
 
-    // statuses/{author}/{sid}/photo.jpg: written once by the author. Readable by the author, and by anyone the
+    // statuses/{author}/{sid}/(photo.jpg|video.mp4|voice.m4a): written once by the author. Readable by the author, and by anyone the
     // status document says may see it (checked against the Firestore document, including blocks).
     match /statuses/{author}/{sid}/{file} {
       function item() {
@@ -81,10 +81,15 @@ service firebase.storage {
         && request.auth.uid == author
         && resource == null
         && sid.matches('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
-        && file == 'photo.jpg'
         && request.resource.size > 0
-        && request.resource.size <= 8 * 1024 * 1024
-        && request.resource.contentType.matches('image/(jpeg|png|webp)')
+        && (
+          (file == 'photo.jpg' && request.resource.size <= 8 * 1024 * 1024
+            && request.resource.contentType.matches('image/(jpeg|png|webp)'))
+          || (file == 'video.mp4' && request.resource.size <= 16 * 1024 * 1024
+            && request.resource.contentType == 'video/mp4')
+          || (file == 'voice.m4a' && request.resource.size <= 4 * 1024 * 1024
+            && request.resource.contentType.matches('audio/(mp4|aac)'))
+        )
         && !firestore.exists(/databases/(default)/documents/statuses/$(author)/items/$(sid));
 
       allow update, delete: if false;
