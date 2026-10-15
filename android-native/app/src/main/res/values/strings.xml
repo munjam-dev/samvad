@@ -65,6 +65,23 @@
     <string name="setup_about_title">Add a short about</string>
     <string name="setup_about_hint">e.g. Tending the balcony garden</string>
     <string name="setup_about_help">Optional · up to 140 characters</string>
+    <string name="profile_username">Username</string>
+    <string name="setup_username_title">Pick a username</string>
+    <string name="username_hint">e.g. asha_k</string>
+    <string name="username_help">Optional · letters, numbers and underscores</string>
+    <string name="username_checking">Checking…</string>
+    <string name="username_available">Available</string>
+    <string name="username_current">This is your username</string>
+    <string name="username_taken">Someone already has this username</string>
+    <string name="username_too_short">At least %1$d characters</string>
+    <string name="username_too_long">At most %1$d characters</string>
+    <string name="username_bad_start">Start with a letter</string>
+    <string name="username_bad_chars">Use only letters a to z, numbers and underscores</string>
+    <string name="username_underscores">No double underscores, and do not end with one</string>
+    <string name="username_reserved">This username is not available</string>
+    <string name="username_unknown">Could not check right now. Check your connection</string>
+    <string name="username_too_many_checks">Too many checks today. Try again tomorrow</string>
+    <string name="username_save_failed">Could not save the username. Your other changes were saved</string>
     <string name="setup_finish">Start chatting</string>
     <string name="setup_skip">Skip</string>
 

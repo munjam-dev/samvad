@@ -29,18 +29,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.samvad.messenger.AppContainer
+import com.samvad.core.profile.Usernames
 import com.samvad.messenger.R
+import com.samvad.messenger.data.UsernameResult
 import com.samvad.messenger.ui.components.PrimaryButton
 import com.samvad.messenger.ui.components.QuietButton
 import com.samvad.messenger.ui.components.SamvadTextField
 import com.samvad.messenger.ui.theme.SamvadTheme
 import kotlinx.coroutines.launch
 
-private const val STEPS = 2
+private const val STEPS = 3
 
 /**
  * One question per screen with a progress bar. Only what the backend stores is asked:
- * display name and an optional about line. No gender, birth date or other personal data.
+ * display name, an optional username and an optional about line. No gender, birth date or other personal data.
  */
 @Composable
 fun ProfileSetupScreen(container: AppContainer, uid: String, phone: String, onDone: () -> Unit) {
@@ -48,10 +50,15 @@ fun ProfileSetupScreen(container: AppContainer, uid: String, phone: String, onDo
   val scope = rememberCoroutineScope()
   var step by rememberSaveable { mutableIntStateOf(1) }
   var name by rememberSaveable { mutableStateOf("") }
+  var username by rememberSaveable { mutableStateOf("") }
   var about by rememberSaveable { mutableStateOf("") }
+  var created by rememberSaveable { mutableStateOf(false) }
+  var lostName by rememberSaveable { mutableStateOf(false) }
   var saving by rememberSaveable { mutableStateOf(false) }
   var failed by rememberSaveable { mutableStateOf(false) }
   val nameOk = name.isNotBlank() && name.length <= 64
+  val status by usernameStatus(container.accounts, username, current = null)
+  val shown = if (lostName && status == UsernameStatus.AVAILABLE) UsernameStatus.TAKEN else status
 
   BackHandler(enabled = step > 1) { step-- }
 
@@ -59,8 +66,18 @@ fun ProfileSetupScreen(container: AppContainer, uid: String, phone: String, onDo
     saving = true
     failed = false
     scope.launch {
-      runCatching { container.accounts!!.createAccount(uid, phone, name.trim(), about.trim()) }
-        .onSuccess { onDone() }
+      runCatching { if (!created) container.accounts!!.createAccount(uid, phone, name.trim(), about.trim()) }
+        .onSuccess {
+          created = true
+          val wanted = Usernames.normalize(username)
+          // The name may have been taken since it was checked: send the person back to choose another.
+          if (wanted.isNotEmpty() && container.accounts!!.setUsername(wanted) == UsernameResult.Taken) {
+            lostName = true
+            step = 2
+          } else {
+            onDone()
+          }
+        }
         .onFailure { failed = true }
       saving = false
     }
@@ -93,6 +110,10 @@ fun ProfileSetupScreen(container: AppContainer, uid: String, phone: String, onDo
             name, { name = it }, stringResource(R.string.setup_name_hint),
             supportingText = stringResource(R.string.setup_name_help), maxLength = 64,
           )
+        } else if (s == 2) {
+          Text(stringResource(R.string.setup_username_title), style = MaterialTheme.typography.headlineMedium, color = colors.onSurface)
+          Spacer(Modifier.height(24.dp))
+          UsernameField(username, { username = it; lostName = false }, shown)
         } else {
           Text(stringResource(R.string.setup_about_title), style = MaterialTheme.typography.headlineMedium, color = colors.onSurface)
           Spacer(Modifier.height(24.dp))
@@ -105,13 +126,16 @@ fun ProfileSetupScreen(container: AppContainer, uid: String, phone: String, onDo
       }
     }
     if (failed) Text(stringResource(R.string.error_unknown), color = colors.error, style = MaterialTheme.typography.bodyMedium)
-    if (step == 2) {
+    if (step == 2 && username.isNotEmpty()) {
+      QuietButton(stringResource(R.string.setup_skip), { username = ""; step++ }, Modifier.align(Alignment.CenterHorizontally))
+    }
+    if (step == 3) {
       QuietButton(stringResource(R.string.setup_skip), { about = ""; finish() }, Modifier.align(Alignment.CenterHorizontally), enabled = !saving)
     }
     PrimaryButton(
       text = stringResource(if (step == STEPS) R.string.setup_finish else R.string.onboarding_next),
       onClick = { if (step < STEPS) step++ else finish() },
-      enabled = nameOk,
+      enabled = nameOk && (step != 2 || shown.ok),
       loading = saving,
       modifier = Modifier.padding(bottom = 24.dp, top = 8.dp),
     )

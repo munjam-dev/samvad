@@ -1,6 +1,7 @@
 package com.samvad.messenger.data
 
 import android.os.Build
+import android.util.Log
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.functions.FirebaseFunctions
@@ -20,6 +21,17 @@ sealed class AccountException(message: String) : Exception(message) {
   class WrongPin : AccountException("wrong-pin")
   class Failed(cause: Throwable) : AccountException(cause.message ?: "failed")
 }
+
+sealed interface UsernameCheck {
+  data object Available : UsernameCheck
+  /** [reason] is the server's code ("taken", "reserved", ...), or null. */
+  data class Unavailable(val reason: String?) : UsernameCheck
+  data object TooManyChecks : UsernameCheck
+  /** Offline or a server error: the name is not known to be free. */
+  data object Unknown : UsernameCheck
+}
+
+enum class UsernameResult { Saved, Taken, Invalid, TooManyChanges, Failed }
 
 /** users/{uid}, profiles/{uid}, devices and the account callables (B1). */
 class AccountRepository(
@@ -62,7 +74,7 @@ class AccountRepository(
     val reg = db.document("profiles/$uid").addSnapshotListener { snap, _ ->
       trySend(
         snap?.takeIf { it.exists() }?.let {
-          Profile(uid, it.getString("displayName") ?: "", it.getString("about") ?: "", it.getString("photoUrl"))
+          Profile(uid, it.getString("displayName") ?: "", it.getString("about") ?: "", it.getString("photoUrl"), it.getString("username"))
         },
       )
     }
@@ -108,6 +120,33 @@ class AccountRepository(
     } catch (e: Exception) {
       throw AccountException.Failed(e)
     }
+  }
+
+  /** Whether [name] can be taken right now (the server's answer, so a name someone just took shows as taken). */
+  suspend fun checkUsername(name: String): UsernameCheck = try {
+    val r = functions.getHttpsCallable("checkUsername", limitedUse).call(mapOf("username" to name)).await().data as Map<*, *>
+    if (r["available"] == true) UsernameCheck.Available else UsernameCheck.Unavailable(r["reason"] as? String)
+  } catch (e: FirebaseFunctionsException) {
+    Log.w("Username", "checkUsername failed: ${e.code}")
+    if (e.code == FirebaseFunctionsException.Code.RESOURCE_EXHAUSTED) UsernameCheck.TooManyChecks else UsernameCheck.Unknown
+  } catch (e: Exception) {
+    Log.w("Username", "checkUsername failed: ${e.javaClass.simpleName}")
+    UsernameCheck.Unknown
+  }
+
+  /** Claims [name], or with null removes the username. Returns the server's reason when it is refused. */
+  suspend fun setUsername(name: String?): UsernameResult = try {
+    functions.getHttpsCallable("setUsername", limitedUse).call(mapOf("username" to name)).await()
+    UsernameResult.Saved
+  } catch (e: FirebaseFunctionsException) {
+    when {
+      e.code == FirebaseFunctionsException.Code.ALREADY_EXISTS -> UsernameResult.Taken
+      e.code == FirebaseFunctionsException.Code.INVALID_ARGUMENT -> UsernameResult.Invalid
+      e.code == FirebaseFunctionsException.Code.RESOURCE_EXHAUSTED -> UsernameResult.TooManyChanges
+      else -> UsernameResult.Failed
+    }
+  } catch (e: Exception) {
+    UsernameResult.Failed
   }
 
   /** With two-step on, [pin] replaces the fresh SMS sign-in the server otherwise requires. */

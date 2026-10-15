@@ -90,6 +90,11 @@ import com.samvad.messenger.AppContainer
 import com.samvad.messenger.BuildConfig
 import com.samvad.messenger.R
 import com.samvad.messenger.data.AccountException
+import com.samvad.messenger.data.AccountRepository
+import com.samvad.messenger.data.UsernameResult
+import com.samvad.core.profile.Usernames
+import com.samvad.messenger.ui.setup.UsernameField
+import com.samvad.messenger.ui.setup.usernameStatus
 import com.samvad.messenger.ui.security.PinInput
 import com.samvad.messenger.data.AppPreferences
 import com.samvad.messenger.ui.auth.AuthStep
@@ -144,6 +149,7 @@ fun SettingsScreen(
   val msgSignedOutAll = stringResource(R.string.settings_signed_out_all)
   val msgCooldown = stringResource(R.string.settings_cooldown)
   val msgError = stringResource(R.string.error_unknown)
+  val msgUsernameFailed = stringResource(R.string.username_save_failed)
   val msgNoScreenLock = stringResource(R.string.settings_app_lock_unavailable)
   val lockTitle = stringResource(R.string.lock_prompt_title)
   val lockSubtitle = stringResource(R.string.lock_prompt_subtitle)
@@ -183,6 +189,7 @@ fun SettingsScreen(
         }
         Column(Modifier.weight(1f)) {
           Text(profile?.displayName ?: "", style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
+          if (!profile?.username.isNullOrEmpty()) Text("@${profile!!.username}", style = MaterialTheme.typography.bodyMedium, color = colors.brand)
           if (!profile?.about.isNullOrBlank()) Text(profile!!.about, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
           Text(phone, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
         }
@@ -352,11 +359,17 @@ fun SettingsScreen(
     EditProfileSheet(
       initialName = profile?.displayName ?: "",
       initialAbout = profile?.about ?: "",
+      initialUsername = profile?.username ?: "",
+      accounts = container.accounts,
       onDismiss = { editing = false },
-      onSave = { name, about ->
+      onSave = { name, about, username ->
         scope.launch {
           runCatching { container.accounts!!.updateProfile(me, name, about) }
             .onFailure { snackbar.showSnackbar(msgError) }
+          if (username != (profile?.username ?: "")) {
+            val result = container.accounts!!.setUsername(username.ifEmpty { null })
+            if (result != UsernameResult.Saved) snackbar.showSnackbar(msgUsernameFailed)
+          }
           editing = false
         }
       },
@@ -490,15 +503,25 @@ private fun ReauthThenDelete(container: AppContainer, phone: String, onDeleted: 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun EditProfileSheet(initialName: String, initialAbout: String, onDismiss: () -> Unit, onSave: (String, String) -> Unit) {
+private fun EditProfileSheet(
+  initialName: String,
+  initialAbout: String,
+  initialUsername: String,
+  accounts: AccountRepository?,
+  onDismiss: () -> Unit,
+  onSave: (String, String, String) -> Unit,
+) {
   var name by remember { mutableStateOf(initialName) }
   var about by remember { mutableStateOf(initialAbout) }
+  var username by remember { mutableStateOf(initialUsername) }
+  val status by usernameStatus(accounts, username, initialUsername.ifEmpty { null })
   ModalBottomSheet(onDismissRequest = onDismiss) {
     Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
       Text(stringResource(R.string.settings_edit_profile), style = MaterialTheme.typography.titleLarge, color = SamvadTheme.colors.onSurface)
       SamvadTextField(name, { name = it }, stringResource(R.string.profile_name), maxLength = 64, supportingText = stringResource(R.string.setup_name_help))
+      UsernameField(username, { username = it }, status)
       SamvadTextField(about, { about = it }, stringResource(R.string.profile_about), maxLength = 140, singleLine = false, supportingText = stringResource(R.string.setup_about_help))
-      PrimaryButton(stringResource(R.string.save), { onSave(name.trim(), about.trim()) }, enabled = name.isNotBlank())
+      PrimaryButton(stringResource(R.string.save), { onSave(name.trim(), about.trim(), Usernames.normalize(username)) }, enabled = name.isNotBlank() && status.ok)
       Spacer(Modifier.height(16.dp))
     }
   }
