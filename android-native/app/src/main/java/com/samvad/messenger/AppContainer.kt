@@ -4,6 +4,7 @@ import android.content.Context
 import com.samvad.messenger.data.AccountRepository
 import com.samvad.messenger.data.AuthRepository
 import com.samvad.messenger.data.ChatRepository
+import com.samvad.messenger.data.StatusRepository
 import com.samvad.messenger.data.ChatThemeRepository
 import com.samvad.messenger.data.ContactsRepository
 import com.samvad.messenger.data.FirebaseServices
@@ -43,6 +44,7 @@ class AppContainer(context: Context) {
   val safety: SafetyRepository? = firebase?.let { SafetyRepository(it.db, it.functions) }
   val twoStep: TwoStepRepository? = firebase?.let { TwoStepRepository(it.auth, it.functions) }
   val groups: GroupRepository? = firebase?.let { GroupRepository(it.functions) }
+  val status: StatusRepository? = firebase?.let { StatusRepository(it.db, it.storage) }
   val push = PushTokens(enabled = firebase != null && !com.samvad.messenger.BuildConfig.USE_EMULATORS)
 
   val isConfigured: Boolean get() = firebase != null

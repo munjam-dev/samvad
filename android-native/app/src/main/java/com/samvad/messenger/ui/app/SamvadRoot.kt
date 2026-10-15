@@ -120,6 +120,8 @@ private fun SignedInNav(
         onOpenChat = { cid, other -> nav.navigate(if (other == null) "group/$cid" else "chat/$cid/$other") },
         onNewChat = { nav.navigate("newchat") },
         onOpenSettings = { nav.navigate("settings") },
+        onOpenStatus = { author -> nav.navigate("status/view/$author") },
+        onNewStatus = { nav.navigate("status/new") },
       )
     }
     composable(
@@ -194,6 +196,12 @@ private fun SignedInNav(
         onOpenChatTheme = { nav.navigate("chattheme") },
         onOpenStarred = { nav.navigate("starred") },
       )
+    }
+    composable("status/new") {
+      com.samvad.messenger.ui.status.StatusComposerScreen(container, uid, onBack = { nav.popBackStack() })
+    }
+    composable("status/view/{author}", arguments = listOf(navArgument("author") { type = NavType.StringType })) { entry ->
+      com.samvad.messenger.ui.status.StatusViewerScreen(container, uid, entry.arguments!!.getString("author")!!, onBack = { nav.popBackStack() })
     }
     composable("starred") {
       StarredScreen(container, uid, onlyChat = null, onBack = { nav.popBackStack() }, onOpenChat = { cid, other ->

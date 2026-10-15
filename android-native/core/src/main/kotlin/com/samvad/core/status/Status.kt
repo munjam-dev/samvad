@@ -32,9 +32,9 @@ object StatusRules {
   const val MAX_TEXT = 700
   const val LIFETIME_MS = 24L * 60 * 60 * 1000
 
-  /** Names of the text-status backgrounds. The colours live in the app theme. */
-  val STYLES = listOf("forest", "sage", "marigold", "monsoon", "night")
-  const val DEFAULT_STYLE = "forest"
+  /** Text-status backgrounds. These are chat theme ids, so the colours come from the chat themes. */
+  val STYLES = listOf("night_garden", "sage", "marigold", "monsoon", "ivory")
+  const val DEFAULT_STYLE = "night_garden"
 
   fun style(name: String?): String = if (name in STYLES) name!! else DEFAULT_STYLE
 

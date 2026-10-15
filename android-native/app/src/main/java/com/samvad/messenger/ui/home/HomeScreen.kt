@@ -121,6 +121,8 @@ fun HomeScreen(
   onOpenChat: (conversationId: String, otherUid: String?) -> Unit,
   onNewChat: () -> Unit,
   onOpenSettings: () -> Unit,
+  onOpenStatus: (String) -> Unit = {},
+  onNewStatus: () -> Unit = {},
 ) {
   val vm: HomeViewModel = viewModel(factory = HomeViewModel.factory(container, me))
   val state = vm.state.collectAsStateWithLifecycle().value
@@ -138,7 +140,7 @@ fun HomeScreen(
       label = "tab",
     ) { t ->
       when (t) {
-        Tab.CHATS -> ChatsTab(container, state, vm, onOpenChat, onNewChat, onOpenSettings)
+        Tab.CHATS -> ChatsTab(container, me, state, vm, onOpenChat, onNewChat, onOpenSettings, onOpenStatus, onNewStatus)
         Tab.CALLS -> ComingSoon(Icons.Outlined.Call, R.string.calls_title, R.string.calls_body)
         Tab.COMMUNITIES -> ComingSoon(Icons.Outlined.Groups, R.string.communities_title, R.string.communities_body)
       }
@@ -180,13 +182,19 @@ private fun ComingSoon(icon: ImageVector, title: Int, body: Int) {
 @Composable
 private fun ChatsTab(
   container: AppContainer,
+  me: String,
   state: HomeUiState,
   vm: HomeViewModel,
   onOpenChat: (String, String?) -> Unit,
   onNewChat: () -> Unit,
   onOpenSettings: () -> Unit,
+  onOpenStatus: (String) -> Unit,
+  onNewStatus: () -> Unit,
 ) {
   val colors = SamvadTheme.colors
+  val statusVm: com.samvad.messenger.ui.status.StatusViewModel? = container.status?.let {
+    androidx.lifecycle.viewmodel.compose.viewModel(factory = com.samvad.messenger.ui.status.StatusViewModel.factory(container, me))
+  }
   val open: (ChatRow) -> Unit = { row -> onOpenChat(row.conversationId, if (row.isGroup) null else vm.otherOf(row)) }
   val seen = remember { mutableSetOf<Any>() }
   LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 128.dp)) {
@@ -201,6 +209,12 @@ private fun ChatsTab(
     item(key = "banners") {
       StatusBanner(state.offline, stringResource(R.string.home_offline))
       StatusBanner(state.error, stringResource(R.string.home_load_error), isError = true, actionLabel = stringResource(R.string.retry), onAction = vm::retry)
+    }
+    if (statusVm != null && !state.searching) {
+      item(key = "status") {
+        val statusState = statusVm.state.collectAsStateWithLifecycle().value
+        com.samvad.messenger.ui.status.StatusStrip(statusState, onOpenMine = { onOpenStatus(me) }, onCompose = onNewStatus, onOpenPerson = onOpenStatus)
+      }
     }
     if (state.recentPeople.isNotEmpty() && !state.searching) {
       item(key = "people") {

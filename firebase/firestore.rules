@@ -450,6 +450,9 @@ service cloud.firestore {
 
       allow delete: if isOwner(author);
 
+      // The author can list their own posts (their other devices and the "My status" row).
+      allow list: if isOwner(author);
+
       // Who has seen it: each viewer writes only their own document; the author reads them all.
       match /views/{viewer} {
         function parent() {

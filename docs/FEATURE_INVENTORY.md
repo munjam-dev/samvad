@@ -76,7 +76,7 @@ payments and commerce.
 | Feature | Status | Notes |
 |---|---|---|
 | Communities | Missing | Needs data model, rules and an announcement-group authorization design |
-| Status updates (24 h expiry, audience, replies, reactions, viewers) | Partial | Backend built and deployed 2026-10-15: rules for text and photo posts, server-set audience (`visibleTo`) and 24 h expiry, views and reactions, Storage rules, cleanup trigger, TTL policy; 24 rules tests and 13 function tests pass. App: pure rules in `:core` (12 tests pass). **No Status screens yet**, so nothing is visible to users |
+| Status updates (24 h expiry, audience, replies, reactions, viewers) | Partial | Backend built and deployed 2026-10-15: rules for text and photo posts, server-set audience (`visibleTo`) and 24 h expiry, views and reactions, Storage rules, cleanup trigger, TTL policy; 24 rules tests and 13 function tests pass. App (built 2026-10-15): Status row on Home, text composer with 5 backgrounds, photo composer, audience picker (everyone / everyone except / only), full-screen viewer with progress bars, reactions, private reply, viewers list for the author, mute, delete. 12 core tests pass, lint 0 errors. **Checked on the emulator:** posting a text status, the My status ring, and the viewer. **Not yet checked:** viewing someone else's status (needs a second account), photo statuses, reactions, replies, audience picker, expiry |
 | Channels (follow, admins, updates, discovery, moderation) | Missing | |
 
 ## Calling

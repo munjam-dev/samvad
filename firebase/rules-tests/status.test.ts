@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, it } from 'vitest';
 import { assertFails, assertSucceeds, type RulesTestEnvironment } from '@firebase/rules-unit-testing';
 import {
-  collectionGroup, deleteDoc, doc, getDoc, getDocs, query, serverTimestamp, setDoc, Timestamp, updateDoc, where, type Firestore,
+  collection, collectionGroup, deleteDoc, doc, getDoc, getDocs, query, serverTimestamp, setDoc, Timestamp, updateDoc, where, type Firestore,
 } from 'firebase/firestore';
 import { createRulesEnv, phoneContext } from '../test-support/rulesEnv';
 
@@ -99,6 +99,15 @@ describe('reading a status', () => {
 
   it('the author reads their own', async () => {
     await assertSucceeds(getDoc(item(A)));
+  });
+
+  it('the author can list their own statuses', async () => {
+    await assertSucceeds(getDocs(collection(db(A), `statuses/${A}/items`)));
+  });
+
+  it('nobody else can list someone else\'s statuses folder', async () => {
+    await assertFails(getDocs(collection(db(B), `statuses/${A}/items`)));
+    await assertFails(getDocs(collection(db(C), `statuses/${A}/items`)));
   });
 
   it('a person in visibleTo can read it', async () => {
