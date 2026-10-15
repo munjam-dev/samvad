@@ -20,6 +20,7 @@ import com.samvad.messenger.security.AppLock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
 
 /**
  * Manual dependency container. A DI framework (Hilt) is deferred until the build can be verified
@@ -45,4 +46,10 @@ class AppContainer(context: Context) {
   val push = PushTokens(enabled = firebase != null && !com.samvad.messenger.BuildConfig.USE_EMULATORS)
 
   val isConfigured: Boolean get() = firebase != null
+
+  /** Gives a chat the user just created their default disappearing-message timer (off by default). Never throws. */
+  suspend fun applyDefaultTimer(cid: String) {
+    val seconds = runCatching { preferences.preferences.first().defaultTimer }.getOrDefault(0L)
+    if (seconds > 0L) runCatching { groups?.setDisappearingTimer(cid, seconds) }
+  }
 }

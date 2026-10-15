@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { onCall, HttpsError, type CallableRequest } from 'firebase-functions/v2/https';
 import { onDocumentDeleted } from 'firebase-functions/v2/firestore';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { REGION, buildCallableOptions } from './config';
 import { defaultDeps, type Deps } from './deps';
+import { previewOf } from './onMessageCreated';
 import { requirePhoneAuth } from './lib/guards';
 import { consumeDailyBudget } from './lib/budget';
 import { logEvent, newCorrelationId } from './lib/logger';
@@ -61,7 +62,37 @@ export async function cleanupGoneMessage(deps: Deps, cid: string, mid: string): 
   const writer = deps.db.bulkWriter();
   for (const d of saved.docs) if (d.get('conversationId') === cid) void writer.delete(d.ref);
   await writer.close();
+  await refreshLastMessage(deps, cid, mid);
   logEvent('message_cleanup', { count: 1, outcome: 'ok' });
+}
+
+/**
+ * The chat list reads the newest message from a copy on the conversation. When that message is gone, replace
+ * the copy with the newest message that is left (or clear it), so its text does not outlive the message.
+ */
+async function refreshLastMessage(deps: Deps, cid: string, gone: string): Promise<void> {
+  const ref = deps.db.doc(`conversations/${cid}`);
+  const conv = await ref.get();
+  if (!conv.exists || conv.get('lastMessage.id') !== gone) return;
+  const newest = await ref.collection('messages').orderBy('createdAt', 'desc').limit(1).get();
+  const next = newest.docs[0];
+  if (!next) {
+    await ref.update({ lastMessage: null });
+    return;
+  }
+  const data = next.data() as Record<string, any>;
+  const timer = data.expiresAt as Timestamp | undefined;
+  await ref.update({
+    lastMessage: {
+      id: next.id,
+      senderId: data.senderId,
+      preview: data.deleted ? '' : previewOf({ ...data, createdAt: data.createdAt } as any),
+      kind: data.kind,
+      createdAt: data.createdAt,
+      ...(data.kind === 'system' && data.system ? { system: data.system } : {}),
+      ...(timer ? { expiresAt: timer } : {}),
+    },
+  });
 }
 
 type Req = CallableRequest<unknown>;

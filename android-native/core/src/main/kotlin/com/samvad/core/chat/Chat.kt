@@ -15,6 +15,8 @@ data class LastMessage(
   val createdAt: Long,
   /** Set when the last message is a group event ("added", "left"…). */
   val system: SystemInfo? = null,
+  /** When the disappearing-message timer will remove it; null when none. */
+  val expiresAt: Long? = null,
 )
 
 data class Conversation(
@@ -28,6 +30,8 @@ data class Conversation(
   val admins: List<String> = emptyList(),
   val description: String = "",
   val photoPath: String? = null,
+  /** Disappearing-message timer in seconds; 0 means off. Changed only through the server. */
+  val disappearAfterSec: Long = 0L,
 )
 
 data class MemberState(
@@ -63,6 +67,8 @@ data class Message(
   /** Phase 2: @mentioned members, a server-written group event, or a poll. */
   val mentions: List<String> = emptyList(),
   val system: SystemInfo? = null,
+  /** Disappearing messages: when the server will delete it; null when the chat has no timer. */
+  val expiresAt: Long? = null,
   val poll: Poll? = null,
 )
 

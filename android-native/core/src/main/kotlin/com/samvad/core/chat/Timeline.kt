@@ -53,6 +53,7 @@ object Timeline {
     var lastDay: String? = null
     var previous: Message? = null
     for (m in messages) {
+      if (Disappearing.isExpired(m.expiresAt, nowMs)) continue
       val day = Instant.ofEpochMilli(m.createdAt).atZone(zone).toLocalDate().toString()
       if (day != lastDay) {
         out += TimelineItem.DateSeparator(TimeLabels.dateSeparator(m.createdAt, nowMs, zone), day)

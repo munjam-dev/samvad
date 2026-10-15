@@ -25,6 +25,7 @@ data class ChatRow(
 object ChatList {
   const val DELETED_ACCOUNT = "Deleted account"
   const val DELETED_MESSAGE = "Message deleted"
+  const val EXPIRED_MESSAGE = "This message has disappeared"
   const val NEW_CHAT = "Say hello 👋"
   const val GROUP = "Group"
 
@@ -51,6 +52,7 @@ object ChatList {
       val body = when {
         last == null -> NEW_CHAT
         system != null -> SystemText.describe(system, last.senderId, me, nameOf)
+        Disappearing.isExpired(last.expiresAt, nowMs) -> EXPIRED_MESSAGE
         last.preview.isEmpty() -> DELETED_MESSAGE
         else -> last.preview
       }

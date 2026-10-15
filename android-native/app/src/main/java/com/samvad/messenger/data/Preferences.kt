@@ -36,6 +36,8 @@ data class AppPreferences(
   val autoDownload: AutoDownload = AutoDownload.ALWAYS,
   /** Smaller uploads, and photos wait for Wi-Fi unless the setting is stricter. */
   val dataSaver: Boolean = false,
+  /** Disappearing-message timer given to chats the user creates from now on, in seconds; 0 = off. */
+  val defaultTimer: Long = 0L,
 )
 
 /** Local, non-sensitive preferences. Never stores verification IDs, codes or tokens. */
@@ -54,6 +56,7 @@ class PreferencesRepository(private val context: Context) {
   private val calm = booleanPreferencesKey("calm_mode")
   private val autoDl = stringPreferencesKey("auto_download")
   private val saver = booleanPreferencesKey("data_saver")
+  private val defaultTimerKey = androidx.datastore.preferences.core.longPreferencesKey("default_timer")
 
   val preferences: Flow<AppPreferences> = context.dataStore.data.map { p ->
     AppPreferences(
@@ -70,6 +73,7 @@ class PreferencesRepository(private val context: Context) {
       calmMode = p[calm] ?: false,
       autoDownload = AutoDownload.parse(p[autoDl]),
       dataSaver = p[saver] ?: false,
+      defaultTimer = (p[defaultTimerKey] ?: 0L).takeIf { com.samvad.core.chat.Disappearing.isValid(it) } ?: 0L,
     )
   }
 
@@ -86,6 +90,9 @@ class PreferencesRepository(private val context: Context) {
   suspend fun setCalmMode(enabled: Boolean) = context.dataStore.edit { it[calm] = enabled }
   suspend fun setAutoDownload(value: AutoDownload) = context.dataStore.edit { it[autoDl] = value.name }
   suspend fun setDataSaver(enabled: Boolean) = context.dataStore.edit { it[saver] = enabled }
+  suspend fun setDefaultTimer(seconds: Long) = context.dataStore.edit {
+    it[defaultTimerKey] = if (com.samvad.core.chat.Disappearing.isValid(seconds)) seconds else 0L
+  }
 
   /** Random per-install ID (lowercase UUID); no hardware identifiers. */
   suspend fun deviceId(): String {

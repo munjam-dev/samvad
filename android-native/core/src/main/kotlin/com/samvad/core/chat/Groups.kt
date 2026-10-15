@@ -1,7 +1,7 @@
 package com.samvad.core.chat
 
 /** A server-written group event, e.g. event "added" with the added people in [targets]. */
-data class SystemInfo(val event: String, val targets: List<String> = emptyList(), val name: String? = null)
+data class SystemInfo(val event: String, val targets: List<String> = emptyList(), val name: String? = null, val seconds: Long? = null)
 
 /** A poll message. Option i is identified by ids[i]; votes store ids. */
 data class Poll(val question: String, val options: List<String>, val ids: List<String>, val multi: Boolean)
@@ -123,6 +123,7 @@ object SystemText {
       "demoted" -> "${list(info.targets)} ${if (info.targets == listOf(me)) "are" else "is"} no longer an admin"
       "renamed" -> "$a changed the group name to \"${info.name.orEmpty()}\""
       "photo" -> "$a changed the group photo"
+      "disappearing" -> Disappearing.describe(a, info.seconds ?: 0L)
       else -> "$a updated the group"
     }
   }

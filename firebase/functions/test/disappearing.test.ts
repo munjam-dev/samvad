@@ -102,6 +102,15 @@ describe('expiry stamp', () => {
     expect(await expiry('m3')).toBeUndefined();
   });
 
+  it('marks the chat-list preview with the same expiry', async () => {
+    await call('anil', { conversationId: CID, seconds: 86_400 });
+    await put('m5');
+    await applyMessageCreated(deps, msg('m5'));
+    const last = (await conv()).lastMessage;
+    expect(last.id).toBe('m5');
+    expect((last.expiresAt as Timestamp).toMillis()).toBe(created.toMillis() + 86_400_000);
+  });
+
   it('is applied once even if the trigger is delivered twice', async () => {
     await call('anil', { conversationId: CID, seconds: 86_400 });
     await put('m4');
@@ -125,6 +134,26 @@ describe('cleanupGoneMessage', () => {
     expect((await deps.db.doc(`users/anil/savedMessages/${CID}_gone`).get()).exists).toBe(false);
     expect((await deps.db.doc(`users/bina/savedMessages/${CID}_gone`).get()).exists).toBe(false);
     expect((await deps.db.doc(`users/bina/savedMessages/${CID}_kept`).get()).exists).toBe(true);
+  });
+
+  it('replaces the chat-list preview with the newest message that is left', async () => {
+    const t = (ms: number) => Timestamp.fromMillis(1_791_900_000_000 + ms);
+    await deps.db.doc(`conversations/${CID}/messages/older`).set({ senderId: 'bina', kind: 'text', text: 'still here', createdAt: t(0), replyTo: null, deleted: false });
+    await deps.db.doc(`conversations/${CID}`).update({ lastMessage: { id: 'newer', senderId: 'anil', preview: 'secret', kind: 'text', createdAt: t(1000) } });
+    await cleanupGoneMessage(deps, CID, 'newer');
+    expect((await conv()).lastMessage).toMatchObject({ id: 'older', preview: 'still here', senderId: 'bina' });
+  });
+
+  it('clears the chat-list preview when nothing is left', async () => {
+    await deps.db.doc(`conversations/${CID}`).update({ lastMessage: { id: 'only', senderId: 'anil', preview: 'secret', kind: 'text', createdAt: Timestamp.now() } });
+    await cleanupGoneMessage(deps, CID, 'only');
+    expect((await conv()).lastMessage).toBeNull();
+  });
+
+  it('leaves the preview alone when the gone message was not the newest', async () => {
+    await deps.db.doc(`conversations/${CID}`).update({ lastMessage: { id: 'keep', senderId: 'anil', preview: 'visible', kind: 'text', createdAt: Timestamp.now() } });
+    await cleanupGoneMessage(deps, CID, 'someone-else');
+    expect((await conv()).lastMessage).toMatchObject({ id: 'keep', preview: 'visible' });
   });
 
   it('can run twice without error', async () => {

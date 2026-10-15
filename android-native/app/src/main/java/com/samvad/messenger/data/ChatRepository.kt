@@ -129,7 +129,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
   }
 
   /** Returns the direct conversation ID, creating the conversation and member docs if needed. */
-  suspend fun openDirect(me: String, other: String): String {
+  suspend fun openDirect(me: String, other: String, onCreated: suspend (String) -> Unit = {}): String {
     val id = ConversationIds.direct(me, other)
     val ref = db.document("conversations/$id")
     val exists = runCatching { ref.get().await().exists() }.getOrDefault(false)
@@ -157,6 +157,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
         )
       }
       batch.commit().await()
+      onCreated(id)
     }
     return id
   }
@@ -467,6 +468,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
           kind = it["kind"] as? String ?: "text",
           createdAt = (it["createdAt"] as? com.google.firebase.Timestamp)?.toDate()?.time ?: 0L,
           system = (it["system"] as? Map<*, *>)?.let(::toSystem),
+          expiresAt = (it["expiresAt"] as? com.google.firebase.Timestamp)?.toDate()?.time,
         )
       },
       lastMessageAt = d.millis("lastMessageAt") ?: 0L,
@@ -475,12 +477,13 @@ class ChatRepository(private val db: FirebaseFirestore) {
       admins = (d.get("admins") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
       description = d.getString("description") ?: "",
       photoPath = d.getString("photoUrl"),
+      disappearAfterSec = d.getLong("disappearAfterSec") ?: 0L,
     )
   }
 
   private fun toSystem(m: Map<*, *>): SystemInfo? {
     val event = m["event"] as? String ?: return null
-    return SystemInfo(event, (m["targets"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(), m["name"] as? String)
+    return SystemInfo(event, (m["targets"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(), m["name"] as? String, (m["seconds"] as? Number)?.toLong())
   }
 
   private fun toPoll(m: Map<*, *>): Poll? {
@@ -534,6 +537,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
       forwarded = d.getBoolean("forwarded") ?: false,
       mentions = (d.get("mentions") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
       system = (d.get("system") as? Map<*, *>)?.let(::toSystem),
+      expiresAt = d.millis("expiresAt"),
       poll = (d.get("poll") as? Map<*, *>)?.let(::toPoll),
     )
   }

@@ -99,7 +99,7 @@ class GroupInfoViewModel(private val container: AppContainer, private val me: St
   fun hideInvite() { _invite.value = null }
 
   /** Opens (creating if needed) a direct chat with a member. */
-  fun message(uid: String, then: (String, String) -> Unit) = act { then(chats.openDirect(me, uid), uid) }
+  fun message(uid: String, then: (String, String) -> Unit) = act { then(chats.openDirect(me, uid, container::applyDefaultTimer), uid) }
 
   companion object {
     fun factory(container: AppContainer, me: String, cid: String) =

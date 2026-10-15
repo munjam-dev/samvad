@@ -355,6 +355,22 @@
     <string name="settings_auto_wifi">On Wi-Fi only</string>
     <string name="settings_auto_never">Never</string>
     <string name="media_download_photo">Download photo · %1$s</string>
+    <string name="disappearing_title">Disappearing messages</string>
+    <string name="disappearing_body">New messages in this chat are deleted after the time you choose.</string>
+    <string name="disappearing_off">Off</string>
+    <string name="disappearing_24h">24 hours</string>
+    <string name="disappearing_7d">7 days</string>
+    <string name="disappearing_90d">90 days</string>
+    <string name="disappearing_admin_only">Only group admins can change this.</string>
+    <string name="disappearing_limits">This does not stop people from taking screenshots or copying messages. Messages sent before you turn it on are not affected.</string>
+    <string name="cd_disappearing_on">Disappearing messages: %1$s</string>
+    <string name="disappearing_ok">OK</string>
+    <string name="disappearing_error_title">Could not change the timer</string>
+    <string name="disappearing_error_not_allowed">You are not allowed to change this.</string>
+    <string name="disappearing_error_limit">You have changed this too many times today. Try again tomorrow.</string>
+    <string name="disappearing_error_other">Something went wrong. Check your connection and try again.</string>
+    <string name="settings_default_timer">Default message timer</string>
+    <string name="settings_default_timer_body">Applies to new chats you start, not to chats you already have. Anyone in a chat can still screenshot or copy messages.</string>
     <string name="settings_read_receipts">Read receipts</string>
     <string name="settings_read_receipts_body">When off, others won\'t see when you\'ve read their messages, and you won\'t see theirs.</string>
     <!-- Phase 1.6: forward -->

@@ -78,6 +78,7 @@ export async function applyMessageCreated(deps: Deps, msg: CreatedMessage): Prom
           kind: msg.data.kind,
           createdAt: msg.data.createdAt,
           ...(msg.data.kind === 'system' && msg.data.system ? { system: msg.data.system } : {}),
+          ...(timer > 0 ? { expiresAt: Timestamp.fromMillis(msg.data.createdAt.toMillis() + timer * 1000) } : {}),
         },
         lastMessageAt: msg.data.createdAt,
       });

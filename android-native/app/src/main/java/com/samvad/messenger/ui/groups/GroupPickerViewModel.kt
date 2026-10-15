@@ -86,7 +86,11 @@ class GroupPickerViewModel(
   /** New group: creates it and returns its ID through [then]. */
   fun create(then: (String) -> Unit) {
     val name = GroupRules.validName(_state.value.name) ?: return
-    submit { then(groups.create(name, _state.value.selected.map { it.uid })) }
+    submit {
+      val cid = groups.create(name, _state.value.selected.map { it.uid })
+      container.applyDefaultTimer(cid)
+      then(cid)
+    }
   }
 
   /** Add mode: adds the selection to the existing group. */

@@ -251,6 +251,13 @@ fun SettingsScreen(
         }
       }
 
+      Group(stringResource(R.string.settings_default_timer)) {
+        Text(stringResource(R.string.settings_default_timer_body), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp))
+        com.samvad.core.chat.Disappearing.CHOICES.forEach { seconds ->
+          RadioRow(com.samvad.messenger.ui.chat.timerOptionLabel(seconds), prefs.defaultTimer == seconds) { scope.launch { container.preferences.setDefaultTimer(seconds) } }
+        }
+      }
+
       Group(stringResource(R.string.settings_privacy)) {
         val presenceRepo = container.presence
         if (presenceRepo != null) {

@@ -58,6 +58,11 @@ class GroupRepository(private val functions: FirebaseFunctions) {
     return InvitePreview(data["name"] as? String ?: "", (data["memberCount"] as? Number)?.toInt() ?: 0)
   }
 
+  /** Disappearing messages: 0 turns it off. Direct chats: either member; groups: admins only (the server decides). */
+  suspend fun setDisappearingTimer(cid: String, seconds: Long) {
+    call("setDisappearingTimer", mapOf("conversationId" to cid, "seconds" to seconds))
+  }
+
   suspend fun join(code: String): String = call("joinGroupWithCode", mapOf("code" to code))["cid"] as String
 
   private suspend fun call(name: String, data: Map<String, Any?>): Map<String, Any?> {

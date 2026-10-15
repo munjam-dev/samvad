@@ -35,7 +35,9 @@ import android.app.Application
 import android.net.Uri
 import com.samvad.core.media.Media
 import com.samvad.core.media.MediaKind
+import com.samvad.messenger.data.GroupException
 import com.samvad.messenger.data.ScheduledItem
+import kotlinx.coroutines.flow.collectLatest
 import com.samvad.messenger.AppContainer
 import com.samvad.messenger.data.MediaException
 import com.samvad.messenger.data.PreparedMedia
@@ -118,6 +120,17 @@ data class ComposerState(
   val mentionQuery: String? = null,
 )
 
+/** Result of asking the server to change the disappearing-message timer. */
+sealed interface TimerChange {
+  data object Idle : TimerChange
+  data object Saving : TimerChange
+  sealed interface Failed : TimerChange {
+    data object NotAllowed : Failed
+    data object Limit : Failed
+    data object Other : Failed
+  }
+}
+
 class ConversationViewModel(
   private val app: Application,
   private val container: AppContainer,
@@ -188,13 +201,59 @@ class ConversationViewModel(
     else chats.messages(conversationId, n, from).catch { failed.value = true }
   }
 
+  /** Re-reads "now" when the next message expires, so it leaves the screen on time. */
+  private val clock = MutableStateFlow(System.currentTimeMillis())
+
+  init {
+    viewModelScope.launch {
+      page.collectLatest { p ->
+        val now = System.currentTimeMillis()
+        val next = com.samvad.core.chat.Disappearing.nextExpiry(p.messages, now)
+        if (next != null) {
+          kotlinx.coroutines.delay(next - now + 50)
+          clock.value = System.currentTimeMillis()
+        }
+      }
+    }
+  }
+
+  /** The chat's disappearing-message timer in seconds (0 = off). */
+  val timer: StateFlow<Long> = chats.conversation(conversationId)
+    .map { it?.disappearAfterSec ?: 0L }
+    .catch { emit(0L) }
+    .distinctUntilChanged()
+    .stateIn(viewModelScope, SharingStarted.Eagerly, 0L)
+
+  private val _timerChange = MutableStateFlow<TimerChange>(TimerChange.Idle)
+  val timerChange: StateFlow<TimerChange> = _timerChange
+
+  fun setTimer(seconds: Long) {
+    val groups = container.groups ?: return
+    if (_timerChange.value == TimerChange.Saving) return
+    _timerChange.value = TimerChange.Saving
+    viewModelScope.launch {
+      _timerChange.value = try {
+        groups.setDisappearingTimer(conversationId, seconds)
+        TimerChange.Idle
+      } catch (e: GroupException) {
+        when (e) {
+          is GroupException.NotAllowed -> TimerChange.Failed.NotAllowed
+          is GroupException.LimitReached -> TimerChange.Failed.Limit
+          else -> TimerChange.Failed.Other
+        }
+      }
+    }
+  }
+
+  fun dismissTimerError() { if (_timerChange.value is TimerChange.Failed) _timerChange.value = TimerChange.Idle }
+
   val state: StateFlow<ConversationUiState> = combine(
     page,
     if (otherUid != null) chats.memberState(conversationId, otherUid) else flowOf(null),
     myState,
     combine(chats.profiles, group) { profiles, g -> profiles to g },
-    combine(failed, receipts) { f, r -> f to r },
-  ) { p: MessagesPage, other, mine, (profiles, g), (err, showRead) ->
+    combine(failed, receipts, clock) { f, r, now -> Triple(f, r, now) },
+  ) { p: MessagesPage, other, mine, (profiles, g), (err, showRead, now) ->
     val title = if (isGroup) g?.name ?: ChatList.GROUP else profiles[otherUid]?.displayName ?: ChatList.DELETED_ACCOUNT
     val names: ((String) -> String)? =
       if (isGroup) { uid -> profiles[uid]?.displayName ?: ChatList.DELETED_ACCOUNT } else null
@@ -205,7 +264,7 @@ class ConversationViewModel(
       title = title,
       initials = ChatList.initials(title),
       items = Timeline.build(
-        p.messages, me, other, System.currentTimeMillis(), showReadReceipts = showRead, groupNames = names,
+        p.messages, me, other, now, showReadReceipts = showRead, groupNames = names,
         otherName = if (isGroup) null else title,
       ).asReversed(),
       hasMore = p.hasMore,

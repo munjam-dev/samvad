@@ -93,7 +93,7 @@ payments and commerce.
 | App lock (biometric / screen lock), screenshot block, private notification previews | Done | |
 | Tapjacking guard, deep-link validation, no app backups | Done | |
 | Rate limits (lookup, reports, photos, PIN) | Done | |
-| Disappearing messages (default and per chat) | Missing | Needs a per-chat timer, server-enforced expiry (Firestore TTL) and media cleanup |
+| Disappearing messages (default and per chat) | Partial | Built 2026-10-15. Server: timer callable (admins only in groups), server-stamped expiry, TTL policy, cleanup of files, votes, starred references and the chat-list preview; 18 emulator tests, full backend suite 239 pass. App: per-chat timer sheet, header icon, system line, hides expired messages on time, default timer in Settings; 10 core tests pass, lint 0 errors. **Not deployed** (needs the Cloud Run quota) and **not yet checked on a device**. Still to build: starred-copy notice and export warning (US-009), local cache cleanup (US-010) |
 | Chat lock with hidden folder | Missing | |
 | Privacy checkup, profile-photo and about visibility controls | Missing | |
 | **End-to-end encryption** | Missing | The server can read messages today. The site and policies say so. A reviewed protocol (libsignal) must be integrated, with key storage, multi-device keys, attachment and group encryption, and key verification. This is the largest single item and must precede linked devices and encrypted backups |

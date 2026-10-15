@@ -71,7 +71,7 @@ class NewChatViewModel(private val container: AppContainer, private val me: Stri
 
   fun open(uid: String, then: (String, String) -> Unit) = viewModelScope.launch {
     _state.update { it.copy(opening = true, error = false) }
-    runCatching { container.chats!!.openDirect(me, uid) }
+    runCatching { container.chats!!.openDirect(me, uid, container::applyDefaultTimer) }
       .onSuccess { then(it, uid) }
       .onFailure { e -> logFailure("open", e); _state.update { s -> s.copy(error = true) } }
     _state.update { it.copy(opening = false) }

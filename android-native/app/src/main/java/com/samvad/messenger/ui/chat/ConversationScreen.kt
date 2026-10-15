@@ -90,6 +90,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
+import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.zIndex
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -178,6 +179,9 @@ fun ConversationScreen(
   val appPrefs = container.preferences.preferences.collectAsStateWithLifecycle(com.samvad.messenger.data.AppPreferences()).value
   val autoLoadPhotos = com.samvad.core.media.DownloadPolicy.shouldAutoDownload(appPrefs.autoDownload, appPrefs.dataSaver, vm.isMetered(), cached = false)
   var searching by rememberSaveable { mutableStateOf(false) }
+  var timerSheet by rememberSaveable { mutableStateOf(false) }
+  val timer = vm.timer.collectAsStateWithLifecycle().value
+  val timerChange = vm.timerChange.collectAsStateWithLifecycle().value
   var query by rememberSaveable { mutableStateOf("") }
   var matchIdx by rememberSaveable { mutableStateOf(0) }
   val matches = remember(state.items, query) { com.samvad.core.chat.ChatSearch.matches(state.items, query) }
@@ -334,6 +338,33 @@ fun ConversationScreen(
   }
 
   Box(Modifier.fillMaxSize().background(colors.background)) {
+    if (timerSheet) {
+      DisappearingSheet(
+        current = timer,
+        canChange = !state.isGroup || state.isAdmin,
+        saving = timerChange == TimerChange.Saving,
+        onPick = vm::setTimer,
+        onDismiss = { timerSheet = false; vm.dismissTimerError() },
+      )
+    }
+    if (timerChange is TimerChange.Failed) {
+      androidx.compose.material3.AlertDialog(
+        onDismissRequest = vm::dismissTimerError,
+        confirmButton = { androidx.compose.material3.TextButton(onClick = vm::dismissTimerError) { Text(stringResource(R.string.disappearing_ok)) } },
+        title = { Text(stringResource(R.string.disappearing_error_title)) },
+        text = {
+          Text(
+            stringResource(
+              when (timerChange) {
+                TimerChange.Failed.NotAllowed -> R.string.disappearing_error_not_allowed
+                TimerChange.Failed.Limit -> R.string.disappearing_error_limit
+                else -> R.string.disappearing_error_other
+              },
+            ),
+          )
+        },
+      )
+    }
     if (searching) {
       ChatSearchBar(
         query = query,
@@ -365,13 +396,20 @@ fun ConversationScreen(
             .then(if (state.isGroup && onOpenGroupInfo != null) Modifier.clickable(onClickLabel = groupInfoLabel, onClick = onOpenGroupInfo) else Modifier)
             .padding(start = 12.dp),
         ) {
-          Text(
-            state.title,
-            style = MaterialTheme.typography.titleMedium,
-            color = colors.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-          )
+          Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(
+              state.title,
+              style = MaterialTheme.typography.titleMedium,
+              color = colors.onSurface,
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis,
+              modifier = Modifier.weight(1f, fill = false),
+            )
+            if (com.samvad.core.chat.Disappearing.isOn(timer)) {
+              val timerDescription = stringResource(R.string.cd_disappearing_on, optionLabel(timer))
+              Icon(Icons.Outlined.Timer, timerDescription, tint = colors.onSurfaceVariant, modifier = Modifier.size(16.dp))
+            }
+          }
           val you = stringResource(R.string.chat_you)
           val subtitle = when {
             state.isGroup && groupStatus.typing.size == 1 -> stringResource(R.string.group_typing_one, groupStatus.typing[0])
@@ -422,6 +460,7 @@ fun ConversationScreen(
               onClick = { menu = false; confirmExport = true },
             )
             DropdownMenuItem(text = { Text(stringResource(R.string.chat_search)) }, onClick = { menu = false; searching = true })
+            DropdownMenuItem(text = { Text(stringResource(R.string.disappearing_title)) }, onClick = { menu = false; timerSheet = true })
             DropdownMenuItem(text = { Text(stringResource(R.string.starred_title)) }, onClick = { menu = false; onOpenStarred() })
             DropdownMenuItem(text = { Text(stringResource(R.string.chat_theme_title)) }, onClick = { menu = false; onOpenChatTheme() })
             if (!state.isGroup) {
