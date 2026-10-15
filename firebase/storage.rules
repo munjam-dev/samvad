@@ -63,6 +63,33 @@ service firebase.storage {
       allow update, delete: if false;
     }
 
+    // statuses/{author}/{sid}/photo.jpg: written once by the author. Readable by the author, and by anyone the
+    // status document says may see it (checked against the Firestore document, including blocks).
+    match /statuses/{author}/{sid}/{file} {
+      function item() {
+        return firestore.get(/databases/(default)/documents/statuses/$(author)/items/$(sid)).data;
+      }
+      allow read: if signedIn()
+        && (request.auth.uid == author
+            || (firestore.exists(/databases/(default)/documents/statuses/$(author)/items/$(sid))
+                && request.auth.uid in item().get('visibleTo', [])
+                && request.time < item().get('expiresAt', timestamp.date(1970, 1, 1))
+                && !firestore.exists(/databases/(default)/documents/users/$(author)/blocked/$(request.auth.uid))
+                && !firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)/blocked/$(author))));
+
+      allow create: if signedIn()
+        && request.auth.uid == author
+        && resource == null
+        && sid.matches('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
+        && file == 'photo.jpg'
+        && request.resource.size > 0
+        && request.resource.size <= 8 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp)')
+        && !firestore.exists(/databases/(default)/documents/statuses/$(author)/items/$(sid));
+
+      allow update, delete: if false;
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }

@@ -1,6 +1,8 @@
 # End-to-end encryption: decision record
 
-Status: **waiting on a legal answer.** No encryption library has been added to the app.
+Status: **libsignal added to the build on the owner's instruction (2026-10-15). A release gate applies, see below.**
+The Android app does not use it yet: only the version catalog, the `:core` module (compile-only, for tests)
+and a spike test of the protocol are in place.
 
 ## Why this matters
 
@@ -47,3 +49,25 @@ does not link libsignal) may stay private.
 Linked devices, encrypted backups, and any server-side feature that needs message text (the server will not
 have it). Disappearing-message expiry and the chat-list preview use server-side fields today and will need
 rework once the server can no longer read previews.
+
+## Update 2026-10-15: libsignal added
+
+The owner instructed that libsignal be added. Done so far:
+
+- `gradle/libs.versions.toml`: `libsignal-client` (JVM, for `:core` unit tests) and `libsignal-android` (for the app), version 0.86.5.
+- `:core` declares the JVM artifact `compileOnly` and for tests only, so the protocol API is available to pure Kotlin logic without shipping desktop binaries in the app.
+- `core/src/test/.../SignalSpikeTest.kt`: 5 tests pass. Two parties establish a session (PQXDH with a one-time pre-key and a Kyber pre-key) and exchange messages both ways; a third party cannot decrypt; each ciphertext differs; out-of-order delivery works; a replayed message is refused.
+
+**Not done yet:** the app module does not depend on `libsignal-android` yet (the dependency line is still to be added and the build checked), and no app code uses the protocol. No message is encrypted. The website, app notice and policies still say messages are not end-to-end encrypted, and they must until the full flow is built and tested.
+
+## RELEASE GATE (do not skip)
+
+Adding the dependency does not publish anything. The AGPL-3.0 obligations apply **when the app is distributed**
+(for example uploaded to Google Play or shared as an APK). Before the first distribution that includes libsignal:
+
+1. The lawyer must confirm in writing that publishing the Samvad Android app's complete source under AGPL-3.0 is acceptable.
+2. The source must actually be published (a public repository with the AGPL-3.0 licence file), with a link inside the app (Settings, About, Open-source licences).
+3. Brand assets (name, logo) are not licensed under AGPL; say so in the repository.
+
+If the answer is no, remove `libsignal-android` and choose another path from the table above. Nothing else in
+the app is built to depend on libsignal's licence terms except the encryption code that is still to be written.

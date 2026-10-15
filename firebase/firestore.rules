@@ -408,6 +408,86 @@ service cloud.firestore {
       }
     }
 
+    // ---- Status (Phase 4) ----------------------------------------------
+    // A status is a text or photo post that lasts 24 hours. Who may see it is stored in visibleTo, filled in by
+    // the onStatusCreated function (never by a client): the author's direct-chat partners for "all", or the
+    // author's own list for "only"/"except", minus anyone blocked in either direction. Reads also re-check
+    // blocks, so blocking someone hides statuses immediately. The server also stamps expiresAt (createdAt + 24 h):
+    // single reads stop at expiry, and the cleanup job (Firestore TTL) removes the document and its files after.
+
+    function statusVisible(author, data) {
+      return request.auth.uid in data.get('visibleTo', [])
+        && !isBlocked(author, request.auth.uid)
+        && !isBlocked(request.auth.uid, author);
+    }
+
+    function validStatus(uid, sid, d) {
+      return d.keys().hasOnly(['kind', 'text', 'style', 'media', 'audience', 'list', 'createdAt'])
+        && d.keys().hasAll(['kind', 'text', 'audience', 'list', 'createdAt'])
+        && d.createdAt == request.time
+        && d.audience in ['all', 'only', 'except']
+        && d.list is list && d.list.size() <= 200
+        && (d.audience == 'all' ? d.list.size() == 0 : d.list.size() >= 1)
+        && d.text is string && d.text.size() <= 700
+        && (d.get('style', null) == null || (d.style is string && d.style.matches('^[a-z0-9_]{1,24}$')))
+        && ((d.kind == 'text' && d.text.size() >= 1 && !('media' in d))
+            || (d.kind == 'image'
+                && d.media is map
+                && d.media.keys().hasOnly(['path', 'width', 'height', 'size'])
+                && d.media.path == 'statuses/' + uid + '/' + sid + '/photo.jpg'));
+    }
+
+    match /statuses/{author}/items/{sid} {
+      allow get: if signedIn()
+        && (request.auth.uid == author
+            || (request.time < resource.data.get('expiresAt', timestamp.date(1970, 1, 1)) && statusVisible(author, resource.data)));
+
+      allow create: if isOwner(author)
+        && notDeleted(author)
+        && hasProfile(author)
+        && sid.matches('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
+        && validStatus(author, sid, request.resource.data);
+
+      allow delete: if isOwner(author);
+
+      // Who has seen it: each viewer writes only their own document; the author reads them all.
+      match /views/{viewer} {
+        function parent() {
+          return get(/databases/$(database)/documents/statuses/$(author)/items/$(sid)).data;
+        }
+        allow read: if isOwner(author) || isOwner(viewer);
+        allow create: if isOwner(viewer)
+          && viewer != author
+          && request.time < parent().get('expiresAt', timestamp.date(1970, 1, 1))
+          && statusVisible(author, parent())
+          && request.resource.data.keys().hasOnly(['viewedAt'])
+          && request.resource.data.viewedAt == request.time;
+      }
+
+      // One emoji reaction per viewer; visible to the author and to that viewer only.
+      match /reactions/{viewer} {
+        function parent() {
+          return get(/databases/$(database)/documents/statuses/$(author)/items/$(sid)).data;
+        }
+        allow read: if isOwner(author) || isOwner(viewer);
+        allow create, update: if isOwner(viewer)
+          && viewer != author
+          && request.time < parent().get('expiresAt', timestamp.date(1970, 1, 1))
+          && statusVisible(author, parent())
+          && request.resource.data.keys().hasOnly(['emoji', 'at'])
+          && request.resource.data.emoji is string
+          && request.resource.data.emoji.size() >= 1 && request.resource.data.emoji.size() <= 16
+          && request.resource.data.at == request.time;
+        allow delete: if isOwner(viewer);
+      }
+    }
+
+    // The status feed: one collection-group query for everything visible to me.
+    match /{path=**}/items/{sid} {
+      allow list: if signedIn()
+        && request.auth.uid in resource.data.get('visibleTo', []);
+    }
+
     // ---- server-only ---------------------------------------------------
 
     match /deletedAccounts/{uid} {

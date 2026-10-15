@@ -16,6 +16,9 @@ kotlin {
 dependencies {
   implementation(libs.libphonenumber)
   implementation(libs.kotlinx.coroutines.core)
+  // Signal Protocol API. compileOnly here: the app supplies the Android build of the same classes at runtime.
+  compileOnly(libs.libsignal.client)
+  testImplementation(libs.libsignal.client)
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)
 }
