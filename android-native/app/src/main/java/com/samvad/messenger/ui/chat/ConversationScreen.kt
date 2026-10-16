@@ -103,7 +103,16 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.selected
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.outlined.RadioButtonUnchecked
+import com.samvad.core.chat.Selection
+import com.samvad.core.chat.SelectionActions
+import com.samvad.core.chat.StarAction
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextRange
@@ -222,7 +231,21 @@ fun ConversationScreen(
   var viewing by remember { mutableStateOf<String?>(null) }
   val context = LocalContext.current
   var confirmExport by remember { mutableStateOf(false) }
-  var forwarding by remember { mutableStateOf<Message?>(null) }
+  var forwarding by remember { mutableStateOf<List<Message>?>(null) }
+  val selection = vm.selection.collectAsStateWithLifecycle().value
+  val selecting = selection.isNotEmpty()
+  var confirmDeleteSelected by remember { mutableStateOf(false) }
+  val bubbleMessages = remember(state.items) { state.items.filterIsInstance<TimelineItem.Bubble>().map { it.message } }
+  val selectedMessages = remember(bubbleMessages, selection) { Selection.ordered(bubbleMessages, selection) }
+  val selectionActions = remember(selectedMessages, starredIds) { Selection.actions(selectedMessages, me, starredIds) }
+  // Messages that disappear or are deleted drop out; when none are left, selection mode ends.
+  LaunchedEffect(selection, selectedMessages, state.loading) {
+    if (selecting && selectedMessages.isEmpty() && !state.loading) vm.clearSelection()
+  }
+  LaunchedEffect(selecting) {
+    if (selecting && searching) { searching = false; query = ""; matchIdx = 0 }
+  }
+  androidx.activity.compose.BackHandler(enabled = selecting) { vm.clearSelection() }
   val forwardResult = vm.forwardResult.collectAsStateWithLifecycle().value
   val forwardText = forwardResult?.let {
     if (it.failed == 0) androidx.compose.ui.res.pluralStringResource(R.plurals.forward_sent, it.sent, it.sent)
@@ -312,7 +335,10 @@ fun ConversationScreen(
           ActiveChat.set(conversationId)
           Notifications.cancel(appContext, conversationId)
         }
-        Lifecycle.Event.ON_PAUSE -> ActiveChat.set(null)
+        Lifecycle.Event.ON_PAUSE -> {
+          ActiveChat.set(null)
+          vm.saveDraft()
+        }
         else -> Unit
       }
     }
@@ -378,7 +404,20 @@ fun ConversationScreen(
     }
     Column(Modifier.fillMaxSize().imePadding()) {
       // Header
-      Row(
+      if (selecting) SelectionBar(
+        count = selectedMessages.size,
+        actions = selectionActions,
+        onClose = vm::clearSelection,
+        onCopy = {
+          clipboard.setText(AnnotatedString(Selection.copyText(selectedMessages)))
+          vm.clearSelection()
+          scope.launch { snackbar.showSnackbar(copied) }
+        },
+        onForward = { forwarding = selectedMessages; vm.clearSelection() },
+        onStar = { vm.starMany(selectedMessages, selectionActions.star); vm.clearSelection() },
+        onDelete = { confirmDeleteSelected = true },
+        onMessageOptions = { selected = selectedMessages.singleOrNull(); vm.clearSelection() },
+      ) else Row(
         Modifier.fillMaxWidth().background(colors.surface).statusBarsPadding().padding(horizontal = 4.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
       ) {
@@ -505,11 +544,19 @@ fun ConversationScreen(
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
           ) {
             items(state.items, key = { it.key }, contentType = { it::class }) { item ->
-              Box(
+              val bubble = item as? TimelineItem.Bubble
+              val canPick = bubble != null && Selection.canSelect(bubble.message)
+              val picked = canPick && bubble != null && bubble.message.id in selection
+              val toggle: () -> Unit = { if (bubble != null && canPick) vm.toggleSelected(bubble.message.id) }
+              Row(
                 Modifier
                   .animateItem(fadeInSpec = null, fadeOutSpec = null, placementSpec = Motion.offsetSpring)
-                  .then(if (item.key == currentMatch) Modifier.background(colors.primary.copy(alpha = 0.14f), RoundedCornerShape(14.dp)) else Modifier),
+                  .then(if (item.key == currentMatch) Modifier.background(colors.primary.copy(alpha = 0.14f), RoundedCornerShape(14.dp)) else Modifier)
+                  .then(if (picked) Modifier.background(colors.primary.copy(alpha = 0.14f)) else Modifier),
+                verticalAlignment = Alignment.CenterVertically,
               ) {
+              if (selecting && bubble != null) SelectionMark(picked = picked, selectable = canPick, onClick = toggle)
+              Box(Modifier.weight(1f)) {
               when (item) {
                 is TimelineItem.DateSeparator -> DateChip(item.label)
                 is TimelineItem.SystemLine -> SystemLineChip(item.text)
@@ -518,29 +565,33 @@ fun ConversationScreen(
                   animateIn = initialIds?.contains(item.key) == false,
                   replied = item.message.replyTo?.let { id -> state.items.firstOrNull { it.key == id } as? TimelineItem.Bubble },
                   otherName = item.message.replyTo?.let { id -> (state.items.firstOrNull { it.key == id } as? TimelineItem.Bubble)?.message?.senderId }?.let(vm::displayName) ?: state.title,
-                  onLongPress = { selected = item.message },
+                  onLongPress = { if (selecting) toggle() else vm.startSelection(item.message.id) },
+                  selecting = selecting,
+                  picked = picked,
+                  onToggle = toggle,
                   onOpenSender = { person = item.message.senderId },
                   starred = item.message.id in starredIds,
                   onRetry = { vm.retry(item.message) },
-                  onReact = { emoji -> vm.react(item.message, emoji) },
+                  onReact = { emoji -> if (selecting) toggle() else vm.react(item.message, emoji) },
                   mentionNames = groupStatus.allNames,
                   mediaContent = {
                     val media = item.message.media
                     if (media != null) {
                       when (item.message.kind) {
-                        "image" -> MediaImage(media, vm::bitmap, autoLoad = autoLoadPhotos, isCached = vm::isCached) { viewing = media.path }
-                        "voice" -> VoiceNote(item.message.id, media, playback, item.mine) { vm.togglePlayback(item.message) }
-                        else -> FileCard(media) { openFile(media) }
+                        "image" -> MediaImage(media, vm::bitmap, autoLoad = autoLoadPhotos, isCached = vm::isCached) { if (selecting) toggle() else viewing = media.path }
+                        "voice" -> VoiceNote(item.message.id, media, playback, item.mine) { if (selecting) toggle() else vm.togglePlayback(item.message) }
+                        else -> FileCard(media) { if (selecting) toggle() else openFile(media) }
                       }
                     }
                     val poll = item.message.poll
                     if (item.message.kind == "poll" && poll != null && !item.message.deleted) {
                       val votes = remember(item.message.id) { vm.votes(item.message.id) }.collectAsStateWithLifecycle(emptyMap()).value
                       val result = remember(votes, poll) { com.samvad.core.chat.Polls.tally(poll, votes, me) }
-                      PollCard(item.message, result, item.mine) { id -> vm.vote(item.message, id, result.mine) }
+                      PollCard(item.message, result, item.mine) { id -> if (selecting) toggle() else vm.vote(item.message, id, result.mine) }
                     }
                   },
                 )
+              }
               }
               }
             }
@@ -650,14 +701,31 @@ fun ConversationScreen(
     }
   }
 
-  forwarding?.let { msg ->
+  forwarding?.let { msgs ->
     ModalBottomSheet(onDismissRequest = { forwarding = null }) {
       val targets = remember { vm.forwardTargets() }.collectAsStateWithLifecycle(null).value
       ForwardSheet(targets) { chosen ->
         forwarding = null
-        vm.forward(msg, chosen)
+        vm.forwardMany(msgs, chosen)
       }
     }
+  }
+
+  if (confirmDeleteSelected && selectedMessages.isNotEmpty()) {
+    val count = selectedMessages.size
+    androidx.compose.material3.AlertDialog(
+      onDismissRequest = { confirmDeleteSelected = false },
+      title = { Text(androidx.compose.ui.res.pluralStringResource(R.plurals.selection_delete_title, count, count)) },
+      text = { Text(stringResource(R.string.selection_delete_body)) },
+      confirmButton = {
+        androidx.compose.material3.TextButton({
+          confirmDeleteSelected = false
+          vm.deleteMany(selectedMessages)
+          vm.clearSelection()
+        }) { Text(stringResource(R.string.chat_delete), color = colors.error) }
+      },
+      dismissButton = { androidx.compose.material3.TextButton({ confirmDeleteSelected = false }) { Text(stringResource(R.string.cancel)) } },
+    )
   }
 
   if (confirmExport) {
@@ -706,7 +774,7 @@ fun ConversationScreen(
         onEdit = { vm.startEdit(msg); selected = null },
         onDelete = { vm.delete(msg); selected = null },
         canForward = com.samvad.core.chat.MessageRules.canForward(msg),
-        onForward = { forwarding = msg; selected = null },
+        onForward = { forwarding = listOf(msg); selected = null },
         starred = msg.id in starredIds,
         canStar = !msg.deleted && msg.kind != "system",
         onStar = { vm.toggleStar(msg); selected = null },
@@ -744,9 +812,14 @@ private fun MessageBubble(
   /** Opens the sender's info (incoming messages: avatar and name). */
   onOpenSender: () -> Unit = {},
   starred: Boolean = false,
+  /** Selection mode: a tap toggles this message instead of its usual action. */
+  selecting: Boolean = false,
+  picked: Boolean = false,
+  onToggle: () -> Unit = {},
 ) {
   val colors = SamvadTheme.colors
   val m = item.message
+  val selectLabel = stringResource(R.string.selection_select)
   val mine = item.mine
   // The first bubble of a run carries the tail at its top corner, beside the avatar (US-003).
   val shape = when {
@@ -799,10 +872,13 @@ private fun MessageBubble(
           .background(bg)
           .then(if (!mine) Modifier.border(1.dp, colors.outlineVariant, shape) else Modifier)
           .combinedClickable(
-            onClick = { if (m.failed) onRetry() },
-            onClickLabel = if (m.failed) retryLabel else null,
+            onClick = { if (selecting) onToggle() else if (m.failed) onRetry() },
+            onClickLabel = if (!selecting && m.failed) retryLabel else null,
+            role = if (selecting) androidx.compose.ui.semantics.Role.Checkbox else null,
+            onLongClickLabel = selectLabel,
             onLongClick = { if (!m.deleted && !m.pending) onLongPress() },
           )
+          .then(if (selecting) Modifier.semantics { this.selected = picked } else Modifier)
           .padding(horizontal = 12.dp, vertical = 8.dp),
       ) {
         item.senderName?.let { SenderLabel(it, m.senderId) }
@@ -868,6 +944,103 @@ private fun MessageBubble(
           )
         }
       }
+    }
+  }
+}
+
+/**
+ * Selection mode: top bar with the count and the actions that are allowed for the selection.
+ * Copy and forward sit on the bar; star, delete and the single-message menu sit in the overflow
+ * menu so the bar still fits at 360 dp and 200% font scale.
+ */
+@Composable
+private fun SelectionBar(
+  count: Int,
+  actions: SelectionActions,
+  onClose: () -> Unit,
+  onCopy: () -> Unit,
+  onForward: () -> Unit,
+  onStar: () -> Unit,
+  onDelete: () -> Unit,
+  onMessageOptions: () -> Unit,
+) {
+  val colors = SamvadTheme.colors
+  var menu by remember { mutableStateOf(false) }
+  val hasMenu = actions.star != StarAction.NONE || actions.deleteForEveryone || actions.moreOptions
+  Row(
+    Modifier.fillMaxWidth().background(colors.surface).statusBarsPadding().padding(horizontal = 4.dp, vertical = 6.dp),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, stringResource(R.string.cd_selection_close), tint = colors.onSurface) }
+    Text(
+      androidx.compose.ui.res.pluralStringResource(R.plurals.selection_count, count, count),
+      style = MaterialTheme.typography.titleMedium,
+      color = colors.onSurface,
+      maxLines = 2,
+      overflow = TextOverflow.Ellipsis,
+      modifier = Modifier
+        .weight(1f)
+        .padding(horizontal = 8.dp)
+        .semantics {
+          heading()
+          liveRegion = androidx.compose.ui.semantics.LiveRegionMode.Polite
+        },
+    )
+    if (actions.copy) {
+      IconButton(onClick = onCopy) { Icon(Icons.Outlined.ContentCopy, stringResource(R.string.chat_copy), tint = colors.onSurface) }
+    }
+    if (actions.forward) {
+      IconButton(onClick = onForward) { Icon(Icons.AutoMirrored.Outlined.Forward, stringResource(R.string.chat_forward), tint = colors.onSurface) }
+    }
+    if (hasMenu) {
+      Box {
+        IconButton(onClick = { menu = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.cd_more), tint = colors.onSurface) }
+        DropdownMenu(menu, onDismissRequest = { menu = false }) {
+          if (actions.star != StarAction.NONE) {
+            val unstar = actions.star == StarAction.UNSTAR
+            DropdownMenuItem(
+              text = { Text(stringResource(if (unstar) R.string.chat_unstar else R.string.chat_star)) },
+              leadingIcon = { Icon(if (unstar) Icons.Outlined.StarOutline else Icons.Outlined.Star, null) },
+              onClick = { menu = false; onStar() },
+            )
+          }
+          if (actions.moreOptions) {
+            DropdownMenuItem(
+              text = { Text(stringResource(R.string.selection_message_options)) },
+              leadingIcon = { Icon(Icons.Outlined.MoreVert, null) },
+              onClick = { menu = false; onMessageOptions() },
+            )
+          }
+          if (actions.deleteForEveryone) {
+            DropdownMenuItem(
+              text = { Text(stringResource(R.string.chat_delete), color = colors.error) },
+              leadingIcon = { Icon(Icons.Outlined.Delete, null, tint = colors.error) },
+              onClick = { menu = false; onDelete() },
+            )
+          }
+        }
+      }
+    }
+  }
+}
+
+/** The check beside a message in selection mode. It repeats what the bubble's own state says, so it is hidden from screen readers. */
+@Composable
+private fun SelectionMark(picked: Boolean, selectable: Boolean, onClick: () -> Unit) {
+  val colors = SamvadTheme.colors
+  Box(
+    Modifier
+      .size(width = 40.dp, height = 48.dp)
+      .clickable(enabled = selectable, onClick = onClick)
+      .clearAndSetSemantics {},
+    contentAlignment = Alignment.Center,
+  ) {
+    if (selectable) {
+      Icon(
+        if (picked) Icons.Filled.CheckCircle else Icons.Outlined.RadioButtonUnchecked,
+        null,
+        tint = if (picked) colors.primary else colors.onSurfaceVariant,
+      )
     }
   }
 }

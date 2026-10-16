@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.graphics.graphicsLayer
 import com.samvad.messenger.ui.theme.LocalReducedMotion
@@ -651,8 +652,20 @@ fun ChatRowItem(row: ChatRow, highlight: Boolean, onClick: () -> Unit) {
         )
       }
       Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        val draft = row.draft
+        val draftLabel = stringResource(R.string.draft_label)
         Text(
-          row.preview,
+          if (draft != null) {
+            androidx.compose.ui.text.buildAnnotatedString {
+              withStyle(androidx.compose.ui.text.SpanStyle(color = colors.primary)) {
+                append(draftLabel)
+              }
+              append(" ")
+              append(draft)
+            }
+          } else {
+            androidx.compose.ui.text.AnnotatedString(row.preview)
+          },
           style = MaterialTheme.typography.bodyMedium,
           color = if (row.unreadCount > 0) colors.onSurface else colors.onSurfaceVariant,
           maxLines = 1,

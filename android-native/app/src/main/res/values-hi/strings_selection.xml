@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Drafts: unsent text shown in the chat list in place of the last message -->
+    <string name="draft_label">ड्राफ़्ट:</string>
+
+    <!-- Selecting several messages in a chat -->
+    <plurals name="selection_count">
+        <item quantity="one">%1$d चुना गया</item>
+        <item quantity="other">%1$d चुने गए</item>
+    </plurals>
+    <string name="cd_selection_close">चयन रद्द करें</string>
+    <string name="selection_select">चुनें</string>
+    <string name="selection_message_options">संदेश के विकल्प</string>
+    <plurals name="selection_delete_title">
+        <item quantity="one">%1$d संदेश सबके लिए हटाएँ?</item>
+        <item quantity="other">%1$d संदेश सबके लिए हटाएँ?</item>
+    </plurals>
+    <string name="selection_delete_body">इस चैट में सभी को दिखेगा कि ये संदेश हटा दिए गए हैं। इसे वापस नहीं किया जा सकता।</string>
+</resources>

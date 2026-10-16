@@ -109,11 +109,12 @@ class HomeViewModel(private val container: AppContainer, private val me: String)
       combine(filter, query, searching) { f, q, s -> Triple(f, q, s) },
       container.preferences.preferences,
       container.accounts!!.profile(me),
-    ) { inputs, (f, q, s), prefs, myProfile ->
+      container.drafts.all,
+    ) { inputs, (f, q, s), prefs, myProfile, drafts ->
       val now = System.currentTimeMillis()
       val convs = inputs.conversations?.value.orEmpty()
-      val all = ChatList.build(me, convs, inputs.states, inputs.profiles, ChatFilter.ALL, now, unreadOverride = inputs.groupUnread)
-      val filtered = ChatList.build(me, convs, inputs.states, inputs.profiles, f, now, unreadOverride = inputs.groupUnread)
+      val all = ChatList.build(me, convs, inputs.states, inputs.profiles, ChatFilter.ALL, now, unreadOverride = inputs.groupUnread, drafts = drafts)
+      val filtered = ChatList.build(me, convs, inputs.states, inputs.profiles, f, now, unreadOverride = inputs.groupUnread, drafts = drafts)
         .filter { q.isBlank() || it.title.contains(q.trim(), ignoreCase = true) }
       HomeUiState(
         loading = inputs.conversations == null && !inputs.failed,
