@@ -3,6 +3,7 @@ package com.samvad.messenger.data
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
 import android.net.Uri
 import android.provider.OpenableColumns
 import com.google.firebase.storage.FirebaseStorage
@@ -11,6 +12,8 @@ import com.samvad.core.media.Media
 import com.samvad.core.media.MediaKind
 import com.samvad.core.media.DownloadPolicy
 import com.samvad.core.media.MediaRules
+import com.samvad.core.status.PhotoEditRules
+import com.samvad.core.status.PhotoEdits
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.security.MessageDigest
@@ -65,16 +68,40 @@ class MediaRepository(private val context: Context, private val storage: Firebas
   }
 
   /** Upright, downscaled to 1600 px and re-encoded as JPEG, which also strips EXIF data such as GPS location. */
-  suspend fun prepareImage(uri: Uri, dataSaver: Boolean = false): PreparedMedia = withContext(Dispatchers.Default) {
-    val edge = DownloadPolicy.uploadEdgePx(dataSaver)
+  suspend fun prepareImage(uri: Uri, dataSaver: Boolean = false, edits: PhotoEdits = PhotoEdits.NONE): PreparedMedia = withContext(Dispatchers.Default) {
+    // A photo moment with text or pen on it is drawn on a bitmap of at most MAX_EDGE_PX, so memory stays small.
+    val edge = if (edits.isEmpty) DownloadPolicy.uploadEdgePx(dataSaver) else minOf(DownloadPolicy.uploadEdgePx(dataSaver), PhotoEditRules.MAX_EDGE_PX)
     val decoded = ImageCodec.decodeUpright(context.contentResolver, uri, edge) ?: throw MediaException.Unreadable()
-    val (w, h) = MediaRules.fitWithin(decoded.width, decoded.height, edge)
-    val scaled = if (w == decoded.width && h == decoded.height) decoded else Bitmap.createScaledBitmap(decoded, w, h, true)
-    val out = ByteArrayOutputStream()
-    scaled.compress(Bitmap.CompressFormat.JPEG, DownloadPolicy.uploadQuality(dataSaver), out)
-    if (scaled !== decoded) scaled.recycle()
-    decoded.recycle()
-    val bytes = out.toByteArray()
+    var scaled: Bitmap? = null
+    var flattened: Bitmap? = null
+    val bytes: ByteArray
+    val w: Int
+    val h: Int
+    try {
+      val fitted = MediaRules.fitWithin(decoded.width, decoded.height, edge)
+      w = fitted.first
+      h = fitted.second
+      scaled = if (w == decoded.width && h == decoded.height) decoded else Bitmap.createScaledBitmap(decoded, w, h, true)
+      var source: Bitmap = scaled
+      if (!edits.isEmpty) {
+        // The pen and text are drawn into a copy, so the JPEG carries them and nobody can lift them off again.
+        val copy = try {
+          source.copy(Bitmap.Config.ARGB_8888, true)
+        } catch (_: OutOfMemoryError) {
+          null
+        } ?: throw MediaException.Unreadable()
+        flattened = copy
+        PhotoEditRenderer.draw(Canvas(copy), copy.width, copy.height, edits)
+        source = copy
+      }
+      val out = ByteArrayOutputStream()
+      source.compress(Bitmap.CompressFormat.JPEG, DownloadPolicy.uploadQuality(dataSaver), out)
+      bytes = out.toByteArray()
+    } finally {
+      flattened?.recycle()
+      if (scaled != null && scaled !== decoded) scaled.recycle()
+      decoded.recycle()
+    }
     if (!MediaRules.isWithinLimit(bytes.size.toLong())) throw MediaException.TooLarge()
     PreparedMedia(MediaKind.IMAGE, "photo.jpg", "Photo", "image/jpeg", bytes, width = w, height = h)
   }

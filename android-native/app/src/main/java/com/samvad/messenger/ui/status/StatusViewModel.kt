@@ -6,12 +6,15 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.samvad.core.chat.ChatList
 import com.samvad.core.chat.ConversationIds
+import com.samvad.core.safety.ReportReason
+import com.samvad.core.status.PhotoEdits
 import com.samvad.core.status.StatusAudience
 import com.samvad.core.status.StatusGroup
 import com.samvad.core.status.StatusItem
 import com.samvad.core.status.StatusRules
 import com.samvad.messenger.AppContainer
 import com.samvad.messenger.data.PreparedMedia
+import com.samvad.messenger.data.ReportException
 import com.samvad.messenger.data.StatusViewer
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -23,6 +26,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -44,6 +48,9 @@ data class StatusPerson(val uid: String, val name: String)
 
 /** Why a moment could not be posted, so the screen can say something useful. */
 enum class PostError { GENERIC, VIDEO_TOO_LONG, VIDEO_TOO_BIG, VIDEO_UNREADABLE }
+
+/** How reporting a moment ended, so the viewer can say so. */
+enum class MomentReportResult { SENT, SENT_AND_BLOCKED, LIMIT, NO_CHAT, FAILED }
 
 sealed interface PostState {
   data object Idle : PostState
@@ -133,12 +140,12 @@ class StatusViewModel(private val container: AppContainer, private val me: Strin
     }
   }
 
-  fun postPhoto(uri: Uri, caption: String, audience: StatusAudience, list: List<String>) {
+  fun postPhoto(uri: Uri, caption: String, audience: StatusAudience, list: List<String>, edits: PhotoEdits = PhotoEdits.NONE) {
     if (!start()) return
     viewModelScope.launch {
       runCatching {
         val saver = container.preferences.preferences.first().dataSaver
-        val prepared: PreparedMedia = container.media!!.prepareImage(uri, saver)
+        val prepared: PreparedMedia = container.media!!.prepareImage(uri, saver, edits)
         repo.postImage(me, prepared, caption.take(StatusRules.MAX_TEXT), audience, list) { _progress.value = it }
       }.fold({ _post.value = PostState.Done }, ::fail)
     }
@@ -193,6 +200,51 @@ class StatusViewModel(private val container: AppContainer, private val me: Strin
       }.onSuccess { onSent() }
     }
   }
+
+  // ---- Report a moment ---------------------------------------------------------------------
+
+  private val safety = container.safety
+
+  /** People I have blocked, so the report dialog can leave out "also block" for them. */
+  val blockedUids: StateFlow<Set<String>> = (safety?.blocked(me) ?: flowOf(emptySet()))
+    .catch { emit(emptySet()) }
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
+
+  private val _reporting = MutableStateFlow(false)
+  val reporting: StateFlow<Boolean> = _reporting
+  private val _reportResult = MutableStateFlow<MomentReportResult?>(null)
+  val reportResult: StateFlow<MomentReportResult?> = _reportResult
+  private var reportRequest: Pair<String, String>? = null
+
+  /**
+   * Reports the author of a moment through the same reportContact flow as the chat report. The server takes a
+   * one-to-one chat, so the report names our chat with [author]. A retry reuses the request ID so it is stored once.
+   */
+  fun reportMoment(author: String, reason: ReportReason, alsoBlock: Boolean) {
+    val s = safety ?: return
+    if (author == me || _reporting.value) return
+    val conversationId = ConversationIds.direct(me, author)
+    val requestId = reportRequest?.takeIf { it.first == conversationId }?.second
+      ?: java.util.UUID.randomUUID().toString().also { reportRequest = conversationId to it }
+    _reporting.value = true
+    viewModelScope.launch {
+      _reportResult.value = try {
+        s.report(requestId, conversationId, reason, alsoBlock)
+        reportRequest = null
+        if (alsoBlock) MomentReportResult.SENT_AND_BLOCKED else MomentReportResult.SENT
+      } catch (e: ReportException.LimitReached) {
+        MomentReportResult.LIMIT
+      } catch (e: ReportException.Failed) {
+        val code = (e.cause as? com.google.firebase.functions.FirebaseFunctionsException)?.code
+        if (code == com.google.firebase.functions.FirebaseFunctionsException.Code.NOT_FOUND) MomentReportResult.NO_CHAT else MomentReportResult.FAILED
+      } catch (e: Exception) {
+        MomentReportResult.FAILED
+      }
+      _reporting.value = false
+    }
+  }
+
+  fun clearReportResult() { _reportResult.value = null }
 
   fun delete(item: StatusItem) { viewModelScope.launch { runCatching { repo.delete(me, item.id) } } }
 

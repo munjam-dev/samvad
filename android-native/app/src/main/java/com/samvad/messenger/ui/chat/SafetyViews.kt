@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
@@ -95,6 +97,8 @@ internal fun ReportDialog(
   alreadyBlocked: Boolean,
   onSend: (ReportReason, Boolean) -> Unit,
   onDismiss: () -> Unit,
+  /** Replaces the default explanation, for reports that start somewhere other than a chat. */
+  body: String? = null,
 ) {
   val colors = SamvadTheme.colors
   var reason by rememberSaveable { mutableStateOf(ReportReason.SPAM) }
@@ -103,8 +107,8 @@ internal fun ReportDialog(
     onDismissRequest = { if (!sending) onDismiss() },
     title = { Text(stringResource(R.string.report_title, name)) },
     text = {
-      Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(stringResource(R.string.report_body), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+      Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(body ?: stringResource(R.string.report_body), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
         Column(Modifier.selectableGroup().padding(top = 8.dp)) {
           REASON_LABELS.forEach { (value, label) ->
             Row(

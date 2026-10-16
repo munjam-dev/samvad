@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Moments, second pass: report from the viewer, capture note, audience line, photo text and pen, viewer navigation -->
+
+    <!-- Viewer: report -->
+    <string name="moment_report">Report this moment</string>
+    <string name="moment_report_body">The last 5 messages from this person will be sent to Samvad for review, with the reason you choose. The moment itself is not attached. They won\'t be notified.</string>
+    <string name="moment_report_no_chat">We couldn\'t find a chat with this person, so the report wasn\'t sent. You can report them from a chat.</string>
+
+    <!-- Viewer: moving around -->
+    <string name="moment_position">Moment %1$d of %2$d</string>
+    <string name="moment_next">Next moment</string>
+    <string name="moment_previous">Previous moment</string>
+
+    <!-- Composer: note and audience -->
+    <string name="moment_capture_note">People who can see a moment can take a screenshot or save it.</string>
+    <string name="moment_audience_line">Who sees this: %1$s</string>
+    <string name="moment_audience_pick_hint">Choose at least one person to share with.</string>
+
+    <!-- Photo editor: tools -->
+    <string name="photo_edit_tool_text">Text</string>
+    <string name="photo_edit_tool_pen">Pen</string>
+    <string name="photo_edit_surface">Your photo. Edits you make here are part of the picture you post.</string>
+    <string name="photo_edit_hint_text">Tap the photo to put text on it. Drag the text to move it.</string>
+    <string name="photo_edit_hint_pen">Draw on the photo with your finger.</string>
+
+    <!-- Photo editor: text -->
+    <string name="photo_edit_text_title">Text on photo</string>
+    <string name="photo_edit_text_hint">Type your text</string>
+    <string name="photo_edit_text_done">Done</string>
+    <string name="photo_edit_text_edit">Edit text</string>
+    <string name="photo_edit_text_remove">Remove text</string>
+    <string name="photo_edit_size_small">Small</string>
+    <string name="photo_edit_size_medium">Medium</string>
+    <string name="photo_edit_size_large">Large</string>
+
+    <!-- Photo editor: colours -->
+    <string name="photo_edit_color_white">White</string>
+    <string name="photo_edit_color_champagne">Champagne</string>
+    <string name="photo_edit_color_lime">Lime</string>
+    <string name="photo_edit_color_green">Green</string>
+    <string name="photo_edit_color_red">Red</string>
+    <string name="photo_edit_color_label">Colour: %1$s</string>
+
+    <!-- Photo editor: pen -->
+    <string name="photo_edit_pen_undo">Undo last stroke</string>
+    <string name="photo_edit_pen_clear">Clear drawing</string>
+    <string name="photo_edit_clear_title">Clear your drawing?</string>
+    <string name="photo_edit_clear_body">All pen strokes on this photo will be removed. Your text stays.</string>
+    <string name="photo_edit_clear_confirm">Clear</string>
+</resources>
