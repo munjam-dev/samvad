@@ -7,6 +7,7 @@ import com.samvad.messenger.data.ChatRepository
 import com.samvad.messenger.data.StatusRepository
 import com.samvad.messenger.data.ChatThemeRepository
 import com.samvad.messenger.data.ContactsRepository
+import com.samvad.messenger.data.DraftRepository
 import com.samvad.messenger.data.FirebaseServices
 import com.samvad.messenger.data.GroupRepository
 import com.samvad.messenger.data.PreferencesRepository
@@ -30,6 +31,7 @@ import kotlinx.coroutines.flow.first
 class AppContainer(context: Context) {
   val preferences = PreferencesRepository(context)
   val network = NetworkMonitor(context)
+  val drafts = DraftRepository(context)
   val chatThemes = ChatThemeRepository(context)
   val appLock = AppLock(preferences, CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate))
   val firebase: FirebaseServices? = FirebaseServices.create(context)

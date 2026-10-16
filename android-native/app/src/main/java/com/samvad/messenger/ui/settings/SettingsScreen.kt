@@ -472,7 +472,7 @@ fun SettingsScreen(
         container = container,
         onDeleted = {
           deletingWithPin = false
-          scope.launch { container.preferences.clearDeviceId() }
+          scope.launch { container.preferences.clearDeviceId(); container.drafts.clearAll() }
           container.auth?.signOut()
         },
       )

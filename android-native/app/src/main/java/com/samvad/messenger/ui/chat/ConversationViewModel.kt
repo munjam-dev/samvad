@@ -4,6 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.samvad.core.chat.DraftChange
+import com.samvad.core.chat.Drafts
+import com.samvad.core.chat.Selection
+import com.samvad.core.chat.StarAction
 import com.samvad.core.chat.ScheduleRules
 import com.samvad.core.chat.ScheduleCheck
 import com.samvad.core.chat.Profile
@@ -60,6 +64,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
@@ -184,6 +189,39 @@ class ConversationViewModel(
 
   /** Mentions picked from the member list for the message being typed (uid → name). */
   private val picked = mutableMapOf<String, String>()
+
+  private val drafts = container.drafts
+  /** The stored draft has been read; until then leaving the chat must not overwrite it with an empty composer. */
+  private var draftRestored = false
+
+  init {
+    viewModelScope.launch {
+      val saved = runCatching { drafts.get(conversationId) }.getOrNull()
+      // Anything the user typed in the meantime wins over the saved draft.
+      if (saved != null && _composer.value.text.isEmpty() && _composer.value.editing == null) {
+        _composer.update { it.copy(text = saved, tooLong = false) }
+      }
+      draftRestored = true
+    }
+  }
+
+  /** Keeps the unsent text on this device, or forgets it when the composer is blank. */
+  fun saveDraft() {
+    if (!draftRestored) return
+    val c = _composer.value
+    drafts.save(conversationId, Drafts.onLeave(c.text, editing = c.editing != null))
+  }
+
+  private fun clearDraft() = drafts.save(conversationId, DraftChange.Clear)
+
+  private val _selection = MutableStateFlow<Set<String>>(emptySet())
+
+  /** IDs of the messages picked in selection mode; empty when not selecting. */
+  val selection: StateFlow<Set<String>> = _selection
+
+  fun startSelection(id: String) { _selection.value = setOf(id) }
+  fun toggleSelected(id: String) = _selection.update { Selection.toggle(it, id) }
+  fun clearSelection() { _selection.value = emptySet() }
 
   init {
     // Re-read on open so a changed name or photo shows up.
@@ -371,7 +409,10 @@ class ConversationViewModel(
     val id = UUID.randomUUID().toString()
     val caption = _composer.value.text.trim().takeIf { media.kind != MediaKind.VOICE && it.length <= MessageRules.MAX_LENGTH }.orEmpty()
     val replyTo = _composer.value.replyTo?.id
-    if (caption.isNotEmpty() || replyTo != null) _composer.value = ComposerState()
+    if (caption.isNotEmpty() || replyTo != null) {
+      _composer.value = ComposerState()
+      clearDraft()
+    }
     prepared[id] = Outgoing(media, caption, replyTo)
     _uploads.update { it + PendingUpload(id, media.kind, media.displayName) }
     upload(id)
@@ -421,6 +462,7 @@ class ConversationViewModel(
   }
 
   override fun onCleared() {
+    saveDraft()
     recorder.cancel()
     player.release()
     // viewModelScope is already cancelled here, so clear the typing mark on a short-lived scope.
@@ -470,6 +512,7 @@ class ConversationViewModel(
     val c = _composer.value
     val text = (MessageRules.validate(c.text) as? TextValidation.Ok)?.text ?: return
     _composer.value = ComposerState()
+    if (c.editing == null) clearDraft()
     stopTyping()
     val mentions = Mentions.resolve(text, picked)
     picked.clear()
@@ -517,6 +560,7 @@ class ConversationViewModel(
     val check = ScheduleRules.check(sendAtMs, System.currentTimeMillis())
     if (check != ScheduleCheck.OK) return check
     _composer.value = ComposerState()
+    if (c.editing == null) clearDraft()
     stopTyping()
     picked.clear()
     viewModelScope.launch { runCatching { chats.schedule(me, conversationId, text, c.replyTo?.id, sendAtMs) } }
@@ -620,20 +664,33 @@ class ConversationViewModel(
    * Media is uploaded again into each target chat. Chats where it fails (for example a block) are
    * counted, not retried.
    */
-  fun forward(message: Message, targets: List<ForwardTarget>) = viewModelScope.launch {
+  fun forward(message: Message, targets: List<ForwardTarget>) = forwardMany(listOf(message), targets)
+
+  /**
+   * Forwards [messages] (given oldest first) one after another, so they arrive in order. A chat
+   * counts as reached only when every message got there.
+   */
+  fun forwardMany(messages: List<Message>, targets: List<ForwardTarget>) = viewModelScope.launch {
     val chosen = targets.distinctBy { it.conversationId }.take(MessageRules.MAX_FORWARD_TARGETS)
-    if (chosen.isEmpty() || !MessageRules.canForward(message)) return@launch
+    val items = messages.filter(MessageRules::canForward).take(Selection.MAX_FORWARD_MESSAGES)
+    if (chosen.isEmpty() || items.isEmpty()) return@launch
+    val reached = BooleanArray(chosen.size) { true }
+    for (message in items) {
+      forwardOne(message, chosen).forEachIndexed { i, ok -> if (!ok) reached[i] = false }
+    }
+    _forwardResult.value = ForwardResult(sent = reached.count { it }, failed = reached.count { !it })
+  }
+
+  /** Sends one message to each chat in [chosen]; true at an index when that chat received it. */
+  private suspend fun forwardOne(message: Message, chosen: List<ForwardTarget>): List<Boolean> = coroutineScope {
     val kind = MediaKind.fromWire(message.kind)
     val media = message.media
     val prepared = if (kind != null && media != null) {
-      runCatching { mediaRepo.prepareForward(media, kind) }.getOrElse {
-        _forwardResult.value = ForwardResult(0, chosen.size)
-        return@launch
-      }
+      runCatching { mediaRepo.prepareForward(media, kind) }.getOrElse { return@coroutineScope chosen.map { false } }
     } else {
       null
     }
-    val outcomes = chosen.map { t ->
+    chosen.map { t ->
       async {
         runCatching {
           if (prepared == null) {
@@ -650,7 +707,21 @@ class ConversationViewModel(
         }.isSuccess
       }
     }.awaitAll()
-    _forwardResult.value = ForwardResult(sent = outcomes.count { it }, failed = outcomes.count { !it })
+  }
+
+  /** Stars or unstars the selected messages that need changing. */
+  fun starMany(messages: List<Message>, action: StarAction) = viewModelScope.launch {
+    val targets = Selection.starTargets(messages, action, starredIds.value)
+    for (m in targets) {
+      runCatching {
+        if (action == StarAction.UNSTAR) chats.unstar(me, conversationId, m.id) else chats.star(me, conversationId, m.id)
+      }
+    }
+  }
+
+  /** Deletes the selected messages for everyone; the caller has checked they are all mine. */
+  fun deleteMany(messages: List<Message>) = viewModelScope.launch {
+    for (m in messages) runCatching { chats.deleteForEveryone(conversationId, m.id) }
   }
 
   fun canEdit(message: Message) = MessageRules.canEdit(message, me, System.currentTimeMillis())

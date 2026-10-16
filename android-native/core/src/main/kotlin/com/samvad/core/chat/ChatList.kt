@@ -20,6 +20,8 @@ data class ChatRow(
   val lastMessageMine: Boolean,
   /** Group photo (Storage path); people's photos come from their profiles. */
   val photoPath: String? = null,
+  /** Unsent text kept on this device (one line); when set, the row shows it instead of the last message. */
+  val draft: String? = null,
 )
 
 object ChatList {
@@ -39,6 +41,8 @@ object ChatList {
     zone: ZoneId = ZoneId.systemDefault(),
     /** Groups: unread counts computed on the device (the server keeps no per-member counter). */
     unreadOverride: Map<String, Int> = emptyMap(),
+    /** Unsent text per conversation id, kept on this device only. */
+    drafts: Map<String, String> = emptyMap(),
   ): List<ChatRow> = conversations
     .mapNotNull { c ->
       val state = memberStates[c.id] ?: MemberState(me)
@@ -77,6 +81,7 @@ object ChatList {
         isGroup = c.isGroup,
         lastMessageMine = mine,
         photoPath = if (c.isGroup) c.photoPath else null,
+        draft = Drafts.rowText(drafts[c.id]),
       )
     }
     .filter { row ->

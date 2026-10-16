@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Drafts: unsent text shown in the chat list in place of the last message -->
+    <string name="draft_label">Draft:</string>
+
+    <!-- Selecting several messages in a chat -->
+    <plurals name="selection_count">
+        <item quantity="one">%1$d selected</item>
+        <item quantity="other">%1$d selected</item>
+    </plurals>
+    <string name="cd_selection_close">Cancel selection</string>
+    <string name="selection_select">Select</string>
+    <string name="selection_message_options">Message options</string>
+    <plurals name="selection_delete_title">
+        <item quantity="one">Delete %1$d message for everyone?</item>
+        <item quantity="other">Delete %1$d messages for everyone?</item>
+    </plurals>
+    <string name="selection_delete_body">Everyone in this chat will see that these messages were deleted. You can\'t undo this.</string>
+</resources>
