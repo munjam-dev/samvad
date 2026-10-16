@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Drafts: unsent text shown in the chat list in place of the last message -->
+    <string name="draft_label">வரைவு:</string>
+
+    <!-- Selecting several messages in a chat -->
+    <plurals name="selection_count">
+        <item quantity="one">%1$d தேர்ந்தெடுக்கப்பட்டது</item>
+        <item quantity="other">%1$d தேர்ந்தெடுக்கப்பட்டன</item>
+    </plurals>
+    <string name="cd_selection_close">தேர்வை ரத்து செய்</string>
+    <string name="selection_select">தேர்ந்தெடு</string>
+    <string name="selection_message_options">செய்தி விருப்பங்கள்</string>
+    <plurals name="selection_delete_title">
+        <item quantity="one">%1$d செய்தியை அனைவருக்கும் நீக்கவா?</item>
+        <item quantity="other">%1$d செய்திகளை அனைவருக்கும் நீக்கவா?</item>
+    </plurals>
+    <string name="selection_delete_body">இந்த சாட்டில் உள்ள அனைவரும் இந்தச் செய்திகள் நீக்கப்பட்டதைப் பார்ப்பார்கள். இதைத் திரும்பப் பெற முடியாது.</string>
+</resources>

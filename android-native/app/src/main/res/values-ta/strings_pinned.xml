@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Pinned messages -->
+    <string name="pinmsg_pin">செய்தியைப் பின் செய்</string>
+    <string name="pinmsg_unpin">செய்தியின் பின்னை நீக்கு</string>
+    <string name="pinmsg_banner_title">பின் செய்த செய்தி</string>
+    <string name="pinmsg_banner_title_count">பின் செய்த செய்தி %1$d / %2$d</string>
+    <string name="pinmsg_go_to">செய்திக்குச் செல்</string>
+    <string name="pinmsg_photo">புகைப்படம்</string>
+    <string name="pinmsg_photo_caption">புகைப்படம்: %1$s</string>
+    <string name="pinmsg_file">கோப்பு</string>
+    <string name="pinmsg_file_name">கோப்பு: %1$s</string>
+    <string name="pinmsg_voice">குரல் செய்தி</string>
+    <string name="pinmsg_poll">வாக்கெடுப்பு: %1$s</string>
+    <string name="pinmsg_unavailable">செய்தி</string>
+    <string name="pinmsg_pinned">செய்தி பின் செய்யப்பட்டது</string>
+    <string name="pinmsg_unpinned">செய்தியின் பின் நீக்கப்பட்டது</string>
+    <string name="pinmsg_limit">3 செய்திகள் வரை பின் செய்யலாம். முதலில் ஒன்றின் பின்னை நீக்கவும்.</string>
+    <string name="pinmsg_not_allowed">இந்த சாட்டில் இப்போது செய்திகளைப் பின் செய்ய முடியாது. குரூப்களில் அட்மின்கள் மட்டுமே பின் செய்யலாம்.</string>
+    <string name="pinmsg_daily">இன்று பின் செய்த செய்திகளை அதிகமுறை மாற்றிவிட்டீர்கள். பிறகு முயலவும்.</string>
+    <string name="pinmsg_failed">பின் செய்த செய்திகளைப் புதுப்பிக்க முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயலவும்.</string>
+</resources>
