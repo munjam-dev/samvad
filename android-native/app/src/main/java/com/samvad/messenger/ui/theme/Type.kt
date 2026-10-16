@@ -5,6 +5,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.samvad.messenger.R
@@ -41,3 +42,18 @@ val SamvadTypography = Typography(
   labelMedium = style(12, 16, FontWeight.SemiBold, 0.02),
   labelSmall = style(11, 14, FontWeight.Medium),
 )
+
+/**
+ * The same styles without letter spacing. Tight tracking suits Latin headings, but any tracking pulls the parts of an
+ * Indic (Devanagari) syllable apart and breaks its joined shapes, so those scripts use the font's own spacing.
+ */
+fun Typography.withoutTracking(): Typography = copy(
+  displayLarge = displayLarge.noTracking(), displayMedium = displayMedium.noTracking(), displaySmall = displaySmall.noTracking(),
+  headlineLarge = headlineLarge.noTracking(), headlineMedium = headlineMedium.noTracking(), headlineSmall = headlineSmall.noTracking(),
+  titleLarge = titleLarge.noTracking(), titleMedium = titleMedium.noTracking(), titleSmall = titleSmall.noTracking(),
+  bodyLarge = bodyLarge.noTracking(), bodyMedium = bodyMedium.noTracking(), bodySmall = bodySmall.noTracking(),
+  labelLarge = labelLarge.noTracking(), labelMedium = labelMedium.noTracking(), labelSmall = labelSmall.noTracking(),
+)
+
+/** Removes letter spacing from this style; use it on text that is always Indic, such as the Devanagari wordmark. */
+fun TextStyle.noTracking(): TextStyle = copy(letterSpacing = TextUnit.Unspecified)

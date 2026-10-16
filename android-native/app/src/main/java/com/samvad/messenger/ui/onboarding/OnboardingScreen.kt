@@ -38,6 +38,7 @@ import com.samvad.messenger.ui.components.PrimaryButton
 import com.samvad.messenger.ui.components.QuietButton
 import com.samvad.messenger.ui.components.SamvadMark
 import com.samvad.messenger.ui.theme.SamvadTheme
+import com.samvad.messenger.ui.theme.noTracking
 import kotlinx.coroutines.launch
 
 private val pages = listOf(
@@ -96,7 +97,7 @@ fun OnboardingScreen(onDone: () -> Unit) {
         Spacer(Modifier.height(28.dp))
         if (page == 0) {
           Text(stringResource(R.string.app_name), style = MaterialTheme.typography.displaySmall, color = colors.onSurface)
-          Text(stringResource(R.string.brand_devanagari), style = MaterialTheme.typography.titleLarge, color = colors.primary)
+          Text(stringResource(R.string.brand_devanagari), style = MaterialTheme.typography.titleLarge.noTracking(), color = colors.primary)
           Spacer(Modifier.height(20.dp))
         }
         Text(
