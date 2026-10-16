@@ -138,7 +138,7 @@ fun SamvadTheme(mode: ThemeMode = ThemeMode.SYSTEM, content: @Composable () -> U
     else -> SamvadPalettes.Light
   }
   val colors = palette.toColors()
-  val indic = androidx.compose.ui.platform.LocalConfiguration.current.locales[0].language == "hi"
+  val indic = com.samvad.core.profile.Languages.isIndic(androidx.compose.ui.platform.LocalConfiguration.current.locales[0].language)
   CompositionLocalProvider(LocalSamvadColors provides colors, LocalReducedMotion provides rememberReducedMotion()) {
     MaterialTheme(
       colorScheme = colors.toMaterial(),

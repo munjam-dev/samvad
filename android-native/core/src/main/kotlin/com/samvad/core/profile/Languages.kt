@@ -9,7 +9,15 @@ data class Language(val tag: String, val nativeName: String)
  */
 object Languages {
   val ENGLISH = Language("en", "English")
-  val SUPPORTED = listOf(ENGLISH, Language("hi", "हिन्दी"))
+  val SUPPORTED = listOf(
+    ENGLISH,
+    Language("hi", "हिन्दी"),
+    Language("te", "తెలుగు"),
+    Language("ta", "தமிழ்"),
+  )
+
+  /** Scripts whose syllables break if letter spacing is applied; the UI uses the font's own spacing for them. */
+  fun isIndic(tag: String?): Boolean = resolve(tag).tag != ENGLISH.tag
 
   /** The supported language for [tag] ("hi", "hi-IN", ...), or English when it is not one of ours. */
   fun resolve(tag: String?): Language {

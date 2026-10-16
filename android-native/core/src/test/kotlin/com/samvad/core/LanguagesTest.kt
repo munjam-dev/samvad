@@ -12,8 +12,15 @@ class LanguagesTest {
     assertEquals("en", Languages.resolve("en-GB").tag)
   }
 
+  @Test fun `Telugu and Tamil are offered`() {
+    assertEquals("te", Languages.resolve("te-IN").tag)
+    assertEquals("ta", Languages.resolve("ta").tag)
+    assertTrue(Languages.isIndic("te"))
+    assertTrue(!Languages.isIndic("en-IN"))
+  }
+
   @Test fun `falls back to English for anything not offered`() {
-    assertEquals("en", Languages.resolve("ta").tag)
+    assertEquals("en", Languages.resolve("bn").tag)
     assertEquals("en", Languages.resolve(null).tag)
     assertEquals("en", Languages.resolve("").tag)
   }
