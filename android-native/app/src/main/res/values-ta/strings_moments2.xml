@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Moments, second pass: report from the viewer, capture note, audience line, photo text and pen, viewer navigation -->
+
+    <!-- Viewer: report -->
+    <string name="moment_report">இந்தத் தருணத்தைப் புகார் செய்</string>
+    <string name="moment_report_body">நீங்கள் தேர்ந்த காரணத்துடன், இவரின் கடைசி 5 செய்திகள் மதிப்பாய்வுக்காக Samvad-க்கு அனுப்பப்படும். தருணம் இணைக்கப்படாது. அவர்களுக்குத் தெரிவிக்கப்படாது.</string>
+    <string name="moment_report_no_chat">இவருடனான சாட் கிடைக்கவில்லை, எனவே புகார் அனுப்பப்படவில்லை. சாட்டிலிருந்து புகார் செய்யலாம்.</string>
+
+    <!-- Viewer: moving around -->
+    <string name="moment_position">தருணம் %1$d / %2$d</string>
+    <string name="moment_next">அடுத்த தருணம்</string>
+    <string name="moment_previous">முந்தைய தருணம்</string>
+
+    <!-- Composer: note and audience -->
+    <string name="moment_capture_note">தருணத்தைப் பார்க்க முடிந்தவர்கள் ஸ்கிரீன்ஷாட் எடுக்கலாம் அல்லது சேமிக்கலாம்.</string>
+    <string name="moment_audience_line">யார் பார்க்கலாம்: %1$s</string>
+    <string name="moment_audience_pick_hint">பகிர குறைந்தது ஒருவரைத் தேர்ந்தெடுக்கவும்.</string>
+
+    <!-- Photo editor: tools -->
+    <string name="photo_edit_tool_text">உரை</string>
+    <string name="photo_edit_tool_pen">பேனா</string>
+    <string name="photo_edit_surface">உங்கள் புகைப்படம். இங்கே செய்யும் திருத்தங்கள் நீங்கள் பகிரும் படத்தின் பகுதியாகும்.</string>
+    <string name="photo_edit_hint_text">புகைப்படத்தில் உரை இட அதைத் தட்டவும். நகர்த்த உரையை இழுக்கவும்.</string>
+    <string name="photo_edit_hint_pen">விரலால் புகைப்படத்தில் வரையுங்கள்.</string>
+
+    <!-- Photo editor: text -->
+    <string name="photo_edit_text_title">புகைப்படத்தில் உரை</string>
+    <string name="photo_edit_text_hint">உரையை உள்ளிடவும்</string>
+    <string name="photo_edit_text_done">முடிந்தது</string>
+    <string name="photo_edit_text_edit">உரையைத் திருத்து</string>
+    <string name="photo_edit_text_remove">உரையை நீக்கு</string>
+    <string name="photo_edit_size_small">சிறியது</string>
+    <string name="photo_edit_size_medium">நடுத்தரம்</string>
+    <string name="photo_edit_size_large">பெரியது</string>
+
+    <!-- Photo editor: colours -->
+    <string name="photo_edit_color_white">வெள்ளை</string>
+    <string name="photo_edit_color_champagne">ஷாம்பெயின்</string>
+    <string name="photo_edit_color_lime">எலுமிச்சை</string>
+    <string name="photo_edit_color_green">பச்சை</string>
+    <string name="photo_edit_color_red">சிவப்பு</string>
+    <string name="photo_edit_color_label">நிறம்: %1$s</string>
+
+    <!-- Photo editor: pen -->
+    <string name="photo_edit_pen_undo">கடைசிக் கோட்டை நீக்கு</string>
+    <string name="photo_edit_pen_clear">வரைவை அழி</string>
+    <string name="photo_edit_clear_title">வரைவை அழிக்கவா?</string>
+    <string name="photo_edit_clear_body">இந்தப் புகைப்படத்தில் உள்ள அனைத்துப் பேனாக் கோடுகளும் நீக்கப்படும். உரை அப்படியே இருக்கும்.</string>
+    <string name="photo_edit_clear_confirm">அழி</string>
+</resources>

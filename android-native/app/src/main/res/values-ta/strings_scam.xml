@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Scam Shield: notices under messages, link confirmation and the new-contact banner. All checks run on this device. -->
+    <string name="scam_notice_link_title">இந்த இணைப்பில் கவனமாக இருங்கள்</string>
+    <string name="scam_notice_message_title">இந்தச் செய்தியில் கவனமாக இருங்கள்</string>
+    <string name="scam_notice_cd">பாதுகாப்பு அறிவிப்பு. %1$s</string>
+
+    <string name="scam_reason_link_ip_address">இணைப்பு இணையதளப் பெயருக்குப் பதிலாக எண் முகவரிக்குச் செல்கிறது.</string>
+    <string name="scam_reason_link_userinfo">இணைப்பு உண்மையில் எங்கே செல்கிறது என்பதை மறைக்கிறது. @ க்குப் பிறகு உள்ள முகவரியே திறக்கும்.</string>
+    <string name="scam_reason_link_lookalike_host">இணைய முகவரி பிரபலமான பெயர் போலத் தெரிகிறது, ஆனால் அது அல்ல.</string>
+    <string name="scam_reason_link_homograph">இணைய முகவரி, ஒரே மாதிரி தெரியும் வேறு எழுத்துக்களைப் பயன்படுத்துகிறது.</string>
+    <string name="scam_reason_link_punycode">இணைய முகவரி வழக்கத்துக்கு மாறான எழுத்துக்களைப் பயன்படுத்துகிறது.</string>
+    <string name="scam_reason_link_shortener">சுருக்கிய இணைப்பு உண்மையான முகவரியை மறைக்கிறது.</string>
+    <string name="scam_reason_link_not_https">இணைப்பு பாதுகாப்பானது அல்ல. https பயன்படுத்தவில்லை.</string>
+    <string name="scam_reason_link_long_host">இணைய முகவரி வழக்கத்துக்கு மாறாக நீளமாக உள்ளது.</string>
+    <string name="scam_reason_link_risky_tld">இணைய முகவரி மோசடிகளில் அடிக்கடி பயன்படுத்தப்படும் வகையில் முடிகிறது.</string>
+    <string name="scam_reason_link_malformed_host">இணைய முகவரி விசித்திரமாகத் தெரிகிறது.</string>
+    <string name="scam_reason_text_share_code">குறியீடு அல்லது PIN ஐப் பகிரச் சொல்கிறது. இவற்றை யாருடனும் பகிராதீர்கள்.</string>
+    <string name="scam_reason_text_kyc_verify">கணக்கு பிளாக் செய்யப்படும் என எச்சரிக்கிறது அல்லது சரிபார்க்கச் சொல்கிறது. மோசடிக்காரர்கள் இப்படி எழுதுவது வழக்கம்.</string>
+    <string name="scam_reason_text_prize">நீங்கள் பரிசு வென்றதாகச் சொல்கிறது. உண்மையான பரிசுக்கு முதலில் பணம் கேட்க மாட்டார்கள்.</string>
+    <string name="scam_reason_text_gift_card">கிஃப்ட் கார்டுகள் அல்லது அவற்றின் குறியீடுகளைக் கேட்கிறது.</string>
+    <string name="scam_reason_text_work_from_home">எளிதாக தினசரி வருமானம் எனக் கூறுகிறது. இப்படிப்பட்ட சலுகைகள் பெரும்பாலும் மோசடி.</string>
+    <string name="scam_reason_text_urgent_money">அவசரமாகப் பணம் கேட்கிறது. உறுதிசெய்ய அவரை அழைத்துப் பாருங்கள்.</string>
+    <string name="scam_reason_text_fee_request">முதலில் கட்டணம் செலுத்தச் சொல்கிறது.</string>
+
+    <string name="scam_open_title">இந்த இணைப்பைத் திறக்கவா?</string>
+    <string name="scam_open_body">இந்த இணைப்பு கீழே உள்ள முகவரியைத் திறக்கும். தொடரும் முன் அதை நம்புகிறீர்களா எனப் பாருங்கள்.</string>
+    <string name="scam_open_host_label">திறப்பது</string>
+    <string name="scam_open_confirm">பரவாயில்லை, திற</string>
+    <string name="scam_open_cancel">பின்செல்</string>
+    <string name="scam_open_failed">இணைப்பைத் திறக்க முடியவில்லை.</string>
+
+    <string name="scam_first_title">புதிய தொடர்பு</string>
+    <string name="scam_first_body">%1$s உங்கள் சேமித்த தொடர்புகளில் இல்லை. தெரியாதவர்களுடன் குறியீடுகள், PIN, பணம் எதையும் பகிராதீர்கள்.</string>
+    <string name="scam_first_dismiss">மூடு</string>
+</resources>
