@@ -61,6 +61,7 @@ import androidx.compose.material.icons.outlined.AttachFile
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.outlined.Done
 import androidx.compose.material.icons.outlined.DoneAll
 import androidx.compose.material.icons.outlined.Edit
@@ -158,6 +159,9 @@ fun ConversationScreen(
   val groupStatus = vm.groupStatus.collectAsStateWithLifecycle().value
   val mentionCandidates = vm.mentionCandidates.collectAsStateWithLifecycle().value
   val starredIds = vm.starredIds.collectAsStateWithLifecycle().value
+  val pinnedBanner = vm.pinnedBanner.collectAsStateWithLifecycle().value
+  val pinnedIds = vm.pinnedIds.collectAsStateWithLifecycle().value
+  val pinNotice = vm.pinNotice.collectAsStateWithLifecycle().value
   var composingPoll by remember { mutableStateOf(false) }
   val themeSettings = container.chatThemes.settings.collectAsStateWithLifecycle(null).value
   val backdrop = themeSettings?.backgroundFor(conversationId) ?: ChatBackground.Theme(ChatThemes.DEFAULT.id)
@@ -189,6 +193,35 @@ fun ConversationScreen(
   LaunchedEffect(currentMatch) {
     val at = currentMatch?.let { key -> state.items.indexOfFirst { it.key == key } } ?: -1
     if (at >= 0) list.animateScrollToItem(at)
+  }
+  // Jumping to a pinned message: scroll to it, loading older messages first when it is not on the screen yet.
+  var jumpTo by remember { mutableStateOf<String?>(null) }
+  LaunchedEffect(jumpTo, state.items, state.hasMore) {
+    val target = jumpTo ?: return@LaunchedEffect
+    val at = state.items.indexOfFirst { it.key == target }
+    when {
+      at >= 0 -> { list.animateScrollToItem(at); jumpTo = null }
+      state.hasMore -> vm.loadMore()
+      else -> jumpTo = null
+    }
+  }
+  val pinNoticeText = pinNotice?.let {
+    stringResource(
+      when (it) {
+        PinNotice.PINNED -> R.string.pinmsg_pinned
+        PinNotice.UNPINNED -> R.string.pinmsg_unpinned
+        PinNotice.LIMIT -> R.string.pinmsg_limit
+        PinNotice.NOT_ALLOWED -> R.string.pinmsg_not_allowed
+        PinNotice.DAILY_LIMIT -> R.string.pinmsg_daily
+        PinNotice.FAILED -> R.string.pinmsg_failed
+      },
+    )
+  }
+  LaunchedEffect(pinNoticeText) {
+    if (pinNoticeText != null) {
+      snackbar.showSnackbar(pinNoticeText)
+      vm.clearPinNotice()
+    }
   }
   val copied = stringResource(R.string.chat_copied)
   val uploads = vm.uploads.collectAsStateWithLifecycle().value
@@ -484,6 +517,8 @@ fun ConversationScreen(
       StatusBanner(state.offline, stringResource(R.string.home_offline))
       StatusBanner(state.error, stringResource(R.string.home_load_error), isError = true, actionLabel = stringResource(R.string.retry), onAction = vm::retryLoad)
 
+      if (pinnedBanner != null) PinnedBannerBar(pinnedBanner, onClick = { vm.bannerTapped()?.let { jumpTo = it } })
+
       Box(Modifier.weight(1f)) {
         if (themeSettings != null) ChatBackdrop(backdrop, themeSettings, container.chatThemes, dark, Modifier.fillMaxSize())
         when {
@@ -710,6 +745,10 @@ fun ConversationScreen(
         starred = msg.id in starredIds,
         canStar = !msg.deleted && msg.kind != "system",
         onStar = { vm.toggleStar(msg); selected = null },
+        canPin = com.samvad.core.chat.PinnedMessages.canChange(state.isGroup, state.isAdmin) && !state.removed &&
+          (msg.id in pinnedIds || !blocked) && com.samvad.core.chat.PinnedMessages.isPinnable(msg),
+        pinned = msg.id in pinnedIds,
+        onPin = { vm.togglePin(msg); selected = null },
       )
     }
   }
@@ -1018,6 +1057,9 @@ private fun MessageActions(
   starred: Boolean = false,
   canStar: Boolean = false,
   onStar: () -> Unit = {},
+  canPin: Boolean = false,
+  pinned: Boolean = false,
+  onPin: () -> Unit = {},
 ) {
   val colors = SamvadTheme.colors
   Column(Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
@@ -1038,6 +1080,7 @@ private fun MessageActions(
     ActionRow(Icons.AutoMirrored.Outlined.Reply, stringResource(R.string.chat_reply), onReply)
     if (canForward) ActionRow(Icons.AutoMirrored.Outlined.Forward, stringResource(R.string.chat_forward), onForward)
     if (canStar) ActionRow(if (starred) Icons.Outlined.StarOutline else Icons.Outlined.Star, stringResource(if (starred) R.string.chat_unstar else R.string.chat_star), onStar)
+    if (canPin) ActionRow(Icons.Outlined.PushPin, stringResource(if (pinned) R.string.pinmsg_unpin else R.string.pinmsg_pin), onPin)
     if (canCopy) ActionRow(Icons.Outlined.ContentCopy, stringResource(R.string.chat_copy), onCopy)
     if (canEdit) ActionRow(Icons.Outlined.Edit, stringResource(R.string.chat_edit), onEdit)
     if (mine) ActionRow(Icons.Outlined.Delete, stringResource(R.string.chat_delete), onDelete, danger = true)

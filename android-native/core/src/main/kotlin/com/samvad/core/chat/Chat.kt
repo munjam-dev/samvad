@@ -32,6 +32,8 @@ data class Conversation(
   val photoPath: String? = null,
   /** Disappearing-message timer in seconds; 0 means off. Changed only through the server. */
   val disappearAfterSec: Long = 0L,
+  /** Pinned messages, set only by the server. Use [PinnedMessages.ordered] before showing them. */
+  val pinnedMessages: List<Pin> = emptyList(),
 )
 
 data class MemberState(

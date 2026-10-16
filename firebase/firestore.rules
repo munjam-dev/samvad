@@ -265,6 +265,8 @@ service cloud.firestore {
             && (resource.data[field] == null || request.resource.data[field] >= resource.data[field]));
     }
 
+    // There is no client update path for a conversation document, so the disappearing-message timer and the
+    // pinned messages (pinnedMessages, at most 3, set by setPinnedMessage) can only be changed by functions.
     match /conversations/{cid} {
       allow get, list: if signedIn() && request.auth.uid in resource.data.members;
 

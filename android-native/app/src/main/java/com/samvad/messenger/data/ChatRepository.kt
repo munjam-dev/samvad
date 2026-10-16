@@ -13,6 +13,7 @@ import com.samvad.core.chat.DisplayNames
 import com.samvad.core.chat.LastMessage
 import com.samvad.core.chat.MemberState
 import com.samvad.core.chat.Message
+import com.samvad.core.chat.Pin
 import com.samvad.core.chat.Poll
 import com.samvad.core.chat.SystemInfo
 import com.samvad.core.chat.Profile
@@ -478,6 +479,14 @@ class ChatRepository(private val db: FirebaseFirestore) {
       description = d.getString("description") ?: "",
       photoPath = d.getString("photoUrl"),
       disappearAfterSec = d.getLong("disappearAfterSec") ?: 0L,
+      pinnedMessages = (d.get("pinnedMessages") as? List<*>).orEmpty().mapNotNull { raw ->
+        val m = raw as? Map<*, *> ?: return@mapNotNull null
+        Pin(
+          messageId = m["messageId"] as? String ?: return@mapNotNull null,
+          pinnedBy = m["pinnedBy"] as? String ?: "",
+          pinnedAt = (m["pinnedAt"] as? com.google.firebase.Timestamp)?.toDate()?.time ?: 0L,
+        )
+      },
     )
   }
 

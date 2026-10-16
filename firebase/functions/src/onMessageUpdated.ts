@@ -3,6 +3,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { REGION } from './config';
 import { defaultDeps, type Deps } from './deps';
 import { logEvent } from './lib/logger';
+import { removePinnedMessage } from './pinned';
 
 /**
  * When a sender deletes a media message for everyone, remove its file(s) from Storage and drop
@@ -27,15 +28,25 @@ export async function cleanupDeletedMedia(
   return true;
 }
 
+/** A message deleted for everyone can no longer be pinned: take it out of the chat's pins. */
+export async function dropPinOfDeleted(
+  deps: Deps,
+  cid: string,
+  mid: string,
+  before: Record<string, unknown> | undefined,
+  after: Record<string, unknown> | undefined,
+): Promise<boolean> {
+  if (!before || !after || before.deleted === true || after.deleted !== true) return false;
+  return removePinnedMessage(deps, cid, mid);
+}
+
 export const onMessageUpdated = onDocumentUpdated(
   { document: 'conversations/{cid}/messages/{mid}', region: REGION },
   async (event) => {
-    await cleanupDeletedMedia(
-      defaultDeps(),
-      event.params.cid,
-      event.params.mid,
-      event.data?.before.data(),
-      event.data?.after.data(),
-    );
+    const deps = defaultDeps();
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    await cleanupDeletedMedia(deps, event.params.cid, event.params.mid, before, after);
+    await dropPinOfDeleted(deps, event.params.cid, event.params.mid, before, after);
   },
 );
