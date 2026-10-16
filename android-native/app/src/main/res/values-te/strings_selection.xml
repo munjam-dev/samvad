@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Drafts: unsent text shown in the chat list in place of the last message -->
+    <string name="draft_label">డ్రాఫ్ట్:</string>
+
+    <!-- Selecting several messages in a chat -->
+    <plurals name="selection_count">
+        <item quantity="one">%1$d ఎంచుకున్నారు</item>
+        <item quantity="other">%1$d ఎంచుకున్నారు</item>
+    </plurals>
+    <string name="cd_selection_close">ఎంపికను రద్దు చేయండి</string>
+    <string name="selection_select">ఎంచుకోండి</string>
+    <string name="selection_message_options">సందేశ ఎంపికలు</string>
+    <plurals name="selection_delete_title">
+        <item quantity="one">%1$d సందేశాన్ని అందరికీ తొలగించాలా?</item>
+        <item quantity="other">%1$d సందేశాలను అందరికీ తొలగించాలా?</item>
+    </plurals>
+    <string name="selection_delete_body">ఈ సందేశాలు తొలగించబడ్డాయని ఈ చాట్‌లోని అందరికీ కనిపిస్తుంది. దీన్ని వెనక్కి తీసుకోలేరు.</string>
+</resources>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Scam Shield: notices under messages, link confirmation and the new-contact banner. All checks run on this device. -->
+    <string name="scam_notice_link_title">ఈ లింక్‌తో జాగ్రత్త</string>
+    <string name="scam_notice_message_title">ఈ సందేశంతో జాగ్రత్త</string>
+    <string name="scam_notice_cd">భద్రతా సూచన. %1$s</string>
+
+    <string name="scam_reason_link_ip_address">ఈ లింక్ వెబ్‌సైట్ పేరుకు బదులు నంబర్ అడ్రస్‌కు వెళ్తుంది.</string>
+    <string name="scam_reason_link_userinfo">ఈ లింక్ నిజంగా ఎక్కడికి వెళ్తుందో దాచిపెడుతుంది. @ తర్వాత ఉన్న అడ్రస్ మాత్రమే తెరుచుకుంటుంది.</string>
+    <string name="scam_reason_link_lookalike_host">ఈ వెబ్ అడ్రస్ పేరున్న సైట్‌లా కనిపిస్తుంది, కానీ అది కాదు.</string>
+    <string name="scam_reason_link_homograph">ఈ వెబ్ అడ్రస్ ఒకేలా కనిపించే వేరే లిపి అక్షరాలను వాడుతోంది.</string>
+    <string name="scam_reason_link_punycode">ఈ వెబ్ అడ్రస్ అసాధారణ అక్షరాలను వాడుతోంది.</string>
+    <string name="scam_reason_link_shortener">చిన్న లింక్ అసలు అడ్రస్‌ను దాచిపెడుతుంది.</string>
+    <string name="scam_reason_link_not_https">ఈ లింక్ సురక్షితం కాదు. ఇది https వాడదు.</string>
+    <string name="scam_reason_link_long_host">ఈ వెబ్ అడ్రస్ అసాధారణంగా పొడవుగా ఉంది.</string>
+    <string name="scam_reason_link_risky_tld">ఈ వెబ్ అడ్రస్ మోసాలలో తరచుగా వాడే రకంతో ముగుస్తోంది.</string>
+    <string name="scam_reason_link_malformed_host">ఈ వెబ్ అడ్రస్ వింతగా ఉంది.</string>
+    <string name="scam_reason_text_share_code">కోడ్ లేదా PIN షేర్ చేయమని అడుగుతోంది. వీటిని ఎవరికీ చెప్పవద్దు.</string>
+    <string name="scam_reason_text_kyc_verify">ఖాతా బ్లాక్ అవుతుందని హెచ్చరిస్తోంది, లేదా వెరిఫై చేయమంటోంది. మోసగాళ్లు తరచుగా ఇలా రాస్తారు.</string>
+    <string name="scam_reason_text_prize">మీకు బహుమతి వచ్చిందని చెబుతోంది. నిజమైన బహుమతులకు ముందే డబ్బు కట్టమని అడగరు.</string>
+    <string name="scam_reason_text_gift_card">గిఫ్ట్ కార్డ్‌లు లేదా వాటి కోడ్‌లు అడుగుతోంది.</string>
+    <string name="scam_reason_text_work_from_home">రోజూ సులభంగా సంపాదించవచ్చని ఆశ చూపుతోంది. ఇలాంటి ఆఫర్‌లు తరచుగా మోసాలే.</string>
+    <string name="scam_reason_text_urgent_money">తొందరగా డబ్బు పంపమని అడుగుతోంది. ఆ వ్యక్తికి ఫోన్ చేసి నిర్ధారించుకోండి.</string>
+    <string name="scam_reason_text_fee_request">ముందుగా ఫీజు కట్టమని అడుగుతోంది.</string>
+
+    <string name="scam_open_title">ఈ లింక్ తెరవాలా?</string>
+    <string name="scam_open_body">ఈ లింక్ కింది అడ్రస్‌ను తెరుస్తుంది. కొనసాగే ముందు మీరు దాన్ని నమ్ముతారో లేదో చూసుకోండి.</string>
+    <string name="scam_open_host_label">తెరిచేది</string>
+    <string name="scam_open_confirm">అయినా తెరవండి</string>
+    <string name="scam_open_cancel">వెనక్కి వెళ్లండి</string>
+    <string name="scam_open_failed">లింక్ తెరవలేకపోయాం.</string>
+
+    <string name="scam_first_title">కొత్త కాంటాక్ట్</string>
+    <string name="scam_first_body">%1$s మీ సేవ్ చేసిన కాంటాక్ట్‌లలో లేరు. మీకు తెలియని వారితో కోడ్‌లు, PINలు, డబ్బు షేర్ చేయవద్దు.</string>
+    <string name="scam_first_dismiss">మూసివేయి</string>
+</resources>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Moments, second pass: report from the viewer, capture note, audience line, photo text and pen, viewer navigation -->
+
+    <!-- Viewer: report -->
+    <string name="moment_report">ఈ మోమెంట్‌ను రిపోర్ట్ చేయండి</string>
+    <string name="moment_report_body">మీరు ఎంచుకున్న కారణంతో పాటు, ఈ వ్యక్తి నుంచి చివరి 5 సందేశాలు సమీక్ష కోసం Samvadకు పంపబడతాయి. మోమెంట్ జత చేయబడదు. వారికి తెలియజేయబడదు.</string>
+    <string name="moment_report_no_chat">ఈ వ్యక్తితో చాట్ కనపడలేదు, అందుకే రిపోర్ట్ పంపబడలేదు. చాట్ నుంచి వారిని రిపోర్ట్ చేయవచ్చు.</string>
+
+    <!-- Viewer: moving around -->
+    <string name="moment_position">మోమెంట్ %1$d / %2$d</string>
+    <string name="moment_next">తర్వాతి మోమెంట్</string>
+    <string name="moment_previous">మునుపటి మోమెంట్</string>
+
+    <!-- Composer: note and audience -->
+    <string name="moment_capture_note">మోమెంట్ చూడగలిగినవారు స్క్రీన్‌షాట్ తీయవచ్చు లేదా సేవ్ చేసుకోవచ్చు.</string>
+    <string name="moment_audience_line">ఎవరు చూడగలరు: %1$s</string>
+    <string name="moment_audience_pick_hint">షేర్ చేయడానికి కనీసం ఒకరిని ఎంచుకోండి.</string>
+
+    <!-- Photo editor: tools -->
+    <string name="photo_edit_tool_text">టెక్స్ట్</string>
+    <string name="photo_edit_tool_pen">పెన్</string>
+    <string name="photo_edit_surface">మీ ఫోటో. ఇక్కడ చేసే మార్పులు మీరు పోస్ట్ చేసే చిత్రంలో భాగం అవుతాయి.</string>
+    <string name="photo_edit_hint_text">ఫోటోపై టెక్స్ట్ పెట్టడానికి దానిని నొక్కండి. కదిలించడానికి టెక్స్ట్‌ను లాగండి.</string>
+    <string name="photo_edit_hint_pen">వేలితో ఫోటోపై గీయండి.</string>
+
+    <!-- Photo editor: text -->
+    <string name="photo_edit_text_title">ఫోటోపై టెక్స్ట్</string>
+    <string name="photo_edit_text_hint">మీ టెక్స్ట్ టైప్ చేయండి</string>
+    <string name="photo_edit_text_done">పూర్తయింది</string>
+    <string name="photo_edit_text_edit">టెక్స్ట్ సవరించండి</string>
+    <string name="photo_edit_text_remove">టెక్స్ట్ తీసివేయండి</string>
+    <string name="photo_edit_size_small">చిన్నది</string>
+    <string name="photo_edit_size_medium">మధ్యస్థం</string>
+    <string name="photo_edit_size_large">పెద్దది</string>
+
+    <!-- Photo editor: colours -->
+    <string name="photo_edit_color_white">తెలుపు</string>
+    <string name="photo_edit_color_champagne">షాంపేన్</string>
+    <string name="photo_edit_color_lime">నిమ్మ పచ్చ</string>
+    <string name="photo_edit_color_green">ఆకుపచ్చ</string>
+    <string name="photo_edit_color_red">ఎరుపు</string>
+    <string name="photo_edit_color_label">రంగు: %1$s</string>
+
+    <!-- Photo editor: pen -->
+    <string name="photo_edit_pen_undo">చివరి గీత రద్దు చేయండి</string>
+    <string name="photo_edit_pen_clear">డ్రాయింగ్ తుడిచేయండి</string>
+    <string name="photo_edit_clear_title">మీ డ్రాయింగ్ తుడిచేయాలా?</string>
+    <string name="photo_edit_clear_body">ఈ ఫోటోపై పెన్ గీతలన్నీ తొలగించబడతాయి. మీ టెక్స్ట్ అలాగే ఉంటుంది.</string>
+    <string name="photo_edit_clear_confirm">తుడిచేయి</string>
+</resources>

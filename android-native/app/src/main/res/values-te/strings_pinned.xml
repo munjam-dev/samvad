@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Pinned messages -->
+    <string name="pinmsg_pin">సందేశాన్ని పిన్ చేయండి</string>
+    <string name="pinmsg_unpin">సందేశాన్ని అన్‌పిన్ చేయండి</string>
+    <string name="pinmsg_banner_title">పిన్ చేసిన సందేశం</string>
+    <string name="pinmsg_banner_title_count">పిన్ చేసిన సందేశం %1$d / %2$d</string>
+    <string name="pinmsg_go_to">సందేశానికి వెళ్లండి</string>
+    <string name="pinmsg_photo">ఫోటో</string>
+    <string name="pinmsg_photo_caption">ఫోటో: %1$s</string>
+    <string name="pinmsg_file">ఫైల్</string>
+    <string name="pinmsg_file_name">ఫైల్: %1$s</string>
+    <string name="pinmsg_voice">వాయిస్ సందేశం</string>
+    <string name="pinmsg_poll">పోల్: %1$s</string>
+    <string name="pinmsg_unavailable">సందేశం</string>
+    <string name="pinmsg_pinned">సందేశం పిన్ అయింది</string>
+    <string name="pinmsg_unpinned">సందేశం అన్‌పిన్ అయింది</string>
+    <string name="pinmsg_limit">గరిష్ఠంగా 3 సందేశాలు పిన్ చేయవచ్చు. ముందు ఒకదాన్ని అన్‌పిన్ చేయండి.</string>
+    <string name="pinmsg_not_allowed">ఈ చాట్‌లో ఇప్పుడు సందేశాలు పిన్ చేయలేరు. గ్రూప్‌లలో అడ్మిన్‌లు మాత్రమే పిన్ చేయగలరు.</string>
+    <string name="pinmsg_daily">ఈరోజు పిన్ చేసిన సందేశాలను చాలాసార్లు మార్చారు. కొంతసేపటి తర్వాత మళ్లీ ప్రయత్నించండి.</string>
+    <string name="pinmsg_failed">పిన్ చేసిన సందేశాలు అప్‌డేట్ చేయలేకపోయాం. కనెక్షన్ చూసి మళ్లీ ప్రయత్నించండి.</string>
+</resources>
