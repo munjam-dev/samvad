@@ -42,6 +42,7 @@ class AppContainer(context: Context) {
   val contacts: ContactsRepository? = firebase?.let { ContactsRepository(context, it.functions) }
   val savedNames: SavedNamesRepository? = contacts?.let { SavedNamesRepository(context, it) }
   val safety: SafetyRepository? = firebase?.let { SafetyRepository(it.db, it.functions) }
+  val scamPrefs = com.samvad.messenger.data.ScamPreferences(context)
   val twoStep: TwoStepRepository? = firebase?.let { TwoStepRepository(it.auth, it.functions) }
   val groups: GroupRepository? = firebase?.let { GroupRepository(it.functions) }
   val status: StatusRepository? = firebase?.let { StatusRepository(it.db, it.storage) }

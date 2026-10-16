@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Scam Shield: notices under messages, link confirmation and the new-contact banner. All checks run on this device. -->
+    <string name="scam_notice_link_title">इस लिंक से सावधान रहें</string>
+    <string name="scam_notice_message_title">इस संदेश से सावधान रहें</string>
+    <string name="scam_notice_cd">सुरक्षा सूचना। %1$s</string>
+
+    <string name="scam_reason_link_ip_address">यह लिंक वेबसाइट के नाम की जगह नंबर वाले पते पर जाता है।</string>
+    <string name="scam_reason_link_userinfo">यह लिंक छिपाता है कि वह असल में कहाँ जाता है। @ के बाद वाला पता ही खुलता है।</string>
+    <string name="scam_reason_link_lookalike_host">यह वेब पता किसी जाने-माने नाम जैसा दिखता है, पर वह नहीं है।</string>
+    <string name="scam_reason_link_homograph">इस वेब पते में दूसरी लिपि के ऐसे अक्षर हैं जो मिलते-जुलते दिखते हैं।</string>
+    <string name="scam_reason_link_punycode">इस वेब पते में असामान्य अक्षर हैं।</string>
+    <string name="scam_reason_link_shortener">छोटा लिंक असली पता छिपा देता है।</string>
+    <string name="scam_reason_link_not_https">यह लिंक सुरक्षित नहीं है। इसमें https नहीं है।</string>
+    <string name="scam_reason_link_long_host">यह वेब पता असामान्य रूप से लंबा है।</string>
+    <string name="scam_reason_link_risky_tld">यह वेब पता ऐसे अंत पर ख़त्म होता है जो अक्सर ठगी में इस्तेमाल होता है।</string>
+    <string name="scam_reason_link_malformed_host">यह वेब पता अजीब लगता है।</string>
+    <string name="scam_reason_text_share_code">इसमें आपसे कोड या PIN साझा करने को कहा गया है। इन्हें किसी को न बताएँ।</string>
+    <string name="scam_reason_text_kyc_verify">इसमें खाता बंद होने की चेतावनी है, या खाता सत्यापित करने को कहा गया है। ठग अक्सर ऐसा लिखते हैं।</string>
+    <string name="scam_reason_text_prize">इसमें कहा गया है कि आपने इनाम जीता है। असली इनाम के लिए पहले पैसे नहीं माँगे जाते।</string>
+    <string name="scam_reason_text_gift_card">इसमें गिफ़्ट कार्ड या उनके कोड माँगे गए हैं।</string>
+    <string name="scam_reason_text_work_from_home">इसमें हर दिन आसान कमाई का वादा है। ऐसे ऑफ़र अक्सर ठगी होते हैं।</string>
+    <string name="scam_reason_text_urgent_money">इसमें जल्दी में पैसे माँगे गए हैं। उस व्यक्ति को फ़ोन करके पक्का कर लें।</string>
+    <string name="scam_reason_text_fee_request">इसमें पहले शुल्क भरने को कहा गया है।</string>
+
+    <string name="scam_open_title">यह लिंक खोलें?</string>
+    <string name="scam_open_body">यह लिंक नीचे लिखा पता खोलता है। आगे बढ़ने से पहले पक्का कर लें कि आप उस पर भरोसा करते हैं।</string>
+    <string name="scam_open_host_label">खुलेगा</string>
+    <string name="scam_open_confirm">फिर भी खोलें</string>
+    <string name="scam_open_cancel">वापस जाएँ</string>
+    <string name="scam_open_failed">लिंक नहीं खुल सका।</string>
+
+    <string name="scam_first_title">नया कॉन्टैक्ट</string>
+    <string name="scam_first_body">%1$s आपके सेव किए कॉन्टैक्ट में नहीं है। जिसे आप नहीं जानते, उसे कोड, PIN या पैसे न दें।</string>
+    <string name="scam_first_dismiss">हटाएँ</string>
+</resources>

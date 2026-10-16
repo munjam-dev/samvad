@@ -200,6 +200,10 @@ fun ConversationScreen(
   val reportSending = vm.reporting.collectAsStateWithLifecycle().value
   var confirmBlock by remember { mutableStateOf(false) }
   var reportOpen by remember { mutableStateOf(false) }
+  // Scam Shield (ScamViews.kt): link taps, the link confirmation and the new-contact banner.
+  val scam = rememberScamLinks(container)
+  val firstContact = rememberFirstContact(container, conversationId, otherUid, state, blocked)
+  ScamLinkDialog(scam)
   val noticeText = notice?.let {
     stringResource(
       when (it) {
@@ -524,6 +528,7 @@ fun ConversationScreen(
                   onRetry = { vm.retry(item.message) },
                   onReact = { emoji -> vm.react(item.message, emoji) },
                   mentionNames = groupStatus.allNames,
+                  scam = scam,
                   mediaContent = {
                     val media = item.message.media
                     if (media != null) {
@@ -545,6 +550,9 @@ fun ConversationScreen(
               }
             }
             if (!state.hasMore) item(key = "privacy-notice") { PrivacyNotice(onLearnMore = { privacyInfo = true }) }
+            if (firstContact.show) item(key = "first-contact") {
+              FirstContactBanner(state.title, onBlock = { confirmBlock = true }, onReport = { reportOpen = true }, onDismiss = firstContact.dismiss)
+            }
           }
         }
         androidx.compose.animation.AnimatedVisibility(
@@ -744,10 +752,12 @@ private fun MessageBubble(
   /** Opens the sender's info (incoming messages: avatar and name). */
   onOpenSender: () -> Unit = {},
   starred: Boolean = false,
+  scam: ScamLinks? = null,
 ) {
   val colors = SamvadTheme.colors
   val m = item.message
   val mine = item.mine
+  val assessment = rememberScamAssessment(m)
   // The first bubble of a run carries the tail at its top corner, beside the avatar (US-003).
   val shape = when {
     item.groupedWithPrevious -> RoundedCornerShape(20.dp)
@@ -828,7 +838,7 @@ private fun MessageBubble(
         }
         if (m.deleted || m.text.isNotBlank()) {
           Text(
-            if (m.deleted) AnnotatedString(stringResource(R.string.chat_deleted)) else mentionText(m.text, mentionNames),
+            if (m.deleted) AnnotatedString(stringResource(R.string.chat_deleted)) else linkedText(mentionText(m.text, mentionNames), assessment, scam),
             style = MaterialTheme.typography.bodyLarge,
             color = if (m.deleted) colors.onSurfaceVariant else colors.onBubble,
           )
@@ -845,6 +855,7 @@ private fun MessageBubble(
         }
       }
     }
+    if (!mine) ScamNotice(assessment, Modifier.padding(start = indent, top = 4.dp))
     if (m.failed) {
       Text(retryLabel, style = MaterialTheme.typography.labelSmall, color = colors.error, modifier = Modifier.padding(top = 2.dp, start = indent))
     }
