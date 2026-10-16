@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Pinned messages -->
+    <string name="pinmsg_pin">संदेश पिन करें</string>
+    <string name="pinmsg_unpin">संदेश का पिन हटाएँ</string>
+    <string name="pinmsg_banner_title">पिन किया हुआ संदेश</string>
+    <string name="pinmsg_banner_title_count">पिन किया हुआ संदेश %1$d / %2$d</string>
+    <string name="pinmsg_go_to">संदेश पर जाएँ</string>
+    <string name="pinmsg_photo">फ़ोटो</string>
+    <string name="pinmsg_photo_caption">फ़ोटो: %1$s</string>
+    <string name="pinmsg_file">फ़ाइल</string>
+    <string name="pinmsg_file_name">फ़ाइल: %1$s</string>
+    <string name="pinmsg_voice">वॉइस संदेश</string>
+    <string name="pinmsg_poll">पोल: %1$s</string>
+    <string name="pinmsg_unavailable">संदेश</string>
+    <string name="pinmsg_pinned">संदेश पिन हो गया</string>
+    <string name="pinmsg_unpinned">संदेश का पिन हट गया</string>
+    <string name="pinmsg_limit">आप ज़्यादा से ज़्यादा 3 संदेश पिन कर सकते हैं। पहले किसी एक का पिन हटाएँ।</string>
+    <string name="pinmsg_not_allowed">अभी आप इस चैट में संदेश पिन नहीं कर सकते। ग्रुप में केवल एडमिन पिन कर सकते हैं।</string>
+    <string name="pinmsg_daily">आपने आज कई बार पिन किए गए संदेश बदले हैं। कुछ देर बाद फिर कोशिश करें।</string>
+    <string name="pinmsg_failed">पिन किए गए संदेश अपडेट नहीं हो सके। अपना कनेक्शन जाँचें और फिर कोशिश करें।</string>
+</resources>

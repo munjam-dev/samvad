@@ -17,6 +17,10 @@ import com.samvad.core.chat.Conversation
 import com.samvad.core.chat.GroupRules
 import com.samvad.core.chat.MemberState
 import com.samvad.core.chat.Mentions
+import com.samvad.core.chat.Pin
+import com.samvad.core.chat.PinBlock
+import com.samvad.core.chat.PinnedBanner
+import com.samvad.core.chat.PinnedMessages
 import com.samvad.core.chat.Polls
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -124,6 +128,9 @@ data class ComposerState(
   /** Groups: the "@query" being typed, for the member picker. */
   val mentionQuery: String? = null,
 )
+
+/** One-shot feedback for pinning a message, shown as a snackbar. */
+enum class PinNotice { PINNED, UNPINNED, LIMIT, NOT_ALLOWED, DAILY_LIMIT, FAILED }
 
 /** Result of asking the server to change the disappearing-message timer. */
 sealed interface TimerChange {
@@ -284,6 +291,74 @@ class ConversationViewModel(
   }
 
   fun dismissTimerError() { if (_timerChange.value is TimerChange.Failed) _timerChange.value = TimerChange.Idle }
+
+  // ---- pinned messages ----------------------------------------------------------------------------
+
+  /** The chat's pins, oldest first. Only the server writes them (setPinnedMessage). */
+  private val pins: StateFlow<List<Pin>> = chats.conversation(conversationId)
+    .map { PinnedMessages.ordered(it?.pinnedMessages.orEmpty()) }
+    .catch { emit(emptyList()) }
+    .distinctUntilChanged()
+    .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+  val pinnedIds: StateFlow<Set<String>> = pins.map { list -> list.map { it.messageId }.toSet() }
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
+
+  /** Which pin the banner shows; null means the newest. Reset whenever the pins change. */
+  private val bannerIndex = MutableStateFlow<Int?>(null)
+
+  /** Pinned messages that are older than the loaded page are read one by one; null means unreadable. */
+  private val fetchedPins = MutableStateFlow<Map<String, Message?>>(emptyMap())
+
+  init {
+    viewModelScope.launch {
+      pins.collect { list ->
+        bannerIndex.value = null
+        list.forEach { pin ->
+          launch { fetchedPins.update { it + (pin.messageId to chats.message(conversationId, pin.messageId)) } }
+        }
+      }
+    }
+  }
+
+  val pinnedBanner: StateFlow<PinnedBanner?> = combine(pins, page, fetchedPins, bannerIndex, clock) { list, p, fetched, index, now ->
+    // Messages on screen are live, so they win over the one-time reads.
+    PinnedMessages.banner(list, fetched + p.messages.associateBy { it.id }, now, index)
+  }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+  /** Returns the message the banner points at and moves the banner on to the next older pin. */
+  fun bannerTapped(): String? {
+    val banner = pinnedBanner.value ?: return null
+    bannerIndex.value = PinnedMessages.nextIndex(banner.index, banner.total)
+    return banner.messageId
+  }
+
+  private val _pinNotice = MutableStateFlow<PinNotice?>(null)
+  val pinNotice: StateFlow<PinNotice?> = _pinNotice
+  fun clearPinNotice() { _pinNotice.value = null }
+
+  fun togglePin(message: Message) {
+    val groups = container.groups ?: return
+    val list = pins.value
+    val pin = !PinnedMessages.isPinned(list, message.id)
+    if (pin && PinnedMessages.blockedReason(list, message.id) == PinBlock.LIMIT_REACHED) {
+      _pinNotice.value = PinNotice.LIMIT
+      return
+    }
+    viewModelScope.launch {
+      _pinNotice.value = try {
+        groups.setPinnedMessage(conversationId, message.id, pin)
+        if (pin) PinNotice.PINNED else PinNotice.UNPINNED
+      } catch (e: GroupException) {
+        when (e) {
+          is GroupException.PinLimit -> PinNotice.LIMIT
+          is GroupException.NotAllowed -> PinNotice.NOT_ALLOWED
+          is GroupException.LimitReached -> PinNotice.DAILY_LIMIT
+          else -> PinNotice.FAILED
+        }
+      }
+    }
+  }
 
   val state: StateFlow<ConversationUiState> = combine(
     page,

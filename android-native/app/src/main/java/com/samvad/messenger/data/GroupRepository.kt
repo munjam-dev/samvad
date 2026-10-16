@@ -12,6 +12,8 @@ sealed class GroupException(message: String) : Exception(message) {
   class LastAdmin : GroupException("last-admin")
   class NotAllowed : GroupException("not-allowed")
   class LimitReached : GroupException("limit")
+  /** Pinned messages: three are already pinned. */
+  class PinLimit : GroupException("pin-limit")
   class Failed(cause: Throwable) : GroupException("failed") {
     init { initCause(cause) }
   }
@@ -63,6 +65,11 @@ class GroupRepository(private val functions: FirebaseFunctions) {
     call("setDisappearingTimer", mapOf("conversationId" to cid, "seconds" to seconds))
   }
 
+  /** Pins or unpins one message. Direct chats: either person; groups: admins only (the server decides). */
+  suspend fun setPinnedMessage(cid: String, messageId: String, pinned: Boolean) {
+    call("setPinnedMessage", mapOf("conversationId" to cid, "messageId" to messageId, "pinned" to pinned))
+  }
+
   suspend fun join(code: String): String = call("joinGroupWithCode", mapOf("code" to code))["cid"] as String
 
   private suspend fun call(name: String, data: Map<String, Any?>): Map<String, Any?> {
@@ -74,6 +81,7 @@ class GroupRepository(private val functions: FirebaseFunctions) {
         e.message == "group-full" -> GroupException.Full()
         e.message == "no-eligible-members" -> GroupException.NoEligibleMembers()
         e.message == "invalid-code" || e.code == FirebaseFunctionsException.Code.NOT_FOUND -> GroupException.InvalidCode()
+        e.message == "pin-limit" -> GroupException.PinLimit()
         e.message == "last-admin" -> GroupException.LastAdmin()
         e.code == FirebaseFunctionsException.Code.PERMISSION_DENIED -> GroupException.NotAllowed()
         e.code == FirebaseFunctionsException.Code.RESOURCE_EXHAUSTED -> GroupException.LimitReached()

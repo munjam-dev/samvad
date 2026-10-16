@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Pinned messages -->
+    <string name="pinmsg_pin">Pin message</string>
+    <string name="pinmsg_unpin">Unpin message</string>
+    <string name="pinmsg_banner_title">Pinned message</string>
+    <string name="pinmsg_banner_title_count">Pinned message %1$d of %2$d</string>
+    <string name="pinmsg_go_to">Go to message</string>
+    <string name="pinmsg_photo">Photo</string>
+    <string name="pinmsg_photo_caption">Photo: %1$s</string>
+    <string name="pinmsg_file">File</string>
+    <string name="pinmsg_file_name">File: %1$s</string>
+    <string name="pinmsg_voice">Voice message</string>
+    <string name="pinmsg_poll">Poll: %1$s</string>
+    <string name="pinmsg_unavailable">Message</string>
+    <string name="pinmsg_pinned">Message pinned</string>
+    <string name="pinmsg_unpinned">Message unpinned</string>
+    <string name="pinmsg_limit">You can pin up to 3 messages. Unpin one first.</string>
+    <string name="pinmsg_not_allowed">You can\'t pin messages in this chat right now. In groups, only admins can pin.</string>
+    <string name="pinmsg_daily">You have changed pinned messages many times today. Try again later.</string>
+    <string name="pinmsg_failed">Couldn\'t update pinned messages. Check your connection and try again.</string>
+</resources>

@@ -5,6 +5,7 @@ import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { REGION, buildCallableOptions } from './config';
 import { defaultDeps, type Deps } from './deps';
 import { previewOf } from './onMessageCreated';
+import { removePinnedMessage } from './pinned';
 import { requirePhoneAuth } from './lib/guards';
 import { consumeDailyBudget } from './lib/budget';
 import { logEvent, newCorrelationId } from './lib/logger';
@@ -53,7 +54,7 @@ export async function setTimerCore(deps: Deps, actor: string, cid: string, secon
 
 /**
  * Removes everything that belonged to a message once it is gone (by expiry or any other deletion): its files,
- * its poll votes and every starred reference to it. Safe to run twice.
+ * its poll votes, its pin and every starred reference to it. Safe to run twice.
  */
 export async function cleanupGoneMessage(deps: Deps, cid: string, mid: string): Promise<void> {
   await deps.deleteFiles(`conversations/${cid}/${mid}/`);
@@ -62,6 +63,7 @@ export async function cleanupGoneMessage(deps: Deps, cid: string, mid: string): 
   const writer = deps.db.bulkWriter();
   for (const d of saved.docs) if (d.get('conversationId') === cid) void writer.delete(d.ref);
   await writer.close();
+  await removePinnedMessage(deps, cid, mid);
   await refreshLastMessage(deps, cid, mid);
   logEvent('message_cleanup', { count: 1, outcome: 'ok' });
 }
