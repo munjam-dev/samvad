@@ -67,7 +67,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -81,8 +83,11 @@ import com.samvad.core.status.StatusAudience
 import com.samvad.core.status.StatusGroup
 import com.samvad.core.status.StatusItem
 import com.samvad.core.status.StatusRules
+import com.samvad.core.status.TapTarget
+import com.samvad.core.status.ViewerNav
 import com.samvad.messenger.AppContainer
 import com.samvad.messenger.R
+import com.samvad.messenger.ui.chat.ReportDialog
 import com.samvad.messenger.ui.components.Avatar
 import com.samvad.messenger.ui.components.LocalPhotoSource
 import com.samvad.messenger.ui.components.StoryAvatar
@@ -221,8 +226,20 @@ fun StatusViewerScreen(container: AppContainer, me: String, authorId: String, on
   val item = items[i]
   val colors = SamvadTheme.colors
 
-  var paused by remember { mutableStateOf(false) }
+  // Several things can pause a moment at once (finger held, a menu or dialog, typing, app in the background),
+  // so each has its own flag and letting go of one never restarts the clock while another still holds it.
+  var menuPaused by remember { mutableStateOf(false) }
+  var held by remember { mutableStateOf(false) }
+  var inBackground by remember { mutableStateOf(false) }
+  var reportOpen by remember { mutableStateOf(false) }
+  val snackbar = remember { androidx.compose.material3.SnackbarHostState() }
+  val reporting = vm.reporting.collectAsStateWithLifecycle().value
+  val reportResult = vm.reportResult.collectAsStateWithLifecycle().value
+  val blockedUids = vm.blockedUids.collectAsStateWithLifecycle().value
   var typing by remember { mutableStateOf(false) }
+  val paused = menuPaused || held || inBackground || reportOpen
+  androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_STOP) { inBackground = true }
+  androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_START) { inBackground = false }
   val progress = remember(item.id) { Animatable(0f) }
   val needsFile = item.kind == "video" || item.kind == "voice"
   var mediaFile by remember(item.id) { mutableStateOf<java.io.File?>(null) }
@@ -236,8 +253,16 @@ fun StatusViewerScreen(container: AppContainer, me: String, authorId: String, on
     if (i < items.lastIndex) index = i + 1 else onBack()
   }
 
+  fun go(target: TapTarget) {
+    val next = ViewerNav.move(i, items.lastIndex, target)
+    if (next != null) index = next else onBack()
+  }
+  val positionLabel = stringResource(R.string.moment_position, i + 1, items.size)
+  val nextLabel = stringResource(R.string.moment_next)
+  val previousLabel = stringResource(R.string.moment_previous)
+
   val (bg, fg) = styleColors(item.style)
-  val dark = item.kind == "image" || item.kind == "video"
+  val dark =item.kind == "image" || item.kind == "video"
   var bitmap by remember(item.id) { mutableStateOf<Bitmap?>(null) }
   LaunchedEffect(item.id) { if (item.kind == "image") item.mediaPath?.let { bitmap = vm.photo(it) } }
 
@@ -249,13 +274,18 @@ fun StatusViewerScreen(container: AppContainer, me: String, authorId: String, on
     Modifier
       .fillMaxSize()
       .background(if (dark) Color.Black else bg)
+      .semantics {
+        customActions = listOf(
+          CustomAccessibilityAction(nextLabel) { go(TapTarget.NEXT); true },
+          CustomAccessibilityAction(previousLabel) { go(TapTarget.PREVIOUS); true },
+        )
+      }
       .pointerInput(item.id, items.size) {
+        // Holding a finger down (a press or a long press) pauses the moment and the progress bar; letting go resumes.
+        // A tap on the left half goes back, a tap on the right half goes on. A long press is never also a tap.
         detectTapGestures(
-          onTap = { offset ->
-            if (offset.x < size.width / 3f) { if (i > 0) index = i - 1 else onBack() }
-            else if (i < items.lastIndex) index = i + 1 else onBack()
-          },
-          onPress = { paused = true; tryAwaitRelease(); paused = false },
+          onTap = { offset -> go(ViewerNav.tapTarget(offset.x, size.width.toFloat())) },
+          onPress = { held = true; try { tryAwaitRelease() } finally { held = false } },
         )
       },
   ) {
@@ -272,7 +302,6 @@ fun StatusViewerScreen(container: AppContainer, me: String, authorId: String, on
         StatusRules.links(item.text).firstOrNull()?.let { link ->
           val context = LocalContext.current
           TextButton(onClick = {
-            paused = true
             container.appLock.expectExternal()
             runCatching { context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(link)).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) }
           }) { Text(stringResource(R.string.moment_open_link), color = fg) }
@@ -290,7 +319,7 @@ fun StatusViewerScreen(container: AppContainer, me: String, authorId: String, on
     }
 
     Column(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 10.dp, vertical = 8.dp)) {
-      Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Moment ${i + 1} of ${items.size}" }) {
+      Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth().semantics { contentDescription = positionLabel }) {
         items.forEachIndexed { n, _ ->
           Box(Modifier.weight(1f).height(3.dp).clip(RoundedCornerShape(2.dp)).background(Color.White.copy(alpha = 0.35f))) {
             Box(Modifier.fillMaxSize(if (n < i) 1f else if (n == i) progress.value else 0f).background(Color.White))
@@ -304,12 +333,13 @@ fun StatusViewerScreen(container: AppContainer, me: String, authorId: String, on
           Text(StatusRules.ago(item.createdAt, state.now), style = MaterialTheme.typography.labelSmall, color = (if (dark) Color.White else fg).copy(alpha = 0.8f))
         }
         Box {
-          IconButton(onClick = { menu = true; paused = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.cd_more), tint = if (dark) Color.White else fg) }
-          DropdownMenu(menu, onDismissRequest = { menu = false; paused = false }) {
+          IconButton(onClick = { menu = true; menuPaused = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.cd_more), tint = if (dark) Color.White else fg) }
+          DropdownMenu(menu, onDismissRequest = { menu = false; menuPaused = false }) {
             if (mineView) {
-              DropdownMenuItem(text = { Text(stringResource(R.string.status_delete)) }, onClick = { menu = false; paused = false; vm.delete(item) })
+              DropdownMenuItem(text = { Text(stringResource(R.string.status_delete)) }, onClick = { menu = false; menuPaused = false; vm.delete(item) })
             } else {
-              DropdownMenuItem(text = { Text(stringResource(R.string.status_mute)) }, onClick = { menu = false; paused = false; vm.mute(authorId, true); onBack() })
+              DropdownMenuItem(text = { Text(stringResource(R.string.status_mute)) }, onClick = { menu = false; menuPaused = false; vm.mute(authorId, true); onBack() })
+              DropdownMenuItem(text = { Text(stringResource(R.string.moment_report)) }, onClick = { menu = false; menuPaused = false; reportOpen = true })
             }
           }
         }
@@ -320,7 +350,7 @@ fun StatusViewerScreen(container: AppContainer, me: String, authorId: String, on
     Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth().navigationBarsPadding().imePadding().padding(12.dp)) {
       if (mineView) {
         Row(
-          Modifier.clip(RoundedCornerShape(20.dp)).background(Color.Black.copy(alpha = 0.45f)).clickable { viewersOpen = true; paused = true }.padding(horizontal = 14.dp, vertical = 8.dp),
+          Modifier.clip(RoundedCornerShape(20.dp)).background(Color.Black.copy(alpha = 0.45f)).clickable { viewersOpen = true; menuPaused = true }.padding(horizontal = 14.dp, vertical = 8.dp),
           verticalAlignment = Alignment.CenterVertically,
         ) {
           Icon(Icons.Outlined.Visibility, null, tint = Color.White, modifier = Modifier.size(18.dp))
@@ -347,13 +377,44 @@ fun StatusViewerScreen(container: AppContainer, me: String, authorId: String, on
         }
       }
     }
+    androidx.compose.material3.SnackbarHost(snackbar, Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(top = 64.dp))
+  }
+
+  if (reportOpen && !mineView) {
+    ReportDialog(
+      name = name,
+      sending = reporting,
+      alreadyBlocked = authorId in blockedUids,
+      onSend = { reason, alsoBlock -> vm.reportMoment(authorId, reason, alsoBlock) },
+      onDismiss = { reportOpen = false },
+      body = stringResource(R.string.moment_report_body),
+    )
+  }
+  val reportText = reportResult?.let {
+    stringResource(
+      when (it) {
+        MomentReportResult.SENT -> R.string.report_sent
+        MomentReportResult.SENT_AND_BLOCKED -> R.string.report_sent_blocked
+        MomentReportResult.LIMIT -> R.string.report_limit
+        MomentReportResult.NO_CHAT -> R.string.moment_report_no_chat
+        MomentReportResult.FAILED -> R.string.safety_failed
+      },
+    )
+  }
+  LaunchedEffect(reportText) {
+    if (reportText != null) {
+      // Any outcome closes the dialog; a retry from the menu reuses the same request ID.
+      reportOpen = false
+      vm.clearReportResult()
+      snackbar.showSnackbar(reportText)
+    }
   }
 
   if (viewersOpen) {
     val viewers = vm.viewers(item.id).collectAsStateWithLifecycle(emptyList()).value
     AlertDialog(
-      onDismissRequest = { viewersOpen = false; paused = false },
-      confirmButton = { TextButton(onClick = { viewersOpen = false; paused = false }) { Text(stringResource(R.string.status_done)) } },
+      onDismissRequest = { viewersOpen = false; menuPaused = false },
+      confirmButton = { TextButton(onClick = { viewersOpen = false; menuPaused = false }) { Text(stringResource(R.string.status_done)) } },
       title = { Text(stringResource(R.string.status_viewers, viewers.size)) },
       text = {
         if (viewers.isEmpty()) Text(stringResource(R.string.status_no_viewers))

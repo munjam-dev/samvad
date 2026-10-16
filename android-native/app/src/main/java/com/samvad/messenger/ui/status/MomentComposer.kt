@@ -57,6 +57,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -73,6 +74,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.samvad.core.design.ChatThemes
+import com.samvad.core.status.PhotoEdits
 import com.samvad.core.status.StatusAudience
 import com.samvad.core.status.StatusRules
 import com.samvad.messenger.AppContainer
@@ -104,11 +106,13 @@ fun StatusComposerScreen(container: AppContainer, me: String, startWithPhoto: Bo
   val context = LocalContext.current
   val scope = rememberCoroutineScope()
 
-  var mode by remember { mutableStateOf(if (startWithPhoto) MomentMode.PHOTO else MomentMode.TEXT) }
-  var text by remember { mutableStateOf("") }
-  var caption by remember { mutableStateOf("") }
-  var style by remember { mutableStateOf(StatusRules.DEFAULT_STYLE) }
-  var photo by remember { mutableStateOf<Uri?>(null) }
+  // Simple values survive rotation and process death; bitmaps do not, so the preview is decoded again from the Uri.
+  var mode by rememberSaveable { mutableStateOf(if (startWithPhoto) MomentMode.PHOTO else MomentMode.TEXT) }
+  var text by rememberSaveable { mutableStateOf("") }
+  var caption by rememberSaveable { mutableStateOf("") }
+  var style by rememberSaveable { mutableStateOf(StatusRules.DEFAULT_STYLE) }
+  var photo by rememberSaveable { mutableStateOf<Uri?>(null) }
+  var photoEdits by rememberSaveable(stateSaver = PhotoEditsSaver) { mutableStateOf(PhotoEdits.NONE) }
   var photoPreview by remember { mutableStateOf<Bitmap?>(null) }
   var video by remember { mutableStateOf<Uri?>(null) }
   var videoFrame by remember { mutableStateOf<Bitmap?>(null) }
@@ -120,8 +124,18 @@ fun StatusComposerScreen(container: AppContainer, me: String, startWithPhoto: Bo
   val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
     if (uri != null) {
       photo = uri
-      photoPreview = com.samvad.messenger.data.ImageCodec.decodeUpright(context.contentResolver, uri, 1024)
+      photoEdits = PhotoEdits.NONE
     }
+  }
+  // A small preview (1024 px) is all the screen needs; the full-size picture is only made when posting.
+  LaunchedEffect(photo) {
+    val uri = photo
+    if (uri == null) { photoPreview = null; return@LaunchedEffect }
+    val decoded = withContext(Dispatchers.IO) {
+      runCatching { com.samvad.messenger.data.ImageCodec.decodeUpright(context.contentResolver, uri, 1024) }.getOrNull()
+    }
+    photoPreview = decoded
+    if (decoded == null) { photo = null; photoEdits = PhotoEdits.NONE }
   }
   val videoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
     if (uri != null) video = uri
@@ -193,11 +207,22 @@ fun StatusComposerScreen(container: AppContainer, me: String, startWithPhoto: Bo
           modifier = Modifier.fillMaxWidth(),
           decorationBox = { inner -> Box(contentAlignment = Alignment.Center) { if (text.isEmpty()) Text(stringResource(R.string.status_hint), style = MaterialTheme.typography.headlineMedium, color = fg.copy(alpha = 0.55f), textAlign = TextAlign.Center); inner() } },
         )
-        MomentMode.PHOTO -> MediaPick(
-          preview = photoPreview, caption = caption, onCaption = { caption = it.take(StatusRules.MAX_TEXT) },
-          pickLabel = if (photoPreview == null) R.string.status_pick_photo else R.string.status_change_photo,
-          onPick = { photoPicker.launch("image/*") }, description = R.string.status_photo,
-        )
+        MomentMode.PHOTO -> {
+          val shown = photoPreview
+          if (shown == null) {
+            MediaPick(
+              preview = null, caption = caption, onCaption = { caption = it.take(StatusRules.MAX_TEXT) },
+              pickLabel = R.string.status_pick_photo,
+              onPick = { photoPicker.launch("image/*") }, description = R.string.status_photo,
+            )
+          } else {
+            PhotoMomentPane(
+              preview = shown, edits = photoEdits, onEdits = { photoEdits = it },
+              caption = caption, onCaption = { caption = it.take(StatusRules.MAX_TEXT) },
+              onPick = { photoPicker.launch("image/*") }, enabled = !posting,
+            )
+          }
+        }
         MomentMode.VIDEO -> MediaPick(
           preview = videoFrame, caption = caption, onCaption = { caption = it.take(StatusRules.MAX_TEXT) },
           pickLabel = if (video == null) R.string.moment_pick_video else R.string.moment_change_video,
@@ -238,18 +263,29 @@ fun StatusComposerScreen(container: AppContainer, me: String, startWithPhoto: Bo
       LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp))
     }
 
-    Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-      TextButton(onClick = { audienceOpen = true }) {
-        Text(
-          when (audience) {
-            StatusAudience.ALL -> stringResource(R.string.status_audience_all)
-            StatusAudience.ONLY -> stringResource(R.string.status_audience_only, chosen.size)
-            StatusAudience.EXCEPT -> stringResource(R.string.status_audience_except, chosen.size)
-          },
-          color = onColor,
-        )
+    // One calm note, once, right above the Post button: nothing here can stop a viewer from keeping a copy.
+    Text(
+      stringResource(R.string.moment_capture_note),
+      style = MaterialTheme.typography.bodySmall, color = onColor.copy(alpha = 0.8f),
+      modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+    )
+    if (audience != StatusAudience.ALL && chosen.isEmpty()) {
+      Text(
+        stringResource(R.string.moment_audience_pick_hint),
+        style = MaterialTheme.typography.bodySmall, color = onColor.copy(alpha = 0.8f),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 2.dp),
+      )
+    }
+    Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+      val audienceName = when (audience) {
+        StatusAudience.ALL -> stringResource(R.string.status_audience_all)
+        StatusAudience.ONLY -> stringResource(R.string.status_audience_only, chosen.size)
+        StatusAudience.EXCEPT -> stringResource(R.string.status_audience_except, chosen.size)
       }
-      Spacer(Modifier.weight(1f))
+      TextButton(onClick = { audienceOpen = true }, enabled = !posting, modifier = Modifier.weight(1f)) {
+        Text(stringResource(R.string.moment_audience_line, audienceName), color = onColor, textAlign = TextAlign.Start, modifier = Modifier.fillMaxWidth())
+      }
+      Spacer(Modifier.width(8.dp))
       Button(
         enabled = canPost,
         colors = ButtonDefaults.buttonColors(
@@ -260,7 +296,7 @@ fun StatusComposerScreen(container: AppContainer, me: String, startWithPhoto: Bo
           val list = if (audience == StatusAudience.ALL) emptyList() else chosen.toList()
           when (mode) {
             MomentMode.TEXT -> vm.postText(text, style, audience, list)
-            MomentMode.PHOTO -> vm.postPhoto(photo!!, caption, audience, list)
+            MomentMode.PHOTO -> vm.postPhoto(photo!!, caption, audience, list, photoEdits)
             MomentMode.VIDEO -> vm.postVideo(video!!, caption, audience, list)
             MomentMode.VOICE -> vm.postVoice(recorded!!, audience, list)
           }

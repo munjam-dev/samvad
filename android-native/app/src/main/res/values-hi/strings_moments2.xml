@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- मोमेंट्स, दूसरा चरण: व्यूअर से रिपोर्ट, कैप्चर नोट, ऑडियंस लाइन, फ़ोटो पर टेक्स्ट और पेन, व्यूअर में आगे-पीछे जाना -->
+
+    <!-- Viewer: report -->
+    <string name="moment_report">इस मोमेंट की रिपोर्ट करें</string>
+    <string name="moment_report_body">आपके चुने कारण के साथ इस व्यक्ति के आख़िरी 5 संदेश समीक्षा के लिए Samvad को भेजे जाएँगे। मोमेंट खुद साथ नहीं भेजा जाता। उन्हें सूचित नहीं किया जाएगा।</string>
+    <string name="moment_report_no_chat">इस व्यक्ति के साथ कोई चैट नहीं मिली, इसलिए रिपोर्ट नहीं भेजी गई। आप किसी चैट से उन्हें रिपोर्ट कर सकते हैं।</string>
+
+    <!-- Viewer: moving around -->
+    <string name="moment_position">मोमेंट %1$d / %2$d</string>
+    <string name="moment_next">अगला मोमेंट</string>
+    <string name="moment_previous">पिछला मोमेंट</string>
+
+    <!-- Composer: note and audience -->
+    <string name="moment_capture_note">जो लोग मोमेंट देख सकते हैं, वे उसका स्क्रीनशॉट ले सकते हैं या उसे सेव कर सकते हैं।</string>
+    <string name="moment_audience_line">इसे कौन देखेगा: %1$s</string>
+    <string name="moment_audience_pick_hint">साझा करने के लिए कम से कम एक व्यक्ति चुनें।</string>
+
+    <!-- Photo editor: tools -->
+    <string name="photo_edit_tool_text">टेक्स्ट</string>
+    <string name="photo_edit_tool_pen">पेन</string>
+    <string name="photo_edit_surface">आपका फ़ोटो। यहाँ किए गए बदलाव आपके पोस्ट किए फ़ोटो का हिस्सा बन जाते हैं।</string>
+    <string name="photo_edit_hint_text">फ़ोटो पर टेक्स्ट लगाने के लिए उस पर टैप करें। टेक्स्ट को खींचकर हिलाएँ।</string>
+    <string name="photo_edit_hint_pen">उँगली से फ़ोटो पर चित्र बनाएँ।</string>
+
+    <!-- Photo editor: text -->
+    <string name="photo_edit_text_title">फ़ोटो पर टेक्स्ट</string>
+    <string name="photo_edit_text_hint">अपना टेक्स्ट लिखें</string>
+    <string name="photo_edit_text_done">हो गया</string>
+    <string name="photo_edit_text_edit">टेक्स्ट बदलें</string>
+    <string name="photo_edit_text_remove">टेक्स्ट हटाएँ</string>
+    <string name="photo_edit_size_small">छोटा</string>
+    <string name="photo_edit_size_medium">मध्यम</string>
+    <string name="photo_edit_size_large">बड़ा</string>
+
+    <!-- Photo editor: colours -->
+    <string name="photo_edit_color_white">सफ़ेद</string>
+    <string name="photo_edit_color_champagne">शैम्पेन</string>
+    <string name="photo_edit_color_lime">नींबू हरा</string>
+    <string name="photo_edit_color_green">हरा</string>
+    <string name="photo_edit_color_red">लाल</string>
+    <string name="photo_edit_color_label">रंग: %1$s</string>
+
+    <!-- Photo editor: pen -->
+    <string name="photo_edit_pen_undo">आख़िरी लकीर पूर्ववत करें</string>
+    <string name="photo_edit_pen_clear">चित्र मिटाएँ</string>
+    <string name="photo_edit_clear_title">अपना चित्र मिटाएँ?</string>
+    <string name="photo_edit_clear_body">इस फ़ोटो पर पेन की सभी लकीरें हट जाएँगी। आपका टेक्स्ट बना रहेगा।</string>
+    <string name="photo_edit_clear_confirm">मिटाएँ</string>
+</resources>
