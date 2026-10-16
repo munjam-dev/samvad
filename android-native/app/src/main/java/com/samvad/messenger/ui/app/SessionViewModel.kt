@@ -112,6 +112,7 @@ class SessionViewModel(private val container: AppContainer) : ViewModel() {
     registeredUid = null
     namesJob?.cancel()
     container.savedNames?.clear()
+    container.scamPrefs.clear()
     container.chatThemes.clear()
     container.drafts.clearAll()
     container.chats?.useNames(null, SavedNames())

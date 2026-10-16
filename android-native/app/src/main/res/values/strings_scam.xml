@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Scam Shield: notices under messages, link confirmation and the new-contact banner. All checks run on this device. -->
+    <string name="scam_notice_link_title">Be careful with this link</string>
+    <string name="scam_notice_message_title">Be careful with this message</string>
+    <string name="scam_notice_cd">Safety notice. %1$s</string>
+
+    <string name="scam_reason_link_ip_address">The link goes to a number address, not a website name.</string>
+    <string name="scam_reason_link_userinfo">The link hides where it really goes. The address after the @ is the one that opens.</string>
+    <string name="scam_reason_link_lookalike_host">The web address looks like a well-known name, but it is not.</string>
+    <string name="scam_reason_link_homograph">The web address uses letters from another alphabet that look alike.</string>
+    <string name="scam_reason_link_punycode">The web address uses unusual letters.</string>
+    <string name="scam_reason_link_shortener">A short link hides the real address.</string>
+    <string name="scam_reason_link_not_https">The link is not secure. It does not use https.</string>
+    <string name="scam_reason_link_long_host">The web address is unusually long.</string>
+    <string name="scam_reason_link_risky_tld">The web address ends in a type that is often used in scams.</string>
+    <string name="scam_reason_link_malformed_host">The web address looks odd.</string>
+    <string name="scam_reason_text_share_code">It asks you to share a code or PIN. Do not share these with anyone.</string>
+    <string name="scam_reason_text_kyc_verify">It warns that an account will be blocked, or asks you to verify it. Scammers often write this.</string>
+    <string name="scam_reason_text_prize">It says you have won a prize. Real prizes do not ask you to pay first.</string>
+    <string name="scam_reason_text_gift_card">It asks for gift cards or their codes.</string>
+    <string name="scam_reason_text_work_from_home">It promises easy daily earnings. Offers like this are often scams.</string>
+    <string name="scam_reason_text_urgent_money">It asks for money in a hurry. Call the person to check.</string>
+    <string name="scam_reason_text_fee_request">It asks you to pay a fee first.</string>
+
+    <string name="scam_open_title">Open this link?</string>
+    <string name="scam_open_body">This link opens the address below. Make sure you trust it before you continue.</string>
+    <string name="scam_open_host_label">Opens</string>
+    <string name="scam_open_confirm">Open anyway</string>
+    <string name="scam_open_cancel">Go back</string>
+    <string name="scam_open_failed">The link could not be opened.</string>
+
+    <string name="scam_first_title">New contact</string>
+    <string name="scam_first_body">%1$s is not in your saved contacts. Do not share codes, PINs or money with someone you do not know.</string>
+    <string name="scam_first_dismiss">Dismiss</string>
+</resources>
