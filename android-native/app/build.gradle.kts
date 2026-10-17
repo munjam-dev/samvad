@@ -4,6 +4,7 @@ plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.google.services)
+  alias(libs.plugins.ksp)
 }
 
 // Debug builds talk to the Firebase Emulator Suite when -Psamvad.useEmulators=true
@@ -63,6 +64,9 @@ android {
   testOptions { unitTests { isIncludeAndroidResources = true } }
 }
 
+// Room writes its schema JSON here so that schema changes are reviewed and migrations can be tested.
+ksp { arg("room.schemaLocation", "$projectDir/schemas") }
+
 // Without google-services.json the app still builds; it then runs only against the emulators
 // (debug) or shows a "setup required" screen.
 googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.WARN }
@@ -90,6 +94,10 @@ dependencies {
   implementation(libs.androidx.exifinterface)
   implementation(libs.androidx.biometric)
   implementation(libs.androidx.fragment.ktx)
+  // Personal Vault metadata (titles are encrypted before they reach the database).
+  implementation(libs.androidx.room.runtime)
+  implementation(libs.androidx.room.ktx)
+  ksp(libs.androidx.room.compiler)
 
   implementation(platform(libs.firebase.bom))
   implementation(libs.firebase.auth)

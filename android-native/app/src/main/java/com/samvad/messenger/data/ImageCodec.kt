@@ -30,7 +30,7 @@ internal object ImageCodec {
     return upright
   }
 
-  private fun orientationMatrix(orientation: Int): Matrix? = when (orientation) {
+  fun orientationMatrix(orientation: Int): Matrix? = when (orientation) {
     ExifInterface.ORIENTATION_ROTATE_90 -> Matrix().apply { postRotate(90f) }
     ExifInterface.ORIENTATION_ROTATE_180 -> Matrix().apply { postRotate(180f) }
     ExifInterface.ORIENTATION_ROTATE_270 -> Matrix().apply { postRotate(270f) }

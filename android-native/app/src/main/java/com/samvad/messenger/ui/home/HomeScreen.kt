@@ -118,7 +118,7 @@ import com.samvad.messenger.ui.theme.SamvadTheme
 private enum class Tab { CHATS, STATUS, COMMUNITIES, CALLS }
 
 /** What the three-dot menu at the top of every tab does. Settings is the last entry. */
-class HomeMenu(val newGroup: () -> Unit, val starred: () -> Unit, val chatTheme: () -> Unit, val settings: () -> Unit)
+class HomeMenu(val newGroup: () -> Unit, val starred: () -> Unit, val chatTheme: () -> Unit, val settings: () -> Unit, val vault: () -> Unit = {})
 
 @Composable
 fun HomeScreen(
@@ -134,8 +134,9 @@ fun HomeScreen(
   onNewGroup: () -> Unit = {},
   onOpenStarred: () -> Unit = {},
   onOpenChatTheme: () -> Unit = {},
+  onOpenVault: () -> Unit = {},
 ) {
-  val menu = HomeMenu(onNewGroup, onOpenStarred, onOpenChatTheme, onOpenSettings)
+  val menu = HomeMenu(onNewGroup, onOpenStarred, onOpenChatTheme, onOpenSettings, onOpenVault)
   val vm: HomeViewModel = viewModel(factory = HomeViewModel.factory(container, me))
   val state = vm.state.collectAsStateWithLifecycle().value
   val appPrefs = container.preferences.preferences.collectAsStateWithLifecycle(AppPreferences()).value
@@ -226,6 +227,7 @@ internal fun MoreMenu(menu: HomeMenu, tint: androidx.compose.ui.graphics.Color, 
       androidx.compose.material3.DropdownMenuItem(text = { Text(stringResource(R.string.group_new)) }, onClick = { open = false; menu.newGroup() })
       androidx.compose.material3.DropdownMenuItem(text = { Text(stringResource(R.string.starred_title)) }, onClick = { open = false; menu.starred() })
       androidx.compose.material3.DropdownMenuItem(text = { Text(stringResource(R.string.chat_theme_title)) }, onClick = { open = false; menu.chatTheme() })
+      androidx.compose.material3.DropdownMenuItem(text = { Text(stringResource(R.string.vault_title)) }, onClick = { open = false; menu.vault() })
       androidx.compose.material3.HorizontalDivider(color = colors.outlineVariant)
       androidx.compose.material3.DropdownMenuItem(
         text = { Text(stringResource(R.string.settings_title)) },

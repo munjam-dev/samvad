@@ -120,6 +120,7 @@ fun SettingsScreen(
   onOpenTwoStep: () -> Unit = {},
   onOpenChatTheme: () -> Unit = {},
   onOpenStarred: () -> Unit = {},
+  onOpenVault: () -> Unit = {},
 ) {
   val colors = SamvadTheme.colors
   val scope = rememberCoroutineScope()
@@ -333,6 +334,7 @@ fun SettingsScreen(
           checked = prefs.secureScreen,
           onChange = { v -> scope.launch { container.preferences.setSecureScreen(v) } },
         )
+        ActionRow(Icons.Outlined.Lock, stringResource(R.string.vault_title), onClick = onOpenVault)
         if (container.safety != null) {
           ActionRow(Icons.Outlined.Block, stringResource(R.string.settings_blocked), onClick = onOpenBlocked)
         }
