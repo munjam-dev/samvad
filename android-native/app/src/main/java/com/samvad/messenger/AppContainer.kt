@@ -33,6 +33,8 @@ class AppContainer(context: Context) {
   val chatThemes = ChatThemeRepository(context)
   val appLock = AppLock(preferences, CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate))
   val firebase: FirebaseServices? = FirebaseServices.create(context)
+  /** Personal Vault: local-only, never uses [firebase]. */
+  val vault = com.samvad.messenger.data.vault.VaultRepository(context, appLock, CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate))
 
   val auth: AuthRepository? = firebase?.let { AuthRepository(it.auth) }
   val accounts: AccountRepository? = firebase?.let { AccountRepository(it.db, it.functions) }

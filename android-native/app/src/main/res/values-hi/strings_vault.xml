@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- पर्सनल वॉल्ट (चरण 4)। केवल फ़ोन पर: यहाँ क्लाउड बैकअप या चैट की एंड-टू-एंड एन्क्रिप्शन का कोई वादा नहीं होना चाहिए। -->
+<resources>
+    <string name="vault_title">निजी वॉल्ट</string>
+
+    <!-- Gate -->
+    <string name="vault_prompt_title">अपना वॉल्ट खोलें</string>
+    <string name="vault_prompt_subtitle">पुष्टि करें कि यह आप हैं</string>
+    <string name="vault_locked_title">आपका वॉल्ट लॉक है</string>
+    <string name="vault_locked_body">अपने दस्तावेज़, फ़ोटो और नोट खोलने के लिए फ़िंगरप्रिंट, चेहरे या स्क्रीन लॉक से पुष्टि करें कि यह आप हैं।</string>
+    <string name="vault_unlock">वॉल्ट खोलें</string>
+    <string name="vault_no_screen_lock_title">पहले स्क्रीन लॉक सेट करें</string>
+    <string name="vault_no_screen_lock_body">वॉल्ट केवल आपके फ़िंगरप्रिंट, चेहरे या स्क्रीन लॉक से खुलता है। अपने फ़ोन की सेटिंग में इनमें से कोई एक जोड़ें, फिर वापस आएँ।</string>
+    <string name="vault_key_lost_title">वॉल्ट खोला नहीं जा सकता</string>
+    <string name="vault_key_lost_body">वॉल्ट के लिए इस फ़ोन की सुरक्षित कुंजी अब मौजूद नहीं है। फ़ैक्टरी रीसेट या फ़ोन की सुरक्षा में बदलाव के बाद ऐसा हो सकता है। सहेजी गई चीज़ें अब पढ़ी नहीं जा सकतीं। आप वॉल्ट मिटाकर नए सिरे से शुरू कर सकते हैं।</string>
+    <string name="vault_erase">वॉल्ट मिटाएँ</string>
+    <string name="vault_erase_title">पूरा वॉल्ट मिटाएँ?</string>
+    <string name="vault_erase_body">वॉल्ट की हर चीज़ इस फ़ोन से हट जाएगी। इसे वापस नहीं किया जा सकता।</string>
+    <string name="vault_erase_confirm">सब कुछ मिटाएँ</string>
+    <string name="vault_opening">वॉल्ट खुल रहा है</string>
+
+    <!-- List -->
+    <plurals name="vault_item_count">
+        <item quantity="one">%d चीज़</item>
+        <item quantity="other">%d चीज़ें</item>
+    </plurals>
+    <string name="vault_search_hint">शीर्षक से खोजें</string>
+    <string name="vault_search_clear">खोज हटाएँ</string>
+    <string name="vault_type_photo">फ़ोटो</string>
+    <string name="vault_type_document">दस्तावेज़</string>
+    <string name="vault_type_note">नोट</string>
+    <string name="vault_type_id_copy">पहचान-पत्र की प्रति</string>
+    <string name="vault_type_photos">फ़ोटो</string>
+    <string name="vault_type_documents">दस्तावेज़</string>
+    <string name="vault_type_notes">नोट</string>
+    <string name="vault_type_id_copies">पहचान-पत्र की प्रतियाँ</string>
+    <string name="vault_empty_title">यहाँ अभी कुछ नहीं है</string>
+    <string name="vault_empty_body">दस्तावेज़, फ़ोटो, नोट और अपने पहचान-पत्रों की प्रतियाँ यहाँ रखें। वे एन्क्रिप्ट होकर केवल इसी फ़ोन में रहते हैं।</string>
+    <string name="vault_no_results_title">कोई मिलान नहीं</string>
+    <string name="vault_no_results_body">कोई दूसरा शब्द आज़माएँ, या फ़िल्टर हटाएँ।</string>
+    <string name="vault_clear_filters">फ़िल्टर हटाएँ</string>
+    <string name="vault_item_meta">%1$s · %2$s</string>
+
+    <!-- Menu and add -->
+    <string name="vault_add">वॉल्ट में जोड़ें</string>
+    <string name="vault_add_photo">फ़ोटो</string>
+    <string name="vault_add_photo_body">अपनी गैलरी से फ़ोटो चुनें</string>
+    <string name="vault_add_document">दस्तावेज़</string>
+    <string name="vault_add_document_body">PDF या कोई दूसरी फ़ाइल चुनें</string>
+    <string name="vault_add_id">पहचान-पत्र की प्रति</string>
+    <string name="vault_add_id_body">पहचान-पत्र की फ़ोटो या PDF</string>
+    <string name="vault_add_note">नोट</string>
+    <string name="vault_add_note_body">निजी नोट लिखें</string>
+    <string name="vault_lock_now">अभी लॉक करें</string>
+    <string name="vault_about">इस वॉल्ट के बारे में</string>
+    <string name="vault_about_body">चीज़ें इस फ़ोन पर एक कुंजी से एन्क्रिप्ट होती हैं, जो फ़ोन के सुरक्षित कुंजी-भंडार में रहती है। कुछ भी अपलोड नहीं होता, और वॉल्ट बैकअप या फ़ोन-से-फ़ोन ट्रांसफ़र में शामिल नहीं है। फ़ोन खो जाने पर ये चीज़ें भी खो जाएँगी।</string>
+    <string name="vault_protection_strongbox">कुंजी की सुरक्षा: समर्पित सुरक्षा चिप</string>
+    <string name="vault_protection_hardware">कुंजी की सुरक्षा: सुरक्षित हार्डवेयर</string>
+    <string name="vault_protection_software">कुंजी की सुरक्षा: केवल सॉफ़्टवेयर। इस फ़ोन में कुंजियों के लिए सुरक्षित हार्डवेयर नहीं है।</string>
+    <string name="vault_protection_unknown">कुंजी की सुरक्षा: अभी जाँची नहीं गई</string>
+    <string name="vault_close">बंद करें</string>
+
+    <!-- Item actions -->
+    <string name="vault_item_options">%1$s के विकल्प</string>
+    <string name="vault_rename">नाम बदलें</string>
+    <string name="vault_rename_title">चीज़ का नाम बदलें</string>
+    <string name="vault_title_label">शीर्षक</string>
+    <string name="vault_delete">हटाएँ</string>
+    <string name="vault_delete_title">यह चीज़ हटाएँ?</string>
+    <string name="vault_delete_body">\"%1$s\" वॉल्ट से हट जाएगा और वापस नहीं मिलेगा।</string>
+    <string name="vault_export">प्रति सेव करें</string>
+    <string name="vault_export_title">वॉल्ट के बाहर प्रति सेव करें?</string>
+    <string name="vault_export_body">यह प्रति एन्क्रिप्टेड नहीं होगी। आप जो जगह चुनेंगे, उसे खोलने वाला कोई भी इसे पढ़ सकता है।</string>
+    <string name="vault_export_choose">चुनें कि कहाँ सेव करना है</string>
+    <string name="vault_open_title">दूसरे ऐप में खोलें?</string>
+    <string name="vault_open_body">दूसरे ऐप के लिए एक अस्थायी, पढ़ने योग्य प्रति बनाई जाती है। आपके लौटने पर Samvad उसे हटा देता है, लेकिन दूसरा ऐप अपनी प्रति रख सकता है।</string>
+    <string name="vault_open">खोलें</string>
+    <string name="vault_open_failed">इस फ़ोन का कोई ऐप यह फ़ाइल नहीं खोल सकता। इसके बजाय आप प्रति सेव कर सकते हैं।</string>
+    <string name="vault_open_unsupported">इस तरह की फ़ाइल वॉल्ट से खोली नहीं जा सकती। इसके बजाय आप प्रति सेव कर सकते हैं।</string>
+    <string name="vault_image_failed">यह तस्वीर दिखाई नहीं जा सकी। इसके बजाय आप प्रति सेव कर सकते हैं।</string>
+    <string name="vault_image_cd">%1$s, तस्वीर</string>
+    <string name="vault_missing">यह चीज़ अब वॉल्ट में नहीं है।</string>
+
+    <!-- Notes -->
+    <string name="vault_note_new">नया नोट</string>
+    <string name="vault_note_title_hint">शीर्षक</string>
+    <string name="vault_note_body_hint">अपना नोट लिखें</string>
+    <string name="vault_note_untitled">बिना शीर्षक का नोट</string>
+    <string name="vault_note_discard_title">बिना सेव किए बाहर जाएँ?</string>
+    <string name="vault_note_discard_body">इस नोट में किए गए बदलाव खो जाएँगे।</string>
+    <string name="vault_note_discard_confirm">बाहर जाएँ</string>
+    <string name="vault_note_keep_editing">लिखना जारी रखें</string>
+    <string name="vault_default_title">जोड़ी गई चीज़</string>
+
+    <!-- Messages -->
+    <string name="vault_added">वॉल्ट में जोड़ दिया गया</string>
+    <string name="vault_exported">प्रति सेव हो गई</string>
+    <string name="vault_deleted">हटा दिया गया</string>
+    <string name="vault_note_saved">नोट सेव हो गया</string>
+    <string name="vault_error_locked">वॉल्ट लॉक हो गया। उसे खोलकर फिर कोशिश करें।</string>
+    <string name="vault_error_too_large">यह बहुत बड़ा है। फ़ाइल की सीमा 100 MB और नोट की सीमा 1,00,000 अक्षर है।</string>
+    <string name="vault_error_empty">वह फ़ाइल खाली है।</string>
+    <string name="vault_error_unreadable">उसे पढ़ा नहीं जा सका। हो सकता है वह बदल गई हो या ख़राब हो गई हो।</string>
+    <string name="vault_error_failed">यह नहीं हो सका। कृपया फिर कोशिश करें।</string>
+</resources>

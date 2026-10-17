@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Personal Vault (Phase 4). Local only: nothing here may promise cloud backup or end-to-end encryption of chats. -->
+<resources>
+    <string name="vault_title">Personal Vault</string>
+
+    <!-- Gate -->
+    <string name="vault_prompt_title">Open your vault</string>
+    <string name="vault_prompt_subtitle">Confirm it\'s you</string>
+    <string name="vault_locked_title">Your vault is locked</string>
+    <string name="vault_locked_body">Confirm it\'s you with your fingerprint, face or screen lock to open your documents, photos and notes.</string>
+    <string name="vault_unlock">Unlock vault</string>
+    <string name="vault_no_screen_lock_title">Set a screen lock first</string>
+    <string name="vault_no_screen_lock_body">The vault opens only with your fingerprint, face or screen lock. Add one in your phone\'s settings, then come back.</string>
+    <string name="vault_key_lost_title">The vault can\'t be opened</string>
+    <string name="vault_key_lost_body">This phone\'s secure key for the vault is gone. That can happen after a factory reset or a change to the phone\'s security. The saved items can\'t be read any more. You can erase the vault and start again.</string>
+    <string name="vault_erase">Erase vault</string>
+    <string name="vault_erase_title">Erase the whole vault?</string>
+    <string name="vault_erase_body">Everything in the vault is deleted from this phone. This can\'t be undone.</string>
+    <string name="vault_erase_confirm">Erase everything</string>
+    <string name="vault_opening">Opening the vault</string>
+
+    <!-- List -->
+    <plurals name="vault_item_count">
+        <item quantity="one">%d item</item>
+        <item quantity="other">%d items</item>
+    </plurals>
+    <string name="vault_search_hint">Search by title</string>
+    <string name="vault_search_clear">Clear search</string>
+    <string name="vault_type_photo">Photo</string>
+    <string name="vault_type_document">Document</string>
+    <string name="vault_type_note">Note</string>
+    <string name="vault_type_id_copy">ID copy</string>
+    <string name="vault_type_photos">Photos</string>
+    <string name="vault_type_documents">Documents</string>
+    <string name="vault_type_notes">Notes</string>
+    <string name="vault_type_id_copies">ID copies</string>
+    <string name="vault_empty_title">Nothing here yet</string>
+    <string name="vault_empty_body">Keep documents, photos, notes and copies of your IDs here. They are encrypted and stay only on this phone.</string>
+    <string name="vault_no_results_title">No matches</string>
+    <string name="vault_no_results_body">Try another word, or clear the filters.</string>
+    <string name="vault_clear_filters">Clear filters</string>
+    <string name="vault_item_meta">%1$s · %2$s</string>
+
+    <!-- Menu and add -->
+    <string name="vault_add">Add to vault</string>
+    <string name="vault_add_photo">Photo</string>
+    <string name="vault_add_photo_body">Choose a photo from your gallery</string>
+    <string name="vault_add_document">Document</string>
+    <string name="vault_add_document_body">Choose a PDF or another file</string>
+    <string name="vault_add_id">ID copy</string>
+    <string name="vault_add_id_body">A photo or PDF of an ID card</string>
+    <string name="vault_add_note">Note</string>
+    <string name="vault_add_note_body">Write a private note</string>
+    <string name="vault_lock_now">Lock now</string>
+    <string name="vault_about">About this vault</string>
+    <string name="vault_about_body">Items are encrypted on this phone with a key that is kept in the phone\'s secure key store. Nothing is uploaded, and the vault is not part of backups or phone-to-phone transfers. If you lose this phone, the items are lost with it.</string>
+    <string name="vault_protection_strongbox">Key protection: dedicated security chip</string>
+    <string name="vault_protection_hardware">Key protection: secure hardware</string>
+    <string name="vault_protection_software">Key protection: software only. This phone has no secure hardware for keys.</string>
+    <string name="vault_protection_unknown">Key protection: not checked yet</string>
+    <string name="vault_close">Close</string>
+
+    <!-- Item actions -->
+    <string name="vault_item_options">Options for %1$s</string>
+    <string name="vault_rename">Rename</string>
+    <string name="vault_rename_title">Rename item</string>
+    <string name="vault_title_label">Title</string>
+    <string name="vault_delete">Delete</string>
+    <string name="vault_delete_title">Delete this item?</string>
+    <string name="vault_delete_body">\"%1$s\" is deleted from the vault and can\'t be recovered.</string>
+    <string name="vault_export">Save a copy</string>
+    <string name="vault_export_title">Save a copy outside the vault?</string>
+    <string name="vault_export_body">The copy is not encrypted. Anyone who can open the place you choose can read it.</string>
+    <string name="vault_export_choose">Choose where to save</string>
+    <string name="vault_open_title">Open in another app?</string>
+    <string name="vault_open_body">A temporary readable copy is made for the other app. Samvad deletes it when you come back, but the other app may keep its own copy.</string>
+    <string name="vault_open">Open</string>
+    <string name="vault_open_failed">No app on this phone can open this file. You can save a copy instead.</string>
+    <string name="vault_open_unsupported">This kind of file can\'t be opened from the vault. You can save a copy instead.</string>
+    <string name="vault_image_failed">Couldn\'t show this picture. You can save a copy instead.</string>
+    <string name="vault_image_cd">%1$s, picture</string>
+    <string name="vault_missing">This item is no longer in the vault.</string>
+
+    <!-- Notes -->
+    <string name="vault_note_new">New note</string>
+    <string name="vault_note_title_hint">Title</string>
+    <string name="vault_note_body_hint">Write your note</string>
+    <string name="vault_note_untitled">Untitled note</string>
+    <string name="vault_note_discard_title">Leave without saving?</string>
+    <string name="vault_note_discard_body">Your changes to this note will be lost.</string>
+    <string name="vault_note_discard_confirm">Leave</string>
+    <string name="vault_note_keep_editing">Keep editing</string>
+    <string name="vault_default_title">Imported item</string>
+
+    <!-- Messages -->
+    <string name="vault_added">Added to the vault</string>
+    <string name="vault_exported">Copy saved</string>
+    <string name="vault_deleted">Deleted</string>
+    <string name="vault_note_saved">Note saved</string>
+    <string name="vault_error_locked">The vault locked. Unlock it and try again.</string>
+    <string name="vault_error_too_large">That is too large. The limit is 100 MB for a file and 100,000 characters for a note.</string>
+    <string name="vault_error_empty">That file is empty.</string>
+    <string name="vault_error_unreadable">Couldn\'t read that. It may have been changed or damaged.</string>
+    <string name="vault_error_failed">That didn\'t work. Please try again.</string>
+</resources>

@@ -59,6 +59,8 @@ import com.samvad.messenger.ui.settings.SettingsScreen
 import com.samvad.messenger.ui.language.LanguageScreen
 import com.samvad.messenger.ui.setup.ProfileSetupScreen
 import com.samvad.messenger.ui.theme.SamvadTheme
+import com.samvad.messenger.ui.vault.VAULT_ROUTE
+import com.samvad.messenger.ui.vault.vaultRoutes
 
 @Composable
 fun SamvadRoot(
@@ -136,6 +138,7 @@ private fun SignedInNav(
         onNewGroup = { nav.navigate("newgroup") },
         onOpenStarred = { nav.navigate("starred") },
         onOpenChatTheme = { nav.navigate("chattheme") },
+        onOpenVault = { nav.navigate(VAULT_ROUTE) },
       )
     }
     composable(
@@ -209,8 +212,10 @@ private fun SignedInNav(
         onOpenTwoStep = { nav.navigate("twostep") },
         onOpenChatTheme = { nav.navigate("chattheme") },
         onOpenStarred = { nav.navigate("starred") },
+        onOpenVault = { nav.navigate(VAULT_ROUTE) },
       )
     }
+    vaultRoutes(nav, container)
     composable(
       "status/new?photo={photo}",
       arguments = listOf(navArgument("photo") { type = NavType.BoolType; defaultValue = false }),

@@ -52,8 +52,9 @@ shows only those that are finished. Urdu needs right-to-left testing before it i
 
 ## Phase 4: Personal Vault (local-first)
 
-All **Missing**. Needs Room (not yet a dependency), AndroidX Security / Keystore-wrapped keys, Storage Access Framework,
-and **Google Drive API with explicit user authorization** for backup. Two decisions are needed first: the backup
+**Local vault: Have** (built, see `docs/VAULT_DESIGN.md`: Room + Keystore-wrapped AES-256-GCM files, gated by the app unlock, import/view/rename/delete/export, search and filters). **Drive backup: still Missing and blocked** on the two decisions below; `VaultBackup` is an interface with no implementation.
+
+Backup needs the **Google Drive API with explicit user authorization**. Two decisions are needed first: the backup
 recovery key design (passphrase or generated key shown to the user) and whether Drive scope `drive.file` (app-created
 files only, but not visible in the user's normal Drive listing) or the visible-folder scope is acceptable, because
 the visible-folder scope is a restricted scope that requires a Google security review before production.
