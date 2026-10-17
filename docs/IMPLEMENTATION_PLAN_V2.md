@@ -7,6 +7,21 @@ Stack: Android (Kotlin, Compose, Material 3; `ui/*`, `data/*`, `core/` for pure 
 Storage, RTDB, Functions in `firebase/functions/src`, rules in `firebase/*.rules`). Backend tests run on the
 emulators (`npm test`), app logic tests in `:core`.
 
+## Progress (updated 2026-10-17)
+
+| Phase | State |
+|---|---|
+| 1 Onboarding, profile, language | **Built.** Username (backend deployed, UI, live availability check), language picker, English/Hindi/Telugu/Tamil (AI-written, native review pending: `docs/LOCALIZATION.md`). Username check on a device is blocked only by the owner registering the App Check debug token. |
+| 2 Core messaging | **Built.** Drafts, multi-select, pinned messages (backend deployed). Not built: contact and video sharing, global message search. |
+| 3 Privacy and security | In progress: profile visibility, group-add permission, contact discovery switch, linked devices, appeals. E2EE is **not** started (licence gate). |
+| 4 Personal Vault | In progress (local-first, Drive backup blocked on the scope decision). |
+| 5 HD media, weak networks | In progress (original quality, resumable uploads, download progress, network hints). Direct device-to-device transfer blocked. |
+| 6 Groups and communities | Not started (backend-heavy; runs after Phase 3 because the backend emulators are shared). |
+| 7 Meetings | Blocked on the calling decision. |
+| 8 Moments | **Built**, including report, photo text and pen, capture note. Notifications for new moments not built. |
+| 9 Scam Shield | **Built** on-device (link and text risk analysis, first-contact banner). |
+| 10 Tests and release | Core and backend tests pass; instrumented tests, accessibility audit and release build still to do. |
+
 ## Phase 1: onboarding, profile, language
 
 | Item | Status | Where |
