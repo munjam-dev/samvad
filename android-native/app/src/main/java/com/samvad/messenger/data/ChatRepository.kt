@@ -252,6 +252,13 @@ class ChatRepository(private val db: FirebaseFirestore) {
     ).await()
   }
 
+  /**
+   * True when the message document already exists (written, or queued locally by an earlier attempt), so a
+   * resumed upload never creates a second message with the same client ID.
+   */
+  suspend fun messageExists(conversationId: String, id: String): Boolean =
+    db.document("conversations/$conversationId/messages/$id").get().await().exists()
+
   suspend fun retry(conversationId: String, me: String, message: Message) {
     val existing = runCatching { db.document("conversations/$conversationId/messages/${message.id}").get().await() }.getOrNull()
     if (existing?.exists() == true && existing.metadata.hasPendingWrites().not()) {

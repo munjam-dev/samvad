@@ -28,6 +28,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Poll
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Mic
@@ -69,6 +70,7 @@ import com.samvad.core.media.Media
 import com.samvad.core.media.MediaKind
 import com.samvad.core.media.MediaRules
 import com.samvad.messenger.R
+import com.samvad.messenger.data.DownloadState
 import com.samvad.messenger.media.PlaybackState
 import com.samvad.messenger.media.RecordingState
 import com.samvad.messenger.ui.theme.Motion
@@ -77,6 +79,8 @@ import com.samvad.messenger.ui.theme.motionSpec
 /**
  * Photo bubble: reserves its aspect ratio, then shows the cached, rules-checked download. When auto-download
  * is off for this connection and the photo is not on the phone yet, it waits for a tap and shows its size.
+ * A download shows a determinate progress ring with Cancel, and a failed one offers Retry. Whether a download
+ * may start by itself is decided by the caller through [autoLoad] (the auto-download policy).
  */
 @Composable
 fun MediaImage(
@@ -84,18 +88,29 @@ fun MediaImage(
   load: suspend (String, Int) -> Bitmap?,
   autoLoad: Boolean = true,
   isCached: (String) -> Boolean = { true },
+  downloadState: (String) -> DownloadState? = { null },
+  onDownload: (String, Long) -> Unit = { _, _ -> },
+  onCancelDownload: (String) -> Unit = {},
   onOpen: () -> Unit,
 ) {
   val colors = com.samvad.messenger.ui.theme.SamvadTheme.colors
   var bitmap by remember(media.path) { mutableStateOf<Bitmap?>(null) }
   var requested by remember(media.path) { mutableStateOf(false) }
-  val go = autoLoad || requested || remember(media.path) { isCached(media.path) }
-  LaunchedEffect(media.path, go) { if (go) bitmap = load(media.path, 900) }
+  val state = downloadState(media.path)
+  val cached = remember(media.path, state) { isCached(media.path) }
+  val wants = autoLoad || requested
+  // Starts only when the policy allows and nothing was tried yet: a failed or cancelled download waits for a tap.
+  LaunchedEffect(media.path, wants, cached) {
+    if (wants && !cached && downloadState(media.path) == null) onDownload(media.path, media.size)
+  }
+  LaunchedEffect(media.path, cached) { if (cached) bitmap = load(media.path, 900) }
   val ratio = if ((media.width ?: 0) > 0 && (media.height ?: 0) > 0) media.width!!.toFloat() / media.height!! else 4f / 3f
   val label = stringResource(R.string.cd_open_photo)
   val size = android.text.format.Formatter.formatShortFileSize(androidx.compose.ui.platform.LocalContext.current, media.size)
   val downloadLabel = stringResource(R.string.media_download_photo, size)
+  val retryLabel = stringResource(R.string.media2_cd_retry_download)
   val alpha by animateFloatAsState(if (bitmap != null) 1f else 0f, motionSpec(Motion.standard()), label = "img")
+  val start = { requested = true; onDownload(media.path, media.size) }
   Box(
     Modifier
       .widthIn(max = 260.dp)
@@ -104,9 +119,13 @@ fun MediaImage(
       .clip(RoundedCornerShape(14.dp))
       .background(colors.surfaceContainer)
       .clickable(
-        onClickLabel = if (go) label else downloadLabel,
-        role = if (go) Role.Image else Role.Button,
-        onClick = { if (go) onOpen() else requested = true },
+        onClickLabel = when {
+          cached -> label
+          state is DownloadState.Failed -> retryLabel
+          else -> downloadLabel
+        },
+        role = if (cached) Role.Image else Role.Button,
+        onClick = { if (cached) onOpen() else if (state !is DownloadState.Active) start() },
       ),
     contentAlignment = Alignment.Center,
   ) {
@@ -117,34 +136,82 @@ fun MediaImage(
         contentScale = ContentScale.Crop,
         modifier = Modifier.fillMaxSize().graphicsLayer { this.alpha = alpha },
       )
-      !go -> Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Icon(Icons.Outlined.Image, null, tint = colors.onSurfaceVariant)
-        Text(downloadLabel, style = MaterialTheme.typography.labelLarge, color = colors.primary)
-      }
+      !cached -> PhotoDownloadState(
+        state = state,
+        sizeText = size,
+        waiting = state is DownloadState.Cancelled || (state == null && !wants),
+        onStart = start,
+        onCancel = { onCancelDownload(media.path) },
+      )
       else -> Icon(Icons.Outlined.Image, null, tint = colors.onSurfaceVariant)
     }
   }
 }
 
+/**
+ * Document card. A file that is not on the phone yet shows its size and downloads on tap, with a progress ring
+ * and Cancel while it runs and Retry if it fails; once it is on the phone a tap opens it.
+ */
 @Composable
-fun FileCard(media: Media, onOpen: () -> Unit) {
+fun FileCard(
+  media: Media,
+  cached: Boolean = true,
+  download: DownloadState? = null,
+  onDownload: () -> Unit = {},
+  onCancelDownload: () -> Unit = {},
+  onOpen: () -> Unit,
+) {
   val colors = com.samvad.messenger.ui.theme.SamvadTheme.colors
+  val active = download as? DownloadState.Active
+  val failed = download is DownloadState.Failed
+  val sizeText = MediaRules.formatBytes(media.size)
+  val clickLabel = when {
+    cached -> stringResource(R.string.media2_cd_open_file, media.name)
+    failed -> stringResource(R.string.media2_cd_retry_download)
+    else -> stringResource(R.string.media2_cd_download_file, media.name)
+  }
   Row(
     Modifier
       .widthIn(min = 200.dp, max = 260.dp)
       .clip(RoundedCornerShape(12.dp))
       .background(colors.surfaceContainer)
-      .clickable(onClick = onOpen)
+      .clickable(
+        enabled = active == null,
+        onClickLabel = clickLabel,
+        role = Role.Button,
+        onClick = { if (cached) onOpen() else onDownload() },
+      )
       .padding(10.dp),
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.spacedBy(10.dp),
   ) {
-    Box(Modifier.size(40.dp).background(colors.primaryContainer, RoundedCornerShape(10.dp)), contentAlignment = Alignment.Center) {
-      Icon(Icons.Outlined.Description, null, tint = colors.onPrimaryContainer)
+    if (active != null) {
+      TransferRing(active.fraction, stringResource(R.string.media2_cd_cancel_download), onCancelDownload)
+    } else {
+      Box(Modifier.size(40.dp).background(colors.primaryContainer, RoundedCornerShape(10.dp)), contentAlignment = Alignment.Center) {
+        Icon(
+          when {
+            failed -> Icons.Outlined.Refresh
+            cached -> Icons.Outlined.Description
+            else -> Icons.Outlined.Download
+          },
+          null,
+          tint = colors.onPrimaryContainer,
+        )
+      }
     }
     Column(Modifier.weight(1f)) {
       Text(media.name, style = MaterialTheme.typography.titleSmall, color = colors.onSurface, maxLines = 2, overflow = TextOverflow.Ellipsis)
-      Text(MediaRules.formatBytes(media.size), style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
+      Text(
+        when {
+          active != null -> downloadProgressText(active)
+          failed -> stringResource(R.string.media2_download_failed) + " · " + stringResource(R.string.retry)
+          cached -> stringResource(R.string.media2_file_open, sizeText)
+          else -> stringResource(R.string.media2_file_download, sizeText)
+        },
+        style = MaterialTheme.typography.labelSmall,
+        color = if (failed) colors.error else colors.onSurfaceVariant,
+      )
     }
   }
 }
@@ -266,45 +333,6 @@ fun RecorderBar(state: RecordingState, onCancel: () -> Unit, onSend: () -> Unit)
     IconButton(onClick = onSend, modifier = Modifier.size(48.dp).background(colors.primary, CircleShape)) {
       Icon(Icons.AutoMirrored.Outlined.Send, stringResource(R.string.voice_send), tint = colors.onPrimary)
     }
-  }
-}
-
-@Composable
-fun PendingUploadRow(upload: PendingUpload, onRetry: () -> Unit, onCancel: () -> Unit) {
-  val colors = com.samvad.messenger.ui.theme.SamvadTheme.colors
-  Row(
-    Modifier
-      .fillMaxWidth()
-      .padding(horizontal = 12.dp, vertical = 3.dp)
-      .background(colors.bubbleOutgoing, RoundedCornerShape(16.dp))
-      .clickable(enabled = upload.failed, onClick = onRetry)
-      .padding(horizontal = 12.dp, vertical = 8.dp),
-    verticalAlignment = Alignment.CenterVertically,
-    horizontalArrangement = Arrangement.spacedBy(10.dp),
-  ) {
-    Icon(
-      when (upload.kind) {
-        MediaKind.IMAGE -> Icons.Outlined.Image
-        MediaKind.VOICE -> Icons.Outlined.Mic
-        MediaKind.FILE -> Icons.Outlined.Description
-      },
-      null,
-      tint = colors.bubbleMeta,
-    )
-    Column(Modifier.weight(1f)) {
-      Text(upload.label, style = MaterialTheme.typography.bodyMedium, color = colors.onBubble, maxLines = 1, overflow = TextOverflow.Ellipsis)
-      Text(
-        stringResource(if (upload.failed) R.string.media_upload_failed else R.string.media_uploading),
-        style = MaterialTheme.typography.labelSmall,
-        color = if (upload.failed) colors.error else colors.bubbleMeta,
-      )
-    }
-    if (upload.failed) {
-      Icon(Icons.Outlined.Refresh, null, tint = colors.error)
-    } else {
-      CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = colors.primary)
-    }
-    IconButton(onClick = onCancel) { Icon(Icons.Outlined.Close, stringResource(R.string.cd_cancel_upload), tint = colors.bubbleMeta) }
   }
 }
 

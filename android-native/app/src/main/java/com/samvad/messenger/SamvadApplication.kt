@@ -20,6 +20,8 @@ class SamvadApplication : Application() {
     ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
       override fun onStart(owner: LifecycleOwner) {
         container.appLock.onForeground()
+        // Finish attachments that were still sending when the app was last closed.
+        container.pendingUploads?.resumeAll()
         val uid = container.auth?.currentUser?.uid ?: return
         owner.lifecycleScope.launch { container.presence?.goOnline(uid) }
       }

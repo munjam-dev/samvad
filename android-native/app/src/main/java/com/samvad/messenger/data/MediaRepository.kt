@@ -9,15 +9,19 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageMetadata
 import com.samvad.core.media.Media
 import com.samvad.core.media.MediaKind
-import com.samvad.core.media.DownloadPolicy
+import com.samvad.core.media.ImageQuality
 import com.samvad.core.media.MediaRules
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.security.MessageDigest
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 /** A file ready to upload: bytes plus the description the message will carry. */
 class PreparedMedia(
@@ -30,6 +34,8 @@ class PreparedMedia(
   val height: Int? = null,
   val durationMs: Long? = null,
   val waveform: List<Int> = emptyList(),
+  /** Photos only: whether the photo went out as chosen, at lower quality, or smaller to fit 16 MB. */
+  val imageOutcome: ImageQuality.Outcome? = null,
 )
 
 sealed class MediaException(message: String) : Exception(message) {
@@ -64,19 +70,74 @@ class MediaRepository(private val context: Context, private val storage: Firebas
     out.toByteArray()
   }
 
-  /** Upright, downscaled to 1600 px and re-encoded as JPEG, which also strips EXIF data such as GPS location. */
-  suspend fun prepareImage(uri: Uri, dataSaver: Boolean = false): PreparedMedia = withContext(Dispatchers.Default) {
-    val edge = DownloadPolicy.uploadEdgePx(dataSaver)
-    val decoded = ImageCodec.decodeUpright(context.contentResolver, uri, edge) ?: throw MediaException.Unreadable()
-    val (w, h) = MediaRules.fitWithin(decoded.width, decoded.height, edge)
-    val scaled = if (w == decoded.width && h == decoded.height) decoded else Bitmap.createScaledBitmap(decoded, w, h, true)
-    val out = ByteArrayOutputStream()
-    scaled.compress(Bitmap.CompressFormat.JPEG, DownloadPolicy.uploadQuality(dataSaver), out)
-    if (scaled !== decoded) scaled.recycle()
-    decoded.recycle()
-    val bytes = out.toByteArray()
-    if (!MediaRules.isWithinLimit(bytes.size.toLong())) throw MediaException.TooLarge()
-    PreparedMedia(MediaKind.IMAGE, "photo.jpg", "Photo", "image/jpeg", bytes, width = w, height = h)
+  /**
+   * Upright and re-encoded as JPEG, which also strips EXIF data such as GPS location. By default scaled to
+   * 1600 px (smaller with Data saver). With [original] the photo keeps its size and is encoded at a high
+   * quality; if that is over 16 MB the quality, and only then the size, steps down until it fits (see
+   * [ImageQuality]). [PreparedMedia.imageOutcome] says which happened.
+   */
+  suspend fun prepareImage(uri: Uri, dataSaver: Boolean = false, original: Boolean = false): PreparedMedia = withContext(Dispatchers.Default) {
+    val attempts = ImageQuality.attempts(original, dataSaver)
+    val firstEdge = attempts.first().maxEdge
+    var budget = ImageQuality.MAX_DECODE_PIXELS
+    var decoded: Bitmap? = null
+    while (decoded == null) {
+      try {
+        decoded = if (firstEdge != null) ImageCodec.decodeUpright(context.contentResolver, uri, firstEdge)
+        else ImageCodec.decodeUprightWithin(context.contentResolver, uri, budget)
+        if (decoded == null) throw MediaException.Unreadable()
+      } catch (e: OutOfMemoryError) {
+        // Too big for this phone's memory: decode at a quarter of the pixels and try again.
+        if (firstEdge != null || budget < 1_000_000L) throw MediaException.Unreadable()
+        budget /= 4
+      }
+    }
+    val source: Bitmap = decoded
+    var best: ByteArray? = null
+    var bestWidth = 0
+    var bestHeight = 0
+    // Smallest quality already tried at a given size: a higher quality at the same size cannot fit either.
+    val triedAt = HashMap<Pair<Int, Int>, Int>()
+    try {
+      val choice = ImageQuality.choose(attempts) { attempt ->
+        val edge = attempt.maxEdge
+        val (w, h) = if (edge == null) source.width to source.height else MediaRules.fitWithin(source.width, source.height, edge)
+        val lowest = triedAt[w to h]
+        if (lowest != null && attempt.quality >= lowest) return@choose null
+        triedAt[w to h] = attempt.quality
+        val scaled = if (w == source.width && h == source.height) source else Bitmap.createScaledBitmap(source, w, h, true)
+        val out = ByteArrayOutputStream()
+        scaled.compress(Bitmap.CompressFormat.JPEG, attempt.quality, out)
+        if (scaled !== source) scaled.recycle()
+        val bytes = out.toByteArray()
+        best = bytes
+        bestWidth = w
+        bestHeight = h
+        bytes.size.toLong()
+      } ?: throw MediaException.TooLarge()
+      PreparedMedia(
+        MediaKind.IMAGE, "photo.jpg", "Photo", "image/jpeg", best!!,
+        width = bestWidth, height = bestHeight, imageOutcome = choice.outcome,
+      )
+    } finally {
+      source.recycle()
+    }
+  }
+
+  /** Size of a picked file in bytes, or -1 when the provider does not say. */
+  suspend fun sourceSize(uri: Uri): Long = withContext(Dispatchers.IO) {
+    var size = -1L
+    runCatching {
+      context.contentResolver.query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)?.use { c ->
+        if (c.moveToFirst() && !c.isNull(0)) size = c.getLong(0)
+      }
+    }
+    size
+  }
+
+  /** A small upright copy of a picked photo for the preview before sending. */
+  suspend fun loadPreview(uri: Uri, maxEdgePx: Int = 1400): Bitmap? = withContext(Dispatchers.Default) {
+    runCatching { ImageCodec.decodeUpright(context.contentResolver, uri, maxEdgePx) }.getOrNull()
   }
 
   suspend fun prepareDocument(uri: Uri): PreparedMedia = withContext(Dispatchers.IO) {
@@ -133,6 +194,70 @@ class MediaRepository(private val context: Context, private val storage: Firebas
         if (++attempt >= 3) throw e
         delay(1000L * attempt)
       }
+    }
+  }
+
+  /**
+   * Uploads a local file with progress, for the pending-upload queue. Pass the session URI reported by an
+   * earlier attempt (through [onSession]) to continue that upload where it stopped instead of starting over.
+   * Cancelling the coroutine cancels the transfer.
+   */
+  suspend fun uploadFile(
+    path: String,
+    file: File,
+    mime: String,
+    me: String,
+    sessionUri: Uri?,
+    onSession: (Uri) -> Unit,
+    onProgress: (transferred: Long, total: Long) -> Unit,
+  ): Unit = suspendCancellableCoroutine { cont ->
+    val meta = StorageMetadata.Builder()
+      .setContentType(mime)
+      .setCustomMetadata("senderId", me)
+      .build()
+    val ref = storage.reference.child(path)
+    val source = Uri.fromFile(file)
+    val task = if (sessionUri != null) ref.putFile(source, meta, sessionUri) else ref.putFile(source, meta)
+    task.addOnProgressListener { snap ->
+      snap.uploadSessionUri?.let(onSession)
+      onProgress(snap.bytesTransferred, snap.totalByteCount)
+    }
+    task.addOnSuccessListener { if (cont.isActive) cont.resume(Unit) }
+    task.addOnFailureListener { if (cont.isActive) cont.resumeWithException(it) }
+    cont.invokeOnCancellation { task.cancel() }
+  }
+
+  /** Puts a copy of an uploaded file in the media cache, so the sender's own photo opens without downloading it again. */
+  suspend fun adoptLocal(path: String, source: File) = withContext(Dispatchers.IO) {
+    runCatching { source.copyTo(cacheFile(path), overwrite = true) }
+    Unit
+  }
+
+  /**
+   * Downloads an attachment into the media cache with progress; returns at once when it is already there. Goes
+   * through the Storage SDK so the membership rules apply. Cancelling the coroutine cancels the transfer and
+   * removes the partial file.
+   */
+  suspend fun download(path: String, onProgress: (transferred: Long, total: Long) -> Unit): File {
+    val file = cacheFile(path)
+    if (file.exists() && file.length() > 0L) return file
+    val tmp = File(file.path + ".part")
+    withContext(Dispatchers.IO) { tmp.delete() }
+    try {
+      suspendCancellableCoroutine<Unit> { cont ->
+        val task = storage.reference.child(path).getFile(tmp)
+        task.addOnProgressListener { snap -> onProgress(snap.bytesTransferred, snap.totalByteCount) }
+        task.addOnSuccessListener { if (cont.isActive) cont.resume(Unit) }
+        task.addOnFailureListener { if (cont.isActive) cont.resumeWithException(it) }
+        cont.invokeOnCancellation { task.cancel() }
+      }
+    } catch (e: Throwable) {
+      withContext(NonCancellable + Dispatchers.IO) { tmp.delete() }
+      throw e
+    }
+    return withContext(Dispatchers.IO) {
+      if (!tmp.renameTo(file)) throw java.io.IOException("could not store download")
+      file
     }
   }
 

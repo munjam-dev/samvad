@@ -39,7 +39,11 @@ import com.samvad.messenger.data.GroupException
 import com.samvad.messenger.data.ScheduledItem
 import kotlinx.coroutines.flow.collectLatest
 import com.samvad.messenger.AppContainer
+import com.samvad.core.media.ImageQuality
+import com.samvad.core.media.NetworkInfo
+import com.samvad.messenger.data.DownloadState
 import com.samvad.messenger.data.MediaException
+import com.samvad.messenger.data.UploadItem
 import com.samvad.messenger.data.PreparedMedia
 import com.samvad.messenger.media.VoicePlayer
 import com.samvad.messenger.media.VoiceRecorder
@@ -92,14 +96,6 @@ data class GroupStatus(
   val allNames: List<String> = emptyList(),
 )
 
-/** An attachment being uploaded; shown as a pending bubble until its message is written. */
-data class PendingUpload(
-  val id: String,
-  val kind: MediaKind,
-  val label: String,
-  val failed: Boolean = false,
-)
-
 enum class MediaError { TOO_LARGE, TYPE_BLOCKED, UNREADABLE, DOWNLOAD, OPEN }
 
 /** One-shot feedback for block / report actions, shown as a snackbar. */
@@ -142,10 +138,11 @@ class ConversationViewModel(
   val isGroup = otherUid == null
   private val chats = container.chats!!
   private val mediaRepo = container.media!!
-  private class Outgoing(val media: PreparedMedia, val caption: String, val replyTo: String?)
-  private val prepared = mutableMapOf<String, Outgoing>()
-  private val _uploads = MutableStateFlow<List<PendingUpload>>(emptyList())
-  val uploads: StateFlow<List<PendingUpload>> = _uploads
+  private val pendingUploads = container.pendingUploads!!
+
+  /** Attachments of this chat still being sent (also after the app was closed); see [com.samvad.messenger.data.PendingUploadManager]. */
+  val uploads: StateFlow<List<UploadItem>> = pendingUploads.itemsFor(conversationId)
+    .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
   private val _mediaError = MutableStateFlow<MediaError?>(null)
   val mediaError: StateFlow<MediaError?> = _mediaError
   val recorder = VoiceRecorder(app, viewModelScope)
@@ -184,6 +181,11 @@ class ConversationViewModel(
 
   /** Mentions picked from the member list for the message being typed (uid → name). */
   private val picked = mutableMapOf<String, String>()
+
+  init {
+    // Continue attachments left over from an earlier run of the app.
+    pendingUploads.resumeAll()
+  }
 
   init {
     // Re-read on open so a changed name or photo shows up.
@@ -347,7 +349,8 @@ class ConversationViewModel(
     presence?.let { p -> viewModelScope.launch { p.clearTyping(conversationId, me) } }
   }
 
-  fun sendImage(uri: Uri) = prepareAndSend { mediaRepo.prepareImage(uri, container.preferences.preferences.first().dataSaver) }
+  fun sendImage(uri: Uri, original: Boolean = false) =
+    prepareAndSend { mediaRepo.prepareImage(uri, container.preferences.preferences.first().dataSaver, original) }
   fun sendDocument(uri: Uri) = prepareAndSend { mediaRepo.prepareDocument(uri) }
 
   fun startRecording(): Boolean = recorder.start()
@@ -368,45 +371,48 @@ class ConversationViewModel(
     } catch (e: Exception) {
       _mediaError.value = MediaError.UNREADABLE; return@launch
     }
-    val id = UUID.randomUUID().toString()
     val caption = _composer.value.text.trim().takeIf { media.kind != MediaKind.VOICE && it.length <= MessageRules.MAX_LENGTH }.orEmpty()
     val replyTo = _composer.value.replyTo?.id
     if (caption.isNotEmpty() || replyTo != null) _composer.value = ComposerState()
-    prepared[id] = Outgoing(media, caption, replyTo)
-    _uploads.update { it + PendingUpload(id, media.kind, media.displayName) }
-    upload(id)
-  }
-
-  private suspend fun upload(id: String) {
-    val out = prepared[id] ?: return
-    val media = out.media
-    val caption = out.caption
-    val replyTo = out.replyTo
+    media.imageOutcome?.takeIf { it != ImageQuality.Outcome.AS_CHOSEN }?.let { _photoReduced.value = it }
+    // The pending-upload queue saves the file and the client message ID first, then sends in the background.
     try {
-      val path = mediaRepo.upload(conversationId, id, me, media)
-      chats.sendMedia(
-        conversationId, me, id, media.kind.wire,
-        Media(path, media.displayName, media.bytes.size.toLong(), media.mime, media.width, media.height, media.durationMs, media.waveform),
-        caption, replyTo,
-      )
-      prepared.remove(id)
-      _uploads.update { list -> list.filterNot { it.id == id } }
-    } catch (e: Exception) {
-      _uploads.update { list -> list.map { if (it.id == id) it.copy(failed = true) else it } }
+      pendingUploads.enqueue(conversationId, me, media, caption, replyTo)
+    } catch (e: java.io.IOException) {
+      _mediaError.value = MediaError.UNREADABLE
     }
   }
 
-  fun retryUpload(id: String) = viewModelScope.launch {
-    _uploads.update { list -> list.map { if (it.id == id) it.copy(failed = false) else it } }
-    upload(id)
-  }
+  fun retryUpload(id: String) = pendingUploads.retry(id)
 
-  fun cancelUpload(id: String) {
-    prepared.remove(id)
-    _uploads.update { list -> list.filterNot { it.id == id } }
-  }
+  fun cancelUpload(id: String) = pendingUploads.cancel(id)
 
   fun clearMediaError() { _mediaError.value = null }
+
+  // Phase 5: weak-network media (original quality, downloads with progress, network hints).
+  private val _photoReduced = MutableStateFlow<ImageQuality.Outcome?>(null)
+
+  /** Set when a photo sent at original quality had to be made smaller to fit 16 MB; shown once. */
+  val photoReduced: StateFlow<ImageQuality.Outcome?> = _photoReduced
+  fun clearPhotoReduced() { _photoReduced.value = null }
+
+  val downloads: StateFlow<Map<String, DownloadState>> = (container.downloads?.state ?: MutableStateFlow(emptyMap()))
+  fun startDownload(path: String, size: Long) { container.downloads?.start(path, size) }
+  fun cancelDownload(path: String) { container.downloads?.cancel(path) }
+
+  val network: StateFlow<NetworkInfo> = container.network.state
+  val dataSaverHintAnswered: StateFlow<Boolean> = container.networkHints.dataSaverHintAnswered
+  val dataSaverOn: StateFlow<Boolean> = container.preferences.preferences.map { it.dataSaver }
+    .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+  /** The one-time Data saver suggestion was answered; [turnOn] also switches Data saver on. */
+  fun answerDataSaverHint(turnOn: Boolean) {
+    container.networkHints.markDataSaverHintAnswered()
+    if (turnOn) viewModelScope.launch { container.preferences.setDataSaver(true) }
+  }
+
+  suspend fun photoPreview(uri: Uri) = mediaRepo.loadPreview(uri)
+  suspend fun photoSourceSize(uri: Uri) = mediaRepo.sourceSize(uri)
   fun reportMediaError(e: MediaError) { _mediaError.value = e }
 
   suspend fun localFile(path: String): File? = runCatching { mediaRepo.localFile(path) }.getOrNull()
