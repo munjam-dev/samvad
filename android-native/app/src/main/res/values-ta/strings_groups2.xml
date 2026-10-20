@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="done_label">முடிந்தது</string>
+
+    <string name="group_announce_notice">இந்தக் குழுவில் நிர்வாகிகள் மட்டுமே செய்திகள் அனுப்ப முடியும்.</string>
+    <string name="group_settings_section">குழு அமைப்புகள்</string>
+    <string name="group_announce_title">நிர்வாகிகள் மட்டும் செய்தி அனுப்பலாம்</string>
+    <string name="group_announce_body">உறுப்பினர்கள் இன்னும் படிக்கலாம், ரியாக்ட் செய்யலாம், கருத்துக் கணிப்பில் வோட் செய்யலாம்.</string>
+
+    <string name="group_approve_title">புதிய உறுப்பினர்களை அங்கீகரிக்கவும்</string>
+    <string name="group_approve_body">அழைப்பு இணைப்பு மூலம் இணைவோர் ஒரு நிர்வாகியின் அங்கீகாரத்திற்காக காத்திருப்பார்கள்.</string>
+    <string name="group_pending_requests">அங்கீகாரத்திற்காக காத்திருக்கும் கோரிக்கைகள்</string>
+    <string name="group_pending_empty">இப்போது யாரும் இணைய காத்திருக்கவில்லை.</string>
+    <string name="group_decline">நிராகரி</string>
+    <string name="group_approve">அங்கீகரி</string>
+    <string name="group_waiting_approval">இந்தக் குழுவைப் பார்ப்பதற்கு முன் ஒரு நிர்வாகி உங்களை அங்கீகரிக்க வேண்டும்.</string>
+    <string name="group_join_needs_approval">இங்கே புதிய உறுப்பினர்களுக்கு நிர்வாகி அங்கீகாரம் தேவை.</string>
+    <string name="group_join_already_pending">நீங்கள் ஏற்கெனவே இணைய கேட்டுவிட்டீர்கள். அங்கீகாரத்திற்காக காத்திருக்கிறீர்கள்.</string>
+    <string name="group_join_pending_sent">உங்கள் கோரிக்கை அனுப்பப்பட்டது. ஒரு நிர்வாகி அங்கீகரித்தவுடன் நீங்கள் இணைக்கப்படுவீர்கள்.</string>
+    <string name="group_join_request">இணைய கேள்</string>
+
+    <string name="group_events">நிகழ்வுகள்</string>
+    <string name="group_events_setting_title">உறுப்பினர்கள் நிகழ்வுகளை உருவாக்கலாம்</string>
+    <string name="group_events_setting_body">இது ஆஃப் செய்யப்பட்டால், நிர்வாகிகள் மட்டுமே நிகழ்வுகளை உருவாக்க முடியும்.</string>
+    <string name="group_events_empty_title">இன்னும் நிகழ்வுகள் இல்லை</string>
+    <string name="group_events_empty_body">அனைவரும் வருகிறார்களா என்று சொல்ல ஒரு நிகழ்வை உருவாக்குங்கள்.</string>
+    <string name="group_events_upcoming">வரவிருக்கும்</string>
+    <string name="group_events_earlier">முந்தைய</string>
+    <string name="group_event_new">புதிய நிகழ்வு</string>
+    <string name="group_event_card_label">நிகழ்வு</string>
+    <string name="group_event_cancel_title">இந்த நிகழ்வை ரத்து செய்யவா?</string>
+    <string name="group_event_cancel_body">\"%1$s\" குழுவில் அனைவருக்கும் ரத்து செய்யப்படும்.</string>
+    <string name="group_event_cancel">நிகழ்வை ரத்து செய்</string>
+    <string name="group_event_cancelled">ரத்து செய்யப்பட்டது</string>
+    <string name="group_event_counts">%1$d வருகிறார்கள் · %2$d வரலாம்</string>
+    <string name="group_event_going">வருகிறேன்</string>
+    <string name="group_event_maybe">வரலாம்</string>
+    <string name="group_event_no">வர முடியாது</string>
+    <string name="group_event_title_hint">நிகழ்வு என்ன?</string>
+    <string name="group_event_place_hint">இடம் (விருப்பத்தேர்வு)</string>
+    <string name="group_event_description_hint">விளக்கம் (விருப்பத்தேர்வு)</string>
+    <string name="group_event_pick_time">தொடங்கும் நேரத்தைத் தேர்வு செய்யவும்</string>
+    <string name="group_event_create">நிகழ்வை உருவாக்கு</string>
+    <string name="group_event_error_past">இன்னும் நடக்காத ஒரு நேரத்தைத் தேர்வு செய்யவும்.</string>
+    <string name="group_event_error_too_far">வரும் இரண்டு ஆண்டுகளுக்குள் ஒரு நேரத்தைத் தேர்வு செய்யவும்.</string>
+    <string name="group_event_error_gone">இந்த நிகழ்வு ரத்து செய்யப்பட்டது அல்லது ஏற்கெனவே தொடங்கிவிட்டது.</string>
+    <string name="group_event_error_limit">இந்தக் குழுவில் ஏற்கெனவே பல வரவிருக்கும் நிகழ்வுகள் உள்ளன. முதலில் ஒன்றை ரத்து செய்யுங்கள்.</string>
+
+    <string name="media_tab_title">மீடியா, இணைப்புகள் மற்றும் ஆவணங்கள்</string>
+    <string name="media_tab_photos">புகைப்படங்களும் வீடியோக்களும்</string>
+    <string name="media_tab_docs">ஆவணங்கள்</string>
+    <string name="media_tab_links">இணைப்புகள்</string>
+    <string name="media_loaded_note">இந்தச் சாதனத்தில் ஏற்றப்பட்டதை மட்டும் காட்டுகிறது, முழு உரையாடல் வரலாற்றை அல்ல.</string>
+    <string name="media_photos_empty_title">இன்னும் புகைப்படங்களோ வீடியோக்களோ இல்லை</string>
+    <string name="media_photos_empty_body">இங்கே பகிரப்பட்ட புகைப்படங்களும் வீடியோக்களும் இந்தத் தாவலில் தோன்றும்.</string>
+    <string name="media_docs_empty_title">இன்னும் ஆவணங்கள் இல்லை</string>
+    <string name="media_docs_empty_body">இங்கே பகிரப்பட்ட கோப்புகள் இந்தத் தாவலில் தோன்றும்.</string>
+    <string name="media_links_empty_title">இன்னும் இணைப்புகள் இல்லை</string>
+    <string name="media_links_empty_body">செய்திகளில் பகிரப்பட்ட இணைப்புகள் இங்கே தோன்றும்.</string>
+
+    <string name="settings_quiet_hours">அமைதி நேரம்</string>
+    <string name="settings_quiet_hours_body">இந்த நேரத்தில் செய்திகள் வரும், ஆனால் ஒலி அல்லது அதிர்வு இல்லாமல்.</string>
+    <string name="settings_quiet_hours_start">தொடக்கம்</string>
+    <string name="settings_quiet_hours_end">முடிவு</string>
+    <string name="settings_quiet_hours_note">இது இந்தச் சாதனத்தில் மட்டும், அதன் இப்போதைய நேர மண்டலத்தின்படி பொருந்தும்.</string>
+</resources>

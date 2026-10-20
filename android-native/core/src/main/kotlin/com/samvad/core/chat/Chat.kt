@@ -34,6 +34,12 @@ data class Conversation(
   val disappearAfterSec: Long = 0L,
   /** Pinned messages, set only by the server. Use [PinnedMessages.ordered] before showing them. */
   val pinnedMessages: List<Pin> = emptyList(),
+  /** Groups, Phase 6 (set only by the server): only admins may send messages. */
+  val onlyAdminsSend: Boolean = false,
+  /** Groups: joining by invite code creates a request an admin must approve. */
+  val approveMembers: Boolean = false,
+  /** Groups: members (not only admins) may create events. */
+  val eventsByMembers: Boolean = false,
 )
 
 data class MemberState(
@@ -72,6 +78,9 @@ data class Message(
   /** Disappearing messages: when the server will delete it; null when the chat has no timer. */
   val expiresAt: Long? = null,
   val poll: Poll? = null,
+  /** Kind "event" (groups): the card points at conversations/{cid}/events/{eventId}. */
+  val eventId: String? = null,
+  val eventTitle: String? = null,
 )
 
 enum class DeliveryState { SENDING, SENT, DELIVERED, READ, FAILED }
@@ -126,7 +135,7 @@ object MessageRules {
     }
   }
 
-  fun canForward(message: Message): Boolean = !message.deleted && !message.pending && !message.failed
+  fun canForward(message: Message): Boolean = !message.deleted && !message.pending && !message.failed && message.kind != "event"
 
   fun canEdit(message: Message, me: String, nowMs: Long): Boolean =
     message.kind == "text" && message.senderId == me && !message.deleted && !message.pending &&

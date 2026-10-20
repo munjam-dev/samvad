@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="done_label">పూర్తయింది</string>
+
+    <string name="group_announce_notice">ఈ గ్రూప్‌లో అడ్మిన్‌లు మాత్రమే మెసేజ్‌లు పంపగలరు.</string>
+    <string name="group_settings_section">గ్రూప్ సెట్టింగ్‌లు</string>
+    <string name="group_announce_title">అడ్మిన్‌లు మాత్రమే మెసేజ్‌లు పంపగలరు</string>
+    <string name="group_announce_body">మెంబర్‌లు ఇప్పటికీ చదవగలరు, రియాక్ట్ చేయగలరు మరియు పోల్‌లలో ఓటు వేయగలరు.</string>
+
+    <string name="group_approve_title">కొత్త మెంబర్‌లను ఆమోదించండి</string>
+    <string name="group_approve_body">ఇన్వైట్ లింక్ ద్వారా చేరే వాళ్ళు ఒక అడ్మిన్ ఆమోదం కోసం వేచి ఉంటారు.</string>
+    <string name="group_pending_requests">ఆమోదం కోసం వేచి ఉన్న రిక్వెస్ట్‌లు</string>
+    <string name="group_pending_empty">ఇప్పుడు ఎవరూ చేరడానికి వేచి ఉండలేదు.</string>
+    <string name="group_decline">తిరస్కరించు</string>
+    <string name="group_approve">ఆమోదించు</string>
+    <string name="group_waiting_approval">ఈ గ్రూప్‌ను చూసే ముందు ఒక అడ్మిన్ మీకు ఆమోదం ఇవ్వాల్సి ఉంటుంది.</string>
+    <string name="group_join_needs_approval">ఇక్కడ కొత్త మెంబర్‌లకు ఒక అడ్మిన్ ఆమోదం అవసరం.</string>
+    <string name="group_join_already_pending">మీరు ఇంతకుముందే చేరడానికి అడిగారు. ఆమోదం కోసం వేచి ఉన్నారు.</string>
+    <string name="group_join_pending_sent">మీ రిక్వెస్ట్ పంపబడింది. ఒక అడ్మిన్ ఆమోదించాక మీరు చేరుతారు.</string>
+    <string name="group_join_request">చేరడానికి అడుగు</string>
+
+    <string name="group_events">ఈవెంట్‌లు</string>
+    <string name="group_events_setting_title">మెంబర్‌లు ఈవెంట్‌లు సృష్టించగలరు</string>
+    <string name="group_events_setting_body">ఇది ఆఫ్‌లో ఉంటే, అడ్మిన్‌లు మాత్రమే ఈవెంట్‌లు సృష్టించగలరు.</string>
+    <string name="group_events_empty_title">ఇంకా ఈవెంట్‌లు లేవు</string>
+    <string name="group_events_empty_body">అందరూ వస్తున్నారా లేదా చెప్పేందుకు ఒక ఈవెంట్ సృష్టించండి.</string>
+    <string name="group_events_upcoming">రాబోయేవి</string>
+    <string name="group_events_earlier">గతంలోవి</string>
+    <string name="group_event_new">కొత్త ఈవెంట్</string>
+    <string name="group_event_card_label">ఈవెంట్</string>
+    <string name="group_event_cancel_title">ఈ ఈవెంట్‌ను రద్దు చేయాలా?</string>
+    <string name="group_event_cancel_body">\"%1$s\" గ్రూప్‌లో అందరికీ రద్దు అవుతుంది.</string>
+    <string name="group_event_cancel">ఈవెంట్ రద్దు చేయి</string>
+    <string name="group_event_cancelled">రద్దు చేయబడింది</string>
+    <string name="group_event_counts">%1$d వస్తున్నారు · %2$d రావచ్చు</string>
+    <string name="group_event_going">వస్తున్నాను</string>
+    <string name="group_event_maybe">రావచ్చు</string>
+    <string name="group_event_no">రాలేను</string>
+    <string name="group_event_title_hint">ఈవెంట్ ఏమిటి?</string>
+    <string name="group_event_place_hint">స్థలం (ఐచ్ఛికం)</string>
+    <string name="group_event_description_hint">వివరణ (ఐచ్ఛికం)</string>
+    <string name="group_event_pick_time">ఎప్పుడు మొదలవుతుందో ఎంచుకోండి</string>
+    <string name="group_event_create">ఈవెంట్ సృష్టించు</string>
+    <string name="group_event_error_past">ఇంకా జరగని సమయాన్ని ఎంచుకోండి.</string>
+    <string name="group_event_error_too_far">వచ్చే రెండు సంవత్సరాల లోపు సమయాన్ని ఎంచుకోండి.</string>
+    <string name="group_event_error_gone">ఈ ఈవెంట్ రద్దు చేయబడింది లేదా ఇప్పటికే మొదలైంది.</string>
+    <string name="group_event_error_limit">ఈ గ్రూప్‌లో ఇప్పటికే చాలా రాబోయే ఈవెంట్‌లు ఉన్నాయి. ముందు ఒకదాన్ని రద్దు చేయండి.</string>
+
+    <string name="media_tab_title">మీడియా, లింక్‌లు మరియు డాక్యుమెంట్‌లు</string>
+    <string name="media_tab_photos">ఫోటోలు మరియు వీడియోలు</string>
+    <string name="media_tab_docs">డాక్యుమెంట్‌లు</string>
+    <string name="media_tab_links">లింక్‌లు</string>
+    <string name="media_loaded_note">ఈ డివైస్‌లో లోడ్ అయినది చూపిస్తుంది, పూర్తి చాట్ చరిత్ర కాదు.</string>
+    <string name="media_photos_empty_title">ఇంకా ఫోటోలు లేదా వీడియోలు లేవు</string>
+    <string name="media_photos_empty_body">ఇక్కడ షేర్ చేసిన ఫోటోలు మరియు వీడియోలు ఈ ట్యాబ్‌లో కనిపిస్తాయి.</string>
+    <string name="media_docs_empty_title">ఇంకా డాక్యుమెంట్‌లు లేవు</string>
+    <string name="media_docs_empty_body">ఇక్కడ షేర్ చేసిన ఫైళ్ళు ఈ ట్యాబ్‌లో కనిపిస్తాయి.</string>
+    <string name="media_links_empty_title">ఇంకా లింక్‌లు లేవు</string>
+    <string name="media_links_empty_body">మెసేజ్‌లలో షేర్ చేసిన లింక్‌లు ఇక్కడ కనిపిస్తాయి.</string>
+
+    <string name="settings_quiet_hours">నిశ్శబ్ద గంటలు</string>
+    <string name="settings_quiet_hours_body">ఈ సమయంలో మెసేజ్‌లు వస్తాయి, కానీ శబ్దం లేదా వైబ్రేషన్ ఉండదు.</string>
+    <string name="settings_quiet_hours_start">మొదలు</string>
+    <string name="settings_quiet_hours_end">ముగింపు</string>
+    <string name="settings_quiet_hours_note">ఇది ఈ డివైస్‌కు మాత్రమే, దాని ఇప్పటి టైమ్ జోన్ ప్రకారం వర్తిస్తుంది.</string>
+</resources>

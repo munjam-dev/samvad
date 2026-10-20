@@ -21,7 +21,9 @@ const CID = /^[A-Za-z0-9]{20}$/;
 export const INVITE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const INVITE = new RegExp(`^[${INVITE_ALPHABET}]{12}$`);
 
-type SystemEvent = 'created' | 'added' | 'removed' | 'left' | 'joined' | 'promoted' | 'demoted' | 'renamed' | 'photo';
+export type SystemEvent =
+  | 'created' | 'added' | 'removed' | 'left' | 'joined' | 'promoted' | 'demoted' | 'renamed' | 'photo'
+  | 'announce_on' | 'announce_off' | 'event_cancelled';
 
 // ---- input --------------------------------------------------------------------------------------
 
@@ -38,13 +40,13 @@ function uidList(raw: unknown, max: number): string[] {
   return [...new Set(raw as string[])];
 }
 
-function cidOf(data: unknown): string {
+export function cidOf(data: unknown): string {
   const cid = (data as { cid?: unknown } | null)?.cid;
   if (typeof cid !== 'string' || !CID.test(cid)) throw new HttpsError('invalid-argument', 'Unknown group.');
   return cid;
 }
 
-function uidOf(data: unknown): string {
+export function uidOf(data: unknown): string {
   const uid = (data as { uid?: unknown } | null)?.uid;
   if (typeof uid !== 'string' || !UID.test(uid)) throw new HttpsError('invalid-argument', 'Unknown member.');
   return uid;
@@ -56,9 +58,9 @@ export function newInviteCode(): string {
 
 // ---- shared steps -------------------------------------------------------------------------------
 
-const convRef = (deps: Deps, cid: string) => deps.db.doc(`conversations/${cid}`);
+export const convRef = (deps: Deps, cid: string) => deps.db.doc(`conversations/${cid}`);
 
-interface Group {
+export interface Group {
   ref: DocumentReference;
   members: string[];
   admins: string[];
@@ -66,7 +68,7 @@ interface Group {
 }
 
 /** Reads the group inside [tx]; the caller must be a member (and an admin when [admin]). */
-async function loadGroup(tx: Transaction, deps: Deps, cid: string, actor: string, admin: boolean): Promise<Group> {
+export async function loadGroup(tx: Transaction, deps: Deps, cid: string, actor: string, admin: boolean): Promise<Group> {
   const ref = convRef(deps, cid);
   const snap = await tx.get(ref);
   const members: string[] = snap.get('members') ?? [];
@@ -83,7 +85,7 @@ async function loadGroup(tx: Transaction, deps: Deps, cid: string, actor: string
  * Which of [candidates] may be put in a group by [actor]: they need a profile, an undeleted account,
  * and no block in either direction with the actor (so nobody is pulled into a group by someone they blocked).
  */
-async function eligible(tx: Transaction, deps: Deps, actor: string, candidates: string[]): Promise<string[]> {
+export async function eligible(tx: Transaction, deps: Deps, actor: string, candidates: string[]): Promise<string[]> {
   const db = deps.db;
   const checks = await Promise.all(
     candidates.map(async (u) => {
@@ -100,7 +102,7 @@ async function eligible(tx: Transaction, deps: Deps, actor: string, candidates: 
   return candidates.filter((_, i) => checks[i]);
 }
 
-function memberDoc(uid: string) {
+export function memberDoc(uid: string) {
   return {
     uid,
     lastReadAt: null,
@@ -114,7 +116,7 @@ function memberDoc(uid: string) {
 }
 
 /** A server-written "Asha added Ravi" line; clients render it in their own language. */
-function systemMessage(tx: Transaction, ref: DocumentReference, actor: string, event: SystemEvent, extra: { targets?: string[]; name?: string } = {}) {
+export function systemMessage(tx: Transaction, ref: DocumentReference, actor: string, event: SystemEvent, extra: { targets?: string[]; name?: string } = {}) {
   tx.set(ref.collection('messages').doc(randomUUID()), {
     senderId: actor,
     kind: 'system',
@@ -128,7 +130,7 @@ function systemMessage(tx: Transaction, ref: DocumentReference, actor: string, e
 }
 
 /** Keeps the RTDB membership mirror (used by the typing rules) in step. */
-async function mirror(deps: Deps, cid: string, add: string[], remove: string[]): Promise<void> {
+export async function mirror(deps: Deps, cid: string, add: string[], remove: string[]): Promise<void> {
   const update: Record<string, true | null> = {};
   for (const u of add) update[`members/${cid}/${u}`] = true;
   for (const u of remove) {
@@ -162,6 +164,10 @@ export async function createGroupCore(deps: Deps, actor: string, name: string, i
       photoUrl: null,
       lastMessage: null,
       lastMessageAt: FieldValue.serverTimestamp(),
+      // Phase 6 settings, all off by default; changed only by setGroupSettings (admins).
+      onlyAdminsSend: false,
+      approveMembers: false,
+      eventsByMembers: false,
     });
     for (const m of members) tx.set(ref.collection('members').doc(m), memberDoc(m));
     systemMessage(tx, ref, actor, 'created', { name });
@@ -297,51 +303,83 @@ export async function revokeInviteCore(deps: Deps, actor: string, cid: string): 
   });
 }
 
-function inviteCode(data: unknown): string {
+export function inviteCode(data: unknown): string {
   const code = (data as { code?: unknown } | null)?.code;
   const normal = typeof code === 'string' ? code.trim().toUpperCase() : '';
   if (!INVITE.test(normal)) throw new HttpsError('invalid-argument', 'invalid-code');
   return normal;
 }
 
-/** What the person is about to join: name and size only, never the member list. */
-export async function previewInviteCore(deps: Deps, uid: string, code: string): Promise<{ name: string; memberCount: number }> {
+export const MAX_PENDING_REQUESTS = 100;
+export const requestRef = (deps: Deps, cid: string, uid: string) => deps.db.doc(`groupJoinRequests/${cid}_${uid}`);
+
+export interface InvitePreview {
+  name: string;
+  memberCount: number;
+  /** True when admins approve new members; joining then becomes a request. */
+  approval: boolean;
+  /** True when the caller already asked and is waiting. */
+  pending: boolean;
+}
+
+/** What the person is about to join: name, size and whether approval is needed; never the member list. */
+export async function previewInviteCore(deps: Deps, uid: string, code: string): Promise<InvitePreview> {
   await consumeDailyBudget(deps, uid, 'joins', DAILY_JOINS);
   const invite = await deps.db.doc(`groupInvites/${code}`).get();
   if (!invite.exists) throw new HttpsError('not-found', 'invalid-code');
-  const g = await convRef(deps, String(invite.get('cid'))).get();
+  const cid = String(invite.get('cid'));
+  const g = await convRef(deps, cid).get();
   if (!g.exists) throw new HttpsError('not-found', 'invalid-code');
-  return { name: String(g.get('name') ?? ''), memberCount: (g.get('members') ?? []).length };
+  const approval = g.get('approveMembers') === true;
+  const pending = approval && (await requestRef(deps, cid, uid).get()).get('status') === 'pending';
+  return { name: String(g.get('name') ?? ''), memberCount: (g.get('members') ?? []).length, approval, pending };
 }
 
-export async function joinWithCodeCore(deps: Deps, uid: string, code: string): Promise<{ cid: string }> {
+/**
+ * Joins by invite code. When the group asks admins to approve new members, nobody is added: a pending
+ * request is recorded instead (one per person and group; asking again changes nothing).
+ */
+export async function joinWithCodeCore(deps: Deps, uid: string, code: string): Promise<{ cid: string; status: 'joined' | 'pending' }> {
   await consumeDailyBudget(deps, uid, 'joins', DAILY_JOINS);
   let cid = '';
   let joined = false;
+  let status: 'joined' | 'pending' = 'joined';
   await deps.db.runTransaction(async (tx) => {
     joined = false;
+    status = 'joined';
     const invite = await tx.get(deps.db.doc(`groupInvites/${code}`));
     if (!invite.exists) throw new HttpsError('not-found', 'invalid-code');
     cid = String(invite.get('cid'));
     const ref = convRef(deps, cid);
-    const [snap, profile] = await Promise.all([tx.get(ref), tx.get(deps.db.doc(`profiles/${uid}`))]);
+    const reqRef = requestRef(deps, cid, uid);
+    const [snap, profile, req] = await Promise.all([tx.get(ref), tx.get(deps.db.doc(`profiles/${uid}`)), tx.get(reqRef)]);
     if (!snap.exists) throw new HttpsError('not-found', 'invalid-code');
     if (!profile.exists) throw new HttpsError('failed-precondition', 'Create your profile first.');
     const members: string[] = snap.get('members') ?? [];
     if (members.includes(uid)) return;
     if (members.length >= MAX_GROUP_MEMBERS) throw new HttpsError('resource-exhausted', 'group-full');
+    if (snap.get('approveMembers') === true) {
+      status = 'pending';
+      if (req.exists && req.get('status') === 'pending') return;
+      const waiting = await tx.get(
+        deps.db.collection('groupJoinRequests').where('cid', '==', cid).where('status', '==', 'pending').limit(MAX_PENDING_REQUESTS),
+      );
+      if (waiting.size >= MAX_PENDING_REQUESTS) throw new HttpsError('resource-exhausted', 'too-many-requests');
+      tx.set(reqRef, { cid, uid, groupName: String(snap.get('name') ?? ''), status: 'pending', requestedAt: FieldValue.serverTimestamp() });
+      return;
+    }
     tx.update(ref, { members: FieldValue.arrayUnion(uid) });
     tx.set(ref.collection('members').doc(uid), memberDoc(uid));
     systemMessage(tx, ref, uid, 'joined');
     joined = true;
   });
   if (joined) await mirror(deps, cid, [uid], []);
-  return { cid };
+  return { cid, status };
 }
 
 // ---- callables ----------------------------------------------------------------------------------
 
-async function run<T>(event: string, work: () => Promise<T>): Promise<T> {
+export async function run<T>(event: string, work: () => Promise<T>): Promise<T> {
   const correlationId = newCorrelationId();
   try {
     const result = await work();

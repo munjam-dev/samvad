@@ -244,6 +244,9 @@ fun SettingsScreen(
           checked = prefs.notificationPreviews,
           onChange = { v -> scope.launch { container.preferences.setNotificationPreviews(v) } },
         )
+        com.samvad.messenger.ui.settings.QuietHoursRow(prefs.quietHours) { enabled, start, end ->
+          scope.launch { container.preferences.setQuietHours(enabled, start, end) }
+        }
       }
 
       Group(stringResource(R.string.settings_data)) {

@@ -141,9 +141,9 @@ describe('invite codes', () => {
     expect(code).toMatch(new RegExp(`^[${INVITE_ALPHABET}]{12}$`));
     expect((await call(handleCreateGroupInvite, 'anil', { cid })).code).toBe(code);
 
-    expect(await call(handlePreviewGroupInvite, 'dev', { code: code.toLowerCase() })).toEqual({ name: 'Family', memberCount: 3 });
-    expect(await call(handleJoinGroupWithCode, 'dev', { code })).toEqual({ cid });
-    expect(await call(handleJoinGroupWithCode, 'dev', { code })).toEqual({ cid }); // already a member
+    expect(await call(handlePreviewGroupInvite, 'dev', { code: code.toLowerCase() })).toEqual({ name: 'Family', memberCount: 3, approval: false, pending: false });
+    expect(await call(handleJoinGroupWithCode, 'dev', { code })).toEqual({ cid, status: 'joined' });
+    expect(await call(handleJoinGroupWithCode, 'dev', { code })).toEqual({ cid, status: 'joined' }); // already a member
     expect((await conv(cid)).members).toContain('dev');
     expect(await systemEvents(cid)).toEqual(['created', 'joined']);
 

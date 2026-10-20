@@ -91,6 +91,8 @@ data class ConversationUiState(
   val isAdmin: Boolean = false,
   /** I was removed or left: the group is read-only and shows why. */
   val removed: Boolean = false,
+  /** False while a group's "only admins can send messages" is on and I am not an admin. */
+  val canSend: Boolean = true,
 )
 
 /** Group header line: who is typing, otherwise who is in the group. */
@@ -389,6 +391,7 @@ class ConversationViewModel(
       memberCount = g?.members?.size ?: 0,
       isAdmin = g?.let { GroupRules.isAdmin(it, me) } ?: false,
       removed = isGroup && g != null && me !in g.members,
+      canSend = g?.let { GroupRules.canSend(it, me) } ?: true,
     )
   }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ConversationUiState())
 

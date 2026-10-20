@@ -18,6 +18,12 @@ service firebase.storage {
         && request.auth.uid in firestore.get(/databases/(default)/documents/conversations/$(cid)).data.members;
     }
 
+    // Phase 6: announcement mode. While a group's onlyAdminsSend is true, only admins upload message files.
+    function mayPost(cid) {
+      let c = firestore.get(/databases/(default)/documents/conversations/$(cid)).data;
+      return c.type != 'group' || c.get('onlyAdminsSend', false) != true || request.auth.uid in c.admins;
+    }
+
     // Allow-list of content types. Executables (APK, scripts, binaries) are never accepted.
     function allowedType(type) {
       return type.matches('image/(jpeg|png|webp)')
@@ -50,6 +56,7 @@ service firebase.storage {
       allow read: if isMember(cid);
 
       allow create: if isMember(cid)
+        && mayPost(cid)
         && resource == null
         && mid.matches('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
         && file.matches('^[A-Za-z0-9._-]{1,100}$')

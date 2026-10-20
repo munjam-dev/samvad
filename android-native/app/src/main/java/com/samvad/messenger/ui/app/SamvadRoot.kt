@@ -150,18 +150,22 @@ private fun SignedInNav(
         onBack = { nav.popBackStack() },
         onOpenChatTheme = { nav.navigate("chattheme/${entry.arguments!!.getString("cid")}") },
         onOpenStarred = { nav.navigate("starred/${entry.arguments!!.getString("cid")}") },
+        onOpenMedia = { nav.navigate("media/${entry.arguments!!.getString("cid")}") },
       )
     }
     composable("group/{cid}", arguments = listOf(navArgument("cid") { type = NavType.StringType })) { entry ->
+      val cid = entry.arguments!!.getString("cid")!!
       ConversationScreen(
         container = container,
         me = uid,
-        conversationId = entry.arguments!!.getString("cid")!!,
+        conversationId = cid,
         otherUid = null,
         onBack = { nav.popBackStack() },
-        onOpenGroupInfo = { nav.navigate("groupinfo/${entry.arguments!!.getString("cid")}") },
-        onOpenChatTheme = { nav.navigate("chattheme/${entry.arguments!!.getString("cid")}") },
-        onOpenStarred = { nav.navigate("starred/${entry.arguments!!.getString("cid")}") },
+        onOpenGroupInfo = { nav.navigate("groupinfo/$cid") },
+        onOpenChatTheme = { nav.navigate("chattheme/$cid") },
+        onOpenStarred = { nav.navigate("starred/$cid") },
+        onOpenEvents = { nav.navigate("groupevents/$cid") },
+        onOpenMedia = { nav.navigate("media/$cid") },
       )
     }
     composable("groupinfo/{cid}", arguments = listOf(navArgument("cid") { type = NavType.StringType })) { entry ->
@@ -174,7 +178,15 @@ private fun SignedInNav(
         onAddMembers = { nav.navigate("groupadd/$cid") },
         onLeft = { nav.popBackStack("home", inclusive = false) },
         onOpenChat = { chat, other -> nav.navigate("chat/$chat/$other") },
+        onOpenEvents = { nav.navigate("groupevents/$cid") },
+        onOpenMedia = { nav.navigate("media/$cid") },
       )
+    }
+    composable("groupevents/{cid}", arguments = listOf(navArgument("cid") { type = NavType.StringType })) { entry ->
+      com.samvad.messenger.ui.groups.EventsScreen(container = container, me = uid, cid = entry.arguments!!.getString("cid")!!, onBack = { nav.popBackStack() })
+    }
+    composable("media/{cid}", arguments = listOf(navArgument("cid") { type = NavType.StringType })) { entry ->
+      com.samvad.messenger.ui.media.SharedMediaScreen(container = container, conversationId = entry.arguments!!.getString("cid")!!, onBack = { nav.popBackStack() })
     }
     composable("groupadd/{cid}", arguments = listOf(navArgument("cid") { type = NavType.StringType })) { entry ->
       AddMembersScreen(container = container, me = uid, cid = entry.arguments!!.getString("cid")!!, onBack = { nav.popBackStack() })

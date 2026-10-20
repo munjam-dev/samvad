@@ -479,6 +479,9 @@ class ChatRepository(private val db: FirebaseFirestore) {
       description = d.getString("description") ?: "",
       photoPath = d.getString("photoUrl"),
       disappearAfterSec = d.getLong("disappearAfterSec") ?: 0L,
+      onlyAdminsSend = d.getBoolean("onlyAdminsSend") ?: false,
+      approveMembers = d.getBoolean("approveMembers") ?: false,
+      eventsByMembers = d.getBoolean("eventsByMembers") ?: false,
       pinnedMessages = (d.get("pinnedMessages") as? List<*>).orEmpty().mapNotNull { raw ->
         val m = raw as? Map<*, *> ?: return@mapNotNull null
         Pin(
@@ -548,6 +551,71 @@ class ChatRepository(private val db: FirebaseFirestore) {
       system = (d.get("system") as? Map<*, *>)?.let(::toSystem),
       expiresAt = d.millis("expiresAt"),
       poll = (d.get("poll") as? Map<*, *>)?.let(::toPoll),
+      eventId = d.getString("eventId"),
+      eventTitle = d.getString("eventTitle"),
     )
+  }
+
+  /** Phase 6: one group event, live. */
+  fun groupEvent(conversationId: String, eventId: String): Flow<com.samvad.core.chat.GroupEvent?> = callbackFlow {
+    val reg = db.document("conversations/$conversationId/events/$eventId").addSnapshotListener { snap, _ ->
+      trySend(snap?.takeIf { it.exists() }?.let(::toGroupEvent))
+    }
+    awaitClose { reg.remove() }
+  }
+
+  /** Phase 6: every event in a group, live (used by the "Events" list in group info). */
+  fun groupEvents(conversationId: String): Flow<List<com.samvad.core.chat.GroupEvent>> = callbackFlow {
+    val reg = db.collection("conversations/$conversationId/events")
+      .addSnapshotListener { snap, _ -> if (snap != null) trySend(snap.documents.map(::toGroupEvent)) }
+    awaitClose { reg.remove() }
+  }
+
+  /** My RSVP answer on one event, live. */
+  fun myRsvp(conversationId: String, eventId: String, me: String): Flow<com.samvad.core.chat.Rsvp?> = callbackFlow {
+    val reg = db.document("conversations/$conversationId/events/$eventId/rsvps/$me").addSnapshotListener { snap, _ ->
+      trySend(com.samvad.core.chat.Rsvp.fromWire(snap?.getString("status")))
+    }
+    awaitClose { reg.remove() }
+  }
+
+  private fun toGroupEvent(d: DocumentSnapshot) = com.samvad.core.chat.GroupEvent(
+    id = d.id,
+    title = d.getString("title") ?: "",
+    description = d.getString("description") ?: "",
+    place = d.getString("place") ?: "",
+    startsAt = d.millis("startsAt") ?: 0L,
+    createdBy = d.getString("createdBy") ?: "",
+    cancelled = d.getBoolean("cancelled") ?: false,
+    counts = (d.get("counts") as? Map<*, *>)?.let {
+      com.samvad.core.chat.RsvpCounts(
+        going = (it["going"] as? Number)?.toInt() ?: 0,
+        maybe = (it["maybe"] as? Number)?.toInt() ?: 0,
+        no = (it["no"] as? Number)?.toInt() ?: 0,
+      )
+    } ?: com.samvad.core.chat.RsvpCounts(),
+  )
+
+  /** Phase 6: pending join requests for a group (admins only; the rules enforce that). */
+  fun joinRequests(conversationId: String): Flow<List<com.samvad.core.chat.JoinRequest>> = callbackFlow {
+    val reg = db.collection("groupJoinRequests")
+      .whereEqualTo("cid", conversationId)
+      .whereEqualTo("status", "pending")
+      .addSnapshotListener { snap, err ->
+        if (err != null) { trySend(emptyList()); return@addSnapshotListener }
+        if (snap != null) {
+          trySend(
+            snap.documents.map { d ->
+              com.samvad.core.chat.JoinRequest(
+                uid = d.getString("uid") ?: "",
+                cid = d.getString("cid") ?: conversationId,
+                groupName = d.getString("groupName") ?: "",
+                requestedAt = d.millis("requestedAt") ?: 0L,
+              )
+            },
+          )
+        }
+      }
+    awaitClose { reg.remove() }
   }
 }

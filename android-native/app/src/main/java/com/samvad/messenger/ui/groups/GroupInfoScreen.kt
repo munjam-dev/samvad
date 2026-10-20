@@ -26,13 +26,18 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
 import androidx.compose.material.icons.outlined.AdminPanelSettings
+import androidx.compose.material.icons.outlined.Campaign
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Event
+import androidx.compose.material.icons.outlined.EventAvailable
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.LinkOff
 import androidx.compose.material.icons.outlined.NotificationsOff
+import androidx.compose.material.icons.outlined.PermMedia
 import androidx.compose.material.icons.outlined.PersonAdd
+import androidx.compose.material.icons.outlined.PersonAddAlt
 import androidx.compose.material.icons.outlined.PersonRemove
 import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.Share
@@ -89,6 +94,8 @@ fun GroupInfoScreen(
   onAddMembers: () -> Unit,
   onLeft: () -> Unit,
   onOpenChat: (String, String) -> Unit,
+  onOpenEvents: () -> Unit = {},
+  onOpenMedia: () -> Unit = {},
 ) {
   val colors = SamvadTheme.colors
   val vm: GroupInfoViewModel = viewModel(key = "info-$cid", factory = GroupInfoViewModel.factory(container, me, cid))
@@ -104,6 +111,8 @@ fun GroupInfoScreen(
   var photoMenu by remember { mutableStateOf(false) }
   var selected by remember { mutableStateOf<GroupMember?>(null) }
   var confirmLeave by remember { mutableStateOf(false) }
+  var pendingSheet by remember { mutableStateOf(false) }
+  val decideBusy = vm.decideBusy.collectAsStateWithLifecycle().value
   val errorText = error?.let { groupErrorText(it) }
   LaunchedEffect(errorText) {
     if (errorText != null) {
@@ -174,6 +183,58 @@ fun GroupInfoScreen(
           if (state.isAdmin) {
             item(key = "add") { InfoRow(Icons.Outlined.PersonAdd, stringResource(R.string.group_add_members), onClick = onAddMembers) }
             item(key = "invite") { InfoRow(Icons.Outlined.Link, stringResource(R.string.group_invite), onClick = vm::showInvite) }
+            if (state.pendingRequests.isNotEmpty()) {
+              item(key = "pending") { PendingRequestsRow(state.pendingRequests.size, onClick = { pendingSheet = true }) }
+            }
+          }
+          item(key = "events") {
+            InfoRow(
+              Icons.Outlined.Event,
+              stringResource(R.string.group_events),
+              trailing = if (state.upcomingEvents > 0) "${state.upcomingEvents}" else null,
+              onClick = onOpenEvents,
+            )
+          }
+          item(key = "media") { InfoRow(Icons.Outlined.PermMedia, stringResource(R.string.media_tab_title), onClick = onOpenMedia) }
+          if (state.isAdmin) {
+            item(key = "settings-h") {
+              Text(
+                stringResource(R.string.group_settings_section).uppercase(),
+                style = MaterialTheme.typography.labelMedium,
+                color = colors.onSurfaceVariant,
+                modifier = Modifier.padding(start = 20.dp, top = 16.dp, bottom = 6.dp),
+              )
+            }
+            item(key = "announce") {
+              GroupSettingRow(
+                Icons.Outlined.Campaign,
+                stringResource(R.string.group_announce_title),
+                stringResource(R.string.group_announce_body),
+                state.onlyAdminsSend,
+                busy,
+                vm::setOnlyAdminsSend,
+              )
+            }
+            item(key = "approve") {
+              GroupSettingRow(
+                Icons.Outlined.PersonAddAlt,
+                stringResource(R.string.group_approve_title),
+                stringResource(R.string.group_approve_body),
+                state.approveMembers,
+                busy,
+                vm::setApproveMembers,
+              )
+            }
+            item(key = "events-setting") {
+              GroupSettingRow(
+                Icons.Outlined.EventAvailable,
+                stringResource(R.string.group_events_setting_title),
+                stringResource(R.string.group_events_setting_body),
+                state.eventsByMembers,
+                busy,
+                vm::setEventsByMembers,
+              )
+            }
           }
           item(key = "members-h") {
             Text(
@@ -297,6 +358,18 @@ fun GroupInfoScreen(
       }
     }
   }
+  if (pendingSheet) {
+    ModalBottomSheet(onDismissRequest = { pendingSheet = false }) {
+      PendingRequestsSheet(
+        requests = state.pendingRequests,
+        busyUid = decideBusy,
+        names = { uid -> vm.nameOf(uid) },
+        onDecide = vm::decide,
+        onClose = { pendingSheet = false },
+      )
+    }
+  }
+
   if (confirmLeave) {
     AlertDialog(
       onDismissRequest = { confirmLeave = false },
@@ -309,7 +382,7 @@ fun GroupInfoScreen(
 }
 
 @Composable
-private fun InfoRow(icon: ImageVector, label: String, danger: Boolean = false, onClick: () -> Unit) {
+private fun InfoRow(icon: ImageVector, label: String, danger: Boolean = false, trailing: String? = null, onClick: () -> Unit) {
   val colors = SamvadTheme.colors
   Row(
     Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 20.dp, vertical = 14.dp),
@@ -319,7 +392,8 @@ private fun InfoRow(icon: ImageVector, label: String, danger: Boolean = false, o
     Box(Modifier.size(36.dp).background(if (danger) colors.error.copy(alpha = 0.12f) else colors.primaryContainer, CircleShape), contentAlignment = Alignment.Center) {
       Icon(icon, null, tint = if (danger) colors.error else colors.onPrimaryContainer, modifier = Modifier.size(20.dp))
     }
-    Text(label, style = MaterialTheme.typography.bodyLarge, color = if (danger) colors.error else colors.onSurface)
+    Text(label, style = MaterialTheme.typography.bodyLarge, color = if (danger) colors.error else colors.onSurface, modifier = Modifier.weight(1f))
+    if (trailing != null) Text(trailing, style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant)
   }
 }
 

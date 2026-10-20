@@ -23,6 +23,17 @@ object GroupRules {
 
   fun isAdmin(group: Conversation, uid: String): Boolean = uid in group.admins
 
+  /**
+   * Whether [uid] may post in [group]. Mirrors firestore.rules: in announcement mode only admins can. Nothing is
+   * decided here that the server does not also check.
+   */
+  fun canSend(group: Conversation?, uid: String): Boolean =
+    group == null || !group.onlyAdminsSend || uid in group.admins
+
+  /** Admins always; other members only when the group allows it, and never in announcement mode. */
+  fun canCreateEvent(group: Conversation, uid: String): Boolean =
+    uid in group.members && (uid in group.admins || (group.eventsByMembers && !group.onlyAdminsSend))
+
   fun validName(raw: String): String? = raw.trim().takeIf { it.isNotEmpty() && it.length <= MAX_NAME }
 }
 
@@ -123,6 +134,9 @@ object SystemText {
       "demoted" -> "${list(info.targets)} ${if (info.targets == listOf(me)) "are" else "is"} no longer an admin"
       "renamed" -> "$a changed the group name to \"${info.name.orEmpty()}\""
       "photo" -> "$a changed the group photo"
+      "announce_on" -> "$a made this group admin-only: only admins can send messages"
+      "announce_off" -> "$a allowed everyone to send messages"
+      "event_cancelled" -> "$a cancelled the event \"${info.name.orEmpty()}\""
       "disappearing" -> Disappearing.describe(a, info.seconds ?: 0L)
       else -> "$a updated the group"
     }

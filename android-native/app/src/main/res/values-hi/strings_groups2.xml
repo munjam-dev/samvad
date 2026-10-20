@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="done_label">हो गया</string>
+
+    <string name="group_announce_notice">इस ग्रुप में सिर्फ़ एडमिन संदेश भेज सकते हैं।</string>
+    <string name="group_settings_section">ग्रुप सेटिंग्स</string>
+    <string name="group_announce_title">सिर्फ़ एडमिन संदेश भेज सकते हैं</string>
+    <string name="group_announce_body">मेंबर अभी भी पढ़ सकते हैं, रिएक्ट कर सकते हैं और पोल में वोट कर सकते हैं।</string>
+
+    <string name="group_approve_title">नए मेंबर को मंज़ूरी दें</string>
+    <string name="group_approve_body">इनवाइट लिंक से जुड़ने वाले लोग किसी एडमिन की मंज़ूरी का इंतज़ार करते हैं।</string>
+    <string name="group_pending_requests">मंज़ूरी के लिए रुके हुए लोग</string>
+    <string name="group_pending_empty">अभी कोई जुड़ने का इंतज़ार नहीं कर रहा है।</string>
+    <string name="group_decline">मना करें</string>
+    <string name="group_approve">मंज़ूर करें</string>
+    <string name="group_waiting_approval">इस ग्रुप को देखने से पहले किसी एडमिन को आपको मंज़ूरी देनी होगी।</string>
+    <string name="group_join_needs_approval">यहाँ नए मेंबर को किसी एडमिन की मंज़ूरी चाहिए।</string>
+    <string name="group_join_already_pending">आप पहले ही जुड़ने के लिए कह चुके हैं। मंज़ूरी का इंतज़ार है।</string>
+    <string name="group_join_pending_sent">आपकी गुज़ारिश भेज दी गई है। एडमिन के मंज़ूर करने पर आप जुड़ जाएँगे।</string>
+    <string name="group_join_request">जुड़ने के लिए कहें</string>
+
+    <string name="group_events">इवेंट</string>
+    <string name="group_events_setting_title">मेंबर इवेंट बना सकते हैं</string>
+    <string name="group_events_setting_body">बंद होने पर सिर्फ़ एडमिन इवेंट बना सकते हैं।</string>
+    <string name="group_events_empty_title">अभी कोई इवेंट नहीं है</string>
+    <string name="group_events_empty_body">एक इवेंट बनाएँ, जिससे सब बता सकें कि वे आ रहे हैं या नहीं।</string>
+    <string name="group_events_upcoming">आने वाले</string>
+    <string name="group_events_earlier">पहले के</string>
+    <string name="group_event_new">नया इवेंट</string>
+    <string name="group_event_card_label">इवेंट</string>
+    <string name="group_event_cancel_title">इस इवेंट को रद्द करें?</string>
+    <string name="group_event_cancel_body">\"%1$s\" ग्रुप के सभी लोगों के लिए रद्द हो जाएगा।</string>
+    <string name="group_event_cancel">इवेंट रद्द करें</string>
+    <string name="group_event_cancelled">रद्द</string>
+    <string name="group_event_counts">%1$d आ रहे हैं · %2$d शायद आएँ</string>
+    <string name="group_event_going">आ रहा हूँ</string>
+    <string name="group_event_maybe">शायद</string>
+    <string name="group_event_no">नहीं आ सकता</string>
+    <string name="group_event_title_hint">इवेंट किस बारे में है?</string>
+    <string name="group_event_place_hint">जगह (वैकल्पिक)</string>
+    <string name="group_event_description_hint">विवरण (वैकल्पिक)</string>
+    <string name="group_event_pick_time">शुरू होने का समय चुनें</string>
+    <string name="group_event_create">इवेंट बनाएँ</string>
+    <string name="group_event_error_past">ऐसा समय चुनें जो अभी बीता न हो।</string>
+    <string name="group_event_error_too_far">आने वाले दो साल के भीतर का समय चुनें।</string>
+    <string name="group_event_error_gone">यह इवेंट रद्द हो गया है या शुरू हो चुका है।</string>
+    <string name="group_event_error_limit">इस ग्रुप में आने वाले बहुत इवेंट हैं। पहले किसी एक को रद्द करें।</string>
+
+    <string name="media_tab_title">मीडिया, लिंक और दस्तावेज़</string>
+    <string name="media_tab_photos">फ़ोटो और वीडियो</string>
+    <string name="media_tab_docs">दस्तावेज़</string>
+    <string name="media_tab_links">लिंक</string>
+    <string name="media_loaded_note">सिर्फ़ वही दिखाता है जो इस डिवाइस पर लोड हुआ है, पूरी चैट नहीं।</string>
+    <string name="media_photos_empty_title">अभी कोई फ़ोटो या वीडियो नहीं है</string>
+    <string name="media_photos_empty_body">यहाँ भेजे गए फ़ोटो और वीडियो इस टैब में दिखेंगे।</string>
+    <string name="media_docs_empty_title">अभी कोई दस्तावेज़ नहीं है</string>
+    <string name="media_docs_empty_body">यहाँ भेजी गई फ़ाइलें इस टैब में दिखेंगी।</string>
+    <string name="media_links_empty_title">अभी कोई लिंक नहीं है</string>
+    <string name="media_links_empty_body">संदेशों में भेजे गए लिंक यहाँ दिखेंगे।</string>
+
+    <string name="settings_quiet_hours">शांत घंटे</string>
+    <string name="settings_quiet_hours_body">इस दौरान संदेश फिर भी आएँगे, पर बिना आवाज़ या वाइब्रेशन के।</string>
+    <string name="settings_quiet_hours_start">शुरू</string>
+    <string name="settings_quiet_hours_end">खत्म</string>
+    <string name="settings_quiet_hours_note">यह सिर्फ़ इस डिवाइस पर लागू है, इसके मौजूदा टाइम ज़ोन के हिसाब से।</string>
+</resources>

@@ -6,14 +6,19 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.samvad.core.chat.ChatList
+import com.samvad.core.chat.EventRules
 import com.samvad.core.chat.GroupRules
+import com.samvad.core.chat.JoinRequest
 import com.samvad.messenger.AppContainer
 import com.samvad.messenger.data.GroupException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -29,6 +34,12 @@ data class GroupInfoState(
   val members: List<GroupMember> = emptyList(),
   val isAdmin: Boolean = false,
   val muted: Boolean = false,
+  /** Phase 6 settings, mirrored from the group document (server is the source of truth). */
+  val onlyAdminsSend: Boolean = false,
+  val approveMembers: Boolean = false,
+  val eventsByMembers: Boolean = false,
+  val pendingRequests: List<JoinRequest> = emptyList(),
+  val upcomingEvents: Int = 0,
 )
 
 /** Group info (Phase 2): every change goes through a group callable; the server checks admin rights. */
@@ -43,11 +54,21 @@ class GroupInfoViewModel(private val container: AppContainer, private val me: St
   private val _invite = MutableStateFlow<String?>(null)
   val invite: StateFlow<String?> = _invite
 
+  @OptIn(ExperimentalCoroutinesApi::class)
+  private val group = chats.conversation(cid).catch { emit(null) }
+  @OptIn(ExperimentalCoroutinesApi::class)
+  private val requests = group.flatMapLatest { g ->
+    if (g != null && GroupRules.isAdmin(g, me)) chats.joinRequests(cid) else flowOf(emptyList())
+  }
+  private val events = chats.groupEvents(cid)
+
   val state: StateFlow<GroupInfoState> = combine(
-    chats.conversation(cid).catch { emit(null) },
+    group,
     chats.profiles,
     chats.memberState(cid, me),
-  ) { g, profiles, mine ->
+    requests,
+    events,
+  ) { g, profiles, mine, pending, allEvents ->
     if (g == null) return@combine GroupInfoState(loading = false, gone = true)
     val missing = g.members.filter { it !in profiles }
     if (missing.isNotEmpty()) viewModelScope.launch { chats.loadProfiles(missing) }
@@ -63,10 +84,22 @@ class GroupInfoViewModel(private val container: AppContainer, private val me: St
       members = members,
       isAdmin = GroupRules.isAdmin(g, me),
       muted = mine?.muted ?: false,
+      onlyAdminsSend = g.onlyAdminsSend,
+      approveMembers = g.approveMembers,
+      eventsByMembers = g.eventsByMembers,
+      pendingRequests = pending,
+      upcomingEvents = EventRules.upcomingCount(allEvents, System.currentTimeMillis()),
     )
   }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GroupInfoState())
 
   fun clearError() { _error.value = null }
+
+  /** A requester's display name; loads it on demand (they may not be in the member list). */
+  fun nameOf(uid: String): String {
+    chats.profiles.value[uid]?.let { return it.displayName }
+    viewModelScope.launch { chats.loadProfiles(listOf(uid)) }
+    return uid
+  }
 
   private fun act(work: suspend () -> Unit) = viewModelScope.launch {
     if (_busy.value) return@launch
@@ -97,6 +130,28 @@ class GroupInfoViewModel(private val container: AppContainer, private val me: St
   fun showInvite() = act { _invite.value = groups.createInvite(cid) }
   fun revokeInvite() = act { groups.revokeInvite(cid); _invite.value = null }
   fun hideInvite() { _invite.value = null }
+
+  fun setOnlyAdminsSend(on: Boolean) = act { groups.setSettings(cid, onlyAdminsSend = on) }
+  fun setApproveMembers(on: Boolean) = act { groups.setSettings(cid, approveMembers = on) }
+  fun setEventsByMembers(on: Boolean) = act { groups.setSettings(cid, eventsByMembers = on) }
+
+  private val _decideBusy = MutableStateFlow<String?>(null)
+  val decideBusy: StateFlow<String?> = _decideBusy
+
+  /** An admin approves or declines one pending join request. */
+  fun decide(uid: String, approve: Boolean) = viewModelScope.launch {
+    if (_decideBusy.value != null) return@launch
+    _decideBusy.value = uid
+    _error.value = try {
+      groups.decideJoinRequest(cid, uid, approve)
+      null
+    } catch (e: GroupException.NoRequest) {
+      null // someone else already decided it; the list will update
+    } catch (e: Exception) {
+      GroupError.FAILED
+    }
+    _decideBusy.value = null
+  }
 
   /** Opens (creating if needed) a direct chat with a member. */
   fun message(uid: String, then: (String, String) -> Unit) = act { then(chats.openDirect(me, uid, container::applyDefaultTimer), uid) }

@@ -10,7 +10,7 @@ export const SCHEDULE_BATCH = 200;
 /** Sent and failed items stay visible to the sender this long, then a TTL policy removes them. */
 export const SCHEDULE_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 
-export type ScheduledFailure = 'not_member' | 'blocked' | 'account_deleted' | 'invalid';
+export type ScheduledFailure = 'not_member' | 'blocked' | 'account_deleted' | 'invalid' | 'not_allowed';
 
 const MAX_TEXT = 4096;
 
@@ -29,6 +29,8 @@ async function problem(tx: Transaction, deps: Deps, s: DocumentData): Promise<Sc
   if (deleted.exists) return 'account_deleted';
   const members: unknown = conv.get('members');
   if (!conv.exists || !Array.isArray(members) || !members.includes(s.senderId)) return 'not_member';
+  // Announcement mode: a scheduled message from someone who is no longer allowed to post is not sent.
+  if (conv.get('type') === 'group' && conv.get('onlyAdminsSend') === true && !(conv.get('admins') ?? []).includes(s.senderId)) return 'not_allowed';
   if (conv.get('type') === 'direct') {
     const other = members.find((m) => m !== s.senderId);
     if (typeof other === 'string') {

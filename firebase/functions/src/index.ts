@@ -31,6 +31,14 @@ export {
   joinGroupWithCode,
 } from './groups';
 export {
+  setGroupSettings,
+  decideGroupJoinRequest,
+  createGroupEvent,
+  rsvpGroupEvent,
+  cancelGroupEvent,
+  sendEventReminders,
+} from './groupAdvanced';
+export {
   setTwoStepPin,
   verifyTwoStepPin,
   disableTwoStep,
