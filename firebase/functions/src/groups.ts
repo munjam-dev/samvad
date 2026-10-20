@@ -7,6 +7,7 @@ import { consumeDailyBudget } from './lib/budget';
 import { requirePhoneAuth } from './lib/guards';
 import { logEvent, newCorrelationId } from './lib/logger';
 import { cleanPhoto, parsePhoto } from './setProfilePhoto';
+import { renameGroup, readGroups, linkFields, withoutGroup } from './lib/communityLinks';
 
 // Phase 2: groups. See docs/superpowers/specs/2026-10-13-phase2-groups.md. Group conversation
 // documents are written only here; the rules let members read them and post messages.
@@ -22,7 +23,7 @@ export const INVITE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const INVITE = new RegExp(`^[${INVITE_ALPHABET}]{12}$`);
 
 export type SystemEvent =
-  | 'created' | 'added' | 'removed' | 'left' | 'joined' | 'promoted' | 'demoted' | 'renamed' | 'photo'
+  | 'created' | 'added' | 'removed' | 'left' | 'joined' | 'joinedFromCommunity' | 'promoted' | 'demoted' | 'renamed' | 'photo'
   | 'announce_on' | 'announce_off' | 'event_cancelled';
 
 // ---- input --------------------------------------------------------------------------------------
@@ -65,6 +66,8 @@ export interface Group {
   members: string[];
   admins: string[];
   name: string;
+  /** The community this group is linked into, if any (set only by the community functions). */
+  communityId: string | null;
 }
 
 /** Reads the group inside [tx]; the caller must be a member (and an admin when [admin]). */
@@ -78,7 +81,8 @@ export async function loadGroup(tx: Transaction, deps: Deps, cid: string, actor:
   }
   const admins: string[] = snap.get('admins') ?? [];
   if (admin && !admins.includes(actor)) throw new HttpsError('permission-denied', 'Only group admins can do that.');
-  return { ref, members, admins, name: String(snap.get('name') ?? '') };
+  const communityId = snap.get('communityId');
+  return { ref, members, admins, name: String(snap.get('name') ?? ''), communityId: typeof communityId === 'string' ? communityId : null };
 }
 
 /**
@@ -212,7 +216,10 @@ export async function leaveGroupCore(deps: Deps, actor: string, cid: string): Pr
     const members = g.members.filter((m) => m !== actor);
     const admins = g.admins.filter((a) => a !== actor);
     if (admins.length === 0 && members.length > 0) admins.push(members[0]);
-    tx.update(g.ref, { members, admins });
+    // An empty group cannot be joined from its community any more, so it leaves the community's list.
+    const community = g.communityId && members.length === 0 ? await tx.get(deps.db.doc(`communities/${g.communityId}`)) : null;
+    tx.update(g.ref, { members, admins, ...(community ? { communityId: FieldValue.delete() } : {}) });
+    if (community?.exists) tx.update(community.ref, linkFields(withoutGroup(readGroups(community.get('groups')), cid)));
     tx.delete(g.ref.collection('members').doc(actor));
     systemMessage(tx, g.ref, actor, 'left');
     if (admins.length > 0 && !g.admins.includes(admins[admins.length - 1])) {
@@ -246,8 +253,14 @@ export async function updateInfoCore(deps: Deps, actor: string, cid: string, dat
   if (Object.keys(update).length === 0) throw new HttpsError('invalid-argument', 'Nothing to change.');
   await deps.db.runTransaction(async (tx) => {
     const g = await loadGroup(tx, deps, cid, actor, true);
+    const renamed = update.name !== undefined && update.name !== g.name;
+    // The community keeps its own copy of the name (its members cannot read the group), so rename it there too.
+    const community = renamed && g.communityId ? await tx.get(deps.db.doc(`communities/${g.communityId}`)) : null;
     tx.update(g.ref, update);
-    if (update.name !== undefined && update.name !== g.name) systemMessage(tx, g.ref, actor, 'renamed', { name: update.name });
+    if (renamed) systemMessage(tx, g.ref, actor, 'renamed', { name: update.name });
+    if (renamed && community?.exists) {
+      tx.update(community.ref, linkFields(renameGroup(readGroups(community.get('groups')), cid, update.name)));
+    }
   });
 }
 

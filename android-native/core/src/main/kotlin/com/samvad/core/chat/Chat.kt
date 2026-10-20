@@ -40,6 +40,8 @@ data class Conversation(
   val approveMembers: Boolean = false,
   /** Groups: members (not only admins) may create events. */
   val eventsByMembers: Boolean = false,
+  /** Phase 6: the community this group is linked into, if any (set only by the community functions). */
+  val communityId: String? = null,
 )
 
 data class MemberState(

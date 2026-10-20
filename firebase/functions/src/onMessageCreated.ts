@@ -5,6 +5,7 @@ import { defaultDeps, type Deps } from './deps';
 import { logEvent } from './lib/logger';
 
 export const PREVIEW_LENGTH = 120;
+const RECIPIENT_PARALLELISM = 25;
 
 export interface CreatedMessage {
   cid: string;
@@ -54,7 +55,7 @@ export async function applyMessageCreated(deps: Deps, msg: CreatedMessage): Prom
   const convRef = db.doc(`conversations/${msg.cid}`);
   const markerRef = db.doc(`processedEvents/${msg.eventId}`);
   let recipients: string[] = [];
-  let group: { name: string } | null = null;
+  let group: { name: string; community?: boolean } | null = null;
 
   await db.runTransaction(async (tx) => {
     recipients = [];
@@ -62,14 +63,18 @@ export async function applyMessageCreated(deps: Deps, msg: CreatedMessage): Prom
     const [marker, conv] = await Promise.all([tx.get(markerRef), tx.get(convRef)]);
     if (marker.exists || !conv.exists) return;
 
-    const isGroup = conv.get('type') === 'group';
+    const type = conv.get('type');
+    const isGroup = type === 'group';
+    // Announcements (up to 1,000 members) count unread on the device like groups: no counter per member.
+    const isAnnouncements = type === 'community_announcements';
     // Disappearing messages: the timer in force right now decides this message's expiry (written below).
     const timer = Number(conv.get('disappearAfterSec') ?? 0);
     if (isGroup) group = { name: String(conv.get('name') ?? '') };
+    if (isAnnouncements) group = { name: String(conv.get('name') ?? ''), community: true };
     const members: string[] = conv.get('members') ?? [];
     const others = members.filter((m) => m !== msg.data.senderId);
     recipients = msg.data.kind === 'system' ? [] : others;
-    const memberSnaps = isGroup ? [] : await Promise.all(others.map((m) => tx.get(convRef.collection('members').doc(m))));
+    const memberSnaps = isGroup || isAnnouncements ? [] : await Promise.all(others.map((m) => tx.get(convRef.collection('members').doc(m))));
 
     const current = conv.get('lastMessage');
     const currentAt: Timestamp | undefined = current?.createdAt;
@@ -134,7 +139,7 @@ export async function notifyRecipients(
   deps: Deps,
   msg: CreatedMessage,
   recipients: string[],
-  group: { name: string } | null = null,
+  group: { name: string; community?: boolean } | null = null,
 ): Promise<void> {
   const { db } = deps;
   const sender = await db.doc(`profiles/${msg.data.senderId}`).get();
@@ -144,15 +149,20 @@ export async function notifyRecipients(
   const mentioned = new Set(Array.isArray(msg.data.mentions) ? msg.data.mentions : []);
   const tokenOwners = new Map<string, FirebaseFirestore.DocumentReference>();
 
-  for (const uid of recipients) {
-    const member = await db.doc(`conversations/${msg.cid}/members/${uid}`).get();
-    if (member.get('muted') === true && !mentioned.has(uid)) continue;
-    const devices = await db.collection(`users/${uid}/devices`).where('fcmToken', '!=', null).get();
-    for (const d of devices.docs) {
-      if (d.get('revokedAt')) continue;
-      const token = d.get('fcmToken');
-      if (typeof token === 'string' && token.length > 0) tokenOwners.set(token, d.ref);
-    }
+  // A few recipients at a time: an announcement can reach 1,000 members, which must not run one by one.
+  for (let i = 0; i < recipients.length; i += RECIPIENT_PARALLELISM) {
+    await Promise.all(
+      recipients.slice(i, i + RECIPIENT_PARALLELISM).map(async (uid) => {
+        const member = await db.doc(`conversations/${msg.cid}/members/${uid}`).get();
+        if (member.get('muted') === true && !mentioned.has(uid)) return;
+        const devices = await db.collection(`users/${uid}/devices`).where('fcmToken', '!=', null).get();
+        for (const d of devices.docs) {
+          if (d.get('revokedAt')) continue;
+          const token = d.get('fcmToken');
+          if (typeof token === 'string' && token.length > 0) tokenOwners.set(token, d.ref);
+        }
+      }),
+    );
   }
   if (tokenOwners.size === 0) return;
 
@@ -164,6 +174,7 @@ export async function notifyRecipients(
     title,
     body: body.slice(0, PREVIEW_LENGTH + 66),
     ...(group ? { group: '1' } : {}),
+    ...(group?.community ? { community: '1' } : {}),
   });
   for (const t of invalidTokens) {
     await tokenOwners.get(t)?.update({ fcmToken: null });

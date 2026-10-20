@@ -135,6 +135,8 @@ fun HomeScreen(
   onOpenStarred: () -> Unit = {},
   onOpenChatTheme: () -> Unit = {},
   onOpenVault: () -> Unit = {},
+  onOpenCommunity: (String) -> Unit = {},
+  onNewCommunity: () -> Unit = {},
 ) {
   val menu = HomeMenu(onNewGroup, onOpenStarred, onOpenChatTheme, onOpenSettings, onOpenVault)
   val vm: HomeViewModel = viewModel(factory = HomeViewModel.factory(container, me))
@@ -162,7 +164,7 @@ fun HomeScreen(
           onNewText = onNewStatus,
           onNewPhoto = onNewPhotoStatus,
         )
-        Tab.COMMUNITIES -> ComingSoon(Icons.Outlined.Groups, R.string.communities_title, R.string.communities_body, menu, R.string.nav_communities)
+        Tab.COMMUNITIES -> com.samvad.messenger.ui.community.CommunitiesTab(container, me, menu, onOpenCommunity, onNewCommunity)
         Tab.CALLS -> ComingSoon(Icons.Outlined.Call, R.string.calls_title, R.string.calls_body, menu, R.string.nav_calls)
       }
     }

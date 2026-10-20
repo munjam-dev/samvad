@@ -38,7 +38,7 @@ export async function setPinnedCore(deps: Deps, actor: string, cid: string, mid:
     const members: string[] = snap.exists ? snap.get('members') ?? [] : [];
     // Same answer for "no such chat" and "not yours", so ids cannot be probed.
     if (!snap.exists || !members.includes(actor)) throw new HttpsError('permission-denied', 'Not allowed.');
-    const group = snap.get('type') === 'group';
+    const group = snap.get('type') !== 'direct';
     if (group && !(snap.get('admins') ?? []).includes(actor)) {
       throw new HttpsError('permission-denied', 'Only admins can change this.');
     }

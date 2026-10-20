@@ -38,17 +38,28 @@ const DEAD_TOKEN_CODES = new Set([
   'messaging/invalid-registration-token',
 ]);
 
+/** FCM accepts at most 500 tokens per multicast; a community announcement can have more devices than that. */
+export const FCM_MULTICAST_LIMIT = 500;
+
+export function chunkTokens(tokens: string[], size = FCM_MULTICAST_LIMIT): string[][] {
+  const chunks: string[][] = [];
+  for (let i = 0; i < tokens.length; i += size) chunks.push(tokens.slice(i, i + size));
+  return chunks;
+}
+
 export const fcmPushSender: PushSender = {
   async send(tokens, data) {
-    if (tokens.length === 0) return { invalidTokens: [] };
-    const res = await getMessaging().sendEachForMulticast({
-      tokens,
-      data,
-      android: { priority: 'high', collapseKey: data.cid },
-    });
-    const invalidTokens = res.responses
-      .map((r, i) => (!r.success && r.error && DEAD_TOKEN_CODES.has(r.error.code) ? tokens[i] : null))
-      .filter((t): t is string => t !== null);
+    const invalidTokens: string[] = [];
+    for (const batch of chunkTokens(tokens)) {
+      const res = await getMessaging().sendEachForMulticast({
+        tokens: batch,
+        data,
+        android: { priority: 'high', collapseKey: data.cid },
+      });
+      res.responses.forEach((r, i) => {
+        if (!r.success && r.error && DEAD_TOKEN_CODES.has(r.error.code)) invalidTokens.push(batch[i]);
+      });
+    }
     return { invalidTokens };
   },
 };

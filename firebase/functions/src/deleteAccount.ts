@@ -6,6 +6,7 @@ import { requirePhoneAuth, requireRecentAuth } from './lib/guards';
 import { logEvent, newCorrelationId } from './lib/logger';
 import { checkPin, pinProblem } from './twoStep';
 import { leaveGroupCore } from './groups';
+import { leaveAllCommunities } from './communities';
 import { releaseUsername } from './username';
 
 /** Idempotent: every step tolerates having already run. */
@@ -22,6 +23,8 @@ export async function deleteAccountCore(deps: Deps, uid: string): Promise<void> 
     scheduled.docs.slice(i, i + 400).forEach((d) => batch.delete(d.ref));
     await batch.commit();
   }
+  // Phase 6: leave every community first (admins hand over, an empty community is closed).
+  await leaveAllCommunities(deps, uid);
   // B2: leave every conversation (sent messages stay so the other member's history is intact).
   const memberships = await db.collectionGroup('members').where('uid', '==', uid).get();
   // Phase 1.1/1.3: clear presence, privacy, the block mirror and the RTDB membership mirror for this user.

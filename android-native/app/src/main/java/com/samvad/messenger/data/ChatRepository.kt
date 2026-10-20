@@ -49,6 +49,8 @@ data class ScheduledItem(
   val failure: String?,
 )
 
+const val ANNOUNCEMENTS_TYPE = "community_announcements"
+
 /** Conversations, member state and messages (B2). Firestore's offline cache provides offline mode. */
 class ChatRepository(private val db: FirebaseFirestore) {
 
@@ -91,7 +93,8 @@ class ChatRepository(private val db: FirebaseFirestore) {
           close(err)
           return@addSnapshotListener
         }
-        if (snap != null) trySend(Snapshot(snap.documents.map(::toConversation), snap.metadata.isFromCache))
+        // A community's announcements conversation lives in Communities, not in the chat list.
+        if (snap != null) trySend(Snapshot(snap.documents.filter { it.getString("type") != ANNOUNCEMENTS_TYPE }.map(::toConversation), snap.metadata.isFromCache))
       }
     awaitClose { reg.remove() }
   }
@@ -489,6 +492,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
       onlyAdminsSend = d.getBoolean("onlyAdminsSend") ?: false,
       approveMembers = d.getBoolean("approveMembers") ?: false,
       eventsByMembers = d.getBoolean("eventsByMembers") ?: false,
+      communityId = d.getString("communityId"),
       pinnedMessages = (d.get("pinnedMessages") as? List<*>).orEmpty().mapNotNull { raw ->
         val m = raw as? Map<*, *> ?: return@mapNotNull null
         Pin(

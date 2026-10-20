@@ -51,12 +51,26 @@ service firebase.storage {
       allow write: if false;
     }
 
+    // communityPhotos/{id}/{uuid}.jpg: written only by the setCommunityPhoto function; community members can see it.
+    match /communityPhotos/{id}/{file} {
+      allow read: if signedIn()
+        && request.auth.uid in firestore.get(/databases/(default)/documents/communities/$(id)).data.members;
+      allow write: if false;
+    }
+
+    // Announcements conversations accept files from community admins only.
+    function mayUpload(cid) {
+      let c = firestore.get(/databases/(default)/documents/conversations/$(cid)).data;
+      return c.type != 'community_announcements' || request.auth.uid in c.admins;
+    }
+
     // conversations/{cid}/{messageId}/{file}: uploaded once by a member before the message doc is written.
     match /conversations/{cid}/{mid}/{file} {
       allow read: if isMember(cid);
 
       allow create: if isMember(cid)
         && mayPost(cid)
+        && mayUpload(cid)
         && resource == null
         && mid.matches('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
         && file.matches('^[A-Za-z0-9._-]{1,100}$')

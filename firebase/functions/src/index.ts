@@ -39,6 +39,24 @@ export {
   sendEventReminders,
 } from './groupAdvanced';
 export {
+  createCommunity,
+  updateCommunityInfo,
+  setCommunityPhoto,
+  linkCommunityGroup,
+  unlinkCommunityGroup,
+  setCommunityAdmin,
+  removeCommunityMember,
+  addCommunityMembers,
+  leaveCommunity,
+  deleteCommunity,
+  createCommunityInvite,
+  revokeCommunityInvite,
+  previewCommunityInvite,
+  joinCommunityWithCode,
+  joinCommunityGroup,
+  onGroupDeleted,
+} from './communities';
+export {
   setTwoStepPin,
   verifyTwoStepPin,
   disableTwoStep,
