@@ -46,9 +46,11 @@ shows only those that are finished. Urdu needs right-to-left testing before it i
 | App lock, biometric, notification previews, two-step PIN, block, report, account deletion | Have | |
 | Disappearing messages | Have | see Phase 2 |
 | **End-to-end encryption** | Missing, library chosen | libsignal added to the build; **no message is encrypted**. See `docs/security/E2EE_DECISION.md`. **Release gate:** AGPL-3.0, lawyer must confirm before any distribution |
-| Linked devices and sessions | Partial | `devices` collection, sign out everywhere. A per-device list and revoke screen is Missing, and real multi-device needs E2EE first |
-| Profile visibility, contact-discovery controls, group-invite permissions | Missing | |
-| Appeals and recovery flows | Missing | |
+| Linked devices and sessions | Have (single device sign-out) | Settings → Linked devices: `revokeDevice` deletes the device doc, writes a server-only marker and sends an FCM message; the phone signs out when it next opens the app or gets the message (Firebase cannot revoke one refresh token). Real multi-device needs E2EE first |
+| Profile visibility, contact-discovery controls, group-invite permissions | Have, enforced in rules/callables | Last seen, About, photo: Everyone / People I chat with / Nobody. "People I chat with" = a direct chat the person started or has written in (`conversations/{cid}.engagedBy`, set by functions). Run `firebase/scripts/migrate-privacy.mjs` once after deploy |
+
+| Appeals | Have | `submitAppeal`, `appeals/{id}` (server-written), Settings → Help → Appeal a decision |
+| Lost phone recovery | Deferred by the product owner | |
 
 ## Phase 4: Personal Vault (local-first)
 

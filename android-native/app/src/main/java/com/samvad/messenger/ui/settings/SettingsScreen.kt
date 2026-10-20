@@ -44,7 +44,7 @@ import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.Devices
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.HelpOutline
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Notifications
@@ -365,7 +365,7 @@ fun SettingsScreen(
 
       if (container.appeals != null) {
         Group(stringResource(R.string.settings_help)) {
-          ActionRow(Icons.Outlined.HelpOutline, stringResource(R.string.appeal_title), onClick = onOpenAppeal)
+          ActionRow(Icons.AutoMirrored.Outlined.HelpOutline, stringResource(R.string.appeal_title), onClick = onOpenAppeal)
         }
       }
       Text(

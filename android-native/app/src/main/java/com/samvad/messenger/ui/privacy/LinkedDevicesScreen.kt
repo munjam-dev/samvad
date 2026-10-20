@@ -77,7 +77,7 @@ fun LinkedDevicesScreen(container: AppContainer, me: String, onBack: () -> Unit)
         stringResource(R.string.devices_intro),
         style = MaterialTheme.typography.bodyMedium,
         color = colors.onSurfaceVariant,
-        modifier = Modifier.padding(horizontal = 16.dp, bottom = 8.dp),
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
       )
       when {
         devices == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
