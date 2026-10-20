@@ -49,9 +49,9 @@ shows only those that are finished. Urdu needs right-to-left testing before it i
 | Disappearing messages | Have, not checked on a device | `firebase/functions/src/disappearing.ts`, `ui/chat/DisappearingViews.kt` |
 | Message selection (multi-select) | Missing | `ConversationScreen.kt` |
 | Pinned messages (in a chat) | Missing | rules, `ConversationViewModel` |
-| Global message search | Missing | needs a local index (messages are not all on the device) |
+| Global message search | Have, not checked on a device | on-device Room/FTS4 index of messages this device has loaded (`data/search/*`, `ui/search/*`, pure logic in `core/search`); never uploaded; cleared on sign-out and account deletion; covers only messages seen on this device |
 | Drafts | Missing | `data/Preferences` or a small Room table |
-| Contact sharing, video sharing | Missing | `MediaRules`, `storage.rules`, composer |
+| Contact sharing, video sharing | Have, not checked on a device | kinds `contact` and `video` in `firestore.rules`; `video.mp4` and `thumb.jpg` in `storage.rules`; `ui/chat/ContactViews.kt`, `VideoViews.kt`. Video: MP4, 16 MB, 60 s, no transcoding. The in-app player is the platform VideoView (Media3 is not in the project) |
 | Pending, retry, duplicate prevention | Have (client-generated ids, Firestore offline cache) | `ChatRepository.send` |
 
 ## Phase 3: privacy, encryption, account security
