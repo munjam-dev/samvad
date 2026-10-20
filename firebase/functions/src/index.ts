@@ -38,3 +38,5 @@ export {
   requestTwoStepReset,
   completeTwoStepReset,
 } from './twoStep';
+export { startCall, answerCall, declineCall, endCall, getCallToken, cleanupMissedCalls } from './calls';
+export { scheduleMeeting, getMeetingToken, endMeeting } from './meetings';

@@ -45,6 +45,23 @@ describe('indexes and list access', () => {
           { fieldPath: 'sendAt', order: 'ASCENDING' },
         ],
       },
+      // Phase 7: the busy check (array-contains + status) and the missed-call sweep.
+      {
+        collectionGroup: 'calls',
+        queryScope: 'COLLECTION',
+        fields: [
+          { fieldPath: 'participants', arrayConfig: 'CONTAINS' },
+          { fieldPath: 'status', order: 'ASCENDING' },
+        ],
+      },
+      {
+        collectionGroup: 'calls',
+        queryScope: 'COLLECTION',
+        fields: [
+          { fieldPath: 'status', order: 'ASCENDING' },
+          { fieldPath: 'expiresAt', order: 'ASCENDING' },
+        ],
+      },
     ]);
     expect(json.fieldOverrides.map((o: any) => `${o.collectionGroup}.${o.fieldPath}`)).toEqual(['members.uid', 'messages.expiresAt', 'savedMessages.messageId', 'items.expiresAt', 'items.visibleTo']);
   });

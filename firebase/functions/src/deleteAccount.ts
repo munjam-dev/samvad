@@ -7,6 +7,8 @@ import { logEvent, newCorrelationId } from './lib/logger';
 import { checkPin, pinProblem } from './twoStep';
 import { leaveGroupCore } from './groups';
 import { releaseUsername } from './username';
+import { cleanupCallsForDeletedAccount } from './calls';
+import { cleanupMeetingsForDeletedAccount } from './meetings';
 
 /** Idempotent: every step tolerates having already run. */
 export async function deleteAccountCore(deps: Deps, uid: string): Promise<void> {
@@ -47,6 +49,8 @@ export async function deleteAccountCore(deps: Deps, uid: string): Promise<void> 
     memberships.docs.slice(i, i + 400).forEach((d) => batch.delete(d.ref));
     await batch.commit();
   }
+  await cleanupCallsForDeletedAccount(deps, uid);
+  await cleanupMeetingsForDeletedAccount(deps, uid);
   await db.doc(`rateLimits/${uid}`).delete();
   await db.doc(`twoStep/${uid}`).delete();
   await deps.deleteFiles(`avatars/${uid}/`);

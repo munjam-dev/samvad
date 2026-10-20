@@ -572,6 +572,21 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // ---- calls and meetings (Phase 7) -----------------------------------
+    // Written only by the calls.ts / meetings.ts callables (Admin SDK bypasses these rules); clients
+    // only ever read their own call or the meetings of groups they belong to.
+
+    match /calls/{callId} {
+      allow get: if signedIn() && request.auth.uid in resource.data.get('participants', []);
+      allow list, create, update, delete: if false;
+    }
+
+    match /meetings/{meetingId} {
+      allow get: if signedIn()
+        && request.auth.uid in get(/databases/$(database)/documents/conversations/$(resource.data.groupId)).data.get('members', []);
+      allow list, create, update, delete: if false;
+    }
+
     // ---- default deny --------------------------------------------------
 
     match /{document=**} {
