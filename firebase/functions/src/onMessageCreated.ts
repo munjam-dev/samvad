@@ -21,6 +21,8 @@ export interface CreatedMessage {
     /** Server-written group events ("added", "left"…); never pushed. */
     system?: Record<string, unknown>;
     poll?: { question?: string };
+    /** Shared contact card; only its name is used in previews (never the phone numbers). */
+    contact?: { name?: string };
   };
 }
 
@@ -33,6 +35,8 @@ export function previewOf(data: CreatedMessage['data']): string {
       case 'voice': return '🎤 Voice message';
       case 'file': return `📄 ${data.media?.name ?? 'File'}`;
       case 'poll': return `📊 ${data.poll?.question ?? 'Poll'}`;
+      case 'video': return '🎬 Video';
+      case 'contact': return `👤 ${data.contact?.name ?? 'Contact'}`;
       default: return '';
     }
   })();

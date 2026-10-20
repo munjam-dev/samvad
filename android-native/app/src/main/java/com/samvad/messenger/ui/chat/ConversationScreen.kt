@@ -159,6 +159,10 @@ fun ConversationScreen(
   onOpenGroupInfo: (() -> Unit)? = null,
   onOpenChatTheme: () -> Unit = {},
   onOpenStarred: () -> Unit = {},
+  /** Contact card "Message": opens (or creates) the direct chat with that Samvad user. */
+  onOpenContact: (conversationId: String, otherUid: String) -> Unit = { _, _ -> },
+  /** Global search "Open": the message this chat should scroll to once it is loaded. */
+  initialJumpId: String? = null,
 ) {
   val appCtx = LocalContext.current.applicationContext as android.app.Application
   val vm: ConversationViewModel = viewModel(factory = ConversationViewModel.factory(appCtx, container, me, conversationId, otherUid))
@@ -203,8 +207,9 @@ fun ConversationScreen(
     val at = currentMatch?.let { key -> state.items.indexOfFirst { it.key == key } } ?: -1
     if (at >= 0) list.animateScrollToItem(at)
   }
-  // Jumping to a pinned message: scroll to it, loading older messages first when it is not on the screen yet.
-  var jumpTo by remember { mutableStateOf<String?>(null) }
+  // Jumping to a pinned message (or a message opened from global search): scroll to it, loading
+  // older messages first when it is not on the screen yet.
+  var jumpTo by remember { mutableStateOf(initialJumpId) }
   LaunchedEffect(jumpTo, state.items, state.hasMore) {
     val target = jumpTo ?: return@LaunchedEffect
     val at = state.items.indexOfFirst { it.key == target }
@@ -303,6 +308,8 @@ fun ConversationScreen(
     file = stringResource(R.string.export_file),
     edited = stringResource(R.string.export_edited),
     unknownSender = stringResource(R.string.export_unknown),
+    video = stringResource(R.string.export_video),
+    contact = stringResource(R.string.export_contact),
   )
   val you = stringResource(R.string.chat_you)
   val exportFailed = stringResource(R.string.export_failed)
@@ -329,6 +336,23 @@ fun ConversationScreen(
   }
   val pickPhoto = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri -> uri?.let(vm::sendImage) }
   val pickDocument = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let(vm::sendDocument) }
+  val pickVideo = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri -> uri?.let(vm::sendVideo) }
+  val contactProblemName = stringResource(R.string.contact_no_name)
+  val contactProblemPhone = stringResource(R.string.contact_no_phone)
+  val contactSaveFailed = stringResource(R.string.contact_save_failed)
+  val region = java.util.Locale.getDefault().country.ifBlank { com.samvad.core.phone.PhoneNumbers.DEFAULT_REGION }
+  val pickContactPhone = rememberDevicePhonePicker { name, phone ->
+    if (phone != null) {
+      vm.sendContact(name, listOf(phone), null, region) { problem ->
+        scope.launch {
+          snackbar.showSnackbar(
+            if (problem == ContactCardResultProblem.NO_NAME) contactProblemName else contactProblemPhone,
+          )
+        }
+      }
+    }
+  }
+  var viewingVideoPath by remember { mutableStateOf<String?>(null) }
   val micPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
     if (granted) vm.startRecording() else vm.reportMediaError(MediaError.OPEN)
   }
@@ -340,6 +364,8 @@ fun ConversationScreen(
         MediaError.UNREADABLE -> R.string.error_unknown
         MediaError.DOWNLOAD -> R.string.media_download_failed
         MediaError.OPEN -> R.string.voice_permission
+        MediaError.VIDEO_TOO_LONG -> R.string.video_too_long
+        MediaError.VIDEO_WRONG_TYPE -> R.string.video_wrong_type
       },
     )
   }
@@ -620,6 +646,12 @@ fun ConversationScreen(
                       when (item.message.kind) {
                         "image" -> MediaImage(media, vm::bitmap, autoLoad = autoLoadPhotos, isCached = vm::isCached) { if (selecting) toggle() else viewing = media.path }
                         "voice" -> VoiceNote(item.message.id, media, playback, item.mine) { if (selecting) toggle() else vm.togglePlayback(item.message) }
+                        "video" -> VideoThumbnail(media, vm::bitmap) {
+                          if (selecting) toggle() else scope.launch {
+                            val file = vm.localFile(media.path) ?: return@launch vm.reportMediaError(MediaError.DOWNLOAD)
+                            viewingVideoPath = file.path
+                          }
+                        }
                         else -> FileCard(media) { if (selecting) toggle() else openFile(media) }
                       }
                     }
@@ -628,6 +660,28 @@ fun ConversationScreen(
                       val votes = remember(item.message.id) { vm.votes(item.message.id) }.collectAsStateWithLifecycle(emptyMap()).value
                       val result = remember(votes, poll) { com.samvad.core.chat.Polls.tally(poll, votes, me) }
                       PollCard(item.message, result, item.mine) { id -> if (selecting) toggle() else vm.vote(item.message, id, result.mine) }
+                    }
+                    val card = item.message.contact
+                    if (item.message.kind == "contact" && card != null && !item.message.deleted) {
+                      ContactCardBubble(
+                        card = card,
+                        onUid = {
+                          runCatching { container.contacts?.lookup(card.phones)?.values?.firstOrNull { it != me } }.getOrNull()
+                        },
+                        onMessage = { uid ->
+                          if (!selecting) scope.launch {
+                            val cid = runCatching { container.chats!!.openDirect(me, uid, container::applyDefaultTimer) }.getOrNull()
+                            if (cid != null) onOpenContact(cid, uid)
+                          }
+                        },
+                        onSave = {
+                          if (!selecting) {
+                            container.appLock.expectExternal()
+                            runCatching { context.startActivity(saveContactIntent(card)) }
+                              .onFailure { scope.launch { snackbar.showSnackbar(contactSaveFailed) } }
+                          }
+                        },
+                      )
                     }
                   },
                 )
@@ -701,11 +755,22 @@ fun ConversationScreen(
           container.appLock.expectExternal()
           pickDocument.launch(com.samvad.core.media.MediaRules.pickableDocuments)
         },
+        onVideo = {
+          attaching = false
+          container.appLock.expectExternal()
+          pickVideo.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
+        },
+        onContact = {
+          attaching = false
+          container.appLock.expectExternal()
+          pickContactPhone()
+        },
         onPoll = { attaching = false; composingPoll = true },
       )
     }
   }
   viewing?.let { path -> MediaViewer(path, vm::bitmap) { viewing = null } }
+  viewingVideoPath?.let { path -> VideoPlayerDialog(java.io.File(path)) { viewingVideoPath = null } }
 
   if (scheduling) {
     ModalBottomSheet(onDismissRequest = { scheduling = false }) {

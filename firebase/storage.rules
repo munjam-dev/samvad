@@ -22,6 +22,7 @@ service firebase.storage {
     function allowedType(type) {
       return type.matches('image/(jpeg|png|webp)')
         || type.matches('audio/(mp4|aac|mpeg|ogg)')
+        || type == 'video/mp4'
         || type.matches('application/pdf')
         || type.matches('text/plain')
         || type.matches('application/zip')
@@ -56,6 +57,9 @@ service firebase.storage {
         && request.resource.size > 0
         && request.resource.size <= 16 * 1024 * 1024
         && allowedType(request.resource.contentType)
+        // Chat video: video/mp4 only as video.mp4 (and video.mp4 only as video/mp4); its poster frame is a small JPEG.
+        && ((request.resource.contentType == 'video/mp4') == (file == 'video.mp4'))
+        && (file != 'thumb.jpg' || (request.resource.contentType == 'image/jpeg' && request.resource.size <= 256 * 1024))
         && request.resource.metadata.senderId == request.auth.uid
         && !firestore.exists(/databases/(default)/documents/conversations/$(cid)/messages/$(mid));
 

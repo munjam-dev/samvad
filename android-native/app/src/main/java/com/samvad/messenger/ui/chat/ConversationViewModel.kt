@@ -109,7 +109,10 @@ data class PendingUpload(
   val failed: Boolean = false,
 )
 
-enum class MediaError { TOO_LARGE, TYPE_BLOCKED, UNREADABLE, DOWNLOAD, OPEN }
+enum class MediaError { TOO_LARGE, TYPE_BLOCKED, UNREADABLE, DOWNLOAD, OPEN, VIDEO_TOO_LONG, VIDEO_WRONG_TYPE }
+
+/** Why a contact card could not be built from what was picked. */
+enum class ContactCardResultProblem { NO_NAME, NO_PHONE }
 
 /** One-shot feedback for block / report actions, shown as a snackbar. */
 enum class SafetyNotice { REPORTED, REPORTED_AND_BLOCKED, REPORT_LIMIT, FAILED }
@@ -259,6 +262,10 @@ class ConversationViewModel(
           clock.value = System.currentTimeMillis()
         }
       }
+    }
+    // Global search is entirely on-device: index each page of messages this chat screen loads.
+    viewModelScope.launch {
+      page.collect { p -> if (p.messages.isNotEmpty()) container.searchIndexer.indexAll(conversationId, p.messages) }
     }
   }
 
@@ -463,6 +470,46 @@ class ConversationViewModel(
   fun sendImage(uri: Uri) = prepareAndSend { mediaRepo.prepareImage(uri, container.preferences.preferences.first().dataSaver) }
   fun sendDocument(uri: Uri) = prepareAndSend { mediaRepo.prepareDocument(uri) }
 
+  fun sendVideo(uri: Uri) = viewModelScope.launch {
+    if (blocked.value) return@launch
+    val media = try {
+      mediaRepo.prepareChatVideo(uri)
+    } catch (e: com.samvad.messenger.data.MediaRepository.ChatVideoException) {
+      _mediaError.value = when (e.problem) {
+        com.samvad.core.media.ChatVideoProblem.TOO_LONG -> MediaError.VIDEO_TOO_LONG
+        com.samvad.core.media.ChatVideoProblem.TOO_BIG -> MediaError.TOO_LARGE
+        com.samvad.core.media.ChatVideoProblem.WRONG_TYPE -> MediaError.VIDEO_WRONG_TYPE
+        com.samvad.core.media.ChatVideoProblem.UNREADABLE -> MediaError.UNREADABLE
+      }
+      return@launch
+    } catch (e: Exception) {
+      _mediaError.value = MediaError.UNREADABLE; return@launch
+    }
+    val id = UUID.randomUUID().toString()
+    val caption = _composer.value.text.trim().takeIf { it.length <= MessageRules.MAX_LENGTH }.orEmpty()
+    val replyTo = _composer.value.replyTo?.id
+    if (caption.isNotEmpty() || replyTo != null) {
+      _composer.value = ComposerState()
+      clearDraft()
+    }
+    prepared[id] = Outgoing(media, caption, replyTo)
+    _uploads.update { it + PendingUpload(id, media.kind, media.displayName) }
+    upload(id)
+  }
+
+  /** Builds and sends a contact card; [problem] explains what to tell the user when the card cannot be built. */
+  fun sendContact(name: String?, phones: List<String>, organisation: String?, region: String, onProblem: (ContactCardResultProblem) -> Unit) {
+    val replyTo = _composer.value.replyTo?.id
+    when (val result = com.samvad.core.chat.ContactCards.build(name, phones, organisation, region)) {
+      is com.samvad.core.chat.ContactCardResult.Ok -> {
+        if (replyTo != null) { _composer.value = ComposerState(); clearDraft() }
+        viewModelScope.launch { runCatching { chats.sendContact(conversationId, me, result.card, replyTo) } }
+      }
+      com.samvad.core.chat.ContactCardResult.NoName -> onProblem(ContactCardResultProblem.NO_NAME)
+      com.samvad.core.chat.ContactCardResult.NoPhone -> onProblem(ContactCardResultProblem.NO_PHONE)
+    }
+  }
+
   fun startRecording(): Boolean = recorder.start()
   fun cancelRecording() = recorder.cancel()
   fun finishRecording() {
@@ -499,10 +546,14 @@ class ConversationViewModel(
     val caption = out.caption
     val replyTo = out.replyTo
     try {
-      val path = mediaRepo.upload(conversationId, id, me, media)
+      val (path, thumbPath) = if (media.kind == MediaKind.VIDEO) {
+        mediaRepo.uploadVideo(conversationId, id, me, media)
+      } else {
+        mediaRepo.upload(conversationId, id, me, media) to null
+      }
       chats.sendMedia(
         conversationId, me, id, media.kind.wire,
-        Media(path, media.displayName, media.bytes.size.toLong(), media.mime, media.width, media.height, media.durationMs, media.waveform),
+        Media(path, media.displayName, media.bytes.size.toLong(), media.mime, media.width, media.height, media.durationMs, media.waveform, thumbPath),
         caption, replyTo,
       )
       prepared.remove(id)

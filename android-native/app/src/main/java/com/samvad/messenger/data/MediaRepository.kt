@@ -33,6 +33,8 @@ class PreparedMedia(
   val height: Int? = null,
   val durationMs: Long? = null,
   val waveform: List<Int> = emptyList(),
+  /** Video only: the small JPEG poster frame, uploaded alongside as thumb.jpg. */
+  val thumbBytes: ByteArray? = null,
 )
 
 sealed class MediaException(message: String) : Exception(message) {
@@ -144,17 +146,28 @@ class MediaRepository(private val context: Context, private val storage: Firebas
   }
 
   /** Uploads with up to 3 attempts (1 s, 2 s back-off). Returns the storage path. */
-  suspend fun upload(conversationId: String, messageId: String, me: String, media: PreparedMedia): String {
-    val path = "conversations/$conversationId/$messageId/${media.fileName}"
+  suspend fun upload(conversationId: String, messageId: String, me: String, media: PreparedMedia): String =
+    uploadOne(conversationId, messageId, me, media.fileName, media.mime, media.bytes)
+
+  /** A video's file, then its poster frame (thumb.jpg) right after. Returns (video path, thumbnail path). */
+  suspend fun uploadVideo(conversationId: String, messageId: String, me: String, media: PreparedMedia): Pair<String, String> {
+    val thumb = media.thumbBytes ?: throw IllegalArgumentException("video needs a thumbnail")
+    val path = uploadOne(conversationId, messageId, me, media.fileName, media.mime, media.bytes)
+    val thumbPath = uploadOne(conversationId, messageId, me, "thumb.jpg", "image/jpeg", thumb)
+    return path to thumbPath
+  }
+
+  private suspend fun uploadOne(conversationId: String, messageId: String, me: String, fileName: String, mime: String, bytes: ByteArray): String {
+    val path = "conversations/$conversationId/$messageId/$fileName"
     val meta = StorageMetadata.Builder()
-      .setContentType(media.mime)
+      .setContentType(mime)
       .setCustomMetadata("senderId", me)
       .build()
     var attempt = 0
     while (true) {
       try {
-        storage.reference.child(path).putBytes(media.bytes, meta).await()
-        cacheFile(path).writeBytes(media.bytes)
+        storage.reference.child(path).putBytes(bytes, meta).await()
+        cacheFile(path).writeBytes(bytes)
         return path
       } catch (e: Exception) {
         if (++attempt >= 3) throw e
@@ -174,6 +187,58 @@ class MediaRepository(private val context: Context, private val storage: Firebas
   class PreparedVideo(val bytes: ByteArray, val width: Int, val height: Int, val durationMs: Long)
 
   class VideoProblemException(val problem: com.samvad.core.status.VideoProblem) : Exception(problem.name)
+
+  class ChatVideoException(val problem: com.samvad.core.media.ChatVideoProblem) : Exception(problem.name)
+
+  /**
+   * Reads a video chosen for a chat (system photo/video picker): checks it against the chat limits
+   * (60 s, 16 MB, MP4) and extracts a small JPEG poster frame on device. Throws [ChatVideoException] when
+   * it does not qualify, so the caller can explain why instead of silently shrinking or re-encoding it.
+   */
+  suspend fun prepareChatVideo(uri: Uri): PreparedMedia = withContext(Dispatchers.IO) {
+    val mime = context.contentResolver.getType(uri)
+    var durationMs = 0L
+    var width = 0
+    var height = 0
+    var poster: Bitmap? = null
+    val retriever = android.media.MediaMetadataRetriever()
+    try {
+      retriever.setDataSource(context, uri)
+      durationMs = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L
+      width = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull() ?: 0
+      height = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull() ?: 0
+      val rotation = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)?.toIntOrNull() ?: 0
+      if (rotation == 90 || rotation == 270) { val t = width; width = height; height = t }
+      poster = retriever.getFrameAtTime(com.samvad.core.media.ChatVideo.posterTimeUs(durationMs), android.media.MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+    } catch (_: Exception) {
+      throw ChatVideoException(com.samvad.core.media.ChatVideoProblem.UNREADABLE)
+    } finally {
+      runCatching { retriever.release() }
+    }
+    var size = -1L
+    context.contentResolver.query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)?.use { c ->
+      if (c.moveToFirst() && !c.isNull(0)) size = c.getLong(0)
+    }
+    com.samvad.core.media.ChatVideo.problem(mime, if (size < 0) 1L else size, durationMs)?.let { throw ChatVideoException(it) }
+    val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: throw ChatVideoException(com.samvad.core.media.ChatVideoProblem.UNREADABLE)
+    com.samvad.core.media.ChatVideo.problem(mime, bytes.size.toLong(), durationMs)?.let { throw ChatVideoException(it) }
+    val (tw, th) = com.samvad.core.media.ChatVideo.thumbSize(width, height)
+    val thumbBytes = try {
+      val base = poster ?: throw MediaException.Unreadable()
+      val scaled = if (base.width != tw || base.height != th) Bitmap.createScaledBitmap(base, tw, th, true) else base
+      val out = ByteArrayOutputStream()
+      scaled.compress(Bitmap.CompressFormat.JPEG, com.samvad.core.media.ChatVideo.THUMB_QUALITY, out)
+      if (scaled !== base) scaled.recycle()
+      base.recycle()
+      out.toByteArray()
+    } catch (_: Exception) {
+      throw ChatVideoException(com.samvad.core.media.ChatVideoProblem.UNREADABLE)
+    }
+    PreparedMedia(
+      MediaKind.VIDEO, com.samvad.core.media.ChatVideo.FILE_NAME, "Video",
+      com.samvad.core.media.MediaRules.VIDEO_MIME, bytes, width, height, durationMs, thumbBytes = thumbBytes,
+    )
+  }
 
   /** Reads a chosen video. Throws [VideoProblemException] when it is longer than 30 seconds, over 16 MB, or unreadable. */
   suspend fun prepareVideo(uri: Uri): PreparedVideo = withContext(Dispatchers.IO) {

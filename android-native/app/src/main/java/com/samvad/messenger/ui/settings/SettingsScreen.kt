@@ -472,7 +472,7 @@ fun SettingsScreen(
         container = container,
         onDeleted = {
           deletingWithPin = false
-          scope.launch { container.preferences.clearDeviceId(); container.drafts.clearAll() }
+          scope.launch { container.preferences.clearDeviceId(); container.drafts.clearAll(); container.searchIndexer.clearAll() }
           container.auth?.signOut()
         },
       )
@@ -486,7 +486,7 @@ fun SettingsScreen(
         phone = phone,
         onDeleted = {
           reauthing = false
-          scope.launch { container.preferences.clearDeviceId() }
+          scope.launch { container.preferences.clearDeviceId(); container.searchIndexer.clearAll() }
           container.auth?.signOut()
         },
         onError = { scope.launch { snackbar.showSnackbar(msgError) } },

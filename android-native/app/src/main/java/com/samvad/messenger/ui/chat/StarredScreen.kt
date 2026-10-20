@@ -187,5 +187,7 @@ private fun previewOf(m: Message): String = when (m.kind) {
   "voice" -> stringResource(R.string.starred_kind_voice)
   "file" -> m.media?.name ?: stringResource(R.string.starred_kind_file)
   "poll" -> m.poll?.question ?: stringResource(R.string.starred_kind_poll)
+  "video" -> stringResource(R.string.starred_kind_video)
+  "contact" -> m.contact?.name ?: stringResource(R.string.starred_kind_contact)
   else -> m.text
 }

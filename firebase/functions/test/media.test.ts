@@ -22,6 +22,14 @@ describe('media previews', () => {
     expect(previewOf({ ...base, kind: 'file', text: '', media: { name: 'Trip.pdf' } })).toBe('📄 Trip.pdf');
     expect(previewOf({ ...base, kind: 'text', text: 'hello' })).toBe('hello');
   });
+
+  it('labels videos and contact cards without leaking phone numbers', () => {
+    expect(previewOf({ ...base, kind: 'video', text: '' })).toBe('🎬 Video');
+    expect(previewOf({ ...base, kind: 'video', text: 'Diwali' })).toBe('🎬 Video · Diwali');
+    const contact = { name: 'Asha Rao', phones: ['+919876543210'] };
+    expect(previewOf({ ...base, kind: 'contact', text: '', contact } as any)).toBe('👤 Asha Rao');
+    expect(previewOf({ ...base, kind: 'contact', text: '' })).toBe('👤 Contact');
+  });
 });
 
 describe('cleanupDeletedMedia', () => {
@@ -35,6 +43,18 @@ describe('cleanupDeletedMedia', () => {
     const [exists] = await bucket().file(path).exists();
     expect(exists).toBe(false);
     expect((await deps.db.doc(`conversations/alice_bob/messages/${mid}`).get()).get('media')).toBeUndefined();
+  });
+
+  it('removes a video together with its thumbnail (the whole message folder)', async () => {
+    const mid = randomUUID();
+    const video = `conversations/alice_bob/${mid}/video.mp4`;
+    const thumb = `conversations/alice_bob/${mid}/thumb.jpg`;
+    await bucket().file(video).save(Buffer.from('mp4'), { contentType: 'video/mp4' });
+    await bucket().file(thumb).save(Buffer.from('jpg'), { contentType: 'image/jpeg' });
+    await deps.db.doc(`conversations/alice_bob/messages/${mid}`).set({ senderId: 'alice', kind: 'video', deleted: true, text: '', media: { path: video } });
+    expect(await cleanupDeletedMedia(deps, 'alice_bob', mid, { deleted: false, media: { path: video } }, { deleted: true, media: { path: video } })).toBe(true);
+    expect((await bucket().file(video).exists())[0]).toBe(false);
+    expect((await bucket().file(thumb).exists())[0]).toBe(false);
   });
 
   it('ignores updates that are not a first-time deletion of a media message', async () => {

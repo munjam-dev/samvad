@@ -61,7 +61,7 @@ data class Message(
   val pending: Boolean = false,
   /** True when the local write was rejected and needs a retry. */
   val failed: Boolean = false,
-  /** "text", "image", "file" or "voice". */
+  /** "text", "image", "file", "voice", "video", "contact", "poll" or "system". */
   val kind: String = "text",
   val media: Media? = null,
   /** A copy forwarded from another chat (Phase 1.6). */
@@ -72,6 +72,8 @@ data class Message(
   /** Disappearing messages: when the server will delete it; null when the chat has no timer. */
   val expiresAt: Long? = null,
   val poll: Poll? = null,
+  /** A shared contact card (kind "contact"). */
+  val contact: ContactCard? = null,
 )
 
 enum class DeliveryState { SENDING, SENT, DELIVERED, READ, FAILED }

@@ -11,6 +11,8 @@ sealed interface PinnedPreview {
   data class File(val name: String) : PinnedPreview
   data object Voice : PinnedPreview
   data class Poll(val question: String) : PinnedPreview
+  data class Video(val caption: String) : PinnedPreview
+  data class Contact(val name: String) : PinnedPreview
   /** The message is not on this device yet, or this person cannot read it. */
   data object Unavailable : PinnedPreview
 }
@@ -62,6 +64,8 @@ object PinnedMessages {
       "file" -> PinnedPreview.File(message.media?.name.orEmpty())
       "voice" -> PinnedPreview.Voice
       "poll" -> PinnedPreview.Poll(oneLine(message.poll?.question.orEmpty()))
+      "video" -> PinnedPreview.Video(oneLine(message.text))
+      "contact" -> PinnedPreview.Contact(oneLine(message.contact?.name.orEmpty()))
       else -> PinnedPreview.Unavailable
     }
   }

@@ -17,6 +17,8 @@ import com.samvad.messenger.data.NetworkMonitor
 import com.samvad.messenger.data.SafetyRepository
 import com.samvad.messenger.data.SavedNamesRepository
 import com.samvad.messenger.data.TwoStepRepository
+import com.samvad.messenger.data.search.SearchIndexer
+import com.samvad.messenger.data.search.SearchRepository
 import com.samvad.messenger.push.PushTokens
 import com.samvad.messenger.security.AppLock
 import kotlinx.coroutines.CoroutineScope
@@ -49,6 +51,9 @@ class AppContainer(context: Context) {
   val groups: GroupRepository? = firebase?.let { GroupRepository(it.functions) }
   val status: StatusRepository? = firebase?.let { StatusRepository(it.db, it.storage) }
   val push = PushTokens(enabled = firebase != null && !com.samvad.messenger.BuildConfig.USE_EMULATORS)
+  /** Local, on-device message search index (Room/FTS). Never uploaded; cleared on sign-out and account deletion. */
+  val searchIndexer = SearchIndexer(context)
+  val searchRepo = SearchRepository(context)
 
   val isConfigured: Boolean get() = firebase != null
 

@@ -37,6 +37,10 @@ internal fun pinnedPreviewText(preview: PinnedPreview): String = when (preview) 
   PinnedPreview.Voice -> stringResource(R.string.pinmsg_voice)
   is PinnedPreview.Poll ->
     if (preview.question.isBlank()) stringResource(R.string.pinmsg_unavailable) else stringResource(R.string.pinmsg_poll, preview.question)
+  is PinnedPreview.Video ->
+    if (preview.caption.isBlank()) stringResource(R.string.pinmsg_video) else stringResource(R.string.pinmsg_video_caption, preview.caption)
+  is PinnedPreview.Contact ->
+    if (preview.name.isBlank()) stringResource(R.string.pinmsg_unavailable) else stringResource(R.string.pinmsg_contact, preview.name)
   PinnedPreview.Unavailable -> stringResource(R.string.pinmsg_unavailable)
 }
 

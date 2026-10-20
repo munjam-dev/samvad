@@ -4,7 +4,7 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 
 enum class MediaKind(val wire: String) {
-  IMAGE("image"), FILE("file"), VOICE("voice");
+  IMAGE("image"), FILE("file"), VOICE("voice"), VIDEO("video");
 
   companion object {
     fun fromWire(value: String?): MediaKind? = entries.firstOrNull { it.wire == value }
@@ -21,6 +21,8 @@ data class Media(
   val height: Int? = null,
   val durationMs: Long? = null,
   val waveform: List<Int> = emptyList(),
+  /** Videos only: Storage path of the small JPEG poster frame (thumb.jpg in the same folder). */
+  val thumbPath: String? = null,
 )
 
 /** Client-side mirror of the Storage/Firestore media rules, so users get instant, clear errors. */
@@ -31,6 +33,7 @@ object MediaRules {
   const val WAVEFORM_BARS = 48
   const val WAVEFORM_MAX = 31
   const val MAX_VOICE_MS = 15 * 60 * 1000L
+  const val VIDEO_MIME = "video/mp4"
 
   private val documentTypes = setOf(
     "application/pdf",
@@ -53,6 +56,7 @@ object MediaRules {
     MediaKind.IMAGE -> mime in imageTypes
     MediaKind.VOICE -> mime in voiceTypes
     MediaKind.FILE -> mime in documentTypes || mime in imageTypes
+    MediaKind.VIDEO -> mime == VIDEO_MIME
   }
 
   fun isWithinLimit(size: Long): Boolean = size in 1..MAX_BYTES
