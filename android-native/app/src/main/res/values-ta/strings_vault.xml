@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Personal Vault (Phase 4). Local only: nothing here may promise cloud backup or end-to-end encryption of chats. -->
+<resources>
+    <string name="vault_title">தனிப்பட்ட வால்ட்</string>
+
+    <!-- Gate -->
+    <string name="vault_prompt_title">உங்கள் வால்ட்டைத் திறக்கவும்</string>
+    <string name="vault_prompt_subtitle">நீங்கள்தான் என உறுதிசெய்யுங்கள்</string>
+    <string name="vault_locked_title">உங்கள் வால்ட் பூட்டப்பட்டுள்ளது</string>
+    <string name="vault_locked_body">உங்கள் ஆவணங்கள், போட்டோக்கள், குறிப்புகளைத் திறக்க கைரேகை, முகம் அல்லது ஸ்கிரீன் லாக் மூலம் நீங்கள்தான் என உறுதிசெய்யுங்கள்.</string>
+    <string name="vault_unlock">வால்ட்டைத் திற</string>
+    <string name="vault_no_screen_lock_title">முதலில் ஸ்கிரீன் லாக் அமையுங்கள்</string>
+    <string name="vault_no_screen_lock_body">கைரேகை, முகம் அல்லது ஸ்கிரீன் லாக் மூலம் மட்டுமே வால்ட் திறக்கும். உங்கள் போனின் அமைப்புகளில் ஒன்றைச் சேர்த்துவிட்டு மீண்டும் வாருங்கள்.</string>
+    <string name="vault_key_lost_title">வால்ட்டைத் திறக்க முடியவில்லை</string>
+    <string name="vault_key_lost_body">வால்ட்டுக்கான இந்த போனின் பாதுகாப்பு கீ இல்லாமல் போய்விட்டது. ஃபேக்டரி ரீசெட் அல்லது போனின் பாதுகாப்பு மாற்றத்துக்குப் பிறகு இப்படி நடக்கலாம். சேமித்த பொருட்களை இனி படிக்க முடியாது. வால்ட்டை அழித்துவிட்டு புதிதாகத் தொடங்கலாம்.</string>
+    <string name="vault_erase">வால்ட்டை அழி</string>
+    <string name="vault_erase_title">முழு வால்ட்டையும் அழிக்கவா?</string>
+    <string name="vault_erase_body">வால்ட்டில் உள்ள அனைத்தும் இந்த போனிலிருந்து நீக்கப்படும். இதைத் திரும்பப் பெற முடியாது.</string>
+    <string name="vault_erase_confirm">அனைத்தையும் அழி</string>
+    <string name="vault_opening">வால்ட் திறக்கிறது</string>
+
+    <!-- List -->
+    <plurals name="vault_item_count">
+        <item quantity="one">%d பொருள்</item>
+        <item quantity="other">%d பொருட்கள்</item>
+    </plurals>
+    <string name="vault_search_hint">தலைப்பால் தேடுங்கள்</string>
+    <string name="vault_search_clear">தேடலை அழி</string>
+    <string name="vault_type_photo">போட்டோ</string>
+    <string name="vault_type_document">ஆவணம்</string>
+    <string name="vault_type_note">குறிப்பு</string>
+    <string name="vault_type_id_copy">அடையாள நகல்</string>
+    <string name="vault_type_photos">போட்டோக்கள்</string>
+    <string name="vault_type_documents">ஆவணங்கள்</string>
+    <string name="vault_type_notes">குறிப்புகள்</string>
+    <string name="vault_type_id_copies">அடையாள நகல்கள்</string>
+    <string name="vault_empty_title">இங்கே இன்னும் எதுவும் இல்லை</string>
+    <string name="vault_empty_body">ஆவணங்கள், போட்டோக்கள், குறிப்புகள், அடையாள அட்டை நகல்களை இங்கே வைத்துக்கொள்ளுங்கள். அவை என்கிரிப்ட் செய்யப்பட்டு இந்த போனிலேயே மட்டும் இருக்கும்.</string>
+    <string name="vault_no_results_title">பொருத்தம் எதுவும் இல்லை</string>
+    <string name="vault_no_results_body">வேறு வார்த்தையை முயலுங்கள், அல்லது ஃபில்டர்களை அழியுங்கள்.</string>
+    <string name="vault_clear_filters">ஃபில்டர்களை அழி</string>
+    <string name="vault_item_meta">%1$s · %2$s</string>
+
+    <!-- Menu and add -->
+    <string name="vault_add">வால்ட்டில் சேர்</string>
+    <string name="vault_add_photo">போட்டோ</string>
+    <string name="vault_add_photo_body">கேலரியிலிருந்து போட்டோவைத் தேர்ந்தெடுங்கள்</string>
+    <string name="vault_add_document">ஆவணம்</string>
+    <string name="vault_add_document_body">PDF அல்லது வேறு கோப்பைத் தேர்ந்தெடுங்கள்</string>
+    <string name="vault_add_id">அடையாள நகல்</string>
+    <string name="vault_add_id_body">அடையாள அட்டையின் போட்டோ அல்லது PDF</string>
+    <string name="vault_add_note">குறிப்பு</string>
+    <string name="vault_add_note_body">தனிப்பட்ட குறிப்பு எழுதுங்கள்</string>
+    <string name="vault_lock_now">இப்போதே பூட்டு</string>
+    <string name="vault_about">இந்த வால்ட் பற்றி</string>
+    <string name="vault_about_body">பொருட்கள் இந்த போனிலேயே என்கிரிப்ட் செய்யப்படுகின்றன. அதற்கான கீ போனின் பாதுகாப்பான கீ ஸ்டோரில் வைக்கப்படுகிறது. எதுவும் அப்லோடு ஆவதில்லை, வால்ட் பேக்கப்களிலோ போனிலிருந்து போனுக்கு மாற்றுவதிலோ சேராது. இந்த போனை இழந்தால், பொருட்களும் இழக்கப்படும்.</string>
+    <string name="vault_protection_strongbox">கீ பாதுகாப்பு: பிரத்யேக பாதுகாப்புச் சிப்</string>
+    <string name="vault_protection_hardware">கீ பாதுகாப்பு: பாதுகாப்பான ஹார்டுவேர்</string>
+    <string name="vault_protection_software">கீ பாதுகாப்பு: சாஃப்ட்வேர் மட்டும். இந்த போனில் கீகளுக்கான பாதுகாப்பான ஹார்டுவேர் இல்லை.</string>
+    <string name="vault_protection_unknown">கீ பாதுகாப்பு: இன்னும் சரிபார்க்கப்படவில்லை</string>
+    <string name="vault_close">மூடு</string>
+
+    <!-- Item actions -->
+    <string name="vault_item_options">%1$s க்கான விருப்பங்கள்</string>
+    <string name="vault_rename">பெயர் மாற்று</string>
+    <string name="vault_rename_title">பொருளின் பெயரை மாற்று</string>
+    <string name="vault_title_label">தலைப்பு</string>
+    <string name="vault_delete">நீக்கு</string>
+    <string name="vault_delete_title">இந்தப் பொருளை நீக்கவா?</string>
+    <string name="vault_delete_body">\"%1$s\" வால்ட்டிலிருந்து நீக்கப்படும், திரும்பப் பெற முடியாது.</string>
+    <string name="vault_export">நகலைச் சேமி</string>
+    <string name="vault_export_title">வால்ட்டுக்கு வெளியே நகலைச் சேமிக்கவா?</string>
+    <string name="vault_export_body">நகல் என்கிரிப்ட் செய்யப்படாது. நீங்கள் தேர்ந்தெடுக்கும் இடத்தைத் திறக்கக்கூடிய யாரும் அதைப் படிக்கலாம்.</string>
+    <string name="vault_export_choose">சேமிக்கும் இடத்தைத் தேர்ந்தெடுங்கள்</string>
+    <string name="vault_open_title">வேறு ஆப்பில் திறக்கவா?</string>
+    <string name="vault_open_body">மற்ற ஆப்புக்காகப் படிக்கக்கூடிய தற்காலிக நகல் உருவாக்கப்படும். நீங்கள் திரும்பி வந்ததும் Samvad அதை நீக்கிவிடும், ஆனால் மற்ற ஆப் தனது நகலை வைத்திருக்கலாம்.</string>
+    <string name="vault_open">திற</string>
+    <string name="vault_open_failed">இந்த போனில் இந்தக் கோப்பைத் திறக்கும் ஆப் இல்லை. அதற்குப் பதிலாக நகலைச் சேமிக்கலாம்.</string>
+    <string name="vault_open_unsupported">இந்த வகைக் கோப்பை வால்ட்டிலிருந்து திறக்க முடியாது. அதற்குப் பதிலாக நகலைச் சேமிக்கலாம்.</string>
+    <string name="vault_image_failed">இந்தப் படத்தைக் காட்ட முடியவில்லை. அதற்குப் பதிலாக நகலைச் சேமிக்கலாம்.</string>
+    <string name="vault_image_cd">%1$s, படம்</string>
+    <string name="vault_missing">இந்தப் பொருள் இனி வால்ட்டில் இல்லை.</string>
+
+    <!-- Notes -->
+    <string name="vault_note_new">புதிய குறிப்பு</string>
+    <string name="vault_note_title_hint">தலைப்பு</string>
+    <string name="vault_note_body_hint">உங்கள் குறிப்பை எழுதுங்கள்</string>
+    <string name="vault_note_untitled">தலைப்பில்லா குறிப்பு</string>
+    <string name="vault_note_discard_title">சேமிக்காமல் வெளியேறவா?</string>
+    <string name="vault_note_discard_body">இந்தக் குறிப்பில் நீங்கள் செய்த மாற்றங்கள் இழக்கப்படும்.</string>
+    <string name="vault_note_discard_confirm">வெளியேறு</string>
+    <string name="vault_note_keep_editing">தொடர்ந்து திருத்து</string>
+    <string name="vault_default_title">இறக்குமதி செய்த பொருள்</string>
+
+    <!-- Messages -->
+    <string name="vault_added">வால்ட்டில் சேர்க்கப்பட்டது</string>
+    <string name="vault_exported">நகல் சேமிக்கப்பட்டது</string>
+    <string name="vault_deleted">நீக்கப்பட்டது</string>
+    <string name="vault_note_saved">குறிப்பு சேமிக்கப்பட்டது</string>
+    <string name="vault_error_locked">வால்ட் பூட்டப்பட்டது. திறந்து மீண்டும் முயலுங்கள்.</string>
+    <string name="vault_error_too_large">இது மிகவும் பெரியது. கோப்புக்கு 100 MB, குறிப்புக்கு 100,000 எழுத்துகள் வரை மட்டுமே.</string>
+    <string name="vault_error_empty">அந்தக் கோப்பு காலியாக உள்ளது.</string>
+    <string name="vault_error_unreadable">அதைப் படிக்க முடியவில்லை. அது மாற்றப்பட்டிருக்கலாம் அல்லது சேதமடைந்திருக்கலாம்.</string>
+    <string name="vault_error_failed">அது செயல்படவில்லை. மீண்டும் முயலுங்கள்.</string>
+</resources>

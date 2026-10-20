@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Phase 5: media on weak networks. Photo preview before sending. -->
+    <string name="media2_preview_title">போட்டோ அனுப்பு</string>
+    <string name="media2_preview_photo_cd">அனுப்ப வேண்டிய போட்டோ</string>
+    <string name="media2_preview_send">அனுப்பு</string>
+    <string name="media2_original_quality">அசல் தரம்</string>
+    <string name="media2_original_quality_body">முழு அளவு போட்டோவை அனுப்பும். அதிக டேட்டா செலவாகும், மெதுவான இணைப்பில் நேரம் ஆகலாம். இருப்பிட விவரங்கள் எப்போதும் நீக்கப்படும்.</string>
+    <string name="media2_photo_size">போட்டோ அளவு: %1$s</string>
+    <string name="media2_photo_large_hint">இந்த போட்டோ 16 MB ஐ விடப் பெரியது, அதனால் பொருந்துவதற்காக சிறிதாக்கப்படலாம்.</string>
+    <string name="media2_photo_reduced_quality">போட்டோ முழுத் தரத்தில் அனுப்ப மிகவும் பெரியதாக இருந்தது, அதனால் சற்று குறைந்த தரத்தில் அனுப்பப்பட்டது.</string>
+    <string name="media2_photo_reduced_size">போட்டோ அசல் அளவில் அனுப்ப மிகவும் பெரியதாக இருந்தது, அதனால் சிறிதாக்கி அனுப்பப்பட்டது.</string>
+
+    <!-- Outgoing attachments. -->
+    <string name="media2_sending">அனுப்புகிறது…</string>
+    <string name="media2_sending_percent">அனுப்புகிறது… %1$d%%</string>
+    <string name="media2_waiting_network">நெட்வொர்க்குக்காகக் காத்திருக்கிறது…</string>
+    <string name="media2_waiting_retry">சிறிது நேரத்தில் மீண்டும் முயலும்…</string>
+    <string name="media2_send_failed">அனுப்ப முடியவில்லை</string>
+    <string name="media2_cd_cancel_sending">%1$s அனுப்புவதை ரத்து செய்</string>
+    <string name="media2_cd_retry_sending">%1$s ஐ மீண்டும் அனுப்பு</string>
+
+    <!-- Downloads. -->
+    <string name="media2_downloading">டவுன்லோடு ஆகிறது…</string>
+    <string name="media2_downloading_percent">டவுன்லோடு ஆகிறது… %1$d%%</string>
+    <string name="media2_download_progress">%2$s இல் %1$s</string>
+    <string name="media2_download_failed">டவுன்லோடு செய்ய முடியவில்லை</string>
+    <string name="media2_cd_cancel_download">டவுன்லோடை ரத்து செய்</string>
+    <string name="media2_cd_retry_download">டவுன்லோடை மீண்டும் முயற்சி செய்</string>
+    <string name="media2_file_download">டவுன்லோடு · %1$s</string>
+    <string name="media2_file_open">%1$s · திறக்கத் தட்டுங்கள்</string>
+    <string name="media2_cd_download_file">%1$s ஐ டவுன்லோடு செய்</string>
+    <string name="media2_cd_open_file">%1$s ஐத் திற</string>
+
+    <!-- Network hints in a chat. -->
+    <string name="media2_waiting_network_banner">நெட்வொர்க்குக்காகக் காத்திருக்கிறது. மீண்டும் ஆன்லைனில் வந்ததும் செய்திகள் அனுப்பப்படும்.</string>
+    <string name="media2_data_saver_hint">இந்த இணைப்பு மெதுவாகவோ குறைவாகவோ தெரிகிறது. டேட்டா சேமிப்பு சிறிய போட்டோக்களை அனுப்பும், டவுன்லோடு செய்ய Wi-Fi க்காகக் காத்திருக்கும்.</string>
+    <string name="media2_data_saver_turn_on">ஆன் செய்</string>
+    <string name="media2_data_saver_not_now">இப்போது வேண்டாம்</string>
+</resources>
