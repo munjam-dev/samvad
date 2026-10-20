@@ -13,7 +13,10 @@ import com.samvad.messenger.data.GroupRepository
 import com.samvad.messenger.data.PreferencesRepository
 import com.samvad.messenger.data.PresenceRepository
 import com.samvad.messenger.data.MediaRepository
+import com.samvad.messenger.data.MediaDownloads
+import com.samvad.messenger.data.NetworkHints
 import com.samvad.messenger.data.NetworkMonitor
+import com.samvad.messenger.data.PendingUploadManager
 import com.samvad.messenger.data.SafetyRepository
 import com.samvad.messenger.data.SavedNamesRepository
 import com.samvad.messenger.data.TwoStepRepository
@@ -43,6 +46,11 @@ class AppContainer(context: Context) {
   val chats: ChatRepository? = firebase?.let { ChatRepository(it.db) }
   val presence: PresenceRepository? = firebase?.let { PresenceRepository(it.rtdb) }
   val media: MediaRepository? = firebase?.let { MediaRepository(context, it.storage) }
+  val downloads: MediaDownloads? = media?.let { MediaDownloads(it) }
+  val networkHints = NetworkHints(context)
+  val pendingUploads: PendingUploadManager? = firebase?.let { fb ->
+    PendingUploadManager(context, media!!, chats!!, network) { fb.auth.currentUser?.uid }
+  }
   val contacts: ContactsRepository? = firebase?.let { ContactsRepository(context, it.functions) }
   val savedNames: SavedNamesRepository? = contacts?.let { SavedNamesRepository(context, it) }
   val safety: SafetyRepository? = firebase?.let { SafetyRepository(it.db, it.functions) }

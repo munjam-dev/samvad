@@ -115,6 +115,7 @@ class SessionViewModel(private val container: AppContainer) : ViewModel() {
     container.scamPrefs.clear()
     container.chatThemes.clear()
     container.drafts.clearAll()
+    container.pendingUploads?.discardAll()
     container.chats?.useNames(null, SavedNames())
     container.push.forgetToken()
     container.auth?.signOut()

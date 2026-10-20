@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.net.Uri
 import androidx.exifinterface.media.ExifInterface
+import com.samvad.core.media.ImageQuality
 import com.samvad.core.media.MediaRules
 
 /**
@@ -15,11 +16,18 @@ import com.samvad.core.media.MediaRules
  */
 internal object ImageCodec {
   /** At most about [maxEdgePx] on the long edge (power-of-two sampling), rotated as the tag says. */
-  fun decodeUpright(resolver: ContentResolver, uri: Uri, maxEdgePx: Int): Bitmap? {
+  fun decodeUpright(resolver: ContentResolver, uri: Uri, maxEdgePx: Int): Bitmap? =
+    decode(resolver, uri) { w, h -> MediaRules.sampleSize(w, h, maxEdgePx) }
+
+  /** Full size unless that would be over [maxPixels]; then a power-of-two fraction of it. For original quality. */
+  fun decodeUprightWithin(resolver: ContentResolver, uri: Uri, maxPixels: Long): Bitmap? =
+    decode(resolver, uri) { w, h -> ImageQuality.decodeSampleSize(w, h, maxPixels) }
+
+  private fun decode(resolver: ContentResolver, uri: Uri, sampleFor: (Int, Int) -> Int): Bitmap? {
     val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
     resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
     if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
-    val opts = BitmapFactory.Options().apply { inSampleSize = MediaRules.sampleSize(bounds.outWidth, bounds.outHeight, maxEdgePx) }
+    val opts = BitmapFactory.Options().apply { inSampleSize = sampleFor(bounds.outWidth, bounds.outHeight) }
     val decoded = resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, opts) } ?: return null
     val orientation = runCatching {
       resolver.openInputStream(uri)?.use { ExifInterface(it).getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL) }

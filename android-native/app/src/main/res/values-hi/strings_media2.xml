@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Phase 5: media on weak networks. Photo preview before sending. -->
+    <string name="media2_preview_title">फ़ोटो भेजें</string>
+    <string name="media2_preview_photo_cd">भेजी जाने वाली फ़ोटो</string>
+    <string name="media2_preview_send">भेजें</string>
+    <string name="media2_original_quality">मूल गुणवत्ता</string>
+    <string name="media2_original_quality_body">पूरे आकार की फ़ोटो भेजता है। इसमें ज़्यादा डेटा लगता है और धीमे कनेक्शन पर समय लग सकता है। लोकेशन की जानकारी हमेशा हटा दी जाती है।</string>
+    <string name="media2_photo_size">फ़ोटो का आकार: %1$s</string>
+    <string name="media2_photo_large_hint">यह फ़ोटो 16 MB से बड़ी है, इसलिए भेजने के लिए इसे छोटा किया जा सकता है।</string>
+    <string name="media2_photo_reduced_quality">फ़ोटो पूरी गुणवत्ता में भेजने के लिए बहुत बड़ी थी, इसलिए इसे थोड़ी कम गुणवत्ता में भेजा गया।</string>
+    <string name="media2_photo_reduced_size">फ़ोटो अपने मूल आकार में भेजने के लिए बहुत बड़ी थी, इसलिए इसे छोटे आकार में भेजा गया।</string>
+
+    <!-- Outgoing attachments. -->
+    <string name="media2_sending">भेजा जा रहा है…</string>
+    <string name="media2_sending_percent">भेजा जा रहा है… %1$d%%</string>
+    <string name="media2_waiting_network">नेटवर्क का इंतज़ार है…</string>
+    <string name="media2_waiting_retry">थोड़ी देर में फिर कोशिश होगी…</string>
+    <string name="media2_send_failed">भेजा नहीं जा सका</string>
+    <string name="media2_cd_cancel_sending">%1$s भेजना रद्द करें</string>
+    <string name="media2_cd_retry_sending">%1$s फिर से भेजें</string>
+
+    <!-- Downloads. -->
+    <string name="media2_downloading">डाउनलोड हो रहा है…</string>
+    <string name="media2_downloading_percent">डाउनलोड हो रहा है… %1$d%%</string>
+    <string name="media2_download_progress">%2$s में से %1$s</string>
+    <string name="media2_download_failed">डाउनलोड नहीं हो सका</string>
+    <string name="media2_cd_cancel_download">डाउनलोड रद्द करें</string>
+    <string name="media2_cd_retry_download">डाउनलोड फिर से करें</string>
+    <string name="media2_file_download">डाउनलोड करें · %1$s</string>
+    <string name="media2_file_open">%1$s · खोलने के लिए टैप करें</string>
+    <string name="media2_cd_download_file">%1$s डाउनलोड करें</string>
+    <string name="media2_cd_open_file">%1$s खोलें</string>
+
+    <!-- Network hints in a chat. -->
+    <string name="media2_waiting_network_banner">नेटवर्क का इंतज़ार है। इंटरनेट वापस आने पर संदेश भेजे जाएँगे।</string>
+    <string name="media2_data_saver_hint">यह कनेक्शन धीमा या सीमित लग रहा है। डेटा सेवर छोटी फ़ोटो भेजता है और फ़ोटो डाउनलोड करने के लिए Wi-Fi का इंतज़ार करता है।</string>
+    <string name="media2_data_saver_turn_on">चालू करें</string>
+    <string name="media2_data_saver_not_now">अभी नहीं</string>
+</resources>

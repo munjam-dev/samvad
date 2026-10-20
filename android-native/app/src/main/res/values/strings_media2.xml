@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Phase 5: media on weak networks. Photo preview before sending. -->
+    <string name="media2_preview_title">Send photo</string>
+    <string name="media2_preview_photo_cd">Photo to send</string>
+    <string name="media2_preview_send">Send</string>
+    <string name="media2_original_quality">Original quality</string>
+    <string name="media2_original_quality_body">Sends the full-size photo. It uses more data and can take longer on a slow connection. Location details are always removed.</string>
+    <string name="media2_photo_size">Photo size: %1$s</string>
+    <string name="media2_photo_large_hint">This photo is larger than 16 MB, so it may be made smaller to fit.</string>
+    <string name="media2_photo_reduced_quality">The photo was too large to send at full quality, so it was sent at slightly lower quality.</string>
+    <string name="media2_photo_reduced_size">The photo was too large to send at its original size, so it was sent smaller.</string>
+
+    <!-- Outgoing attachments. -->
+    <string name="media2_sending">Sending…</string>
+    <string name="media2_sending_percent">Sending… %1$d%%</string>
+    <string name="media2_waiting_network">Waiting for network…</string>
+    <string name="media2_waiting_retry">Will try again soon…</string>
+    <string name="media2_send_failed">Couldn\'t send</string>
+    <string name="media2_cd_cancel_sending">Cancel sending %1$s</string>
+    <string name="media2_cd_retry_sending">Retry sending %1$s</string>
+
+    <!-- Downloads. -->
+    <string name="media2_downloading">Downloading…</string>
+    <string name="media2_downloading_percent">Downloading… %1$d%%</string>
+    <string name="media2_download_progress">%1$s of %2$s</string>
+    <string name="media2_download_failed">Couldn\'t download</string>
+    <string name="media2_cd_cancel_download">Cancel download</string>
+    <string name="media2_cd_retry_download">Retry download</string>
+    <string name="media2_file_download">Download · %1$s</string>
+    <string name="media2_file_open">%1$s · Tap to open</string>
+    <string name="media2_cd_download_file">Download %1$s</string>
+    <string name="media2_cd_open_file">Open %1$s</string>
+
+    <!-- Network hints in a chat. -->
+    <string name="media2_waiting_network_banner">Waiting for network. Messages will send when you\'re back online.</string>
+    <string name="media2_data_saver_hint">This connection looks slow or limited. Data saver sends smaller photos and waits for Wi-Fi before downloading them.</string>
+    <string name="media2_data_saver_turn_on">Turn on</string>
+    <string name="media2_data_saver_not_now">Not now</string>
+</resources>

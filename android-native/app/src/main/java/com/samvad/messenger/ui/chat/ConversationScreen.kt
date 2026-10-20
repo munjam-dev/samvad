@@ -234,6 +234,20 @@ fun ConversationScreen(
   }
   val copied = stringResource(R.string.chat_copied)
   val uploads = vm.uploads.collectAsStateWithLifecycle().value
+  // Phase 5: photo preview with "Original quality", downloads with progress, network hints.
+  var previewUri by rememberSaveable { mutableStateOf<android.net.Uri?>(null) }
+  val downloadMap = vm.downloads.collectAsStateWithLifecycle()
+  val deviceOffline = rememberDeviceOffline(vm.network)
+  val photoReduced = vm.photoReduced.collectAsStateWithLifecycle().value
+  val reducedText = photoReduced?.let {
+    stringResource(if (it == com.samvad.core.media.ImageQuality.Outcome.LOWER_QUALITY) R.string.media2_photo_reduced_quality else R.string.media2_photo_reduced_size)
+  }
+  LaunchedEffect(reducedText) {
+    if (reducedText != null) {
+      vm.clearPhotoReduced()
+      snackbar.showSnackbar(reducedText)
+    }
+  }
   val recording = vm.recorder.state.collectAsStateWithLifecycle().value
   val playback = vm.player.state.collectAsStateWithLifecycle().value
   val mediaError = vm.mediaError.collectAsStateWithLifecycle().value
@@ -327,7 +341,7 @@ fun ConversationScreen(
       }
     }
   }
-  val pickPhoto = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri -> uri?.let(vm::sendImage) }
+  val pickPhoto = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri -> if (uri != null) previewUri = uri }
   val pickDocument = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let(vm::sendDocument) }
   val micPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
     if (granted) vm.startRecording() else vm.reportMediaError(MediaError.OPEN)
@@ -557,7 +571,14 @@ fun ConversationScreen(
         }
       }
       HorizontalDivider(color = colors.outlineVariant)
-      StatusBanner(state.offline, stringResource(R.string.home_offline))
+      StatusBanner(state.offline && !deviceOffline, stringResource(R.string.home_offline))
+      ChatNetworkBanners(
+        deviceOffline = deviceOffline,
+        network = vm.network,
+        dataSaverOn = vm.dataSaverOn.collectAsStateWithLifecycle().value,
+        hintAnswered = vm.dataSaverHintAnswered.collectAsStateWithLifecycle().value,
+        onAnswerHint = vm::answerDataSaverHint,
+      )
       StatusBanner(state.error, stringResource(R.string.home_load_error), isError = true, actionLabel = stringResource(R.string.retry), onAction = vm::retryLoad)
 
       if (pinnedBanner != null) PinnedBannerBar(pinnedBanner, onClick = { vm.bannerTapped()?.let { jumpTo = it } })
@@ -618,9 +639,25 @@ fun ConversationScreen(
                     val media = item.message.media
                     if (media != null) {
                       when (item.message.kind) {
-                        "image" -> MediaImage(media, vm::bitmap, autoLoad = autoLoadPhotos, isCached = vm::isCached) { if (selecting) toggle() else viewing = media.path }
+                        "image" -> MediaImage(
+                          media, vm::bitmap,
+                          autoLoad = autoLoadPhotos,
+                          isCached = vm::isCached,
+                          downloadState = { downloadMap.value[it] },
+                          onDownload = vm::startDownload,
+                          onCancelDownload = vm::cancelDownload,
+                        ) { if (selecting) toggle() else viewing = media.path }
                         "voice" -> VoiceNote(item.message.id, media, playback, item.mine) { if (selecting) toggle() else vm.togglePlayback(item.message) }
-                        else -> FileCard(media) { if (selecting) toggle() else openFile(media) }
+                        else -> {
+                          val fileState = downloadMap.value[media.path]
+                          FileCard(
+                            media,
+                            cached = remember(media.path, fileState) { vm.isCached(media.path) },
+                            download = fileState,
+                            onDownload = { vm.startDownload(media.path, media.size) },
+                            onCancelDownload = { vm.cancelDownload(media.path) },
+                          ) { if (selecting) toggle() else openFile(media) }
+                        }
                       }
                     }
                     val poll = item.message.poll
@@ -706,6 +743,14 @@ fun ConversationScreen(
     }
   }
   viewing?.let { path -> MediaViewer(path, vm::bitmap) { viewing = null } }
+  previewUri?.let { uri ->
+    PhotoSendPreview(
+      load = { vm.photoPreview(uri) },
+      sourceSize = { vm.photoSourceSize(uri) },
+      onSend = { original -> previewUri = null; vm.sendImage(uri, original) },
+      onCancel = { previewUri = null },
+    )
+  }
 
   if (scheduling) {
     ModalBottomSheet(onDismissRequest = { scheduling = false }) {
