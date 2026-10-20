@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Personal Vault (Phase 4). Local only: nothing here may promise cloud backup or end-to-end encryption of chats. -->
+<resources>
+    <string name="vault_title">ప్రైవేట్ వాల్ట్</string>
+
+    <!-- Gate -->
+    <string name="vault_prompt_title">మీ వాల్ట్ తెరవండి</string>
+    <string name="vault_prompt_subtitle">మీరేనని నిర్ధారించండి</string>
+    <string name="vault_locked_title">మీ వాల్ట్ లాక్ అయి ఉంది</string>
+    <string name="vault_locked_body">మీ డాక్యుమెంట్‌లు, ఫోటోలు, నోట్‌లు తెరవడానికి వేలిముద్ర, ఫేస్ లేదా స్క్రీన్ లాక్‌తో మీరేనని నిర్ధారించండి.</string>
+    <string name="vault_unlock">వాల్ట్ అన్‌లాక్ చేయండి</string>
+    <string name="vault_no_screen_lock_title">ముందు స్క్రీన్ లాక్ సెట్ చేయండి</string>
+    <string name="vault_no_screen_lock_body">వాల్ట్ మీ వేలిముద్ర, ఫేస్ లేదా స్క్రీన్ లాక్‌తో మాత్రమే తెరుచుకుంటుంది. మీ ఫోన్ సెట్టింగ్‌లలో ఒకటి జోడించి, తిరిగి రండి.</string>
+    <string name="vault_key_lost_title">వాల్ట్ తెరవడం కుదరదు</string>
+    <string name="vault_key_lost_body">వాల్ట్ కోసం ఈ ఫోన్‌లోని సురక్షిత కీ పోయింది. ఫ్యాక్టరీ రీసెట్ తర్వాత లేదా ఫోన్ భద్రతలో మార్పు చేస్తే ఇలా జరగవచ్చు. సేవ్ చేసిన అంశాలను ఇక చదవలేరు. మీరు వాల్ట్‌ను తొలగించి కొత్తగా మొదలుపెట్టవచ్చు.</string>
+    <string name="vault_erase">వాల్ట్ తొలగించండి</string>
+    <string name="vault_erase_title">మొత్తం వాల్ట్ తొలగించాలా?</string>
+    <string name="vault_erase_body">వాల్ట్‌లోని ప్రతిదీ ఈ ఫోన్ నుండి తొలగించబడుతుంది. దీన్ని వెనక్కి తీసుకోలేరు.</string>
+    <string name="vault_erase_confirm">అన్నీ తొలగించండి</string>
+    <string name="vault_opening">వాల్ట్ తెరుస్తోంది</string>
+
+    <!-- List -->
+    <plurals name="vault_item_count">
+        <item quantity="one">%d అంశం</item>
+        <item quantity="other">%d అంశాలు</item>
+    </plurals>
+    <string name="vault_search_hint">టైటిల్‌తో వెతకండి</string>
+    <string name="vault_search_clear">వెతుకుడు క్లియర్ చేయండి</string>
+    <string name="vault_type_photo">ఫోటో</string>
+    <string name="vault_type_document">డాక్యుమెంట్</string>
+    <string name="vault_type_note">నోట్</string>
+    <string name="vault_type_id_copy">ID కాపీ</string>
+    <string name="vault_type_photos">ఫోటోలు</string>
+    <string name="vault_type_documents">డాక్యుమెంట్‌లు</string>
+    <string name="vault_type_notes">నోట్‌లు</string>
+    <string name="vault_type_id_copies">ID కాపీలు</string>
+    <string name="vault_empty_title">ఇంకా ఏమీ లేదు</string>
+    <string name="vault_empty_body">డాక్యుమెంట్‌లు, ఫోటోలు, నోట్‌లు, మీ IDల కాపీలను ఇక్కడ భద్రపరచండి. అవి ఎన్‌క్రిప్ట్ అయి, ఈ ఫోన్‌లో మాత్రమే ఉంటాయి.</string>
+    <string name="vault_no_results_title">ఏమీ దొరకలేదు</string>
+    <string name="vault_no_results_body">వేరే పదం ప్రయత్నించండి, లేదా ఫిల్టర్‌లను క్లియర్ చేయండి.</string>
+    <string name="vault_clear_filters">ఫిల్టర్‌లు క్లియర్ చేయండి</string>
+    <string name="vault_item_meta">%1$s · %2$s</string>
+
+    <!-- Menu and add -->
+    <string name="vault_add">వాల్ట్‌కు జోడించండి</string>
+    <string name="vault_add_photo">ఫోటో</string>
+    <string name="vault_add_photo_body">గ్యాలరీ నుండి ఫోటో ఎంచుకోండి</string>
+    <string name="vault_add_document">డాక్యుమెంట్</string>
+    <string name="vault_add_document_body">PDF లేదా వేరే ఫైల్ ఎంచుకోండి</string>
+    <string name="vault_add_id">ID కాపీ</string>
+    <string name="vault_add_id_body">ID కార్డ్ ఫోటో లేదా PDF</string>
+    <string name="vault_add_note">నోట్</string>
+    <string name="vault_add_note_body">ప్రైవేట్ నోట్ రాయండి</string>
+    <string name="vault_lock_now">ఇప్పుడే లాక్ చేయండి</string>
+    <string name="vault_about">ఈ వాల్ట్ గురించి</string>
+    <string name="vault_about_body">అంశాలు ఈ ఫోన్‌లో, ఫోన్ సురక్షిత కీ స్టోర్‌లో ఉంచిన కీతో ఎన్‌క్రిప్ట్ అవుతాయి. ఏదీ అప్‌లోడ్ కాదు, వాల్ట్ బ్యాకప్‌లలో లేదా ఫోన్ నుండి ఫోన్‌కు బదిలీలలో భాగం కాదు. ఈ ఫోన్ పోతే, అంశాలు కూడా పోతాయి.</string>
+    <string name="vault_protection_strongbox">కీ రక్షణ: ప్రత్యేక సెక్యూరిటీ చిప్</string>
+    <string name="vault_protection_hardware">కీ రక్షణ: సురక్షిత హార్డ్‌వేర్</string>
+    <string name="vault_protection_software">కీ రక్షణ: సాఫ్ట్‌వేర్ మాత్రమే. ఈ ఫోన్‌లో కీల కోసం సురక్షిత హార్డ్‌వేర్ లేదు.</string>
+    <string name="vault_protection_unknown">కీ రక్షణ: ఇంకా తనిఖీ చేయలేదు</string>
+    <string name="vault_close">మూసివేయండి</string>
+
+    <!-- Item actions -->
+    <string name="vault_item_options">%1$s కోసం ఎంపికలు</string>
+    <string name="vault_rename">పేరు మార్చండి</string>
+    <string name="vault_rename_title">అంశం పేరు మార్చండి</string>
+    <string name="vault_title_label">టైటిల్</string>
+    <string name="vault_delete">తొలగించండి</string>
+    <string name="vault_delete_title">ఈ అంశాన్ని తొలగించాలా?</string>
+    <string name="vault_delete_body">\"%1$s\" వాల్ట్ నుండి తొలగించబడుతుంది, తిరిగి పొందలేరు.</string>
+    <string name="vault_export">కాపీ సేవ్ చేయండి</string>
+    <string name="vault_export_title">వాల్ట్ బయట కాపీ సేవ్ చేయాలా?</string>
+    <string name="vault_export_body">కాపీ ఎన్‌క్రిప్ట్ అయి ఉండదు. మీరు ఎంచుకున్న చోటును తెరవగలిగే ఎవరైనా దాన్ని చదవగలరు.</string>
+    <string name="vault_export_choose">ఎక్కడ సేవ్ చేయాలో ఎంచుకోండి</string>
+    <string name="vault_open_title">వేరే యాప్‌లో తెరవాలా?</string>
+    <string name="vault_open_body">ఆ యాప్ కోసం చదవగలిగే తాత్కాలిక కాపీ తయారవుతుంది. మీరు తిరిగి రాగానే Samvad దాన్ని తొలగిస్తుంది, కానీ ఆ యాప్ తన సొంత కాపీని ఉంచుకోవచ్చు.</string>
+    <string name="vault_open">తెరవండి</string>
+    <string name="vault_open_failed">ఈ ఫైల్‌ను తెరవగల యాప్ ఈ ఫోన్‌లో లేదు. బదులుగా కాపీ సేవ్ చేయవచ్చు.</string>
+    <string name="vault_open_unsupported">ఈ రకం ఫైల్‌ను వాల్ట్ నుండి తెరవలేరు. బదులుగా కాపీ సేవ్ చేయవచ్చు.</string>
+    <string name="vault_image_failed">ఈ చిత్రాన్ని చూపలేకపోయాం. బదులుగా కాపీ సేవ్ చేయవచ్చు.</string>
+    <string name="vault_image_cd">%1$s, చిత్రం</string>
+    <string name="vault_missing">ఈ అంశం ఇక వాల్ట్‌లో లేదు.</string>
+
+    <!-- Notes -->
+    <string name="vault_note_new">కొత్త నోట్</string>
+    <string name="vault_note_title_hint">టైటిల్</string>
+    <string name="vault_note_body_hint">మీ నోట్ రాయండి</string>
+    <string name="vault_note_untitled">పేరు లేని నోట్</string>
+    <string name="vault_note_discard_title">సేవ్ చేయకుండా వెళ్లాలా?</string>
+    <string name="vault_note_discard_body">ఈ నోట్‌లో మీరు చేసిన మార్పులు పోతాయి.</string>
+    <string name="vault_note_discard_confirm">వెళ్లండి</string>
+    <string name="vault_note_keep_editing">ఎడిట్ చేస్తూ ఉండండి</string>
+    <string name="vault_default_title">దిగుమతి చేసిన అంశం</string>
+
+    <!-- Messages -->
+    <string name="vault_added">వాల్ట్‌కు జోడించాం</string>
+    <string name="vault_exported">కాపీ సేవ్ అయింది</string>
+    <string name="vault_deleted">తొలగించాం</string>
+    <string name="vault_note_saved">నోట్ సేవ్ అయింది</string>
+    <string name="vault_error_locked">వాల్ట్ లాక్ అయింది. అన్‌లాక్ చేసి మళ్లీ ప్రయత్నించండి.</string>
+    <string name="vault_error_too_large">అది చాలా పెద్దది. పరిమితి ఫైల్‌కు 100 MB, నోట్‌కు 1,00,000 అక్షరాలు.</string>
+    <string name="vault_error_empty">ఆ ఫైల్ ఖాళీగా ఉంది.</string>
+    <string name="vault_error_unreadable">దాన్ని చదవలేకపోయాం. అది మారి ఉండవచ్చు లేదా పాడై ఉండవచ్చు.</string>
+    <string name="vault_error_failed">అది పని చేయలేదు. దయచేసి మళ్లీ ప్రయత్నించండి.</string>
+</resources>
