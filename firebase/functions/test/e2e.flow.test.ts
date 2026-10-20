@@ -34,7 +34,7 @@ describe('end-to-end account flow', () => {
       }),
     );
     await assertSucceeds(
-      setDoc(doc(db, `profiles/${uid}`), { displayName: 'Asha', about: '', photoUrl: null, updatedAt: serverTimestamp() }),
+      setDoc(doc(db, `profiles/${uid}`), { displayName: 'Asha', updatedAt: serverTimestamp() }),
     );
     await assertSucceeds(
       setDoc(doc(db, `users/${uid}/devices/${deviceId}`), {
@@ -60,7 +60,7 @@ describe('end-to-end account flow', () => {
     expect((await deps.db.doc(`deletedAccounts/${uid}`).get()).exists).toBe(true);
     expect(await listAuthUserIds()).not.toContain(uid);
     await assertFails(
-      setDoc(doc(db, `profiles/${uid}`), { displayName: 'Asha', about: '', photoUrl: null, updatedAt: serverTimestamp() }),
+      setDoc(doc(db, `profiles/${uid}`), { displayName: 'Asha', updatedAt: serverTimestamp() }),
     );
 
     // Give the Functions emulator a moment to flush the account_deleted log line to its output.

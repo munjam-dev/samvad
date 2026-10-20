@@ -57,6 +57,9 @@ import com.samvad.messenger.ui.settings.ChatThemeScreen
 import com.samvad.messenger.ui.settings.BlockedContactsScreen
 import com.samvad.messenger.ui.settings.SettingsScreen
 import com.samvad.messenger.ui.language.LanguageScreen
+import com.samvad.messenger.ui.privacy.AppealScreen
+import com.samvad.messenger.ui.privacy.LinkedDevicesScreen
+import com.samvad.messenger.ui.privacy.PrivacySettingsScreen
 import com.samvad.messenger.ui.setup.ProfileSetupScreen
 import com.samvad.messenger.ui.theme.SamvadTheme
 
@@ -209,7 +212,19 @@ private fun SignedInNav(
         onOpenTwoStep = { nav.navigate("twostep") },
         onOpenChatTheme = { nav.navigate("chattheme") },
         onOpenStarred = { nav.navigate("starred") },
+        onOpenPrivacy = { nav.navigate("privacy") },
+        onOpenDevices = { nav.navigate("devices") },
+        onOpenAppeal = { nav.navigate("appeal") },
       )
+    }
+    composable("privacy") {
+      PrivacySettingsScreen(container = container, me = uid, onBack = { nav.popBackStack() })
+    }
+    composable("devices") {
+      LinkedDevicesScreen(container = container, me = uid, onBack = { nav.popBackStack() })
+    }
+    composable("appeal") {
+      AppealScreen(container = container, me = uid, onBack = { nav.popBackStack() })
     }
     composable(
       "status/new?photo={photo}",

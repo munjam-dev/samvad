@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Phase 3: profile visibility, group-add permission, phone discovery, linked devices, appeals -->
+    <string name="privacy_settings_link">ప్రైవసీ</string>
+    <string name="privacy_title">ప్రైవసీ</string>
+    <string name="privacy_intro">మీ వివరాలు ఎవరు చూడగలరో, మీను గ్రూప్‌లో ఎవరు జత చేయగలరో ఎంచుకోండి. మీరు బ్లాక్ చేసినవారికి ఇవేవీ కనిపించవు.</string>
+    <string name="privacy_last_seen">లాస్ట్ సీన్ &amp; ఆన్‌లైన్</string>
+    <string name="privacy_about_label">పరిచయం</string>
+    <string name="privacy_photo_label">ప్రొఫైల్ ఫోటో</string>
+    <string name="privacy_group_adds_label">నన్ను గ్రూప్‌లలో ఎవరు జత చేయగలరు</string>
+    <string name="privacy_group_adds_nobody_body">మీను గ్రూప్‌లో జత చేయడానికి వారికి ఇన్‌వైట్ లింక్ అవసరం అవుతుంది.</string>
+    <string name="privacy_everyone">అందరూ</string>
+    <string name="privacy_people_i_chat_with">నేను చాట్ చేసేవారు</string>
+    <string name="privacy_nobody">ఎవరూ కాదు</string>
+    <string name="privacy_discovery_title">కాంటాక్ట్ ద్వారా గుర్తింపు</string>
+    <string name="privacy_discovery_switch">నా ఫోన్ నంబర్ ద్వారా నన్ను కనుగొననివ్వండి</string>
+    <string name="privacy_discovery_body">ఇది ఆన్‌లో ఉన్నప్పుడు, మీ ఫోన్ నంబర్ ఉన్నవారు మీ Samvad ఖాతాను కనుగొనగలరు. ఇది ఆఫ్‌లో ఉన్నప్పుడు, మీ నంబర్ సేవ్ చేసుకున్నవారికి కూడా మీ ఖాతా మ్యాచ్‌గా చూపబడదు.</string>
+    <string name="privacy_footer">\"నేను చాట్ చేసేవారు\" అంటే మీతో డైరెక్ట్ చాట్ ఉన్నవారు: మీరు చాట్ మొదలుపెట్టారు, లేదా మీరు వారికి ఒక సందేశం పంపారు. Samvad మీ ఫోన్ కాంటాక్ట్‌లను తన సర్వర్లలో చదవదు, సేవ్ చేయదు.</string>
+
+    <!-- Linked devices -->
+    <string name="devices_title">లింక్ చేసిన డివైజ్‌లు</string>
+    <string name="devices_intro">ఇవి మీ ఖాతాలో సైన్ ఇన్ అయిన ఇన్‌స్టాల్‌లు. ఇక్కడ నుంచి ఒక డివైజ్‌ను సైన్ అవుట్ చేస్తే అది వెంటనే జరగదు: ఆ ఫోన్ తర్వాత యాప్ తెరిచినప్పుడు లేదా సిగ్నల్ వచ్చినప్పుడు తనంతట తాను సైన్ అవుట్ అవుతుంది, అందుకు అది ఆన్‌లైన్‌లో ఉండాలి.</string>
+    <string name="devices_empty">మరే డివైజ్ సైన్ ఇన్ అయి లేదు.</string>
+    <string name="devices_platform_android">Android</string>
+    <string name="devices_detail">Android %1$s · యాప్ %2$s</string>
+    <string name="devices_last_active">చివరిసారి యాక్టివ్ %1$s</string>
+    <string name="devices_this_device">ఈ డివైజ్</string>
+    <string name="devices_sign_out_device">సైన్ అవుట్ చేయండి</string>
+    <string name="devices_revoke_title">ఈ డివైజ్‌ను సైన్ అవుట్ చేయాలా?</string>
+    <string name="devices_revoke_body">ఈ డివైజ్ తర్వాత ఆన్‌లైన్ అయినప్పుడు సైన్ అవుట్ అవుతుంది, వెంటనే కావచ్చు లేదా తర్వాత యాప్ తెరిచినప్పుడు కావచ్చు. Samvad ఉపయోగించడానికి అది మళ్ళీ సైన్ ఇన్ కావాల్సి ఉంటుంది.</string>
+    <string name="devices_revoke_confirm">డివైజ్‌ను సైన్ అవుట్ చేయండి</string>
+    <string name="devices_revoke_failed">ఆ డివైజ్‌ను సైన్ అవుట్ చేయలేకపోయాం. మీ కనెక్షన్ చూసుకుని మళ్ళీ ప్రయత్నించండి.</string>
+
+    <!-- Appeals -->
+    <string name="appeal_title">నిర్ణయంపై అప్పీల్ చేయండి</string>
+    <string name="appeal_intro">ఒక రిపోర్ట్ నిర్ణయం లేదా ఖాతాపై ఆంక్ష పొరపాటు అని మీకు అనిపిస్తే, ఏమి జరిగిందో మాకు చెప్పండి. మేము ప్రతి అప్పీల్‌ను చదువుతాం.</string>
+    <string name="appeal_kind_label">ఇది ఏ విషయంపై</string>
+    <string name="appeal_kind_report_decision">ఒక రిపోర్ట్ నిర్ణయం</string>
+    <string name="appeal_kind_account_restriction">ఖాతాపై ఆంక్ష</string>
+    <string name="appeal_kind_other">మరేదైనా</string>
+    <string name="appeal_message_label">ఏమి జరిగిందో మాకు చెప్పండి</string>
+    <string name="appeal_message_help">10 నుండి 1000 అక్షరాలు.</string>
+    <string name="appeal_send">అప్పీల్ పంపండి</string>
+    <string name="appeal_sent">అప్పీల్ పంపబడింది. మేము దీన్ని చూస్తాం.</string>
+    <string name="appeal_too_many">మీరు ఈ రోజు చాలా అప్పీళ్ళు పంపారు. రేపు మళ్ళీ ప్రయత్నించండి.</string>
+    <string name="appeal_failed">అప్పీల్ పంపలేకపోయాం. మీ కనెక్షన్ చూసుకుని మళ్ళీ ప్రయత్నించండి.</string>
+    <string name="appeal_history_title">మీ అప్పీళ్ళు</string>
+    <string name="appeal_status_open">సమీక్షలో ఉంది</string>
+    <string name="appeal_status_granted">మీకు అనుకూలంగా పరిష్కరించబడింది</string>
+    <string name="appeal_status_denied">నిర్ణయం మార్చలేదు</string>
+
+</resources>

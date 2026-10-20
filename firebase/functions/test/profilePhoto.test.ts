@@ -37,11 +37,11 @@ function jpeg(width = 512, height = 512, withMetadata = true): Buffer {
 const b64 = (b: Buffer) => b.toString('base64');
 const read = async (path: string) => (await getStorage().bucket(bucketName()).file(path).download())[0];
 const exists = async (path: string) => (await getStorage().bucket(bucketName()).file(path).exists())[0];
-const profile = async () => (await deps.db.doc(`profiles/${UID}`).get()).data()!;
+const profile = async () => (await deps.db.doc(`profiles/${UID}/private/photo`).get()).data() ?? { photoUrl: null };
 
 beforeEach(async () => {
   await resetEmulators();
-  await deps.db.doc(`profiles/${UID}`).set({ displayName: 'Nila', about: '', photoUrl: null, updatedAt: Timestamp.now() });
+  await deps.db.doc(`profiles/${UID}`).set({ displayName: 'Nila', updatedAt: Timestamp.now() });
 });
 
 describe('JPEG handling', () => {

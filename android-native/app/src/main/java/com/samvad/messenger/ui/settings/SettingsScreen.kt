@@ -44,9 +44,12 @@ import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.Devices
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.PhoneAndroid
+import androidx.compose.material.icons.outlined.PrivacyTip
 import androidx.compose.material.icons.outlined.VerifiedUser
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -120,6 +123,9 @@ fun SettingsScreen(
   onOpenTwoStep: () -> Unit = {},
   onOpenChatTheme: () -> Unit = {},
   onOpenStarred: () -> Unit = {},
+  onOpenPrivacy: () -> Unit = {},
+  onOpenDevices: () -> Unit = {},
+  onOpenAppeal: () -> Unit = {},
 ) {
   val colors = SamvadTheme.colors
   val scope = rememberCoroutineScope()
@@ -336,6 +342,9 @@ fun SettingsScreen(
         if (container.safety != null) {
           ActionRow(Icons.Outlined.Block, stringResource(R.string.settings_blocked), onClick = onOpenBlocked)
         }
+        if (container.privacy != null) {
+          ActionRow(Icons.Outlined.PrivacyTip, stringResource(R.string.privacy_settings_link), onClick = onOpenPrivacy)
+        }
         Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
           Icon(Icons.Outlined.Lock, null, tint = colors.onPrimaryContainer)
           Text(stringResource(R.string.settings_privacy_body), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
@@ -347,8 +356,17 @@ fun SettingsScreen(
         if (container.twoStep != null) {
           ActionRow(Icons.Outlined.VerifiedUser, stringResource(R.string.two_step_title), onClick = onOpenTwoStep)
         }
+        if (container.devices != null) {
+          ActionRow(Icons.Outlined.PhoneAndroid, stringResource(R.string.devices_title), onClick = onOpenDevices)
+        }
         ActionRow(Icons.Outlined.Devices, stringResource(R.string.settings_sign_out_all), onClick = { confirmSignOutAll = true })
         ActionRow(Icons.Outlined.DeleteForever, stringResource(R.string.settings_delete), danger = true, onClick = { confirmDelete = true })
+      }
+
+      if (container.appeals != null) {
+        Group(stringResource(R.string.settings_help)) {
+          ActionRow(Icons.Outlined.HelpOutline, stringResource(R.string.appeal_title), onClick = onOpenAppeal)
+        }
       }
       Text(
         stringResource(R.string.settings_version, BuildConfig.VERSION_NAME),

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Phase 3: profile visibility, group-add permission, phone discovery, linked devices, appeals -->
+    <string name="privacy_settings_link">Privacy</string>
+    <string name="privacy_title">Privacy</string>
+    <string name="privacy_intro">Choose who sees your details and who can add you to groups. People you have blocked never see any of this.</string>
+    <string name="privacy_last_seen">Last seen &amp; online</string>
+    <string name="privacy_about_label">About</string>
+    <string name="privacy_photo_label">Profile photo</string>
+    <string name="privacy_group_adds_label">Who can add me to groups</string>
+    <string name="privacy_group_adds_nobody_body">People will need an invite link to add you to a group.</string>
+    <string name="privacy_everyone">Everyone</string>
+    <string name="privacy_people_i_chat_with">People I chat with</string>
+    <string name="privacy_nobody">Nobody</string>
+    <string name="privacy_discovery_title">Contact discovery</string>
+    <string name="privacy_discovery_switch">Let people find me by my phone number</string>
+    <string name="privacy_discovery_body">When this is on, someone who has your phone number can find your Samvad account. When it is off, your account is never shown as a match, even to people who have your number saved.</string>
+    <string name="privacy_footer">\"People I chat with\" means people you share a direct chat with: you started the chat, or you have sent them a message. Samvad does not read or store your phone\'s contacts on its servers.</string>
+
+    <!-- Linked devices -->
+    <string name="devices_title">Linked devices</string>
+    <string name="devices_intro">These are the installs signed in to your account. Signing out a device here does not happen instantly: that phone signs itself out the next time it opens the app or receives the signal, which needs it to be online.</string>
+    <string name="devices_empty">No other devices are signed in.</string>
+    <string name="devices_platform_android">Android</string>
+    <string name="devices_detail">Android %1$s · app %2$s</string>
+    <string name="devices_last_active">Last active %1$s</string>
+    <string name="devices_this_device">This device</string>
+    <string name="devices_sign_out_device">Sign out</string>
+    <string name="devices_revoke_title">Sign out this device?</string>
+    <string name="devices_revoke_body">This device will be signed out once it is next online, either right away or the next time it opens the app. It will need to sign in again to use Samvad.</string>
+    <string name="devices_revoke_confirm">Sign out device</string>
+    <string name="devices_revoke_failed">Couldn\'t sign out that device. Check your connection and try again.</string>
+
+    <!-- Appeals -->
+    <string name="appeal_title">Appeal a decision</string>
+    <string name="appeal_intro">If you think a report decision or account restriction was a mistake, tell us what happened. We read every appeal.</string>
+    <string name="appeal_kind_label">What is this about</string>
+    <string name="appeal_kind_report_decision">A report decision</string>
+    <string name="appeal_kind_account_restriction">An account restriction</string>
+    <string name="appeal_kind_other">Something else</string>
+    <string name="appeal_message_label">Tell us what happened</string>
+    <string name="appeal_message_help">10 to 1000 characters.</string>
+    <string name="appeal_send">Send appeal</string>
+    <string name="appeal_sent">Appeal sent. We\'ll review it.</string>
+    <string name="appeal_too_many">You\'ve sent several appeals today. Try again tomorrow.</string>
+    <string name="appeal_failed">Couldn\'t send the appeal. Check your connection and try again.</string>
+    <string name="appeal_history_title">Your appeals</string>
+    <string name="appeal_status_open">Under review</string>
+    <string name="appeal_status_granted">Resolved in your favour</string>
+    <string name="appeal_status_denied">Not upheld</string>
+
+</resources>

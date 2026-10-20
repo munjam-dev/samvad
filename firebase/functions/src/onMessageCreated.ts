@@ -2,6 +2,7 @@ import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { REGION } from './config';
 import { defaultDeps, type Deps } from './deps';
+import { mirrorEngaged } from './engagement';
 import { logEvent } from './lib/logger';
 
 export const PREVIEW_LENGTH = 120;
@@ -51,10 +52,12 @@ export async function applyMessageCreated(deps: Deps, msg: CreatedMessage): Prom
   const markerRef = db.doc(`processedEvents/${msg.eventId}`);
   let recipients: string[] = [];
   let group: { name: string } | null = null;
+  let newlyEngaged = false;
 
   await db.runTransaction(async (tx) => {
     recipients = [];
     group = null;
+    newlyEngaged = false;
     const [marker, conv] = await Promise.all([tx.get(markerRef), tx.get(convRef)]);
     if (marker.exists || !conv.exists) return;
 
@@ -63,9 +66,15 @@ export async function applyMessageCreated(deps: Deps, msg: CreatedMessage): Prom
     const timer = Number(conv.get('disappearAfterSec') ?? 0);
     if (isGroup) group = { name: String(conv.get('name') ?? '') };
     const members: string[] = conv.get('members') ?? [];
+    // Phase 3: a person who writes in a direct chat becomes one of its engaged people ("People I chat with").
+    if (!isGroup && msg.data.kind !== 'system' && !((conv.get('engagedBy') ?? []) as string[]).includes(msg.data.senderId)) {
+      newlyEngaged = true;
+    }
     const others = members.filter((m) => m !== msg.data.senderId);
     recipients = msg.data.kind === 'system' ? [] : others;
     const memberSnaps = isGroup ? [] : await Promise.all(others.map((m) => tx.get(convRef.collection('members').doc(m))));
+
+    if (newlyEngaged) tx.update(convRef, { engagedBy: FieldValue.arrayUnion(msg.data.senderId) });
 
     const current = conv.get('lastMessage');
     const currentAt: Timestamp | undefined = current?.createdAt;
@@ -110,6 +119,7 @@ export async function applyMessageCreated(deps: Deps, msg: CreatedMessage): Prom
     tx.set(markerRef, { at: FieldValue.serverTimestamp() });
   });
   logEvent('message_fanout', { count: 1, outcome: 'ok' });
+  if (newlyEngaged) await mirrorEngaged(deps, msg.cid, [msg.data.senderId]).catch(() => logEvent('engaged_mirror_failed', { outcome: 'error' }));
 
   // Push only when this delivery applied the event, so a redelivered trigger never re-notifies.
   if (recipients.length > 0) {

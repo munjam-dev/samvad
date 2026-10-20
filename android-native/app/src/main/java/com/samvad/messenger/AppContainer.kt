@@ -2,16 +2,19 @@ package com.samvad.messenger
 
 import android.content.Context
 import com.samvad.messenger.data.AccountRepository
+import com.samvad.messenger.data.AppealsRepository
 import com.samvad.messenger.data.AuthRepository
 import com.samvad.messenger.data.ChatRepository
 import com.samvad.messenger.data.StatusRepository
 import com.samvad.messenger.data.ChatThemeRepository
 import com.samvad.messenger.data.ContactsRepository
+import com.samvad.messenger.data.DevicesRepository
 import com.samvad.messenger.data.DraftRepository
 import com.samvad.messenger.data.FirebaseServices
 import com.samvad.messenger.data.GroupRepository
 import com.samvad.messenger.data.PreferencesRepository
 import com.samvad.messenger.data.PresenceRepository
+import com.samvad.messenger.data.PrivacyRepository
 import com.samvad.messenger.data.MediaRepository
 import com.samvad.messenger.data.NetworkMonitor
 import com.samvad.messenger.data.SafetyRepository
@@ -48,6 +51,9 @@ class AppContainer(context: Context) {
   val twoStep: TwoStepRepository? = firebase?.let { TwoStepRepository(it.auth, it.functions) }
   val groups: GroupRepository? = firebase?.let { GroupRepository(it.functions) }
   val status: StatusRepository? = firebase?.let { StatusRepository(it.db, it.storage) }
+  val privacy: PrivacyRepository? = firebase?.let { PrivacyRepository(it.db, it.rtdb) }
+  val devices: DevicesRepository? = firebase?.let { DevicesRepository(it.db, it.functions) }
+  val appeals: AppealsRepository? = firebase?.let { AppealsRepository(it.db, it.functions) }
   val push = PushTokens(enabled = firebase != null && !com.samvad.messenger.BuildConfig.USE_EMULATORS)
 
   val isConfigured: Boolean get() = firebase != null

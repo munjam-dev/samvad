@@ -12,6 +12,7 @@ import com.samvad.messenger.BuildConfig
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.tasks.await
 
 sealed class AccountException(message: String) : Exception(message) {
@@ -42,7 +43,11 @@ class AccountRepository(
 
   suspend fun hasAccount(uid: String): Boolean = db.document("users/$uid").get().await().exists()
 
-  /** Creates users/{uid} and profiles/{uid} in one batch, as the client contract requires. */
+  /**
+   * Creates users/{uid} and profiles/{uid} in one batch, as the client contract requires.
+   * "About" goes to profiles/{uid}/private/about (Phase 3): it has its own visibility setting, so it
+   * cannot live on the public profile document that every signed-in person may read.
+   */
   suspend fun createAccount(uid: String, phoneE164: String, displayName: String, about: String) {
     val batch = db.batch()
     batch.set(
@@ -53,32 +58,39 @@ class AccountRepository(
         "createdAt" to FieldValue.serverTimestamp(),
       ),
     )
-    batch.set(db.document("profiles/$uid"), profileFields(displayName, about))
+    batch.set(db.document("profiles/$uid"), mapOf("displayName" to displayName, "updatedAt" to FieldValue.serverTimestamp()))
+    batch.set(db.document("profiles/$uid/private/about"), mapOf("about" to about, "updatedAt" to FieldValue.serverTimestamp()))
     batch.commit().await()
   }
 
   suspend fun updateProfile(uid: String, displayName: String, about: String) {
-    db.document("profiles/$uid").update(
-      mapOf("displayName" to displayName, "about" to about, "updatedAt" to FieldValue.serverTimestamp()),
-    ).await()
+    val batch = db.batch()
+    batch.update(db.document("profiles/$uid"), mapOf("displayName" to displayName, "updatedAt" to FieldValue.serverTimestamp()))
+    batch.set(db.document("profiles/$uid/private/about"), mapOf("about" to about, "updatedAt" to FieldValue.serverTimestamp()))
+    batch.commit().await()
   }
 
-  private fun profileFields(displayName: String, about: String) = mapOf(
-    "displayName" to displayName,
-    "about" to about,
-    "photoUrl" to null,
-    "updatedAt" to FieldValue.serverTimestamp(),
-  )
-
-  fun profile(uid: String): Flow<Profile?> = callbackFlow {
-    val reg = db.document("profiles/$uid").addSnapshotListener { snap, _ ->
-      trySend(
-        snap?.takeIf { it.exists() }?.let {
-          Profile(uid, it.getString("displayName") ?: "", it.getString("about") ?: "", it.getString("photoUrl"), it.getString("username"))
-        },
-      )
+  /**
+   * The signed-in person's own profile, live. "About" and the photo path live in sibling documents
+   * (profiles/{uid}/private/about, /photo) that only the owner, or the people the owner's privacy
+   * setting allows, can read; a denied listener simply reports null for that part, same as absent.
+   */
+  fun profile(uid: String): Flow<Profile?> {
+    val base = callbackFlow<Map<String, Any?>?> {
+      val reg = db.document("profiles/$uid").addSnapshotListener { snap, _ -> trySend(snap?.takeIf { it.exists() }?.data) }
+      awaitClose { reg.remove() }
     }
-    awaitClose { reg.remove() }
+    val about = callbackFlow<String?> {
+      val reg = db.document("profiles/$uid/private/about").addSnapshotListener { snap, _ -> trySend(snap?.getString("about")) }
+      awaitClose { reg.remove() }
+    }
+    val photo = callbackFlow<String?> {
+      val reg = db.document("profiles/$uid/private/photo").addSnapshotListener { snap, _ -> trySend(snap?.getString("photoUrl")) }
+      awaitClose { reg.remove() }
+    }
+    return combine(base, about, photo) { b, a, p ->
+      b?.let { Profile(uid, it["displayName"] as? String ?: "", a.orEmpty(), p, it["username"] as? String) }
+    }
   }
 
   /**

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Phase 3: profile visibility, group-add permission, phone discovery, linked devices, appeals -->
+    <string name="privacy_settings_link">தனியுரிமை</string>
+    <string name="privacy_title">தனியுரிமை</string>
+    <string name="privacy_intro">உங்கள் விவரங்களை யார் பார்க்கலாம், உங்களை குரூப்பில் யார் சேர்க்கலாம் என்பதைத் தேர்வு செய்யுங்கள். நீங்கள் தடுத்தவர்களுக்கு இவை எதுவும் தெரியாது.</string>
+    <string name="privacy_last_seen">கடைசியாக பார்த்தது &amp; ஆன்லைன்</string>
+    <string name="privacy_about_label">எனது குறிப்பு</string>
+    <string name="privacy_photo_label">சுயவிவரப் படம்</string>
+    <string name="privacy_group_adds_label">என்னை குரூப்புகளில் யார் சேர்க்கலாம்</string>
+    <string name="privacy_group_adds_nobody_body">உங்களை குரூப்பில் சேர்க்க மற்றவருக்கு அழைப்பு இணைப்பு தேவைப்படும்.</string>
+    <string name="privacy_everyone">அனைவரும்</string>
+    <string name="privacy_people_i_chat_with">நான் பேசுபவர்கள்</string>
+    <string name="privacy_nobody">யாரும் இல்லை</string>
+    <string name="privacy_discovery_title">தொடர்பு எண் மூலம் கண்டறிதல்</string>
+    <string name="privacy_discovery_switch">என் தொலைபேசி எண் மூலம் என்னைக் கண்டறிய அனுமதி</string>
+    <string name="privacy_discovery_body">இது ஆன் செய்யப்பட்டால், உங்கள் தொலைபேசி எண் இருப்பவர் உங்கள் Samvad கணக்கைக் கண்டறியலாம். இது ஆஃப் செய்யப்பட்டால், உங்கள் எண்ணை சேமித்திருந்தாலும் உங்கள் கணக்கு பொருத்தமாகக் காட்டப்படாது.</string>
+    <string name="privacy_footer">\"நான் பேசுபவர்கள்\" என்பது உங்களுடன் நேரடி உரையாடல் உள்ளவர்கள்: நீங்கள் உரையாடலைத் தொடங்கியிருக்கலாம், அல்லது நீங்கள் அவர்களுக்கு ஒரு செய்தி அனுப்பியிருக்கலாம். Samvad உங்கள் தொலைபேசி தொடர்புகளை தனது சேவையகங்களில் படிப்பதில்லை, சேமிப்பதில்லை.</string>
+
+    <!-- Linked devices -->
+    <string name="devices_title">இணைக்கப்பட்ட சாதனங்கள்</string>
+    <string name="devices_intro">இவை உங்கள் கணக்கில் உள்நுழைந்துள்ள இன்ஸ்டால்கள். இங்கிருந்து ஒரு சாதனத்தை வெளியேற்றுவது உடனடியாக நடக்காது: அந்த தொலைபேசி அடுத்த முறை ஆப்பைத் திறக்கும்போது அல்லது சிக்னலைப் பெறும்போது தானாகவே வெளியேறும், அதற்கு அது ஆன்லைனில் இருக்க வேண்டும்.</string>
+    <string name="devices_empty">மற்ற சாதனங்கள் எதுவும் உள்நுழையவில்லை.</string>
+    <string name="devices_platform_android">Android</string>
+    <string name="devices_detail">Android %1$s · ஆப் %2$s</string>
+    <string name="devices_last_active">கடைசியாக செயலில் இருந்தது %1$s</string>
+    <string name="devices_this_device">இந்த சாதனம்</string>
+    <string name="devices_sign_out_device">வெளியேறு</string>
+    <string name="devices_revoke_title">இந்த சாதனத்தை வெளியேற்றவா?</string>
+    <string name="devices_revoke_body">இந்த சாதனம் அடுத்த முறை ஆன்லைனில் இருக்கும்போது வெளியேறும், உடனடியாகவோ அல்லது அடுத்த முறை ஆப்பைத் திறக்கும்போதோ. Samvad-ஐப் பயன்படுத்த அது மீண்டும் உள்நுழைய வேண்டும்.</string>
+    <string name="devices_revoke_confirm">சாதனத்தை வெளியேற்று</string>
+    <string name="devices_revoke_failed">அந்த சாதனத்தை வெளியேற்ற முடியவில்லை. உங்கள் இணைப்பைச் சரிபார்த்து மீண்டும் முயலுங்கள்.</string>
+
+    <!-- Appeals -->
+    <string name="appeal_title">முடிவை மறு ஆலோசனை கேட்டு விண்ணப்பிக்கவும்</string>
+    <string name="appeal_intro">ஒரு புகார் முடிவு அல்லது கணக்கு கட்டுப்பாடு தவறு என்று நீங்கள் நினைத்தால், என்ன நடந்தது என்று எங்களிடம் கூறுங்கள். நாங்கள் ஒவ்வொரு விண்ணப்பத்தையும் படிக்கிறோம்.</string>
+    <string name="appeal_kind_label">இது எதைப் பற்றியது</string>
+    <string name="appeal_kind_report_decision">ஒரு புகார் முடிவு</string>
+    <string name="appeal_kind_account_restriction">கணக்கு கட்டுப்பாடு</string>
+    <string name="appeal_kind_other">வேறு ஏதாவது</string>
+    <string name="appeal_message_label">என்ன நடந்தது என்று எங்களிடம் கூறுங்கள்</string>
+    <string name="appeal_message_help">10 முதல் 1000 எழுத்துகள் வரை.</string>
+    <string name="appeal_send">விண்ணப்பத்தை அனுப்பு</string>
+    <string name="appeal_sent">விண்ணப்பம் அனுப்பப்பட்டது. நாங்கள் இதை பரிசீலிப்போம்.</string>
+    <string name="appeal_too_many">இன்று நீங்கள் பல விண்ணப்பங்கள் அனுப்பியுள்ளீர்கள். நாளை மீண்டும் முயலுங்கள்.</string>
+    <string name="appeal_failed">விண்ணப்பத்தை அனுப்ப முடியவில்லை. உங்கள் இணைப்பைச் சரிபார்த்து மீண்டும் முயலுங்கள்.</string>
+    <string name="appeal_history_title">உங்கள் விண்ணப்பங்கள்</string>
+    <string name="appeal_status_open">பரிசீலனையில் உள்ளது</string>
+    <string name="appeal_status_granted">உங்களுக்கு சாதகமாக தீர்க்கப்பட்டது</string>
+    <string name="appeal_status_denied">முடிவு மாற்றப்படவில்லை</string>
+
+</resources>

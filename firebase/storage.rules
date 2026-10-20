@@ -31,11 +31,29 @@ service firebase.storage {
     }
 
     // avatars/{uid}/{uuid}.jpg: written only by the setProfilePhoto function (which strips metadata).
-    // Hidden from people the owner has blocked.
+    // Hidden from people the owner has blocked, and from everyone but the owner's chat partners (or nobody)
+    // when the owner's "Profile photo" setting says so (users/{uid}/settings/privacy.photoVisibility).
+    // "Chat partner" means a direct chat the owner started or has sent a message in (engagedBy). The files are
+    // never listable, and their names are random, so a name is learned only through profiles/{uid}/private/photo.
     match /avatars/{uid}/{file} {
-      allow read: if signedIn()
+      function privacySettings() {
+        return firestore.get(/databases/(default)/documents/users/$(uid)/settings/privacy).data;
+      }
+      function isChatPartner() {
+        let a = request.auth.uid;
+        let conv = /databases/(default)/documents/conversations/$(a < uid ? a + '_' + uid : uid + '_' + a);
+        return firestore.exists(conv) && uid in firestore.get(conv).data.get('engagedBy', []);
+      }
+      function photoShown() {
+        return !firestore.exists(/databases/(default)/documents/users/$(uid)/settings/privacy)
+          || privacySettings().get('photoVisibility', 'everyone') == 'everyone'
+          || (privacySettings().get('photoVisibility', 'everyone') == 'partners' && isChatPartner());
+      }
+      allow get: if signedIn()
         && (request.auth.uid == uid
-            || !firestore.exists(/databases/(default)/documents/users/$(uid)/blocked/$(request.auth.uid)));
+            || (!firestore.exists(/databases/(default)/documents/users/$(uid)/blocked/$(request.auth.uid))
+                && photoShown()));
+      allow list: if false;
       allow write: if false;
     }
 
