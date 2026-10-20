@@ -90,6 +90,8 @@ object Notifications {
     body: String,
     showPreview: Boolean = true,
     group: Boolean = false,
+    /** Quiet hours (Settings → Notifications): still delivered and visible, but no sound or vibration. */
+    silent: Boolean = false,
   ) {
     if (!canPost(context) || ActiveChat.id.value == conversationId) return
     val open = Intent(context, MainActivity::class.java)
@@ -125,6 +127,8 @@ object Notifications {
       .setPriority(NotificationCompat.PRIORITY_HIGH)
       .setAutoCancel(true)
       .setContentIntent(pending)
+      // Quiet hours: still delivered and shown, just without sound or vibration for this one notification.
+      .setSilent(silent)
       .build()
     try {
       NotificationManagerCompat.from(context).notify(conversationId.hashCode(), notification)

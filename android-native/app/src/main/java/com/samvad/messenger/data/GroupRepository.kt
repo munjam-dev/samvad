@@ -14,12 +14,21 @@ sealed class GroupException(message: String) : Exception(message) {
   class LimitReached : GroupException("limit")
   /** Pinned messages: three are already pinned. */
   class PinLimit : GroupException("pin-limit")
+  class EventInPast : GroupException("event-in-past")
+  class EventTooFar : GroupException("event-too-far")
+  class EventGone : GroupException("event-gone")
+  class TooManyEvents : GroupException("too-many-events")
+  class TooManyRequests : GroupException("too-many-requests")
+  class NoRequest : GroupException("no-request")
   class Failed(cause: Throwable) : GroupException("failed") {
     init { initCause(cause) }
   }
 }
 
-data class InvitePreview(val name: String, val memberCount: Int)
+data class InvitePreview(val name: String, val memberCount: Int, val approval: Boolean = false, val pending: Boolean = false)
+
+/** The server's answer to joining when a code requires approval, or to deciding a request. */
+enum class JoinOutcome { JOINED, PENDING, APPROVED, DECLINED, UNAVAILABLE }
 
 /**
  * Group management (Phase 2). Every change goes through a callable: the rules never let clients write
@@ -57,7 +66,56 @@ class GroupRepository(private val functions: FirebaseFunctions) {
 
   suspend fun previewInvite(code: String): InvitePreview {
     val data = call("previewGroupInvite", mapOf("code" to code))
-    return InvitePreview(data["name"] as? String ?: "", (data["memberCount"] as? Number)?.toInt() ?: 0)
+    return InvitePreview(
+      data["name"] as? String ?: "",
+      (data["memberCount"] as? Number)?.toInt() ?: 0,
+      data["approval"] == true,
+      data["pending"] == true,
+    )
+  }
+
+  /** Phase 6: announcement mode, member approval and who may create events (admins only; the server checks). */
+  suspend fun setSettings(
+    cid: String,
+    onlyAdminsSend: Boolean? = null,
+    approveMembers: Boolean? = null,
+    eventsByMembers: Boolean? = null,
+  ) {
+    call(
+      "setGroupSettings",
+      buildMap {
+        put("cid", cid)
+        onlyAdminsSend?.let { put("onlyAdminsSend", it) }
+        approveMembers?.let { put("approveMembers", it) }
+        eventsByMembers?.let { put("eventsByMembers", it) }
+      },
+    )
+  }
+
+  /** An admin approves or declines a pending join request. */
+  suspend fun decideJoinRequest(cid: String, uid: String, approve: Boolean): JoinOutcome {
+    val data = call("decideGroupJoinRequest", mapOf("cid" to cid, "uid" to uid, "approve" to approve))
+    return when (data["status"] as? String) {
+      "approved" -> JoinOutcome.APPROVED
+      "unavailable" -> JoinOutcome.UNAVAILABLE
+      else -> JoinOutcome.DECLINED
+    }
+  }
+
+  /** Creates a group event; returns its id. The server checks admin rights / the group's setting. */
+  suspend fun createEvent(cid: String, title: String, description: String, place: String, startsAtMs: Long): String =
+    call(
+      "createGroupEvent",
+      mapOf("cid" to cid, "title" to title, "description" to description, "place" to place, "startsAt" to startsAtMs),
+    )["eventId"] as String
+
+  /** [answer] null withdraws my RSVP. */
+  suspend fun rsvpEvent(cid: String, eventId: String, answer: com.samvad.core.chat.Rsvp?) {
+    call("rsvpGroupEvent", mapOf("cid" to cid, "eid" to eventId, "answer" to answer?.wire))
+  }
+
+  suspend fun cancelEvent(cid: String, eventId: String) {
+    call("cancelGroupEvent", mapOf("cid" to cid, "eid" to eventId))
   }
 
   /** Disappearing messages: 0 turns it off. Direct chats: either member; groups: admins only (the server decides). */
@@ -70,7 +128,12 @@ class GroupRepository(private val functions: FirebaseFunctions) {
     call("setPinnedMessage", mapOf("conversationId" to cid, "messageId" to messageId, "pinned" to pinned))
   }
 
-  suspend fun join(code: String): String = call("joinGroupWithCode", mapOf("code" to code))["cid"] as String
+  suspend fun join(code: String): Pair<String, JoinOutcome> {
+    val data = call("joinGroupWithCode", mapOf("code" to code))
+    val cid = data["cid"] as String
+    val outcome = if (data["status"] == "pending") JoinOutcome.PENDING else JoinOutcome.JOINED
+    return cid to outcome
+  }
 
   private suspend fun call(name: String, data: Map<String, Any?>): Map<String, Any?> {
     try {
@@ -83,6 +146,12 @@ class GroupRepository(private val functions: FirebaseFunctions) {
         e.message == "invalid-code" || e.code == FirebaseFunctionsException.Code.NOT_FOUND -> GroupException.InvalidCode()
         e.message == "pin-limit" -> GroupException.PinLimit()
         e.message == "last-admin" -> GroupException.LastAdmin()
+        e.message == "event-in-past" -> GroupException.EventInPast()
+        e.message == "event-too-far" -> GroupException.EventTooFar()
+        e.message == "event-cancelled" || e.message == "event-over" -> GroupException.EventGone()
+        e.message == "too-many-events" -> GroupException.TooManyEvents()
+        e.message == "too-many-requests" -> GroupException.TooManyRequests()
+        e.message == "no-request" -> GroupException.NoRequest()
         e.code == FirebaseFunctionsException.Code.PERMISSION_DENIED -> GroupException.NotAllowed()
         e.code == FirebaseFunctionsException.Code.RESOURCE_EXHAUSTED -> GroupException.LimitReached()
         else -> GroupException.Failed(e)

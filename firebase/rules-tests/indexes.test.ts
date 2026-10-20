@@ -45,6 +45,15 @@ describe('indexes and list access', () => {
           { fieldPath: 'sendAt', order: 'ASCENDING' },
         ],
       },
+      // Phase 6: the event reminder function's due query (all groups' events).
+      {
+        collectionGroup: 'events',
+        queryScope: 'COLLECTION_GROUP',
+        fields: [
+          { fieldPath: 'reminderSent', order: 'ASCENDING' },
+          { fieldPath: 'startsAt', order: 'ASCENDING' },
+        ],
+      },
     ]);
     expect(json.fieldOverrides.map((o: any) => `${o.collectionGroup}.${o.fieldPath}`)).toEqual(['members.uid', 'messages.expiresAt', 'savedMessages.messageId', 'items.expiresAt', 'items.visibleTo']);
   });

@@ -24,16 +24,22 @@ import com.samvad.messenger.R
 import com.samvad.messenger.data.GroupException
 import com.samvad.messenger.data.GroupRepository
 import com.samvad.messenger.data.InvitePreview
+import com.samvad.messenger.data.JoinOutcome
 import com.samvad.messenger.ui.theme.SamvadTheme
 import kotlinx.coroutines.launch
 
-/** Enter an invite code, see which group it is (name and size only), then join. */
+/**
+ * Enter an invite code, see which group it is (name and size only) and whether it needs admin approval,
+ * then join or ask to join. [onJoined] fires only when membership is immediate; a pending request shows
+ * its own message and stays on this dialog until the person dismisses it.
+ */
 @Composable
 fun JoinGroupDialog(groups: GroupRepository, onJoined: (String) -> Unit, onDismiss: () -> Unit) {
   val colors = SamvadTheme.colors
   val scope = rememberCoroutineScope()
   var code by rememberSaveable { mutableStateOf("") }
   var preview by remember { mutableStateOf<InvitePreview?>(null) }
+  var pendingSent by remember { mutableStateOf(false) }
   var busy by remember { mutableStateOf(false) }
   var error by remember { mutableStateOf<String?>(null) }
   val invalid = stringResource(R.string.group_join_invalid)
@@ -74,6 +80,16 @@ fun JoinGroupDialog(groups: GroupRepository, onJoined: (String) -> Unit, onDismi
         )
         preview?.let {
           Text(stringResource(R.string.group_join_preview, it.name, it.memberCount), style = MaterialTheme.typography.titleSmall, color = colors.onSurface)
+          if (it.approval) {
+            Text(
+              stringResource(if (it.pending) R.string.group_join_already_pending else R.string.group_join_needs_approval),
+              style = MaterialTheme.typography.bodySmall,
+              color = colors.onSurfaceVariant,
+            )
+          }
+        }
+        if (pendingSent) {
+          Text(stringResource(R.string.group_join_pending_sent), style = MaterialTheme.typography.bodyMedium, color = colors.onSurface)
         }
         error?.let { Text(it, color = colors.error, style = MaterialTheme.typography.bodySmall) }
         if (busy) CircularProgressIndicator(Modifier, color = colors.brand)
@@ -81,12 +97,21 @@ fun JoinGroupDialog(groups: GroupRepository, onJoined: (String) -> Unit, onDismi
     },
     confirmButton = {
       val p = preview
-      if (p == null) {
-        TextButton(enabled = !busy && clean.length == 12, onClick = { run { preview = groups.previewInvite(clean) } }) {
+      when {
+        pendingSent -> TextButton(onClick = onDismiss) { Text(stringResource(R.string.done_label)) }
+        p == null -> TextButton(enabled = !busy && clean.length == 12, onClick = { run { preview = groups.previewInvite(clean) } }) {
           Text(stringResource(R.string.group_join_check))
         }
-      } else {
-        TextButton(enabled = !busy, onClick = { run { onJoined(groups.join(clean)) } }) { Text(stringResource(R.string.group_join_confirm)) }
+        p.pending -> TextButton(onClick = onDismiss) { Text(stringResource(R.string.done_label)) }
+        else -> TextButton(
+          enabled = !busy,
+          onClick = {
+            run {
+              val (cid, outcome) = groups.join(clean)
+              if (outcome == com.samvad.messenger.data.JoinOutcome.PENDING) pendingSent = true else onJoined(cid)
+            }
+          },
+        ) { Text(stringResource(if (p.approval) R.string.group_join_request else R.string.group_join_confirm)) }
       }
     },
     dismissButton = { TextButton(enabled = !busy, onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },

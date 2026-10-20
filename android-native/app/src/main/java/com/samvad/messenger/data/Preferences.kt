@@ -10,6 +10,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.samvad.core.design.HomeLayout
 import com.samvad.core.design.ThemeMode
 import com.samvad.core.media.AutoDownload
+import com.samvad.core.notify.QuietHours
 import com.samvad.core.security.LockTimeout
 import java.util.UUID
 import kotlinx.coroutines.flow.Flow
@@ -38,6 +39,8 @@ data class AppPreferences(
   val dataSaver: Boolean = false,
   /** Disappearing-message timer given to chats the user creates from now on, in seconds; 0 = off. */
   val defaultTimer: Long = 0L,
+  /** Per-device: a daily window in which message notifications are delivered silently. */
+  val quietHours: QuietHours = QuietHours(),
   /** Status posts I have already looked at (kept only while they are still live). */
   val statusSeen: Set<String> = emptySet(),
   /** People whose status I have muted. */
@@ -63,6 +66,9 @@ class PreferencesRepository(private val context: Context) {
   private val defaultTimerKey = androidx.datastore.preferences.core.longPreferencesKey("default_timer")
   private val statusSeenKey = androidx.datastore.preferences.core.stringSetPreferencesKey("status_seen")
   private val statusMutedKey = androidx.datastore.preferences.core.stringSetPreferencesKey("status_muted")
+  private val quietEnabled = booleanPreferencesKey("quiet_hours_enabled")
+  private val quietStart = androidx.datastore.preferences.core.intPreferencesKey("quiet_hours_start")
+  private val quietEnd = androidx.datastore.preferences.core.intPreferencesKey("quiet_hours_end")
 
   val preferences: Flow<AppPreferences> = context.dataStore.data.map { p ->
     AppPreferences(
@@ -82,6 +88,7 @@ class PreferencesRepository(private val context: Context) {
       statusSeen = p[statusSeenKey] ?: emptySet(),
       statusMuted = p[statusMutedKey] ?: emptySet(),
       defaultTimer = (p[defaultTimerKey] ?: 0L).takeIf { com.samvad.core.chat.Disappearing.isValid(it) } ?: 0L,
+      quietHours = QuietHours.sanitized(p[quietEnabled] ?: false, p[quietStart], p[quietEnd]),
     )
   }
 
@@ -110,6 +117,12 @@ class PreferencesRepository(private val context: Context) {
 
   suspend fun setDefaultTimer(seconds: Long) = context.dataStore.edit {
     it[defaultTimerKey] = if (com.samvad.core.chat.Disappearing.isValid(seconds)) seconds else 0L
+  }
+
+  suspend fun setQuietHours(enabled: Boolean, startMinute: Int, endMinute: Int) = context.dataStore.edit {
+    it[quietEnabled] = enabled
+    it[quietStart] = startMinute
+    it[quietEnd] = endMinute
   }
 
   /** Random per-install ID (lowercase UUID); no hardware identifiers. */

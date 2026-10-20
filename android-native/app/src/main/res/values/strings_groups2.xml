@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Phase 6: announcement mode, member approval, group events, shared media, quiet hours -->
+    <string name="done_label">Done</string>
+
+    <!-- Announcement mode -->
+    <string name="group_announce_notice">Only admins can send messages in this group.</string>
+    <string name="group_settings_section">Group settings</string>
+    <string name="group_announce_title">Only admins can send messages</string>
+    <string name="group_announce_body">Members can still read, react and vote on polls.</string>
+
+    <!-- Member approval -->
+    <string name="group_approve_title">Approve new members</string>
+    <string name="group_approve_body">People who join with an invite link wait for an admin to approve them.</string>
+    <string name="group_pending_requests">Pending requests</string>
+    <string name="group_pending_empty">No one is waiting to join.</string>
+    <string name="group_decline">Decline</string>
+    <string name="group_approve">Approve</string>
+    <string name="group_waiting_approval">An admin needs to approve you before you can see this group.</string>
+    <string name="group_join_needs_approval">An admin needs to approve new members here.</string>
+    <string name="group_join_already_pending">You already asked to join. Waiting for approval.</string>
+    <string name="group_join_pending_sent">Your request was sent. You\'ll be added once an admin approves it.</string>
+    <string name="group_join_request">Ask to join</string>
+
+    <!-- Group events -->
+    <string name="group_events">Events</string>
+    <string name="group_events_setting_title">Members can create events</string>
+    <string name="group_events_setting_body">When off, only admins can create events.</string>
+    <string name="group_events_empty_title">No events yet</string>
+    <string name="group_events_empty_body">Create an event so everyone can say if they\'re coming.</string>
+    <string name="group_events_upcoming">Upcoming</string>
+    <string name="group_events_earlier">Earlier</string>
+    <string name="group_event_new">New event</string>
+    <string name="group_event_card_label">Event</string>
+    <string name="group_event_cancel_title">Cancel this event?</string>
+    <string name="group_event_cancel_body">\"%1$s\" will be cancelled for everyone in the group.</string>
+    <string name="group_event_cancel">Cancel event</string>
+    <string name="group_event_cancelled">Cancelled</string>
+    <string name="group_event_counts">%1$d going · %2$d maybe</string>
+    <string name="group_event_going">Going</string>
+    <string name="group_event_maybe">Maybe</string>
+    <string name="group_event_no">Can\'t go</string>
+    <string name="group_event_title_hint">What\'s the event?</string>
+    <string name="group_event_place_hint">Place (optional)</string>
+    <string name="group_event_description_hint">Description (optional)</string>
+    <string name="group_event_pick_time">Choose when it starts</string>
+    <string name="group_event_create">Create event</string>
+    <string name="group_event_error_past">Choose a time that hasn\'t happened yet.</string>
+    <string name="group_event_error_too_far">Choose a time within the next two years.</string>
+    <string name="group_event_error_gone">This event was cancelled or has already started.</string>
+    <string name="group_event_error_limit">This group already has too many upcoming events. Cancel one first.</string>
+
+    <!-- Shared media -->
+    <string name="media_tab_title">Media, links and documents</string>
+    <string name="media_tab_photos">Photos and videos</string>
+    <string name="media_tab_docs">Documents</string>
+    <string name="media_tab_links">Links</string>
+    <string name="media_loaded_note">Shows what\'s loaded on this device, not the whole chat history.</string>
+    <string name="media_photos_empty_title">No photos or videos yet</string>
+    <string name="media_photos_empty_body">Photos and videos shared here will show up in this tab.</string>
+    <string name="media_docs_empty_title">No documents yet</string>
+    <string name="media_docs_empty_body">Files shared here will show up in this tab.</string>
+    <string name="media_links_empty_title">No links yet</string>
+    <string name="media_links_empty_body">Links shared in messages will show up here.</string>
+
+    <!-- Quiet hours (Settings → Notifications) -->
+    <string name="settings_quiet_hours">Quiet hours</string>
+    <string name="settings_quiet_hours_body">Messages still arrive, with no sound or vibration during this window.</string>
+    <string name="settings_quiet_hours_start">Starts</string>
+    <string name="settings_quiet_hours_end">Ends</string>
+    <string name="settings_quiet_hours_note">Applies on this device only, using its current time zone.</string>
+</resources>

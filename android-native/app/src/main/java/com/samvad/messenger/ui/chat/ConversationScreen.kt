@@ -159,6 +159,9 @@ fun ConversationScreen(
   onOpenGroupInfo: (() -> Unit)? = null,
   onOpenChatTheme: () -> Unit = {},
   onOpenStarred: () -> Unit = {},
+  /** Groups: opens the Events list; tapping an event card goes here too. */
+  onOpenEvents: (() -> Unit)? = null,
+  onOpenMedia: () -> Unit = {},
 ) {
   val appCtx = LocalContext.current.applicationContext as android.app.Application
   val vm: ConversationViewModel = viewModel(factory = ConversationViewModel.factory(appCtx, container, me, conversationId, otherUid))
@@ -535,6 +538,10 @@ fun ConversationScreen(
             if (state.isGroup && onOpenGroupInfo != null) {
               DropdownMenuItem(text = { Text(stringResource(R.string.group_info)) }, onClick = { menu = false; onOpenGroupInfo() })
             }
+            if (state.isGroup && onOpenEvents != null) {
+              DropdownMenuItem(text = { Text(stringResource(R.string.group_events)) }, onClick = { menu = false; onOpenEvents() })
+            }
+            DropdownMenuItem(text = { Text(stringResource(R.string.media_tab_title)) }, onClick = { menu = false; onOpenMedia() })
             DropdownMenuItem(
               text = { Text(stringResource(if (state.pinned) R.string.chat_unpin else R.string.chat_pin)) },
               onClick = { vm.toggle("pinned", !state.pinned); menu = false },
@@ -666,6 +673,9 @@ fun ConversationScreen(
                       val result = remember(votes, poll) { com.samvad.core.chat.Polls.tally(poll, votes, me) }
                       PollCard(item.message, result, item.mine) { id -> if (selecting) toggle() else vm.vote(item.message, id, result.mine) }
                     }
+                    if (item.message.kind == "event" && !item.message.deleted) {
+                      EventMessageCard(item.message.eventTitle.orEmpty()) { if (selecting) toggle() else onOpenEvents?.invoke() }
+                    }
                   },
                 )
               }
@@ -701,6 +711,8 @@ fun ConversationScreen(
         BlockedBar(state.title, onUnblock = vm::unblock)
       } else if (recording.active) {
         RecorderBar(recording, onCancel = vm::cancelRecording, onSend = vm::finishRecording)
+      } else if (!state.canSend) {
+        com.samvad.messenger.ui.groups.AnnouncementNotice()
       } else {
         if (mentionCandidates.isNotEmpty()) MentionSuggestions(mentionCandidates, vm::pickMention)
         ScheduledBanner(scheduledHere, onOpen = { scheduledList = true })

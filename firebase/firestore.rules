@@ -257,6 +257,13 @@ service cloud.firestore {
         || (!isBlocked(c.members[0], c.members[1]) && !isBlocked(c.members[1], c.members[0]));
     }
 
+    // Phase 6: announcement mode. While a group's onlyAdminsSend is true, only admins create messages
+    // (the setting is written only by the setGroupSettings function).
+    function groupAllowsSend(cid) {
+      let c = convAfter(cid);
+      return c.type != 'group' || c.get('onlyAdminsSend', false) != true || request.auth.uid in c.admins;
+    }
+
     // Timestamp field that may only stay the same or move forward, never past now.
     function forwardOnly(field) {
       return request.resource.data[field] == resource.data[field]
@@ -318,7 +325,8 @@ service cloud.firestore {
           && request.resource.data.get('reactions', {}).size() == 0
           // Phase 1.6: a forwarded copy is labelled; the flag can only be true and never changes.
           && request.resource.data.get('forwarded', true) == true
-          && notBlocked(cid);
+          && notBlocked(cid)
+          && groupAllowsSend(cid);
 
         function notDeletedMessage() {
           return resource.data.get('deleted', false) == false;
@@ -377,6 +385,16 @@ service cloud.firestore {
             && request.resource.data.updatedAt == request.time;
 
           allow delete: if isMemberOf(cid) && voterId == request.auth.uid;
+        }
+      }
+
+      // Phase 6: group events and RSVPs. Members read; only the group functions write (createGroupEvent,
+      // rsvpGroupEvent, cancelGroupEvent), which check admin rights, the member setting, dates and caps.
+      match /events/{eid} {
+        allow read: if isMemberOf(cid);
+
+        match /rsvps/{uid} {
+          allow read: if isMemberOf(cid);
         }
       }
 
@@ -554,7 +572,8 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time
         && notDeleted(request.auth.uid)
         && isMemberOf(request.resource.data.conversationId)
-        && notBlocked(request.resource.data.conversationId);
+        && notBlocked(request.resource.data.conversationId)
+        && groupAllowsSend(request.resource.data.conversationId);
 
       allow update: if signedIn()
         && resource.data.senderId == request.auth.uid
@@ -566,6 +585,15 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time;
 
       allow delete: if signedIn() && resource.data.senderId == request.auth.uid;
+    }
+
+    // Phase 6: "Approve new members". A join by invite code becomes a request here (written by joinGroupWithCode,
+    // decided by decideGroupJoinRequest). The requester sees their own; admins of that group see its requests.
+    match /groupJoinRequests/{id} {
+      allow get, list: if signedIn()
+        && (resource.data.uid == request.auth.uid
+            || request.auth.uid in get(/databases/$(database)/documents/conversations/$(resource.data.cid)).data.admins);
+      allow write: if false;
     }
 
     match /groupSecrets/{cid} {

@@ -21,13 +21,20 @@ class SamvadMessagingService : FirebaseMessagingService() {
       Notifications.showSecurityAlert(this)
       return
     }
+    // onMessageReceived runs on a background thread, so a short blocking read of the settings is fine.
+    val prefs = (application as SamvadApplication).container.preferences
+    val now = System.currentTimeMillis()
+    val quiet = runCatching { runBlocking { prefs.preferences.first().quietHours } }.getOrDefault(com.samvad.core.notify.QuietHours()).isQuiet(now)
+    if (data["type"] == "event_reminder") {
+      val cid = data["cid"] ?: return
+      Notifications.showMessage(this, cid, data["eid"].orEmpty(), data["title"].orEmpty(), data["body"].orEmpty(), showPreview = true, group = true, silent = quiet)
+      return
+    }
     if (data["type"] != "message") return
     val cid = data["cid"] ?: return
     val sender = data["senderId"] ?: return
-    // onMessageReceived runs on a background thread, so a short blocking read of the settings is fine.
-    val prefs = (application as SamvadApplication).container.preferences
     val showPreview = runCatching { runBlocking { prefs.preferences.first().notificationPreviews } }.getOrDefault(false)
-    Notifications.showMessage(this, cid, sender, data["title"].orEmpty(), data["body"].orEmpty(), showPreview, group = data["group"] == "1")
+    Notifications.showMessage(this, cid, sender, data["title"].orEmpty(), data["body"].orEmpty(), showPreview, group = data["group"] == "1", silent = quiet)
   }
 
   override fun onNewToken(token: String) {
