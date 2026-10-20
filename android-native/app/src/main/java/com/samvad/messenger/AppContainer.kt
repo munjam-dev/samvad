@@ -6,6 +6,7 @@ import com.samvad.messenger.data.AuthRepository
 import com.samvad.messenger.data.ChatRepository
 import com.samvad.messenger.data.StatusRepository
 import com.samvad.messenger.data.ChatThemeRepository
+import com.samvad.messenger.data.CommunityRepository
 import com.samvad.messenger.data.ContactsRepository
 import com.samvad.messenger.data.DraftRepository
 import com.samvad.messenger.data.FirebaseServices
@@ -47,6 +48,7 @@ class AppContainer(context: Context) {
   val scamPrefs = com.samvad.messenger.data.ScamPreferences(context)
   val twoStep: TwoStepRepository? = firebase?.let { TwoStepRepository(it.auth, it.functions) }
   val groups: GroupRepository? = firebase?.let { GroupRepository(it.functions) }
+  val communities: CommunityRepository? = firebase?.let { CommunityRepository(it.db, it.functions) }
   val status: StatusRepository? = firebase?.let { StatusRepository(it.db, it.storage) }
   val push = PushTokens(enabled = firebase != null && !com.samvad.messenger.BuildConfig.USE_EMULATORS)
 

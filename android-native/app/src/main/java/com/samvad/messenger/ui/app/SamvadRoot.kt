@@ -136,6 +136,8 @@ private fun SignedInNav(
         onNewGroup = { nav.navigate("newgroup") },
         onOpenStarred = { nav.navigate("starred") },
         onOpenChatTheme = { nav.navigate("chattheme") },
+        onOpenCommunity = { id -> nav.navigate("community/$id") },
+        onNewCommunity = { nav.navigate("newcommunity") },
       )
     }
     composable(
@@ -178,6 +180,42 @@ private fun SignedInNav(
     }
     composable("groupadd/{cid}", arguments = listOf(navArgument("cid") { type = NavType.StringType })) { entry ->
       AddMembersScreen(container = container, me = uid, cid = entry.arguments!!.getString("cid")!!, onBack = { nav.popBackStack() })
+    }
+    composable("community/{id}", arguments = listOf(navArgument("id") { type = NavType.StringType })) { entry ->
+      val id = entry.arguments!!.getString("id")!!
+      com.samvad.messenger.ui.community.CommunityScreen(
+        container = container,
+        me = uid,
+        id = id,
+        onBack = { nav.popBackStack() },
+        onOpenAnnouncements = { cid -> nav.navigate("communityannouncements/$id/$cid") },
+        onOpenGroup = { cid -> nav.navigate("group/$cid") },
+        onAddMembers = { nav.navigate("communityadd/$id") },
+        onLeft = { nav.popBackStack("home", inclusive = false) },
+      )
+    }
+    composable(
+      "communityannouncements/{id}/{cid}",
+      arguments = listOf(navArgument("id") { type = NavType.StringType }, navArgument("cid") { type = NavType.StringType }),
+    ) { entry ->
+      com.samvad.messenger.ui.community.AnnouncementsScreen(
+        container = container,
+        me = uid,
+        communityId = entry.arguments!!.getString("id")!!,
+        cid = entry.arguments!!.getString("cid")!!,
+        onBack = { nav.popBackStack() },
+      )
+    }
+    composable("communityadd/{id}", arguments = listOf(navArgument("id") { type = NavType.StringType })) { entry ->
+      com.samvad.messenger.ui.community.AddCommunityMembersScreen(container = container, me = uid, id = entry.arguments!!.getString("id")!!, onBack = { nav.popBackStack() })
+    }
+    composable("newcommunity") {
+      com.samvad.messenger.ui.community.CreateCommunityScreen(
+        container = container,
+        me = uid,
+        onBack = { nav.popBackStack() },
+        onCreated = { id, _ -> nav.navigate("community/$id") { popUpTo("home") } },
+      )
     }
     composable("newgroup") {
       NewGroupScreen(

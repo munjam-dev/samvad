@@ -29,6 +29,8 @@ async function problem(tx: Transaction, deps: Deps, s: DocumentData): Promise<Sc
   if (deleted.exists) return 'account_deleted';
   const members: unknown = conv.get('members');
   if (!conv.exists || !Array.isArray(members) || !members.includes(s.senderId)) return 'not_member';
+  // Announcements are written by community admins only, whatever a client scheduled.
+  if (conv.get('type') === 'community_announcements' && !(conv.get('admins') ?? []).includes(s.senderId)) return 'not_member';
   if (conv.get('type') === 'direct') {
     const other = members.find((m) => m !== s.senderId);
     if (typeof other === 'string') {

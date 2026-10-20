@@ -18,6 +18,8 @@ export async function mirrorMembers(deps: Deps, cid: string, members: string[]):
 export const onConversationCreated = onDocumentCreated(
   { document: 'conversations/{cid}', region: REGION },
   async (event) => {
+    // Announcements have no typing indicator, so their (large, changing) member list is not mirrored.
+    if (event.data?.get('type') === 'community_announcements') return;
     const members = (event.data?.get('members') as string[] | undefined) ?? [];
     await mirrorMembers(defaultDeps(), event.params.cid, members);
   },

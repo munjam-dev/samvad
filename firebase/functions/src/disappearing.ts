@@ -34,7 +34,7 @@ export async function setTimerCore(deps: Deps, actor: string, cid: string, secon
     const snap = await tx.get(ref);
     const members: string[] = snap.exists ? snap.get('members') ?? [] : [];
     if (!snap.exists || !members.includes(actor)) throw new HttpsError('permission-denied', 'Not allowed.');
-    if (snap.get('type') === 'group' && !(snap.get('admins') ?? []).includes(actor)) {
+    if (snap.get('type') !== 'direct' && !(snap.get('admins') ?? []).includes(actor)) {
       throw new HttpsError('permission-denied', 'Only admins can change this.');
     }
     if (Number(snap.get('disappearAfterSec') ?? 0) === seconds) return;

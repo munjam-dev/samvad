@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Phase 6: Communities. -->
+    <string name="community_title">Community</string>
+    <string name="community_new">New community</string>
+    <string name="community_start">Start a community</string>
+    <string name="community_step_label">Step %1$d of %2$d</string>
+    <string name="community_name_hint">Community name</string>
+    <string name="community_name_help">Members will see this name and photo everywhere the community appears.</string>
+    <string name="community_change_photo">Change photo</string>
+    <string name="community_description_hint">Description</string>
+    <string name="community_description_help">Say what this community is for. You can change this later.</string>
+    <string name="community_groups_help">Choose up to %1$d of your groups to link. You can add more later.</string>
+    <string name="community_no_groups_title">No groups to add yet</string>
+    <string name="community_no_groups_body">Groups you admin that are not already in a community will appear here.</string>
+    <string name="community_create">Create community</string>
+    <string name="community_removed">This community no longer exists, or you are no longer a member.</string>
+
+    <string name="community_rename">Rename community</string>
+    <string name="community_add_description">Add a description</string>
+    <string name="community_admin">Admin</string>
+    <string name="community_add_members">Add members</string>
+    <string name="community_add">Add</string>
+    <string name="community_no_actions">You cannot change this member.</string>
+    <string name="community_make_admin">Make community admin</string>
+    <string name="community_dismiss_admin">Remove as community admin</string>
+    <string name="community_remove_member">Remove %1$s</string>
+    <string name="community_leave">Leave community</string>
+    <string name="community_leave_title">Leave %1$s?</string>
+    <string name="community_leave_body">You will keep your place in any groups linked to this community.</string>
+    <string name="community_delete">Delete community</string>
+    <string name="community_delete_title">Delete %1$s?</string>
+    <string name="community_delete_body">This removes the community and its announcements for everyone. Linked groups stay as they are.</string>
+
+    <!-- Announcements -->
+    <string name="community_announcements">Announcements</string>
+    <string name="community_announcements_sub_admin">Post updates that every member sees</string>
+    <string name="community_announcements_sub_member">Read updates from the community admins</string>
+    <string name="community_announcement_hint">Write an announcement</string>
+    <string name="community_announcements_empty_title">No announcements yet</string>
+    <string name="community_announcements_empty_body">Updates from community admins will appear here.</string>
+    <string name="community_announcements_empty_admin_body">Write the first announcement. Every member will see it.</string>
+    <string name="community_unread_announcements">%1$d unread announcements</string>
+
+    <!-- Linked groups -->
+    <string name="community_groups_heading">Groups in this community</string>
+    <string name="community_groups_empty">This community has no linked groups yet.</string>
+    <string name="community_group_join">Join</string>
+    <string name="community_group_open">Open</string>
+    <string name="community_unlink">Remove from community</string>
+    <string name="community_unlink_title">Remove %1$s from this community?</string>
+    <string name="community_unlink_body">The group chat and its members are not affected.</string>
+
+    <!-- Invite -->
+    <string name="community_invite">Invite to community</string>
+    <string name="community_invite_body">Anyone with this code can join the community.</string>
+    <string name="community_invite_send">Share code</string>
+    <string name="community_invite_copy">Copy code</string>
+    <string name="community_invite_regenerate">Get a new code</string>
+    <string name="community_invite_revoke">Turn off invite code</string>
+    <string name="community_invite_share">Join my Samvad community "%1$s": open Samvad, go to Communities → Join with code, and enter %2$s</string>
+    <string name="community_join">Join a community</string>
+    <string name="community_join_with_code">Join with code</string>
+    <string name="community_join_hint">Invite code</string>
+    <string name="community_join_invalid">That code is not valid. Check it and try again.</string>
+    <string name="community_join_preview">%1$d members · %2$d groups</string>
+
+    <!-- Errors -->
+    <string name="community_error_full">This community has reached its member limit.</string>
+    <string name="community_error_groups_full">This community already has 10 linked groups.</string>
+    <string name="community_error_admin_limit">This community already has 10 admins.</string>
+    <string name="community_error_last_admin">The last admin cannot step down. Make someone else an admin first.</string>
+    <string name="community_error_already_linked">That group is already linked to a community.</string>
+
+    <plurals name="community_members_count">
+        <item quantity="one">%1$d member</item>
+        <item quantity="other">%1$d members</item>
+    </plurals>
+</resources>

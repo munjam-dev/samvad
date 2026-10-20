@@ -251,6 +251,13 @@ service cloud.firestore {
         && p.multi is bool;
     }
 
+    // Phase 6: in a community's announcements conversation only community admins write (members read and react).
+    // The admin list on the conversation is kept equal to the community's by the community functions.
+    function mayPost(cid) {
+      let c = convAfter(cid);
+      return c.type != 'community_announcements' || request.auth.uid in c.admins;
+    }
+
     function notBlocked(cid) {
       let c = convAfter(cid);
       return c.type != 'direct'
@@ -311,6 +318,7 @@ service cloud.firestore {
           )
           && (request.resource.data.kind == 'poll' || !('poll' in request.resource.data))
           && validMentions(cid, request.resource.data)
+          && mayPost(cid)
           && (request.resource.data.replyTo == null
               || (request.resource.data.replyTo is string && isUuid(request.resource.data.replyTo)))
           && request.resource.data.createdAt == request.time
@@ -528,6 +536,24 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // ---- communities (Phase 6) ------------------------------------------
+    // Community documents (members, admins, linked groups, announcements conversation id) and everything
+    // that changes them are written only by functions. Members read their communities; a list query must
+    // filter members array-contains the caller's UID. The announcements conversation is an ordinary
+    // conversation document (type community_announcements) that the member rules above already cover.
+    match /communities/{id} {
+      allow get, list: if signedIn() && request.auth.uid in resource.data.members;
+      allow write: if false;
+    }
+
+    match /communityInvites/{code} {
+      allow read, write: if false;
+    }
+
+    match /communitySecrets/{id} {
+      allow read, write: if false;
+    }
+
     // ---- scheduled messages (Phase 3) -------------------------------
     // Written by the sender while pending; sent, or failed, only by the sendScheduledMessages function.
 
@@ -554,6 +580,7 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time
         && notDeleted(request.auth.uid)
         && isMemberOf(request.resource.data.conversationId)
+        && mayPost(request.resource.data.conversationId)
         && notBlocked(request.resource.data.conversationId);
 
       allow update: if signedIn()

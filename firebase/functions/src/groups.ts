@@ -7,6 +7,7 @@ import { consumeDailyBudget } from './lib/budget';
 import { requirePhoneAuth } from './lib/guards';
 import { logEvent, newCorrelationId } from './lib/logger';
 import { cleanPhoto, parsePhoto } from './setProfilePhoto';
+import { renameGroup, readGroups, linkFields, withoutGroup } from './lib/communityLinks';
 
 // Phase 2: groups. See docs/superpowers/specs/2026-10-13-phase2-groups.md. Group conversation
 // documents are written only here; the rules let members read them and post messages.
@@ -21,7 +22,7 @@ const CID = /^[A-Za-z0-9]{20}$/;
 export const INVITE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const INVITE = new RegExp(`^[${INVITE_ALPHABET}]{12}$`);
 
-type SystemEvent = 'created' | 'added' | 'removed' | 'left' | 'joined' | 'promoted' | 'demoted' | 'renamed' | 'photo';
+export type SystemEvent = 'created' | 'added' | 'removed' | 'left' | 'joined' | 'joinedFromCommunity' | 'promoted' | 'demoted' | 'renamed' | 'photo';
 
 // ---- input --------------------------------------------------------------------------------------
 
@@ -63,10 +64,12 @@ interface Group {
   members: string[];
   admins: string[];
   name: string;
+  /** The community this group is linked into, if any (set only by the community functions). */
+  communityId: string | null;
 }
 
 /** Reads the group inside [tx]; the caller must be a member (and an admin when [admin]). */
-async function loadGroup(tx: Transaction, deps: Deps, cid: string, actor: string, admin: boolean): Promise<Group> {
+export async function loadGroup(tx: Transaction, deps: Deps, cid: string, actor: string, admin: boolean): Promise<Group> {
   const ref = convRef(deps, cid);
   const snap = await tx.get(ref);
   const members: string[] = snap.get('members') ?? [];
@@ -76,14 +79,15 @@ async function loadGroup(tx: Transaction, deps: Deps, cid: string, actor: string
   }
   const admins: string[] = snap.get('admins') ?? [];
   if (admin && !admins.includes(actor)) throw new HttpsError('permission-denied', 'Only group admins can do that.');
-  return { ref, members, admins, name: String(snap.get('name') ?? '') };
+  const communityId = snap.get('communityId');
+  return { ref, members, admins, name: String(snap.get('name') ?? ''), communityId: typeof communityId === 'string' ? communityId : null };
 }
 
 /**
  * Which of [candidates] may be put in a group by [actor]: they need a profile, an undeleted account,
  * and no block in either direction with the actor (so nobody is pulled into a group by someone they blocked).
  */
-async function eligible(tx: Transaction, deps: Deps, actor: string, candidates: string[]): Promise<string[]> {
+export async function eligible(tx: Transaction, deps: Deps, actor: string, candidates: string[]): Promise<string[]> {
   const db = deps.db;
   const checks = await Promise.all(
     candidates.map(async (u) => {
@@ -100,7 +104,7 @@ async function eligible(tx: Transaction, deps: Deps, actor: string, candidates: 
   return candidates.filter((_, i) => checks[i]);
 }
 
-function memberDoc(uid: string) {
+export function memberDoc(uid: string) {
   return {
     uid,
     lastReadAt: null,
@@ -114,7 +118,7 @@ function memberDoc(uid: string) {
 }
 
 /** A server-written "Asha added Ravi" line; clients render it in their own language. */
-function systemMessage(tx: Transaction, ref: DocumentReference, actor: string, event: SystemEvent, extra: { targets?: string[]; name?: string } = {}) {
+export function systemMessage(tx: Transaction, ref: DocumentReference, actor: string, event: SystemEvent, extra: { targets?: string[]; name?: string } = {}) {
   tx.set(ref.collection('messages').doc(randomUUID()), {
     senderId: actor,
     kind: 'system',
@@ -128,7 +132,7 @@ function systemMessage(tx: Transaction, ref: DocumentReference, actor: string, e
 }
 
 /** Keeps the RTDB membership mirror (used by the typing rules) in step. */
-async function mirror(deps: Deps, cid: string, add: string[], remove: string[]): Promise<void> {
+export async function mirror(deps: Deps, cid: string, add: string[], remove: string[]): Promise<void> {
   const update: Record<string, true | null> = {};
   for (const u of add) update[`members/${cid}/${u}`] = true;
   for (const u of remove) {
@@ -206,7 +210,10 @@ export async function leaveGroupCore(deps: Deps, actor: string, cid: string): Pr
     const members = g.members.filter((m) => m !== actor);
     const admins = g.admins.filter((a) => a !== actor);
     if (admins.length === 0 && members.length > 0) admins.push(members[0]);
-    tx.update(g.ref, { members, admins });
+    // An empty group cannot be joined from its community any more, so it leaves the community's list.
+    const community = g.communityId && members.length === 0 ? await tx.get(deps.db.doc(`communities/${g.communityId}`)) : null;
+    tx.update(g.ref, { members, admins, ...(community ? { communityId: FieldValue.delete() } : {}) });
+    if (community?.exists) tx.update(community.ref, linkFields(withoutGroup(readGroups(community.get('groups')), cid)));
     tx.delete(g.ref.collection('members').doc(actor));
     systemMessage(tx, g.ref, actor, 'left');
     if (admins.length > 0 && !g.admins.includes(admins[admins.length - 1])) {
@@ -240,8 +247,14 @@ export async function updateInfoCore(deps: Deps, actor: string, cid: string, dat
   if (Object.keys(update).length === 0) throw new HttpsError('invalid-argument', 'Nothing to change.');
   await deps.db.runTransaction(async (tx) => {
     const g = await loadGroup(tx, deps, cid, actor, true);
+    const renamed = update.name !== undefined && update.name !== g.name;
+    // The community keeps its own copy of the name (its members cannot read the group), so rename it there too.
+    const community = renamed && g.communityId ? await tx.get(deps.db.doc(`communities/${g.communityId}`)) : null;
     tx.update(g.ref, update);
-    if (update.name !== undefined && update.name !== g.name) systemMessage(tx, g.ref, actor, 'renamed', { name: update.name });
+    if (renamed) systemMessage(tx, g.ref, actor, 'renamed', { name: update.name });
+    if (renamed && community?.exists) {
+      tx.update(community.ref, linkFields(renameGroup(readGroups(community.get('groups')), cid, update.name)));
+    }
   });
 }
 
@@ -341,7 +354,7 @@ export async function joinWithCodeCore(deps: Deps, uid: string, code: string): P
 
 // ---- callables ----------------------------------------------------------------------------------
 
-async function run<T>(event: string, work: () => Promise<T>): Promise<T> {
+export async function run<T>(event: string, work: () => Promise<T>): Promise<T> {
   const correlationId = newCorrelationId();
   try {
     const result = await work();

@@ -34,6 +34,8 @@ data class Conversation(
   val disappearAfterSec: Long = 0L,
   /** Pinned messages, set only by the server. Use [PinnedMessages.ordered] before showing them. */
   val pinnedMessages: List<Pin> = emptyList(),
+  /** Phase 6: the community this group is linked into, if any (set only by the community functions). */
+  val communityId: String? = null,
 )
 
 data class MemberState(

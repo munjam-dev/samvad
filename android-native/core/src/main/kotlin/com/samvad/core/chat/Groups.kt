@@ -119,6 +119,7 @@ object SystemText {
       "removed" -> "$a removed ${list(info.targets)}"
       "left" -> "$a left"
       "joined" -> "$a joined using an invite code"
+      "joinedFromCommunity" -> "$a joined from the community"
       "promoted" -> "${list(info.targets)} ${if (info.targets == listOf(me)) "are" else "is"} now an admin"
       "demoted" -> "${list(info.targets)} ${if (info.targets == listOf(me)) "are" else "is"} no longer an admin"
       "renamed" -> "$a changed the group name to \"${info.name.orEmpty()}\""

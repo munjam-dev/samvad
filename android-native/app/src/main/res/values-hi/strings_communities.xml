@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Phase 6: Communities. -->
+    <string name="community_title">कम्युनिटी</string>
+    <string name="community_new">नई कम्युनिटी</string>
+    <string name="community_start">कम्युनिटी शुरू करें</string>
+    <string name="community_step_label">चरण %1$d / %2$d</string>
+    <string name="community_name_hint">कम्युनिटी का नाम</string>
+    <string name="community_name_help">सदस्यों को यह नाम और फ़ोटो हर जगह दिखेगी जहाँ कम्युनिटी दिखती है।</string>
+    <string name="community_change_photo">फ़ोटो बदलें</string>
+    <string name="community_description_hint">विवरण</string>
+    <string name="community_description_help">बताएँ कि यह कम्युनिटी किसके लिए है। आप इसे बाद में बदल सकते हैं।</string>
+    <string name="community_groups_help">जोड़ने के लिए अपने %1$d तक ग्रुप चुनें। आप बाद में और जोड़ सकते हैं।</string>
+    <string name="community_no_groups_title">अभी जोड़ने के लिए कोई ग्रुप नहीं</string>
+    <string name="community_no_groups_body">जिन ग्रुप्स के आप एडमिन हैं और जो अभी किसी कम्युनिटी में नहीं हैं, वे यहाँ दिखेंगे।</string>
+    <string name="community_create">कम्युनिटी बनाएँ</string>
+    <string name="community_removed">यह कम्युनिटी अब मौजूद नहीं है, या आप अब इसके सदस्य नहीं हैं।</string>
+
+    <string name="community_rename">कम्युनिटी का नाम बदलें</string>
+    <string name="community_add_description">विवरण जोड़ें</string>
+    <string name="community_admin">एडमिन</string>
+    <string name="community_add_members">सदस्य जोड़ें</string>
+    <string name="community_add">जोड़ें</string>
+    <string name="community_no_actions">आप इस सदस्य को नहीं बदल सकते।</string>
+    <string name="community_make_admin">कम्युनिटी एडमिन बनाएँ</string>
+    <string name="community_dismiss_admin">कम्युनिटी एडमिन से हटाएँ</string>
+    <string name="community_remove_member">%1$s को हटाएँ</string>
+    <string name="community_leave">कम्युनिटी छोड़ें</string>
+    <string name="community_leave_title">%1$s छोड़ें?</string>
+    <string name="community_leave_body">इस कम्युनिटी से जुड़े ग्रुप्स में आपकी जगह बनी रहेगी।</string>
+    <string name="community_delete">कम्युनिटी हटाएँ</string>
+    <string name="community_delete_title">%1$s हटाएँ?</string>
+    <string name="community_delete_body">इससे कम्युनिटी और उसकी घोषणाएँ सभी के लिए हट जाएँगी। जुड़े हुए ग्रुप्स जैसे हैं वैसे ही रहेंगे।</string>
+
+    <!-- Announcements -->
+    <string name="community_announcements">घोषणाएँ</string>
+    <string name="community_announcements_sub_admin">ऐसे अपडेट पोस्ट करें जो हर सदस्य देखे</string>
+    <string name="community_announcements_sub_member">कम्युनिटी एडमिन के अपडेट पढ़ें</string>
+    <string name="community_announcement_hint">एक घोषणा लिखें</string>
+    <string name="community_announcements_empty_title">अभी कोई घोषणा नहीं</string>
+    <string name="community_announcements_empty_body">कम्युनिटी एडमिन के अपडेट यहाँ दिखेंगे।</string>
+    <string name="community_announcements_empty_admin_body">पहली घोषणा लिखें। हर सदस्य इसे देखेगा।</string>
+    <string name="community_unread_announcements">%1$d बिना पढ़ी घोषणाएँ</string>
+
+    <!-- Linked groups -->
+    <string name="community_groups_heading">इस कम्युनिटी के ग्रुप्स</string>
+    <string name="community_groups_empty">इस कम्युनिटी में अभी कोई ग्रुप जुड़ा नहीं है।</string>
+    <string name="community_group_join">जॉइन करें</string>
+    <string name="community_group_open">खोलें</string>
+    <string name="community_unlink">कम्युनिटी से हटाएँ</string>
+    <string name="community_unlink_title">%1$s को इस कम्युनिटी से हटाएँ?</string>
+    <string name="community_unlink_body">इससे ग्रुप चैट या उसके सदस्यों पर कोई असर नहीं पड़ता।</string>
+
+    <!-- Invite -->
+    <string name="community_invite">कम्युनिटी में आमंत्रित करें</string>
+    <string name="community_invite_body">यह कोड रखने वाला कोई भी व्यक्ति कम्युनिटी में शामिल हो सकता है।</string>
+    <string name="community_invite_send">कोड शेयर करें</string>
+    <string name="community_invite_copy">कोड कॉपी करें</string>
+    <string name="community_invite_regenerate">नया कोड लें</string>
+    <string name="community_invite_revoke">आमंत्रण कोड बंद करें</string>
+    <string name="community_invite_share">मेरी Samvad कम्युनिटी "%1$s" में शामिल हों: Samvad खोलें, कम्युनिटी → कोड से जॉइन करें पर जाएँ, और %2$s डालें</string>
+    <string name="community_join">कम्युनिटी में शामिल हों</string>
+    <string name="community_join_with_code">कोड से जॉइन करें</string>
+    <string name="community_join_hint">आमंत्रण कोड</string>
+    <string name="community_join_invalid">यह कोड सही नहीं है। इसे जाँचकर फिर कोशिश करें।</string>
+    <string name="community_join_preview">%1$d सदस्य · %2$d ग्रुप्स</string>
+
+    <!-- Errors -->
+    <string name="community_error_full">इस कम्युनिटी में सदस्यों की सीमा पूरी हो गई है।</string>
+    <string name="community_error_groups_full">इस कम्युनिटी में पहले से 10 ग्रुप्स जुड़े हैं।</string>
+    <string name="community_error_admin_limit">इस कम्युनिटी में पहले से 10 एडमिन हैं।</string>
+    <string name="community_error_last_admin">आख़िरी एडमिन पद नहीं छोड़ सकता। पहले किसी और को एडमिन बनाएँ।</string>
+    <string name="community_error_already_linked">वह ग्रुप पहले से किसी कम्युनिटी से जुड़ा है।</string>
+
+    <plurals name="community_members_count">
+        <item quantity="one">%1$d सदस्य</item>
+        <item quantity="other">%1$d सदस्य</item>
+    </plurals>
+</resources>

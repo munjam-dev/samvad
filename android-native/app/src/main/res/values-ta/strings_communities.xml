@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Phase 6: Communities. -->
+    <string name="community_title">கம்யூனிட்டி</string>
+    <string name="community_new">புதிய கம்யூனிட்டி</string>
+    <string name="community_start">கம்யூனிட்டியைத் தொடங்கு</string>
+    <string name="community_step_label">படி %1$d / %2$d</string>
+    <string name="community_name_hint">கம்யூனிட்டி பெயர்</string>
+    <string name="community_name_help">இந்தப் பெயரும் படமும் கம்யூனிட்டி தோன்றும் இடமெல்லாம் உறுப்பினர்களுக்குத் தெரியும்.</string>
+    <string name="community_change_photo">படத்தை மாற்று</string>
+    <string name="community_description_hint">விளக்கம்</string>
+    <string name="community_description_help">இந்தக் கம்யூனிட்டி எதற்காக என்பதைக் கூறுங்கள். இதை பின்னர் மாற்றலாம்.</string>
+    <string name="community_groups_help">இணைக்க உங்கள் குழுக்களில் %1$d வரை தேர்ந்தெடுக்கவும். பின்னர் மேலும் சேர்க்கலாம்.</string>
+    <string name="community_no_groups_title">இணைக்க குழுக்கள் இல்லை</string>
+    <string name="community_no_groups_body">நீங்கள் நிர்வாகியாக உள்ள, இன்னும் எந்தக் கம்யூனிட்டியிலும் இல்லாத குழுக்கள் இங்கே தோன்றும்.</string>
+    <string name="community_create">கம்யூனிட்டியை உருவாக்கு</string>
+    <string name="community_removed">இந்தக் கம்யூனிட்டி இனி இல்லை, அல்லது நீங்கள் இனி இதன் உறுப்பினர் அல்ல.</string>
+
+    <string name="community_rename">கம்யூனிட்டி பெயரை மாற்று</string>
+    <string name="community_add_description">விளக்கத்தைச் சேர்</string>
+    <string name="community_admin">நிர்வாகி</string>
+    <string name="community_add_members">உறுப்பினர்களைச் சேர்</string>
+    <string name="community_add">சேர்</string>
+    <string name="community_no_actions">இந்த உறுப்பினரை நீங்கள் மாற்ற முடியாது.</string>
+    <string name="community_make_admin">கம்யூனிட்டி நிர்வாகியாக்கு</string>
+    <string name="community_dismiss_admin">கம்யூனிட்டி நிர்வாகியிலிருந்து நீக்கு</string>
+    <string name="community_remove_member">%1$s ஐ நீக்கு</string>
+    <string name="community_leave">கம்யூனிட்டியை விட்டு வெளியேறு</string>
+    <string name="community_leave_title">%1$s ஐ விட்டு வெளியேறவா?</string>
+    <string name="community_leave_body">இந்தக் கம்யூனிட்டியுடன் இணைக்கப்பட்ட குழுக்களில் உங்கள் இடம் தொடரும்.</string>
+    <string name="community_delete">கம்யூனிட்டியை அழி</string>
+    <string name="community_delete_title">%1$s ஐ அழிக்கவா?</string>
+    <string name="community_delete_body">இதனால் கம்யூனிட்டியும் அதன் அறிவிப்புகளும் அனைவருக்கும் அகற்றப்படும். இணைக்கப்பட்ட குழுக்கள் அப்படியே இருக்கும்.</string>
+
+    <!-- Announcements -->
+    <string name="community_announcements">அறிவிப்புகள்</string>
+    <string name="community_announcements_sub_admin">ஒவ்வொரு உறுப்பினரும் காணும் புதுப்பிப்புகளை இடுங்கள்</string>
+    <string name="community_announcements_sub_member">கம்யூனிட்டி நிர்வாகிகளின் புதுப்பிப்புகளைப் படியுங்கள்</string>
+    <string name="community_announcement_hint">ஓர் அறிவிப்பை எழுதுங்கள்</string>
+    <string name="community_announcements_empty_title">இன்னும் அறிவிப்புகள் இல்லை</string>
+    <string name="community_announcements_empty_body">கம்யூனிட்டி நிர்வாகிகளின் புதுப்பிப்புகள் இங்கே தோன்றும்.</string>
+    <string name="community_announcements_empty_admin_body">முதல் அறிவிப்பை எழுதுங்கள். ஒவ்வொரு உறுப்பினரும் இதைக் காண்பார்.</string>
+    <string name="community_unread_announcements">%1$d படிக்காத அறிவிப்புகள்</string>
+
+    <!-- Linked groups -->
+    <string name="community_groups_heading">இந்தக் கம்யூனிட்டியின் குழுக்கள்</string>
+    <string name="community_groups_empty">இந்தக் கம்யூனிட்டியுடன் இன்னும் எந்தக் குழுவும் இணைக்கப்படவில்லை.</string>
+    <string name="community_group_join">சேர்</string>
+    <string name="community_group_open">திற</string>
+    <string name="community_unlink">கம்யூனிட்டியிலிருந்து நீக்கு</string>
+    <string name="community_unlink_title">%1$s ஐ இந்தக் கம்யூனிட்டியிலிருந்து நீக்கவா?</string>
+    <string name="community_unlink_body">இது குழு அரட்டையையோ அதன் உறுப்பினர்களையோ பாதிக்காது.</string>
+
+    <!-- Invite -->
+    <string name="community_invite">கம்யூனிட்டிக்கு அழை</string>
+    <string name="community_invite_body">இந்தக் குறியீட்டை வைத்திருக்கும் யார் வேண்டுமானாலும் கம்யூனிட்டியில் சேரலாம்.</string>
+    <string name="community_invite_send">குறியீட்டைப் பகிர்</string>
+    <string name="community_invite_copy">குறியீட்டை நகலெடு</string>
+    <string name="community_invite_regenerate">புதிய குறியீட்டைப் பெறு</string>
+    <string name="community_invite_revoke">அழைப்புக் குறியீட்டை நிறுத்து</string>
+    <string name="community_invite_share">என் Samvad கம்யூனிட்டி "%1$s" இல் சேருங்கள்: Samvad ஐத் திறந்து, கம்யூனிட்டி → குறியீட்டுடன் சேருங்கள் என்பதற்குச் சென்று, %2$s ஐ உள்ளிடுங்கள்</string>
+    <string name="community_join">கம்யூனிட்டியில் சேர்</string>
+    <string name="community_join_with_code">குறியீட்டுடன் சேர்</string>
+    <string name="community_join_hint">அழைப்புக் குறியீடு</string>
+    <string name="community_join_invalid">அந்தக் குறியீடு சரியானதல்ல. அதைச் சரிபார்த்து மீண்டும் முயலுங்கள்.</string>
+    <string name="community_join_preview">%1$d உறுப்பினர்கள் · %2$d குழுக்கள்</string>
+
+    <!-- Errors -->
+    <string name="community_error_full">இந்தக் கம்யூனிட்டி உறுப்பினர் வரம்பை அடைந்துவிட்டது.</string>
+    <string name="community_error_groups_full">இந்தக் கம்யூனிட்டியில் ஏற்கெனவே 10 குழுக்கள் இணைக்கப்பட்டுள்ளன.</string>
+    <string name="community_error_admin_limit">இந்தக் கம்யூனிட்டியில் ஏற்கெனவே 10 நிர்வாகிகள் உள்ளனர்.</string>
+    <string name="community_error_last_admin">கடைசி நிர்வாகி பதவி விலக முடியாது. முதலில் வேறொருவரை நிர்வாகியாக்குங்கள்.</string>
+    <string name="community_error_already_linked">அந்தக் குழு ஏற்கெனவே ஒரு கம்யூனிட்டியுடன் இணைக்கப்பட்டுள்ளது.</string>
+
+    <plurals name="community_members_count">
+        <item quantity="one">%1$d உறுப்பினர்</item>
+        <item quantity="other">%1$d உறுப்பினர்கள்</item>
+    </plurals>
+</resources>
