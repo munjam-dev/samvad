@@ -32,7 +32,9 @@ What we hold depends on how the account was used and how long ago. Generally:
 |---|---|
 | Basic account information | Phone number, account creation date, profile name, about text, profile photo, registered devices (app and Android version), and last connection time |
 | Group information | Groups the account belongs to, group names, members and admins |
-| Message content | Message content is stored on our servers until deleted. Because messages are not yet end-to-end encrypted, content may be produced where Indian law requires it, under a valid order |
+| Message content | Message content is stored on our servers until deleted. Because messages are not end-to-end encrypted, content may be produced where Indian law requires it, under a valid order |
+| Call records | Who called whom, when, for how long and the outcome, kept as call history, including after an account is deleted. We do not record or store call audio or video |
+| Personal Vault | Stored only on the user's phone; we do not hold it and cannot produce it |
 | Content no longer held | Deleted messages and data past our retention periods (see the [Privacy Policy](/legal/privacy-policy)) generally cannot be produced |
 | Location | We do not collect location |
 

@@ -50,11 +50,11 @@ You must not create accounts by automated means, buy, sell or transfer accounts,
 
 ## 4. The Services
 
-Samvad lets you send messages, photos, voice messages, files and polls to individuals and groups, see when others are online or typing, star and schedule messages, and protect your account with two-step verification and app lock.
+Samvad lets you send messages, photos, voice messages, files and polls to individuals and groups, make voice and video calls and join group meetings, post Moments that expire after 24 hours, keep private items in an on-device Personal Vault, see when others are online or typing, star and schedule messages, and protect your account with two-step verification and app lock.
 
 - **Scheduled messages** are sent by our servers at the time you choose. You are responsible for their content when they are sent. A scheduled message may not be sent if you leave the chat, either of you blocks the other, or your account is deleted; the app shows when this happens.
 - **Groups** are run by their admins, who can add and remove members, change group details and create or revoke invite codes. Anyone with an invite code can join, so share codes with care.
-- **Messages are not yet end-to-end encrypted.** Our [Privacy Policy](/legal/privacy-policy) explains what this means.
+- **Messages and calls are not end-to-end encrypted.** Calls and meetings are carried by our service provider LiveKit Cloud and are not recorded or stored by Samvad. The Personal Vault is stored only on your phone and has no backup; if you lose the phone or clear the app's data, the vault cannot be recovered. Our [Privacy Policy](/legal/privacy-policy) explains what this means.
 - **Samvad is not an emergency service.** You cannot use it to contact police, ambulance or fire services. In an emergency, call **112**.
 
 ## 5. Your content

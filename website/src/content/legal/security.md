@@ -10,7 +10,8 @@ group: authorities
 
 ## 1. How we protect Samvad
 
-- **Encryption** of all connections (TLS) and of stored data.
+- **Encryption** of all connections (TLS) and of stored data. Call and meeting media is encrypted in transit to LiveKit Cloud.
+- **Personal Vault** contents are encrypted on the phone and never uploaded.
 - **Deny-by-default access rules** on our databases and file storage, so every request is checked and only the people in a chat can read it. These rules are covered by automated tests that run on every change.
 - **App integrity checks** (Google Play Integrity through Firebase App Check) on server functions.
 - **Rate limits** on sign-in codes, contact lookups, reports, profile photo changes and two-step PIN guesses, with increasing lockouts.
@@ -18,7 +19,7 @@ group: authorities
 - **Privacy-preserving logs** that exclude message content and phone numbers, enforced by an automated check.
 - **Least-privilege access** for our team and service accounts.
 
-Messages are **not yet end-to-end encrypted**; end-to-end encryption is on our roadmap.
+Messages and calls are **not end-to-end encrypted**; end-to-end encryption is planned but not built.
 
 ## 2. Reporting a vulnerability
 

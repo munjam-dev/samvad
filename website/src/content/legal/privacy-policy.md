@@ -1,12 +1,12 @@
 ---
 title: Privacy Policy
 summary: What Samvad collects, why, where it is stored, how long we keep it, and your rights under Indian law.
-updated: 2026-10-14
+updated: 2026-10-21
 order: 1
 group: privacy
 ---
 
-> **In short.** We collect what a messenger needs to work: your phone number, your profile, and the messages and files you send. We do not show ads, sell your data, or use advertising or analytics trackers. Messages are encrypted while they travel and while stored, but **they are not yet end-to-end encrypted**, which means our systems could technically access them. We are building end-to-end encryption and will update this policy and tell you in the app when it is live. You can delete your account at any time.
+> **In short.** We collect what a messenger needs to work: your phone number, your profile, and the messages and files you send. We do not show ads, sell your data, or use advertising or analytics trackers. Messages are encrypted in transit and stored on Google Cloud, but **neither messages nor calls are end-to-end encrypted**, which means our systems could technically access messages. Your Personal Vault stays on your phone and is never uploaded. We are building end-to-end encryption and will update this policy and tell you in the app when it is live. You can delete your account at any time.
 
 ## 1. Who we are and how this policy applies
 
@@ -35,8 +35,8 @@ Where the DPDP Act lets us process data without consent for a "legitimate use" (
 
 ### 3.2 Profile data
 
-- **Display name**, optional **about** text and optional **profile photo**.
-- These are visible to people you chat with and to members of groups you are in. Your profile photo is hidden from people you have blocked.
+- **Display name**, optional **username**, optional **about** text and optional **profile photo**.
+- These are visible to people you chat with and to members of groups you are in, subject to your privacy settings (section 10). Your profile photo is hidden from people you have blocked.
 - Profile photos are checked and re-encoded on our servers, which removes hidden information such as the camera model and location.
 
 ### 3.3 Contacts
@@ -46,6 +46,7 @@ Only if you allow it, Samvad reads the **phone numbers** in your address book an
 - The numbers are sent over an encrypted connection, compared, and **not stored** on our servers.
 - Contact **names** are read and used only on your phone, to show people under the names you saved. They are never uploaded.
 - The number of lookups is limited per day to prevent misuse.
+- You can switch off phone-number discovery in Settings → Privacy so that other people cannot find you by your number.
 - If you do not allow contacts access, you can still start chats by entering a phone number.
 
 ### 3.4 Messages and content
@@ -53,6 +54,7 @@ Only if you allow it, Samvad reads the **phone numbers** in your address book an
 - The **text messages, photos, voice messages, documents, polls and poll votes, reactions, replies, edits and deletions** you send, with the time sent and delivery and read status.
 - This content is stored on our servers so it can be delivered to the people you send it to and synced to your devices.
 - Photos are resized and re-encoded on your phone before upload, which removes hidden information such as location.
+- You can set a chat to **disappearing messages** (24 hours, 7 days or 90 days); see section 8.
 - Files are limited to 16 MB and to safe file types; app installation files (APKs) cannot be sent.
 
 ### 3.5 Starred and scheduled messages
@@ -87,11 +89,38 @@ Group name, description, photo, members, admins, when each member joined, and in
 - If you **report** someone, the report includes the reported account and the **last 5 messages** of that chat, so our safety team can review it.
 - If you **block** someone, we store that, so they cannot message you or see your presence and profile photo.
 
-### 3.11 Data that stays on your phone
+### 3.11 Calls and meetings
 
-Chat themes, wallpaper photos you choose, names from your contacts, app lock settings and other preferences stay on your phone and are not uploaded. Chats you export are files you create and control.
+- When you make or answer a voice or video call, or join a group meeting, our servers record who called whom, the time, the duration and the outcome (answered, declined, missed), so the Calls tab can show your call history and so we can ring the other person. Meeting details (the group, schedule and host) are stored for the same reason.
+- The **audio and video** of calls and meetings are carried by **LiveKit Cloud**, a service provider that acts as our data processor. Our own servers only ring the other person and issue short-lived (10 minute) access tokens; they do not carry the media.
+- Call and meeting media is **encrypted in transit** to LiveKit's servers. It is **not end-to-end encrypted**, so LiveKit's servers handle it unencrypted while relaying it. Samvad **does not record or store** the audio or video of calls and meetings.
+- The app asks for the camera and microphone only when a call starts or is answered. Samvad does not use your camera or microphone at any other time, except when you record a voice message or capture a photo or video yourself.
 
-### 3.12 This website
+### 3.12 Moments
+
+If you post a Moment (text, photo, video or voice), the content and the audience you choose (everyone, everyone except some people, or only some people) are stored on Google Cloud. Moments expire after 24 hours. People who view a Moment, their reactions and their private replies are recorded so you can see your viewers list. You can delete a Moment, and mute other people's Moments, at any time. Anyone who can see a Moment can capture it.
+
+### 3.13 Search on your phone
+
+Samvad builds a search index of messages **on your phone only**, so you can search across your chats. It covers only messages your phone has loaded, is never uploaded, and is cleared when you sign out or delete your account.
+
+### 3.14 Personal Vault
+
+The Personal Vault is a private space for your own documents, photos, notes and ID copies. Its contents are encrypted on your phone with a key protected by the Android Keystore, are opened only after you confirm with your fingerprint, face or screen lock, and are **never uploaded to our servers or anywhere else**. They are excluded from Android backup and device transfer. There is currently **no cloud backup** of the vault: if you uninstall the app, clear its data or lose or reset your phone, the vault is lost and cannot be recovered. If you export an item, the copy you create is not encrypted.
+
+### 3.15 Linked devices
+
+We store a record of the devices signed in to your account (a device identifier, name and when it was last used) so you can see them and sign one out in Settings → Linked devices. Signing a device out removes its record and signs the phone out the next time it opens the app or receives a notification.
+
+### 3.16 Appeals
+
+If you ask us to review a decision we made about your account or content (Settings → Help → Appeal a decision), we store your appeal and the information you give us so that our safety team can review it and reply.
+
+### 3.17 Data that stays on your phone
+
+Chat themes, wallpaper photos you choose, names from your contacts, the on-device search index, the Personal Vault, app lock settings and other preferences stay on your phone and are not uploaded. Chats you export are files you create and control.
+
+### 3.18 This website
 
 This website does not use advertising or analytics cookies. See our [Cookie Policy](/legal/cookie-policy). Our hosting provider keeps standard server logs (such as IP address and pages requested) for security, for a short period.
 
@@ -112,6 +141,9 @@ This website does not use advertising or analytics cookies. See our [Cookie Poli
 | Deliver messages and keep them in sync across your devices | Messages, content, starred and scheduled messages, group data | Consent |
 | Send notifications | Push token, sender name and (unless you turn previews off) a message preview | Consent |
 | Show which of your contacts use Samvad | Contact phone numbers (not stored) | Consent, given through the contacts permission |
+| Make voice and video calls and group meetings | Call records, meeting details; call audio and video (carried by LiveKit Cloud, not stored by us) | Consent |
+| Let you post and view Moments | Moment content, audience, viewers, reactions and replies | Consent |
+| Review appeals | Your appeal and the data needed to answer it | Consent |
 | Show presence, typing and read status | Presence and activity data | Consent; you can limit it in Settings |
 | Keep Samvad safe; prevent spam, fraud and abuse; act on reports | Reports, blocks, rate-limit counters, logs, app integrity signals | Consent, and legitimate uses permitted by law |
 | Respond to your requests and complaints | Your request and the data needed to answer it | Consent |
@@ -130,7 +162,11 @@ We will not use your personal data for a new purpose without telling you and, wh
 
 ### 6.2 Our service providers
 
-We use **Google Cloud and Firebase** (Google LLC and its affiliates) to host our databases, files and servers, to send sign-in codes by SMS, to deliver push notifications, and to check app integrity. Google processes this data only on our behalf, under its data processing terms. The full list is on our [Service Providers](/legal/service-providers) page.
+We use **Google Cloud and Firebase** (Google LLC and its affiliates) to host our databases, files and servers, to send sign-in codes by SMS, to deliver push notifications, and to check app integrity. Google processes this data only on our behalf, under its data processing terms.
+
+We use **LiveKit Cloud** (LiveKit, Inc.) to carry the audio and video of voice calls, video calls and group meetings. LiveKit processes this media only to relay it between participants and does not receive your messages.
+
+The full list is on our [Service Providers](/legal/service-providers) page.
 
 ### 6.3 Authorities
 
@@ -146,7 +182,7 @@ We do not share personal data with anyone else.
 
 - Our main database, files and servers are in Google Cloud's **Mumbai, India** region.
 - Online status and typing information is kept in Google Cloud's **Singapore** region.
-- Our service providers may process data in other countries where they operate to provide their services (for example, to route SMS or notifications).
+- Our service providers may process data in other countries where they operate to provide their services (for example, to route SMS or notifications, or to relay call and meeting media through LiveKit Cloud).
 
 Any transfer of personal data outside India is made in line with section 16 of the DPDP Act and any restrictions notified by the Government of India.
 
@@ -156,6 +192,11 @@ Any transfer of personal data outside India is made in line with section 16 of t
 |---|---|
 | Account, profile, devices, starred messages, server-side settings | Until you delete your account |
 | Messages and files | Until deleted for everyone by the sender, or until the account that holds the chat is deleted. Messages you sent stay in other people's chats after you delete your account, because they are part of their conversation history |
+| Disappearing messages | If you turn this on for a chat, messages are removed after the period you choose: 24 hours, 7 days or 90 days |
+| Moments | 24 hours, unless you delete them sooner |
+| Call and meeting records | Kept as call history after you delete your account (any live call is ended and you are removed from meetings). Call audio and video is not recorded or stored by Samvad |
+| Linked-device records | Until you sign the device out or delete your account |
+| Personal Vault and on-device search index | Only on your phone, until you delete them, sign out (search index) or uninstall the app |
 | Scheduled messages | Until sent, cancelled or failed, then 7 days; deleted at once when you delete your account |
 | Contact phone numbers checked for matches | Not stored |
 | Safety reports | 90 days, unless the law requires us to keep them longer |
@@ -177,14 +218,19 @@ We use reasonable security practices in line with the Information Technology Act
 - logging designed to exclude message content and phone numbers;
 - limiting staff access to personal data to what is needed, and keeping a record of that access.
 
-**Messages are not yet end-to-end encrypted.** We will update this policy and tell you in the app when end-to-end encryption is available.
+**Messages and calls are not end-to-end encrypted.** Messages are encrypted in transit and stored on Google Cloud; calls and meetings are encrypted in transit to LiveKit's servers. We will update this policy and tell you in the app when end-to-end encryption is available.
 
 No system is perfectly secure. If a personal data breach happens, we will inform the **Data Protection Board of India** and each affected user, as the DPDP Act and its rules require, and tell you what happened and what you can do. To report a security problem, see our [Security and Responsible Disclosure](/legal/security) page.
 
 ## 10. Your choices
 
 - **Contacts:** turn the permission on or off in Android settings.
-- **Last seen and online:** hide it in Settings → Privacy.
+- **Last seen, About and profile photo:** choose who can see each (Everyone, People I chat with, or Nobody) in Settings → Privacy.
+- **Who can add me to groups:** choose in Settings → Privacy.
+- **Phone-number discovery:** switch off in Settings → Privacy so people cannot find you by your number.
+- **Linked devices:** review and sign out devices in Settings → Linked devices.
+- **Disappearing messages:** turn on for a chat from its menu.
+- **Two-step verification, app lock and screenshot blocking:** turn on in Settings.
 - **Read receipts:** turn them off in Settings → Privacy.
 - **Notifications and previews:** turn previews off in Settings → Notifications.
 - **Blocking:** block anyone from their chat menu.
@@ -214,10 +260,14 @@ Samvad is only for people **aged 18 and over**. We do not knowingly process the 
 |---|---|---|
 | Contacts | Find which contacts use Samvad, and show saved names | You can still start chats by phone number |
 | Notifications | Tell you about new messages | You will not get notifications |
-| Microphone | Record voice messages, only while you record | You cannot send voice messages |
+| Microphone | Record voice messages, and carry your voice in calls and meetings | You cannot send voice messages or take part in calls |
+| Camera | Video calls, meetings and taking photos or video in the app | You cannot use video |
+| Bluetooth (nearby devices) | Use a Bluetooth headset in calls | Calls use the phone speaker or earpiece |
+| Full-screen notifications | Show an incoming call over the lock screen | Incoming calls arrive as a normal notification |
+| Run in the foreground | Keep a call or meeting running while you use other apps; shows an ongoing notification | Not optional while a call is connected |
 | Photos and files | Chosen by you through Android's own picker; Samvad sees only what you choose | No permission needed |
-| Fingerprint, face or screen lock | Optional app lock, handled by Android; nothing is sent to us | App lock stays off |
-| Internet | Send and receive messages | Samvad cannot work |
+| Fingerprint, face or screen lock | Optional app lock and the Personal Vault, handled by Android; nothing is sent to us | App lock stays off and the vault cannot be opened |
+| Internet and network state | Send and receive messages, calls and meetings | Samvad cannot work |
 
 ## 14. Grievance Officer
 

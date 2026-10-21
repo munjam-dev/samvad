@@ -6,7 +6,7 @@ order: 11
 group: privacy
 ---
 
-> **In short.** Samvad runs on Google Cloud and Firebase. Google processes data only on our instructions, to host and deliver the service. We do not use any advertising or analytics providers.
+> **In short.** Samvad runs on Google Cloud and Firebase, and uses LiveKit Cloud to carry call and meeting audio and video. These providers process data only on our instructions, to host and deliver the service. We do not use any advertising or analytics providers.
 
 ## 1. Why we use service providers
 
@@ -24,6 +24,7 @@ Running a reliable, secure messenger needs data centres, SMS delivery and push n
 | Google LLC and affiliates (Firebase Cloud Messaging) | Push notifications | Deliver message notifications to your phone | Push token, notification data | Global |
 | Google LLC and affiliates (Firebase App Check, Play Integrity) | App integrity | Confirm requests come from the genuine app on a genuine device | Device integrity signals | Global |
 | Google LLC and affiliates (Firebase Hosting) | Website hosting | Serve this website | Standard server logs | Global (content delivery network) |
+| LiveKit, Inc. (LiveKit Cloud) | Call and meeting media | Relay the audio and video of voice calls, video calls and group meetings. Encrypted in transit; not end-to-end encrypted; not recorded or stored by Samvad | Call audio and video, the access token for the call | Region chosen for the project |
 | Google LLC (Google Play) | App distribution | Distribute and update the app | As described in Google's own privacy policy | Global |
 
 ## 3. Providers we do not use
