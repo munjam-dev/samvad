@@ -416,7 +416,7 @@ private fun CommunityTextDialog(
         onValueChange = { text = it.take(maxLength) },
         singleLine = singleLine,
         minLines = if (singleLine) 1 else 3,
-        supportingText = { Text("${text.length} / $maxLength") },
+        supportingText = { Text(stringResource(R.string.a11y_character_count, text.length, maxLength)) },
       )
     },
     confirmButton = { TextButton({ onDone(text.trim()) }, enabled = !singleLine || text.isNotBlank()) { Text(stringResource(R.string.save)) } },

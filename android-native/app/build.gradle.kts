@@ -29,15 +29,52 @@ android {
     buildConfigField("String", "PRIVACY_URL", "\"https://samvad-messenger.web.app/privacy\"")
   }
 
+  // Release signing comes only from environment variables or Gradle properties and is absent by default,
+  // so the release output is unsigned unless the owner supplies them (see docs/RELEASE_CHECKLIST.md).
+  fun signingValue(name: String): String? =
+    (findProperty(name) as String?)?.takeIf { it.isNotBlank() } ?: System.getenv(name)?.takeIf { it.isNotBlank() }
+  val releaseStoreFile = signingValue("SAMVAD_RELEASE_STORE_FILE")
+  val releaseSigningConfigured = releaseStoreFile != null &&
+    signingValue("SAMVAD_RELEASE_STORE_PASSWORD") != null &&
+    signingValue("SAMVAD_RELEASE_KEY_ALIAS") != null &&
+    signingValue("SAMVAD_RELEASE_KEY_PASSWORD") != null
+  if (releaseSigningConfigured) {
+    signingConfigs {
+      create("release") {
+        storeFile = file(releaseStoreFile!!)
+        storePassword = signingValue("SAMVAD_RELEASE_STORE_PASSWORD")
+        keyAlias = signingValue("SAMVAD_RELEASE_KEY_ALIAS")
+        keyPassword = signingValue("SAMVAD_RELEASE_KEY_PASSWORD")
+      }
+    }
+  }
+
+  // -Psamvad.abiSplits=true builds one release APK per ABI instead of one APK holding both ABIs.
+  val abiSplits = (findProperty("samvad.abiSplits") as String?)?.toBoolean() ?: false
+  if (abiSplits) {
+    splits {
+      abi {
+        isEnable = true
+        reset()
+        include("arm64-v8a", "armeabi-v7a")
+        isUniversalApk = false
+      }
+    }
+  }
+
   buildTypes {
     debug {
       applicationIdSuffix = ".debug"
+      // Real phones (arm64) and the x86_64 emulator only; 32-bit ARM ships in release.
+      if (!abiSplits) ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
       buildConfigField("boolean", "USE_EMULATORS", useEmulators.toString())
       buildConfigField("String", "EMULATOR_HOST", "\"$emulatorHost\"")
     }
     release {
       isMinifyEnabled = true
       isShrinkResources = true
+      if (releaseSigningConfigured) signingConfig = signingConfigs.getByName("release")
+      if (!abiSplits) ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       buildConfigField("boolean", "USE_EMULATORS", "false")
       buildConfigField("String", "EMULATOR_HOST", "\"\"")
@@ -45,9 +82,17 @@ android {
   }
 
   packaging {
-    // Signal ships test-only native builds next to the real ones; they must never be in the app.
+    // libsignal-android also ships desktop JVM natives (macOS .dylib and Windows .dll, about 110 MB
+    // uncompressed) as plain Java resources at the archive root, plus test-only builds of every native
+    // library. None of them can run on a phone, so none may be packaged.
     jniLibs.excludes += "**/libsignal_jni_testing.so"
-    jniLibs.excludes += "/lib/*/libsignal_jni_testing.so"
+    resources.excludes += listOf(
+      "/*.dylib",
+      "/*.dll",
+      "/libsignal_jni_testing*",
+      "/signal_jni_testing*",
+      "/lib/**/libsignal_jni_testing*",
+    )
   }
 
   compileOptions {
@@ -120,6 +165,8 @@ dependencies {
   androidTestImplementation(platform(libs.androidx.compose.bom))
   androidTestImplementation(libs.androidx.compose.ui.test.junit4)
   androidTestImplementation(libs.androidx.junit)
+  androidTestImplementation(libs.androidx.test.runner)
+  androidTestImplementation(libs.androidx.test.rules)
   androidTestImplementation(libs.androidx.espresso.core)
   debugImplementation(libs.androidx.compose.ui.tooling)
   debugImplementation(libs.androidx.compose.ui.test.manifest)

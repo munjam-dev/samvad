@@ -1,5 +1,7 @@
 package com.samvad.messenger.ui.community
 
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.selection.toggleable
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -126,7 +128,7 @@ private fun DescriptionStep(description: String, onDescription: (String) -> Unit
       label = { Text(stringResource(R.string.community_description_hint)) },
       minLines = 4,
       modifier = Modifier.fillMaxWidth(),
-      supportingText = { Text("${description.length} / ${CommunityRules.MAX_DESCRIPTION}") },
+      supportingText = { Text(stringResource(R.string.a11y_character_count, description.length, CommunityRules.MAX_DESCRIPTION)) },
     )
     Text(stringResource(R.string.community_description_help), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
   }
@@ -156,7 +158,7 @@ private fun GroupsStep(state: CreateCommunityState, onToggle: (String) -> Unit) 
           Row(
             Modifier
               .fillMaxWidth()
-              .clickable { onToggle(g.cid) }
+              .toggleable(checked, role = Role.Checkbox) { onToggle(g.cid) }
               .padding(horizontal = 20.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp),

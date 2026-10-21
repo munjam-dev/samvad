@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="a11y_clear_search">శోధనను తొలగించండి</string>
+  <string name="a11y_react_thumbs_up">థంబ్స్-అప్ స్పందనను జోడించండి</string>
+  <string name="a11y_open_media">ఫోటో లేదా వీడియో తెరవండి</string>
+  <string name="a11y_character_count">%1$d / %2$d</string>
+  <string name="a11y_see_viewers">ఎవరు చూశారో చూడండి</string>
+</resources>

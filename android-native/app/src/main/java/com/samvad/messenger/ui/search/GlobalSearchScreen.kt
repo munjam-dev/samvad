@@ -109,10 +109,9 @@ fun GlobalSearchScreen(
           )
         }
         if (state.query.isNotEmpty()) {
-          Icon(
-            Icons.Outlined.Close, stringResource(R.string.cd_cancel_upload), tint = colors.onSurfaceVariant,
-            modifier = Modifier.size(18.dp).clickable { vm.setQuery("") },
-          )
+          IconButton(onClick = { vm.setQuery("") }) {
+            Icon(Icons.Outlined.Close, stringResource(R.string.a11y_clear_search), tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
+          }
         }
       }
     }

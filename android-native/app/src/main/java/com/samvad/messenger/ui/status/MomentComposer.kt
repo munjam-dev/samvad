@@ -1,5 +1,9 @@
 package com.samvad.messenger.ui.status
 
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.selection.selectable
 import android.Manifest
 import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
@@ -251,10 +255,14 @@ fun StatusComposerScreen(container: AppContainer, me: String, startWithPhoto: Bo
         StatusRules.STYLES.forEach { s ->
           val (sb, _) = styleColorsOf(s)
           Box(
-            Modifier.size(36.dp).clip(CircleShape).background(sb)
-              .border(if (s == style) 3.dp else 1.dp, if (s == style) fg else colors.outlineVariant, CircleShape)
-              .clickable(role = Role.RadioButton, onClickLabel = s) { style = s },
-          )
+            Modifier.size(48.dp).selectable(s == style, role = Role.RadioButton) { style = s }.semantics { contentDescription = s },
+            contentAlignment = Alignment.Center,
+          ) {
+            Box(
+              Modifier.size(36.dp).clip(CircleShape).background(sb)
+                .border(if (s == style) 3.dp else 1.dp, if (s == style) fg else colors.outlineVariant, CircleShape),
+            )
+          }
         }
       }
     }
@@ -377,7 +385,7 @@ private fun AudienceDialog(
           StatusAudience.EXCEPT to R.string.status_audience_except_label,
           StatusAudience.ONLY to R.string.status_audience_only_label,
         ).forEach { (a, label) ->
-          Row(Modifier.fillMaxWidth().defaultMinSize(minHeight = 48.dp).clickable(role = Role.RadioButton) { onAudience(a) }, verticalAlignment = Alignment.CenterVertically) {
+          Row(Modifier.fillMaxWidth().defaultMinSize(minHeight = 48.dp).selectable(audience == a, role = Role.RadioButton) { onAudience(a) }, verticalAlignment = Alignment.CenterVertically) {
             RadioButton(selected = audience == a, onClick = null)
             Text(stringResource(label), modifier = Modifier.padding(start = 12.dp))
           }
@@ -386,7 +394,7 @@ private fun AudienceDialog(
           Text(stringResource(R.string.status_pick_people), style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant, modifier = Modifier.padding(top = 12.dp, bottom = 4.dp))
           if (people.isEmpty()) Text(stringResource(R.string.status_no_people), style = MaterialTheme.typography.bodySmall)
           people.forEach { p ->
-            Row(Modifier.fillMaxWidth().defaultMinSize(minHeight = 48.dp).clickable { onChosen(if (p.uid in chosen) chosen - p.uid else chosen + p.uid) }, verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().defaultMinSize(minHeight = 48.dp).toggleable(p.uid in chosen, role = Role.Checkbox) { onChosen(if (p.uid in chosen) chosen - p.uid else chosen + p.uid) }, verticalAlignment = Alignment.CenterVertically) {
               Checkbox(checked = p.uid in chosen, onCheckedChange = null)
               Text(p.name, modifier = Modifier.padding(start = 12.dp))
             }
