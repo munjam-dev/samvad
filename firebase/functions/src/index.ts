@@ -14,7 +14,7 @@ export { reportContact } from './reportContact';
 export { setProfilePhoto } from './setProfilePhoto';
 export { sendScheduledMessages } from './scheduled';
 export { setDisappearingTimer, onMessageDeleted } from './disappearing';
-export { onStatusCreated, onStatusDeleted } from './status';
+export { onStatusCreated, onStatusDeleted, setStatusAudience } from './status';
 export { setPinnedMessage } from './pinned';
 export { setUsername, checkUsername } from './username';
 export { revokeDevice } from './devices';

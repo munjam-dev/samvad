@@ -357,6 +357,26 @@ service cloud.firestore {
       return c.type != 'community_announcements' || request.auth.uid in c.admins;
     }
 
+    // Phase 8: a reply to a moment names it (momentRef). It is allowed only as a text or short (30 s) voice message in the
+    // one-to-one chat with the moment's author, only while the moment is live, visible to the sender, and not marked
+    // repliesOff (which is set at creation and cannot change).
+    function validMomentReply(cid, d) {
+      let r = d.momentRef;
+      let c = convAfter(cid);
+      return r is map
+        && r.keys().hasOnly(['author', 'sid'])
+        && r.author is string && r.sid is string && isUuid(r.sid)
+        && c.type == 'direct'
+        && r.author in c.members
+        && r.author != request.auth.uid
+        && d.kind in ['text', 'voice']
+        && (d.kind != 'voice' || d.media.durationMs <= 30000)
+        && exists(/databases/$(database)/documents/statuses/$(r.author)/items/$(r.sid))
+        && get(/databases/$(database)/documents/statuses/$(r.author)/items/$(r.sid)).data.get('repliesOff', false) != true
+        && request.auth.uid in get(/databases/$(database)/documents/statuses/$(r.author)/items/$(r.sid)).data.get('visibleTo', [])
+        && request.time < get(/databases/$(database)/documents/statuses/$(r.author)/items/$(r.sid)).data.get('expiresAt', timestamp.date(1970, 1, 1));
+    }
+
     function notBlocked(cid) {
       let c = convAfter(cid);
       return c.type != 'direct'
@@ -406,7 +426,7 @@ service cloud.firestore {
 
         allow create: if isMemberOf(cid)
           && isUuid(mid)
-          && request.resource.data.keys().hasOnly(['senderId', 'kind', 'text', 'replyTo', 'createdAt', 'deleted', 'reactions', 'media', 'forwarded', 'mentions', 'poll', 'contact'])
+          && request.resource.data.keys().hasOnly(['senderId', 'kind', 'text', 'replyTo', 'createdAt', 'deleted', 'reactions', 'media', 'forwarded', 'mentions', 'poll', 'contact', 'momentRef'])
           && request.resource.data.keys().hasAll(['senderId', 'kind', 'text', 'replyTo', 'createdAt'])
           && request.resource.data.senderId == request.auth.uid
           && (
@@ -429,6 +449,7 @@ service cloud.firestore {
           && (request.resource.data.kind == 'poll' || !('poll' in request.resource.data))
           && (request.resource.data.kind == 'contact' || !('contact' in request.resource.data))
           && validMentions(cid, request.resource.data)
+          && (!('momentRef' in request.resource.data) || validMomentReply(cid, request.resource.data))
           && mayPost(cid)
           && (request.resource.data.replyTo == null
               || (request.resource.data.replyTo is string && isUuid(request.resource.data.replyTo)))
@@ -554,7 +575,8 @@ service cloud.firestore {
     }
 
     function validStatus(uid, sid, d) {
-      return d.keys().hasOnly(['kind', 'text', 'style', 'media', 'audience', 'list', 'createdAt'])
+      return d.keys().hasOnly(['kind', 'text', 'style', 'media', 'audience', 'list', 'createdAt', 'repliesOff'])
+        && d.get('repliesOff', false) is bool
         && d.keys().hasAll(['kind', 'text', 'audience', 'list', 'createdAt'])
         && d.createdAt == request.time
         && d.audience in ['all', 'only', 'except']
