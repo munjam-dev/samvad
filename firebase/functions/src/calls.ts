@@ -148,7 +148,10 @@ export async function declineCallCore(deps: Deps, uid: string, callId: string): 
 
 export async function endCallCore(deps: Deps, uid: string, callId: string, livekit: LiveKitService | null): Promise<void> {
   let roomName: string | null = null;
+  let cancelled: FirebaseFirestore.DocumentData | null = null;
   await deps.db.runTransaction(async (tx) => {
+    roomName = null;
+    cancelled = null;
     const ref = deps.db.doc(`calls/${callId}`);
     const snap = await tx.get(ref);
     const participants: string[] = snap.exists ? snap.get('participants') ?? [] : [];
@@ -156,8 +159,18 @@ export async function endCallCore(deps: Deps, uid: string, callId: string, livek
     const status = snap.get('status') as CallStatus;
     if (status === 'ended' || status === 'declined' || status === 'missed') return;
     roomName = snap.get('roomName') as string;
-    tx.update(ref, { status: 'ended', endedAt: Timestamp.fromMillis(deps.nowMs()), endedBy: uid });
+    const endedAt = Timestamp.fromMillis(deps.nowMs());
+    if (status === 'ringing' && snap.get('callerUid') === uid) {
+      // The caller gave up before an answer: the callee sees a missed call.
+      tx.update(ref, { status: 'missed', endedAt, endedBy: uid });
+      cancelled = snap.data() ?? null;
+    } else if (status === 'ringing') {
+      tx.update(ref, { status: 'declined', endedAt, endedBy: uid });
+    } else {
+      tx.update(ref, { status: 'ended', endedAt, endedBy: uid });
+    }
   });
+  if (cancelled) await notifyMissed(deps, callId, cancelled);
   if (roomName && livekit) await livekit.closeRoom(roomName);
 }
 
@@ -188,6 +201,19 @@ export async function getCallTokenCore(
   return { url: kit.url, token, roomName };
 }
 
+/** Tells the callee's devices the ring is over (stops the ringing and leaves a missed-call line). */
+async function notifyMissed(deps: Deps, callId: string, data: FirebaseFirestore.DocumentData): Promise<void> {
+  const calleeUid = (data.participants as string[]).find((p) => p !== data.callerUid);
+  if (!calleeUid) return;
+  const caller = await deps.db.doc(`profiles/${data.callerUid}`).get();
+  const callerName = (caller.get('displayName') as string | undefined) ?? 'Samvad';
+  const devices = await deps.db.collection(`users/${calleeUid}/devices`).where('fcmToken', '!=', null).get();
+  const tokens = devices.docs.map((dd) => dd.get('fcmToken')).filter((t): t is string => typeof t === 'string' && t.length > 0);
+  if (tokens.length > 0) {
+    await deps.push.send(tokens, { type: 'missed_call', callId, callerUid: String(data.callerUid), callerName, kind: String(data.kind) });
+  }
+}
+
 /**
  * Marks every call still 'ringing' past its expiry as 'missed' and tells the callee. Runs every
  * minute, like the scheduled-message sender; each call is claimed once so a redelivered run is safe.
@@ -208,14 +234,7 @@ export async function cleanupMissedCallsCore(deps: Deps, nowMs: number = deps.no
     });
     if (!outcome) continue;
     missed++;
-    const data = d.data();
-    const calleeUid = (data.participants as string[]).find((p) => p !== data.callerUid);
-    if (!calleeUid) continue;
-    const caller = await deps.db.doc(`profiles/${data.callerUid}`).get();
-    const callerName = (caller.get('displayName') as string | undefined) ?? 'Samvad';
-    const devices = await deps.db.collection(`users/${calleeUid}/devices`).where('fcmToken', '!=', null).get();
-    const tokens = devices.docs.map((dd) => dd.get('fcmToken')).filter((t): t is string => typeof t === 'string' && t.length > 0);
-    if (tokens.length > 0) await deps.push.send(tokens, { type: 'missed_call', callId: d.id, callerName, kind: data.kind });
+    await notifyMissed(deps, d.id, d.data());
   }
   if (missed > 0) logEvent('calls_missed', { count: missed, outcome: 'ok' });
   return missed;

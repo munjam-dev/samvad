@@ -48,6 +48,8 @@ class AppContainer(context: Context) {
   val twoStep: TwoStepRepository? = firebase?.let { TwoStepRepository(it.auth, it.functions) }
   val groups: GroupRepository? = firebase?.let { GroupRepository(it.functions) }
   val status: StatusRepository? = firebase?.let { StatusRepository(it.db, it.storage) }
+  val calls: com.samvad.messenger.data.CallRepository? = firebase?.let { com.samvad.messenger.data.CallRepository(it.db, it.functions) }
+  val callEngine = com.samvad.messenger.ui.call.CallEngine(context.applicationContext, calls)
   val push = PushTokens(enabled = firebase != null && !com.samvad.messenger.BuildConfig.USE_EMULATORS)
 
   val isConfigured: Boolean get() = firebase != null

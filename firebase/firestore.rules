@@ -577,8 +577,9 @@ service cloud.firestore {
     // only ever read their own call or the meetings of groups they belong to.
 
     match /calls/{callId} {
-      allow get: if signedIn() && request.auth.uid in resource.data.get('participants', []);
-      allow list, create, update, delete: if false;
+      // History: the app lists its own calls with a participants array-contains filter.
+      allow get, list: if signedIn() && request.auth.uid in resource.data.get('participants', []);
+      allow create, update, delete: if false;
     }
 
     match /meetings/{meetingId} {

@@ -72,7 +72,12 @@ data class Message(
   /** Disappearing messages: when the server will delete it; null when the chat has no timer. */
   val expiresAt: Long? = null,
   val poll: Poll? = null,
+  /** Phase 7: a scheduled group meeting card (kind "meeting"). */
+  val meeting: MeetingCard? = null,
 )
+
+/** The card posted in a group when an admin schedules a meeting; [kind] is "audio" or "video". */
+data class MeetingCard(val meetingId: String, val title: String, val startsAtMs: Long, val kind: String)
 
 enum class DeliveryState { SENDING, SENT, DELIVERED, READ, FAILED }
 

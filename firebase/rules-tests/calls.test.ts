@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, it } from 'vitest';
 import { assertFails, assertSucceeds, type RulesTestEnvironment } from '@firebase/rules-unit-testing';
-import { doc, getDoc, setDoc, Timestamp, deleteDoc, updateDoc, type Firestore } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, where, setDoc, Timestamp, deleteDoc, updateDoc, type Firestore } from 'firebase/firestore';
 import { createRulesEnv, phoneContext } from '../test-support/rulesEnv';
 
 // Calls (Phase 7): written only by the calls.ts callables (Admin SDK). Clients may only read a call
@@ -43,6 +43,13 @@ describe('calls rules', () => {
   it('lets a participant read the call', async () => {
     await assertSucceeds(getDoc(doc(db(A), `calls/${CALL_ID}`)));
     await assertSucceeds(getDoc(doc(db(B), `calls/${CALL_ID}`)));
+  });
+
+  it('lets a participant list their own history, and nobody else's', async () => {
+    const mine = (uid: string) => getDocs(query(collection(db(uid), 'calls'), where('participants', 'array-contains', uid)));
+    await assertSucceeds(mine(A));
+    await assertFails(getDocs(query(collection(db(C), 'calls'), where('participants', 'array-contains', A))));
+    await assertFails(getDocs(collection(db(C), 'calls')));
   });
 
   it('refuses a non-participant', async () => {

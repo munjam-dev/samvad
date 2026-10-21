@@ -21,6 +21,7 @@ class SamvadMessagingService : FirebaseMessagingService() {
       Notifications.showSecurityAlert(this)
       return
     }
+    if (CallPush.handle(this, data)) return
     if (data["type"] != "message") return
     val cid = data["cid"] ?: return
     val sender = data["senderId"] ?: return

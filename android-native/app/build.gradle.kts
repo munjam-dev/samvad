@@ -101,6 +101,9 @@ dependencies {
   implementation(libs.firebase.appcheck.playintegrity)
   debugImplementation(libs.firebase.appcheck.debug)
 
+  // Calls and meetings (Phase 7): LiveKit client SDK (Apache-2.0) with its bundled WebRTC.
+  implementation(libs.livekit.android)
+
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.kotlinx.coroutines.play.services)
 

@@ -44,7 +44,12 @@ export const fcmPushSender: PushSender = {
     const res = await getMessaging().sendEachForMulticast({
       tokens,
       data,
-      android: { priority: 'high', collapseKey: data.cid },
+      android: {
+        priority: 'high',
+        collapseKey: data.cid ?? data.callId,
+        // A ring is worthless after the ring window.
+        ...(data.type === 'incoming_call' ? { ttl: 45_000 } : {}),
+      },
     });
     const invalidTokens = res.responses
       .map((r, i) => (!r.success && r.error && DEAD_TOKEN_CODES.has(r.error.code) ? tokens[i] : null))

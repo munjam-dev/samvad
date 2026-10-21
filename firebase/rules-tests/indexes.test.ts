@@ -58,6 +58,14 @@ describe('indexes and list access', () => {
         collectionGroup: 'calls',
         queryScope: 'COLLECTION',
         fields: [
+          { fieldPath: 'participants', arrayConfig: 'CONTAINS' },
+          { fieldPath: 'createdAt', order: 'DESCENDING' },
+        ],
+      },
+      {
+        collectionGroup: 'calls',
+        queryScope: 'COLLECTION',
+        fields: [
           { fieldPath: 'status', order: 'ASCENDING' },
           { fieldPath: 'expiresAt', order: 'ASCENDING' },
         ],

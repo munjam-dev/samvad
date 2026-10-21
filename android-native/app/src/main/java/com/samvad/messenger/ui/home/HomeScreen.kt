@@ -162,7 +162,7 @@ fun HomeScreen(
           onNewPhoto = onNewPhotoStatus,
         )
         Tab.COMMUNITIES -> ComingSoon(Icons.Outlined.Groups, R.string.communities_title, R.string.communities_body, menu, R.string.nav_communities)
-        Tab.CALLS -> ComingSoon(Icons.Outlined.Call, R.string.calls_title, R.string.calls_body, menu, R.string.nav_calls)
+        Tab.CALLS -> com.samvad.messenger.ui.call.CallsTab(container, me, topBar = { TabTopBar(R.string.nav_calls, menu) })
       }
     }
     if (Tab.entries[tab] == Tab.CHATS) {

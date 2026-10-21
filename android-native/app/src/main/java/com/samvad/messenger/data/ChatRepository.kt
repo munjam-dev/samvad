@@ -528,6 +528,12 @@ class ChatRepository(private val db: FirebaseFirestore) {
     )
   }
 
+  private fun toMeetingCard(m: Map<*, *>): com.samvad.core.chat.MeetingCard? {
+    val id = m["meetingId"] as? String ?: return null
+    val startsAt = (m["startsAt"] as? com.google.firebase.Timestamp)?.toDate()?.time ?: return null
+    return com.samvad.core.chat.MeetingCard(id, m["title"] as? String ?: "", startsAt, m["kind"] as? String ?: "audio")
+  }
+
   private fun toMessage(d: DocumentSnapshot): Message {
     @Suppress("UNCHECKED_CAST")
     val reactions = (d.get("reactions") as? Map<String, Any?>)?.mapNotNull { (k, v) -> (v as? String)?.let { k to it } }?.toMap()
@@ -548,6 +554,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
       system = (d.get("system") as? Map<*, *>)?.let(::toSystem),
       expiresAt = d.millis("expiresAt"),
       poll = (d.get("poll") as? Map<*, *>)?.let(::toPoll),
+      meeting = (d.get("meeting") as? Map<*, *>)?.let(::toMeetingCard),
     )
   }
 }

@@ -19,6 +19,8 @@ dependencyResolutionManagement {
   repositories {
     google()
     mavenCentral()
+    // LiveKit's client SDK depends on a fork of audioswitch published on JitPack (only that group is allowed).
+    maven("https://jitpack.io") { content { includeGroup("com.github.davidliu") } }
   }
 }
 

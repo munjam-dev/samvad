@@ -21,6 +21,7 @@ export interface CreatedMessage {
     /** Server-written group events ("added", "left"…); never pushed. */
     system?: Record<string, unknown>;
     poll?: { question?: string };
+    meeting?: { title?: string };
   };
 }
 
@@ -33,6 +34,7 @@ export function previewOf(data: CreatedMessage['data']): string {
       case 'voice': return '🎤 Voice message';
       case 'file': return `📄 ${data.media?.name ?? 'File'}`;
       case 'poll': return `📊 ${data.poll?.question ?? 'Poll'}`;
+      case 'meeting': return `📅 ${data.meeting?.title ?? 'Meeting'}`;
       default: return '';
     }
   })();

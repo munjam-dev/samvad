@@ -117,6 +117,15 @@ describe('endCall', () => {
     expect(closed).toContain(roomName);
   });
 
+  it('a caller who hangs up while ringing leaves a missed call and rings no more', async () => {
+    const { callId } = await start(A);
+    await end(A, callId);
+    expect((await deps.db.doc(`calls/${callId}`).get()).get('status')).toBe('missed');
+    // The callee is free to take other calls again.
+    await deps.db.doc(`conversations/bina_chetan`).set({ type: 'direct', members: [B, 'chetan'], createdBy: 'chetan', createdAt: T0, lastMessage: null, lastMessageAt: T0 });
+    expect(await errorOf(start('chetan', 'bina_chetan'))).toBe('ok');
+  });
+
   it('refuses a non-participant', async () => {
     const { callId } = await start(A);
     expect(await errorOf(end('chetan', callId))).toBe('not-found');
