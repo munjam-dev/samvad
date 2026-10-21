@@ -85,7 +85,12 @@ data class Message(
   val eventTitle: String? = null,
   /** A shared contact card (kind "contact"). */
   val contact: ContactCard? = null,
+  /** Phase 7: a scheduled group meeting card (kind "meeting"). */
+  val meeting: MeetingCard? = null,
 )
+
+/** The card posted in a group when an admin schedules a meeting; [kind] is "audio" or "video". */
+data class MeetingCard(val meetingId: String, val title: String, val startsAtMs: Long, val kind: String)
 
 enum class DeliveryState { SENDING, SENT, DELIVERED, READ, FAILED }
 

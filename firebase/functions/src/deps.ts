@@ -49,12 +49,18 @@ export function chunkTokens(tokens: string[], size = FCM_MULTICAST_LIMIT): strin
 
 export const fcmPushSender: PushSender = {
   async send(tokens, data) {
+    if (tokens.length === 0) return { invalidTokens: [] };
     const invalidTokens: string[] = [];
     for (const batch of chunkTokens(tokens)) {
       const res = await getMessaging().sendEachForMulticast({
         tokens: batch,
         data,
-        android: { priority: 'high', collapseKey: data.cid },
+        android: {
+          priority: 'high',
+          collapseKey: data.cid ?? data.callId,
+          // A ring is worthless after the ring window.
+          ...(data.type === 'incoming_call' ? { ttl: 45_000 } : {}),
+        },
       });
       res.responses.forEach((r, i) => {
         if (!r.success && r.error && DEAD_TOKEN_CODES.has(r.error.code)) invalidTokens.push(batch[i]);

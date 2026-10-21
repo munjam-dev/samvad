@@ -21,6 +21,7 @@ class SamvadMessagingService : FirebaseMessagingService() {
       Notifications.showSecurityAlert(this)
       return
     }
+    if (CallPush.handle(this, data)) return
     // onMessageReceived runs on a background thread, so a short blocking read of the settings is fine.
     val prefs = (application as SamvadApplication).container.preferences
     val now = System.currentTimeMillis()

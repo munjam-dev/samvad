@@ -67,6 +67,8 @@ import androidx.compose.material.icons.outlined.DoneAll
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.Call
+import androidx.compose.material.icons.outlined.Videocam
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.CircularProgressIndicator
@@ -179,6 +181,7 @@ fun ConversationScreen(
   val pinnedIds = vm.pinnedIds.collectAsStateWithLifecycle().value
   val pinNotice = vm.pinNotice.collectAsStateWithLifecycle().value
   var composingPoll by remember { mutableStateOf(false) }
+  var schedulingMeeting by remember { mutableStateOf(false) }
   val themeSettings = container.chatThemes.settings.collectAsStateWithLifecycle(null).value
   val backdrop = themeSettings?.backgroundFor(conversationId) ?: ChatBackground.Theme(ChatThemes.DEFAULT.id)
   val dark = SamvadTheme.colors.isDark
@@ -558,6 +561,15 @@ fun ConversationScreen(
             }
           }
         }
+        if (!state.isGroup && otherUid != null && !state.removed) {
+          val callContext = LocalContext.current
+          IconButton(onClick = { com.samvad.messenger.ui.call.AppCalls.start(callContext, conversationId, otherUid, state.title, com.samvad.core.call.CallKind.AUDIO) }) {
+            Icon(Icons.Outlined.Call, stringResource(R.string.call_voice_cd), tint = colors.onSurface)
+          }
+          IconButton(onClick = { com.samvad.messenger.ui.call.AppCalls.start(callContext, conversationId, otherUid, state.title, com.samvad.core.call.CallKind.VIDEO) }) {
+            Icon(Icons.Outlined.Videocam, stringResource(R.string.call_video_cd), tint = colors.onSurface)
+          }
+        }
         Box {
           IconButton(onClick = { menu = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.cd_more), tint = colors.onSurface) }
           DropdownMenu(menu, onDismissRequest = { menu = false }) {
@@ -568,6 +580,9 @@ fun ConversationScreen(
               DropdownMenuItem(text = { Text(stringResource(R.string.group_events)) }, onClick = { menu = false; onOpenEvents() })
             }
             DropdownMenuItem(text = { Text(stringResource(R.string.media_tab_title)) }, onClick = { menu = false; onOpenMedia() })
+            if (state.isGroup && state.isAdmin && !state.removed) {
+              DropdownMenuItem(text = { Text(stringResource(R.string.meeting_schedule_title)) }, onClick = { menu = false; schedulingMeeting = true })
+            }
             DropdownMenuItem(
               text = { Text(stringResource(if (state.pinned) R.string.chat_unpin else R.string.chat_pin)) },
               onClick = { vm.toggle("pinned", !state.pinned); menu = false },
@@ -730,6 +745,10 @@ fun ConversationScreen(
                         },
                       )
                     }
+                    val meeting = item.message.meeting
+                    if (item.message.kind == "meeting" && meeting != null && !item.message.deleted) {
+                      com.samvad.messenger.ui.call.MeetingCardView(meeting, me, container)
+                    }
                   },
                 )
               }
@@ -860,6 +879,17 @@ fun ConversationScreen(
     }
   }
 
+  if (schedulingMeeting) {
+    val meetingScheduled = stringResource(R.string.meeting_created)
+    val meetingFailed = stringResource(R.string.meeting_error)
+    ModalBottomSheet(onDismissRequest = { schedulingMeeting = false }) {
+      com.samvad.messenger.ui.call.ScheduleMeetingSheet(
+        container, conversationId,
+        onClose = { schedulingMeeting = false },
+        onResult = { ok -> scope.launch { snackbar.showSnackbar(if (ok) meetingScheduled else meetingFailed) } },
+      )
+    }
+  }
   if (composingPoll) {
     ModalBottomSheet(onDismissRequest = { composingPoll = false }) {
       PollComposer(onCreate = vm::sendPoll, onClose = { composingPoll = false })

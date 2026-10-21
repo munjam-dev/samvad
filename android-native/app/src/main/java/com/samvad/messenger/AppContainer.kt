@@ -68,6 +68,8 @@ class AppContainer(context: Context) {
   val privacy: PrivacyRepository? = firebase?.let { PrivacyRepository(it.db, it.rtdb) }
   val devices: DevicesRepository? = firebase?.let { DevicesRepository(it.db, it.functions) }
   val appeals: AppealsRepository? = firebase?.let { AppealsRepository(it.db, it.functions) }
+  val calls: com.samvad.messenger.data.CallRepository? = firebase?.let { com.samvad.messenger.data.CallRepository(it.db, it.functions) }
+  val callEngine = com.samvad.messenger.ui.call.CallEngine(context.applicationContext, calls)
   val push = PushTokens(enabled = firebase != null && !com.samvad.messenger.BuildConfig.USE_EMULATORS)
   /** Local, on-device message search index (Room/FTS). Never uploaded; cleared on sign-out and account deletion. */
   val searchIndexer = SearchIndexer(context)

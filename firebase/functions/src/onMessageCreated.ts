@@ -28,6 +28,7 @@ export interface CreatedMessage {
     eventTitle?: string;
     /** Shared contact card; only its name is used in previews (never the phone numbers). */
     contact?: { name?: string };
+    meeting?: { title?: string };
   };
 }
 
@@ -43,6 +44,7 @@ export function previewOf(data: CreatedMessage['data']): string {
       case 'event': return `📅 ${data.eventTitle ?? 'Event'}`;
       case 'video': return '🎬 Video';
       case 'contact': return `👤 ${data.contact?.name ?? 'Contact'}`;
+      case 'meeting': return `📅 ${data.meeting?.title ?? 'Meeting'}`;
       default: return '';
     }
   })();
