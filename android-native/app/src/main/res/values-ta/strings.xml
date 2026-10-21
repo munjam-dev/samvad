@@ -135,7 +135,7 @@
     <string name="calls_title">அழைப்புகள்</string>
     <string name="calls_body">குரல் மற்றும் வீடியோ அழைப்புகள் உருவாக்கப்படுகின்றன. தயாரானதும் இங்கே தோன்றும்.</string>
     <string name="communities_title">சமூகங்கள்</string>
-    <string name="communities_body">சமூகங்களும் சேனல்களும் விரைவில் வரும். முதலில் குரூப் சாட்கள் வரும்.</string>
+    <string name="communities_body">தொடர்புடைய குழுக்களை ஒரு சமூகத்தின் கீழ் இணைக்கவும்; நிர்வாகிகளின் அறிவிப்புகள் அனைவருக்கும் கிடைக்கும்.</string>
 
     <!-- Conversation -->
     <string name="chat_message_hint">செய்தி</string>

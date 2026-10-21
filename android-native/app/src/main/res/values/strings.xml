@@ -135,7 +135,7 @@
     <string name="calls_title">Calls</string>
     <string name="calls_body">Voice and video calling is being built. It will appear here when it\'s ready.</string>
     <string name="communities_title">Communities</string>
-    <string name="communities_body">Communities and channels are on the way. Group chats arrive first.</string>
+    <string name="communities_body">Bring related groups together in one community, with announcements from its admins.</string>
 
     <!-- Conversation -->
     <string name="chat_message_hint">Message</string>

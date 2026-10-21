@@ -135,7 +135,7 @@
     <string name="calls_title">कॉल</string>
     <string name="calls_body">वॉइस और वीडियो कॉलिंग बनाई जा रही है। तैयार होने पर यहाँ दिखेगी।</string>
     <string name="communities_title">कम्युनिटी</string>
-    <string name="communities_body">कम्युनिटी और चैनल आने वाले हैं। पहले ग्रुप चैट आ रही हैं।</string>
+    <string name="communities_body">संबंधित ग्रुप को एक कम्युनिटी में जोड़ें, जहाँ एडमिन की घोषणाएँ सबको मिलती हैं।</string>
 
     <!-- Conversation -->
     <string name="chat_message_hint">संदेश</string>

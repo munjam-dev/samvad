@@ -135,7 +135,7 @@
     <string name="calls_title">కాల్స్</string>
     <string name="calls_body">వాయిస్, వీడియో కాలింగ్ తయారవుతోంది. సిద్ధమైనప్పుడు ఇక్కడ కనిపిస్తుంది.</string>
     <string name="communities_title">కమ్యూనిటీలు</string>
-    <string name="communities_body">కమ్యూనిటీలు, ఛానెళ్లు త్వరలో వస్తాయి. ముందుగా గ్రూప్ చాట్‌లు వస్తాయి.</string>
+    <string name="communities_body">సంబంధిత గ్రూప్‌లను ఒక కమ్యూనిటీ కింద చేర్చండి; అడ్మిన్‌ల ప్రకటనలు అందరికీ చేరతాయి.</string>
 
     <!-- Conversation -->
     <string name="chat_message_hint">సందేశం</string>
