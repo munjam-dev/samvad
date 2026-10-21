@@ -12,15 +12,15 @@ emulators (`npm test`), app logic tests in `:core`.
 | Phase | State |
 |---|---|
 | 1 Onboarding, profile, language | **Built.** Username (backend deployed, UI, live availability check), language picker, English/Hindi/Telugu/Tamil (AI-written, native review pending: `docs/LOCALIZATION.md`). Username check on a device is blocked only by the owner registering the App Check debug token. |
-| 2 Core messaging | **Built.** Drafts, multi-select, pinned messages (backend deployed). Not built: contact and video sharing, global message search. |
-| 3 Privacy and security | In progress: profile visibility, group-add permission, contact discovery switch, linked devices, appeals. E2EE is **not** started (licence gate). |
-| 4 Personal Vault | In progress (local-first, Drive backup blocked on the scope decision). |
-| 5 HD media, weak networks | In progress (original quality, resumable uploads, download progress, network hints). Direct device-to-device transfer blocked. |
-| 6 Groups and communities | Not started (backend-heavy; runs after Phase 3 because the backend emulators are shared). |
-| 7 Meetings | Blocked on the calling decision. |
+| 2 Core messaging | **Built and merged.** Drafts, multi-select, pinned messages (backend deployed), contact cards, video sharing, on-device global search. |
+| 3 Privacy and security | **Built and merged (not deployed):** profile visibility, who can add me to groups, contact-discovery switch, linked devices, appeals. **End-to-end encryption is not started** (AGPL licence gate). Lost Phone Recovery deferred by the owner. |
+| 4 Personal Vault | **Built and merged**, local-first. Google Drive backup blocked on the scope decision. |
+| 5 HD media, weak networks | **Built and merged:** original quality, resumable pending uploads, download progress, network hints. Device-to-device transfer not built (design decision needed). |
+| 6 Groups and communities | **Built and merged (not deployed):** announcement mode, member approval, events with reminders, shared media tab, quiet hours, Communities. |
+| 7 Meetings and calls | **Built and merged (not deployed):** 1:1 voice/video and group meetings on managed LiveKit. Needs the owner to create the LiveKit project and set three secrets (docs/CALLING_SETUP.md). Media itself untested. |
 | 8 Moments | **Built**, including report, photo text and pen, capture note. Notifications for new moments not built. |
 | 9 Scam Shield | **Built** on-device (link and text risk analysis, first-contact banner). |
-| 10 Tests and release | Core and backend tests pass; instrumented tests, accessibility audit and release build still to do. |
+| 10 Tests and release | Core, backend and lint pass on the merged tree. Still to do: emulator walkthrough of every new screen, instrumented UI tests, accessibility audit at 200% font and 360 dp, release build and R8 check, privacy policy and Play data-safety update. |
 
 ## Phase 1: onboarding, profile, language
 
