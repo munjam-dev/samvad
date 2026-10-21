@@ -45,7 +45,7 @@ describe('calls rules', () => {
     await assertSucceeds(getDoc(doc(db(B), `calls/${CALL_ID}`)));
   });
 
-  it('lets a participant list their own history, and nobody else's', async () => {
+  it('lets a participant list their own history, and nobody else', async () => {
     const mine = (uid: string) => getDocs(query(collection(db(uid), 'calls'), where('participants', 'array-contains', uid)));
     await assertSucceeds(mine(A));
     await assertFails(getDocs(query(collection(db(C), 'calls'), where('participants', 'array-contains', A))));
