@@ -4,6 +4,7 @@ import { buildCallableOptions } from './config';
 import { defaultDeps, type Deps } from './deps';
 import { requirePhoneAuth } from './lib/guards';
 import { logEvent, newCorrelationId } from './lib/logger';
+import { parsePrivacy, privacyPath } from './lib/privacy';
 
 export const MAX_NUMBERS_PER_CALL = 50;
 export const DAILY_LOOKUP_LIMIT = 500;
@@ -54,9 +55,13 @@ export async function lookupCore(
   for (let i = 0; i < numbers.length; i += 30) {
     const chunk = numbers.slice(i, i + 30);
     const snap = await deps.db.collection('users').where('phoneE164', 'in', chunk).get();
-    for (const d of snap.docs) {
-      if (d.id !== uid) found.push({ phoneE164: d.get('phoneE164'), uid: d.id });
-    }
+    const others = snap.docs.filter((d) => d.id !== uid);
+    if (others.length === 0) continue;
+    // Phase 3: people who switched off "Let people find me by my phone number" are never returned.
+    const settings = await deps.db.getAll(...others.map((d) => deps.db.doc(privacyPath(d.id))));
+    others.forEach((d, i) => {
+      if (parsePrivacy(settings[i].data()).phoneDiscovery) found.push({ phoneE164: d.get('phoneE164'), uid: d.id });
+    });
   }
   return found;
 }

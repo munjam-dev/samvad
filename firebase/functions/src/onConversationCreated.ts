@@ -1,6 +1,7 @@
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import { REGION } from './config';
 import { defaultDeps, type Deps } from './deps';
+import { markEngaged } from './engagement';
 import { logEvent } from './lib/logger';
 
 /**
@@ -21,6 +22,12 @@ export const onConversationCreated = onDocumentCreated(
     // Announcements have no typing indicator, so their (large, changing) member list is not mirrored.
     if (event.data?.get('type') === 'community_announcements') return;
     const members = (event.data?.get('members') as string[] | undefined) ?? [];
-    await mirrorMembers(defaultDeps(), event.params.cid, members);
+    const deps = defaultDeps();
+    await mirrorMembers(deps, event.params.cid, members);
+    // Phase 3: whoever starts a direct chat is one of its engaged people ("People I chat with").
+    const createdBy = event.data?.get('createdBy');
+    if (event.data?.get('type') === 'direct' && typeof createdBy === 'string') {
+      await markEngaged(deps, event.params.cid, [createdBy]);
+    }
   },
 );

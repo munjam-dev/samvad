@@ -293,7 +293,7 @@ export async function addCommunityMembersCore(deps: Deps, actor: string, id: str
   let added: string[] = [];
   await deps.db.runTransaction(async (tx) => {
     const c = await loadCommunity(tx, deps, id, actor, true);
-    const ok = await eligible(tx, deps, actor, invited.filter((u) => !c.members.includes(u)));
+    const { ok } = await eligible(tx, deps, actor, invited.filter((u) => !c.members.includes(u)));
     if (c.members.length + ok.length > MAX_COMMUNITY_MEMBERS) throw new HttpsError('resource-exhausted', 'community-full');
     added = ok;
     if (ok.length === 0) return;

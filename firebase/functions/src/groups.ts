@@ -6,6 +6,7 @@ import { defaultDeps, type Deps } from './deps';
 import { consumeDailyBudget } from './lib/budget';
 import { requirePhoneAuth } from './lib/guards';
 import { logEvent, newCorrelationId } from './lib/logger';
+import { directCid, isEngagedPartner, parsePrivacy, privacyPath } from './lib/privacy';
 import { cleanPhoto, parsePhoto } from './setProfilePhoto';
 import { renameGroup, readGroups, linkFields, withoutGroup } from './lib/communityLinks';
 
@@ -87,23 +88,42 @@ export async function loadGroup(tx: Transaction, deps: Deps, cid: string, actor:
 
 /**
  * Which of [candidates] may be put in a group by [actor]: they need a profile, an undeleted account,
- * and no block in either direction with the actor (so nobody is pulled into a group by someone they blocked).
+ * no block in either direction with the actor (so nobody is pulled into a group by someone they blocked),
+ * and a "Who can add me to groups" setting (Phase 3) that lets the actor in: Everyone, People I chat with
+ * (the person started a chat with the actor or has written to them), or Nobody (invite link only).
+ * Everyone else is returned in [notEligible] without saying why, so the answer reveals neither a block nor a setting.
  */
-export async function eligible(tx: Transaction, deps: Deps, actor: string, candidates: string[]): Promise<string[]> {
+export async function eligible(
+  tx: Transaction,
+  deps: Deps,
+  actor: string,
+  candidates: string[],
+  /** [selfJoin]: the person asked to join (invite link), so their "who can add me" setting does not apply. */
+  opts: { selfJoin?: boolean } = {},
+): Promise<{ ok: string[]; notEligible: string[] }> {
   const db = deps.db;
   const checks = await Promise.all(
     candidates.map(async (u) => {
       if (u === actor) return false;
-      const [profile, deleted, blockedActor, actorBlocked] = await Promise.all([
+      const [profile, deleted, blockedActor, actorBlocked, settings] = await Promise.all([
         tx.get(db.doc(`profiles/${u}`)),
         tx.get(db.doc(`deletedAccounts/${u}`)),
         tx.get(db.doc(`users/${u}/blocked/${actor}`)),
         tx.get(db.doc(`users/${actor}/blocked/${u}`)),
+        tx.get(db.doc(privacyPath(u))),
       ]);
-      return profile.exists && !deleted.exists && !blockedActor.exists && !actorBlocked.exists;
+      if (!profile.exists || deleted.exists || blockedActor.exists || actorBlocked.exists) return false;
+      if (opts.selfJoin) return true;
+      const rule = parsePrivacy(settings.data()).groupAdds;
+      if (rule === 'everyone') return true;
+      if (rule === 'nobody') return false;
+      return isEngagedPartner((await tx.get(db.doc(`conversations/${directCid(actor, u)}`))).data(), u);
     }),
   );
-  return candidates.filter((_, i) => checks[i]);
+  return {
+    ok: candidates.filter((_, i) => checks[i]),
+    notEligible: candidates.filter((u, i) => !checks[i] && u !== actor),
+  };
 }
 
 export function memberDoc(uid: string) {
@@ -146,15 +166,17 @@ export async function mirror(deps: Deps, cid: string, add: string[], remove: str
 
 // ---- operations ---------------------------------------------------------------------------------
 
-export async function createGroupCore(deps: Deps, actor: string, name: string, invited: string[]): Promise<{ cid: string; added: number }> {
+export async function createGroupCore(deps: Deps, actor: string, name: string, invited: string[]): Promise<{ cid: string; added: number; notEligible: string[] }> {
   await consumeDailyBudget(deps, actor, 'groups', DAILY_GROUPS);
   const ref = deps.db.collection('conversations').doc();
   let members: string[] = [];
+  let notEligible: string[] = [];
   await deps.db.runTransaction(async (tx) => {
     if (!(await tx.get(deps.db.doc(`profiles/${actor}`))).exists) {
       throw new HttpsError('failed-precondition', 'Create your profile first.');
     }
-    const others = await eligible(tx, deps, actor, invited.slice(0, MAX_GROUP_MEMBERS - 1));
+    const { ok: others, notEligible: skipped } = await eligible(tx, deps, actor, invited.slice(0, MAX_GROUP_MEMBERS - 1));
+    notEligible = skipped;
     if (others.length === 0) throw new HttpsError('failed-precondition', 'no-eligible-members');
     members = [actor, ...others];
     tx.create(ref, {
@@ -177,15 +199,17 @@ export async function createGroupCore(deps: Deps, actor: string, name: string, i
     systemMessage(tx, ref, actor, 'created', { name });
   });
   await mirror(deps, ref.id, members, []);
-  return { cid: ref.id, added: members.length - 1 };
+  return { cid: ref.id, added: members.length - 1, notEligible };
 }
 
-export async function addMembersCore(deps: Deps, actor: string, cid: string, invited: string[]): Promise<{ added: string[] }> {
+export async function addMembersCore(deps: Deps, actor: string, cid: string, invited: string[]): Promise<{ added: string[]; notEligible: string[] }> {
   let added: string[] = [];
+  let notEligible: string[] = [];
   await deps.db.runTransaction(async (tx) => {
     const g = await loadGroup(tx, deps, cid, actor, true);
     const fresh = invited.filter((u) => !g.members.includes(u));
-    const ok = await eligible(tx, deps, actor, fresh);
+    const { ok, notEligible: skipped } = await eligible(tx, deps, actor, fresh);
+    notEligible = skipped;
     if (g.members.length + ok.length > MAX_GROUP_MEMBERS) throw new HttpsError('resource-exhausted', 'group-full');
     added = ok;
     if (ok.length === 0) return;
@@ -194,7 +218,7 @@ export async function addMembersCore(deps: Deps, actor: string, cid: string, inv
     systemMessage(tx, g.ref, actor, 'added', { targets: ok });
   });
   await mirror(deps, cid, added, []);
-  return { added };
+  return { added, notEligible };
 }
 
 export async function removeMemberCore(deps: Deps, actor: string, cid: string, target: string): Promise<void> {

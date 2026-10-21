@@ -47,10 +47,17 @@ service cloud.firestore {
         && name.matches('(?s).*\\S.*');
     }
 
-    // photoUrl holds a Storage path (avatars/{uid}/…), never a public URL. Only the setProfilePhoto
-    // function sets it: it starts null and clients cannot change it (see the update allow-list).
+    // Phase 3 privacy: the public profile document holds only what everyone may see (name, username).
+    // "About" and the photo path live in profiles/{uid}/private/{about,photo}, readable per the owner's
+    // setting (see mayShow below). The photo path is set only by the setProfilePhoto function.
     function validProfile(data) {
       return validDisplayName(data.displayName)
+        && data.updatedAt == request.time;
+    }
+
+    function validAbout(data) {
+      return data.keys().hasOnly(['about', 'updatedAt'])
+        && data.keys().hasAll(['about', 'updatedAt'])
         && data.about is string
         && data.about.size() <= 140
         && data.updatedAt == request.time;
@@ -64,6 +71,38 @@ service cloud.firestore {
       return !('fcmToken' in data)
         || data.fcmToken == null
         || (data.fcmToken is string && data.fcmToken.size() <= 4096);
+    }
+
+    // ---- Phase 3 privacy helpers -----------------------------------------
+
+    function validVisibility(v) {
+      return v is string && v in ['everyone', 'partners', 'nobody'];
+    }
+
+    function validPrivacy(d) {
+      return d.keys().hasOnly(['aboutVisibility', 'photoVisibility', 'groupAdds', 'phoneDiscovery', 'updatedAt'])
+        && d.keys().hasAll(['updatedAt'])
+        && validVisibility(d.get('aboutVisibility', 'everyone'))
+        && validVisibility(d.get('photoVisibility', 'everyone'))
+        && validVisibility(d.get('groupAdds', 'everyone'))
+        && d.get('phoneDiscovery', true) is bool
+        && d.updatedAt == request.time;
+    }
+
+    // "People I chat with" of [owner]: people who share a direct chat that [owner] started or has sent a
+    // message in (conversations/{a_b}.engagedBy, kept by functions). A stranger who creates a chat with
+    // [owner] therefore does not become one of their chat partners.
+    function isChatPartnerOf(owner) {
+      let a = request.auth.uid;
+      let conv = /databases/$(database)/documents/conversations/$(a < owner ? a + '_' + owner : owner + '_' + a);
+      return exists(conv) && owner in get(conv).data.get('engagedBy', []);
+    }
+
+    // Whether the signed-in reader may see what [owner] shows under [field]; 'everyone' when never set.
+    function mayShow(owner, field) {
+      let settings = /databases/$(database)/documents/users/$(owner)/settings/privacy;
+      let v = exists(settings) ? get(settings).data.get(field, 'everyone') : 'everyone';
+      return v == 'everyone' || (v == 'partners' && isChatPartnerOf(owner));
     }
 
     // ---- users ---------------------------------------------------------
@@ -88,8 +127,10 @@ service cloud.firestore {
       match /devices/{deviceId} {
         allow read: if isOwner(uid);
 
+        // revokedDevices is written only by the revokeDevice function; a signed-out install cannot register again.
         allow create: if isOwner(uid)
           && notDeleted(uid)
+          && !exists(/databases/$(database)/documents/users/$(uid)/revokedDevices/$(deviceId))
           && deviceId.matches('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
           && request.resource.data.keys().hasOnly(['platform', 'appVersion', 'osVersion', 'createdAt', 'lastSeenAt', 'fcmToken'])
           && request.resource.data.keys().hasAll(['platform', 'appVersion', 'osVersion', 'createdAt', 'lastSeenAt'])
@@ -109,6 +150,22 @@ service cloud.firestore {
           && validFcmToken(request.resource.data);
 
         allow delete: if isOwner(uid);
+      }
+
+      // Phase 3: set by revokeDevice (server only). A device that finds its id here signs itself out.
+      match /revokedDevices/{deviceId} {
+        allow read: if isOwner(uid);
+        allow write: if false;
+      }
+
+      // Phase 3 privacy settings. The owner reads and writes; the rules, functions and triggers read it
+      // server-side (aboutVisibility, photoVisibility, groupAdds, phoneDiscovery). "Last seen" lives in the
+      // Realtime Database (privacy/{uid}/lastSeen) because the presence rules cannot read Firestore.
+      match /settings/privacy {
+        allow get: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && notDeleted(uid)
+          && validPrivacy(request.resource.data);
       }
 
       // Phase 3: starred messages. Private to their owner; a reference only (never a copy of the
@@ -148,15 +205,33 @@ service cloud.firestore {
 
       allow create: if isOwner(uid)
         && notDeleted(uid)
-        && request.resource.data.keys().hasOnly(['displayName', 'about', 'photoUrl', 'updatedAt'])
-        && request.resource.data.keys().hasAll(['displayName', 'about', 'photoUrl', 'updatedAt'])
-        && request.resource.data.photoUrl == null
+        && request.resource.data.keys().hasOnly(['displayName', 'updatedAt'])
+        && request.resource.data.keys().hasAll(['displayName', 'updatedAt'])
         && validProfile(request.resource.data);
 
       allow update: if isOwner(uid)
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['displayName', 'about', 'updatedAt'])
+             .hasOnly(['displayName', 'updatedAt'])
         && validProfile(request.resource.data);
+    }
+
+    // Phase 3: the parts of a profile with a visibility setting, one document each so a rule can decide per part.
+    match /profiles/{uid}/private/about {
+      allow get: if signedIn()
+        && (request.auth.uid == uid
+            || (!isBlocked(uid, request.auth.uid) && mayShow(uid, 'aboutVisibility')));
+
+      allow create, update: if isOwner(uid)
+        && notDeleted(uid)
+        && existsAfter(/databases/$(database)/documents/profiles/$(uid))
+        && validAbout(request.resource.data);
+    }
+
+    // {photoUrl: Storage path or null}, written only by the setProfilePhoto function.
+    match /profiles/{uid}/private/photo {
+      allow get: if signedIn()
+        && (request.auth.uid == uid
+            || (!isBlocked(uid, request.auth.uid) && mayShow(uid, 'photoVisibility')));
     }
 
     // ---- conversations (B2) ---------------------------------------------
@@ -569,6 +644,12 @@ service cloud.firestore {
 
     match /reports/{reportId} {
       allow read, write: if false;
+    }
+
+    // Phase 3: appeals are created by submitAppeal and decided by staff; a person reads only their own.
+    match /appeals/{id} {
+      allow get, list: if signedIn() && resource.data.uid == request.auth.uid;
+      allow create, update, delete: if false;
     }
 
     match /rateLimits/{uid} {

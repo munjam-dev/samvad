@@ -30,6 +30,19 @@ class SamvadMessagingService : FirebaseMessagingService() {
       Notifications.showMessage(this, cid, data["eid"].orEmpty(), data["title"].orEmpty(), data["body"].orEmpty(), showPreview = true, group = true, silent = quiet)
       return
     }
+    // Phase 3: this device was signed out from Settings → Linked devices on another install. Firebase
+    // cannot revoke this device's refresh token remotely, so this data message is how it takes effect
+    // once the phone is online; otherwise the check in SessionViewModel.registerDevice does it on next start.
+    if (data["type"] == "device_revoked") {
+      val container = (application as SamvadApplication).container
+      scope.launch {
+        val myDeviceId = runCatching { container.preferences.deviceId() }.getOrNull()
+        if (myDeviceId != null && myDeviceId == data["deviceId"]) {
+          container.auth?.signOut()
+        }
+      }
+      return
+    }
     if (data["type"] != "message") return
     val cid = data["cid"] ?: return
     val sender = data["senderId"] ?: return

@@ -15,7 +15,14 @@ export async function deleteAccountCore(deps: Deps, uid: string): Promise<void> 
   await db.doc(`deletedAccounts/${uid}`).set({ deletedAt: FieldValue.serverTimestamp() });
   await releaseUsername(deps, uid); // before the profile goes: the profile says which name to free
   await db.recursiveDelete(db.doc(`users/${uid}`));
-  await db.doc(`profiles/${uid}`).delete();
+  await db.recursiveDelete(db.doc(`profiles/${uid}`)); // includes profiles/{uid}/private/*
+  // Phase 3: the account's appeals go with it.
+  const appeals = await db.collection('appeals').where('uid', '==', uid).get();
+  for (let i = 0; i < appeals.docs.length; i += 400) {
+    const batch = db.batch();
+    appeals.docs.slice(i, i + 400).forEach((d) => batch.delete(d.ref));
+    await batch.commit();
+  }
   // Phase 3: the account's scheduled messages, so nothing is sent after deletion.
   const scheduled = await db.collection('scheduledMessages').where('senderId', '==', uid).get();
   for (let i = 0; i < scheduled.docs.length; i += 400) {
@@ -35,7 +42,10 @@ export async function deleteAccountCore(deps: Deps, uid: string): Promise<void> 
   };
   for (const d of memberships.docs) {
     const cid = d.ref.parent.parent?.id;
-    if (cid) rtdbCleanup[`members/${cid}/${uid}`] = null;
+    if (cid) {
+      rtdbCleanup[`members/${cid}/${uid}`] = null;
+      rtdbCleanup[`engaged/${cid}/${uid}`] = null;
+    }
   }
   await deps.rtdb.ref().update(rtdbCleanup);
   // Phase 2: groups need a proper leave, so the member list and admins stay consistent.

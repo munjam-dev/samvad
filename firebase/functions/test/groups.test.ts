@@ -78,7 +78,7 @@ describe('membership', () => {
     const cid = await group();
     expect(await errorOf(call(handleAddGroupMembers, 'bina', { cid, uids: ['dev'] }))).toBe('permission-denied');
     expect(await errorOf(call(handleAddGroupMembers, 'esha', { cid, uids: ['dev'] }))).toBe('not-found');
-    expect(await call(handleAddGroupMembers, 'anil', { cid, uids: ['dev', 'bina'] })).toEqual({ added: ['dev'] });
+    expect(await call(handleAddGroupMembers, 'anil', { cid, uids: ['dev', 'bina'] })).toEqual({ added: ['dev'], notEligible: [] });
     expect((await conv(cid)).members).toEqual(['anil', 'bina', 'chetan', 'dev']);
     expect((await mirror(cid)).dev).toBe(true);
     expect(await systemEvents(cid)).toEqual(['added', 'created']);

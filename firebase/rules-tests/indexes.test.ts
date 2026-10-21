@@ -54,6 +54,15 @@ describe('indexes and list access', () => {
           { fieldPath: 'startsAt', order: 'ASCENDING' },
         ],
       },
+      // Phase 3: a person's own appeals, newest first.
+      {
+        collectionGroup: 'appeals',
+        queryScope: 'COLLECTION',
+        fields: [
+          { fieldPath: 'uid', order: 'ASCENDING' },
+          { fieldPath: 'createdAt', order: 'DESCENDING' },
+        ],
+      },
     ]);
     expect(json.fieldOverrides.map((o: any) => `${o.collectionGroup}.${o.fieldPath}`)).toEqual(['members.uid', 'messages.expiresAt', 'savedMessages.messageId', 'items.expiresAt', 'items.visibleTo']);
   });

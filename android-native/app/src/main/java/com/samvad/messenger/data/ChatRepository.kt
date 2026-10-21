@@ -122,11 +122,18 @@ class ChatRepository(private val db: FirebaseFirestore) {
   /** Re-reads profiles even when cached, so a new name or photo shows up (one read each). */
   suspend fun refreshProfiles(uids: Collection<String>) = fetchProfiles(uids)
 
+  /**
+   * "About" and the photo path (Phase 3) live in profiles/{uid}/private/about and /photo, each readable only
+   * per that person's privacy setting; a denied or missing read is simply treated as blank/absent, same as
+   * someone who never set them.
+   */
   private suspend fun fetchProfiles(uids: Collection<String>) {
     for (uid in uids) {
       val snap = runCatching { db.document("profiles/$uid").get().await() }.getOrNull() ?: continue
       if (snap.exists()) {
-        val p = Profile(uid, snap.getString("displayName") ?: "", snap.getString("about") ?: "", snap.getString("photoUrl"))
+        val about = runCatching { db.document("profiles/$uid/private/about").get().await() }.getOrNull()?.getString("about") ?: ""
+        val photo = runCatching { db.document("profiles/$uid/private/photo").get().await() }.getOrNull()?.getString("photoUrl")
+        val p = Profile(uid, snap.getString("displayName") ?: "", about, photo)
         profileCache.update { it + (uid to p) }
         rename()
       }

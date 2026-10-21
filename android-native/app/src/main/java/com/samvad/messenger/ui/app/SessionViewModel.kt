@@ -75,12 +75,24 @@ class SessionViewModel(private val container: AppContainer) : ViewModel() {
 
   private var registeredUid: String? = null
 
+  /**
+   * Phase 3: before registering, check whether this install was signed out remotely (its device
+   * document is gone and a revocation marker exists). Firebase cannot revoke one device's refresh
+   * token by itself, so this check at startup, together with the data message in
+   * [com.samvad.messenger.push.SamvadMessagingService], is how "sign out this device" takes effect.
+   */
   private fun registerDevice(uid: String) {
     if (registeredUid == uid) return
     registeredUid = uid
     viewModelScope.launch {
+      val deviceId = container.preferences.deviceId()
+      if (container.devices?.isThisDeviceRevoked(uid, deviceId) == true) {
+        registeredUid = null
+        signOut()
+        return@launch
+      }
       val token = container.push.currentToken()
-      runCatching { container.accounts?.registerDevice(uid, container.preferences.deviceId(), token) }
+      runCatching { container.accounts?.registerDevice(uid, deviceId, token) }
         .onFailure { registeredUid = null }
     }
   }

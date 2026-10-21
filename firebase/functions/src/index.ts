@@ -17,6 +17,9 @@ export { setDisappearingTimer, onMessageDeleted } from './disappearing';
 export { onStatusCreated, onStatusDeleted } from './status';
 export { setPinnedMessage } from './pinned';
 export { setUsername, checkUsername } from './username';
+export { revokeDevice } from './devices';
+export { submitAppeal } from './appeals';
+export { onProfileWritten } from './profilePrivacy';
 export {
   createGroup,
   addGroupMembers,

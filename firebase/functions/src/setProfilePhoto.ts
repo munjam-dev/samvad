@@ -70,14 +70,18 @@ export async function setPhotoCore(deps: Deps, uid: string, photo: Buffer | null
     await consumeBudget(deps, uid);
   }
 
+  // Phase 3: the photo path lives in profiles/{uid}/private/photo, whose readers follow the owner's
+  // "Profile photo" setting. A legacy photoUrl on the public document (before the migration) is removed here.
+  const photoRef = deps.db.doc(`profiles/${uid}/private/photo`);
   let previous: string | null = null;
   try {
     await deps.db.runTransaction(async (tx) => {
-      const snap = await tx.get(profileRef);
+      const [snap, photoSnap] = await Promise.all([tx.get(profileRef), tx.get(photoRef)]);
       if (!snap.exists) throw new HttpsError('failed-precondition', 'Create your profile first.');
-      const old = snap.get('photoUrl');
+      const old = photoSnap.get('photoUrl') ?? snap.get('photoUrl');
       previous = typeof old === 'string' ? old : null;
-      tx.update(profileRef, { photoUrl: path, updatedAt: FieldValue.serverTimestamp() });
+      tx.set(photoRef, { photoUrl: path, updatedAt: FieldValue.serverTimestamp() });
+      if (snap.get('photoUrl') !== undefined) tx.update(profileRef, { photoUrl: FieldValue.delete() });
     });
   } catch (err) {
     if (path) await deps.deleteFile(path).catch(() => undefined);

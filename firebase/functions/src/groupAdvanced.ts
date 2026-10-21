@@ -115,7 +115,7 @@ export async function decideJoinRequestCore(
       return;
     }
     if (g.members.length >= MAX_GROUP_MEMBERS) throw new HttpsError('resource-exhausted', 'group-full');
-    const ok = await eligible(tx, deps, actor, [target]);
+    const { ok } = await eligible(tx, deps, actor, [target], { selfJoin: true });
     if (ok.length === 0) {
       tx.delete(reqRef);
       status = 'unavailable';

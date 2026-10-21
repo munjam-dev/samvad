@@ -38,11 +38,11 @@ describe('usernames', () => {
   });
 
   it('a new profile cannot be created with a username already set', async () => {
-    await assertFails(setDoc(doc(db(B), `profiles/${B}`), { displayName: 'Ravi', about: '', photoUrl: null, updatedAt: serverTimestamp(), username: 'ravi_k' }));
+    await assertFails(setDoc(doc(db(B), `profiles/${B}`), { displayName: 'Ravi', updatedAt: serverTimestamp(), username: 'ravi_k' }));
   });
 
-  it('editing the name and about still works and leaves the username alone', async () => {
-    await assertSucceeds(updateDoc(doc(db(A), `profiles/${A}`), { displayName: 'Asha K', about: 'hi', updatedAt: serverTimestamp() }));
+  it('editing the name still works and leaves the username alone', async () => {
+    await assertSucceeds(updateDoc(doc(db(A), `profiles/${A}`), { displayName: 'Asha K', updatedAt: serverTimestamp() }));
   });
 
   it('anyone signed in can read a profile, including its username', async () => {
