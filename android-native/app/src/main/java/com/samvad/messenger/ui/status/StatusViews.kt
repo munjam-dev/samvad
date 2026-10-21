@@ -92,6 +92,7 @@ import com.samvad.messenger.ui.components.Avatar
 import com.samvad.messenger.ui.components.LocalPhotoSource
 import com.samvad.messenger.ui.components.StoryAvatar
 import com.samvad.messenger.ui.theme.SamvadTheme
+import kotlinx.coroutines.launch
 
 private const val STATUS_MS = 5_000
 
@@ -267,6 +268,12 @@ fun StatusViewerScreen(container: AppContainer, me: String, authorId: String, on
   LaunchedEffect(item.id) { if (item.kind == "image") item.mediaPath?.let { bitmap = vm.photo(it) } }
 
   var viewersOpen by remember { mutableStateOf(false) }
+  var audienceEdit by remember { mutableStateOf(false) }
+  var audienceDraft by remember { mutableStateOf(StatusAudience.ALL to emptySet<String>()) }
+  val scope = androidx.compose.runtime.rememberCoroutineScope()
+  val people = vm.people.collectAsStateWithLifecycle().value
+  val audienceSaved = stringResource(R.string.moment_audience_saved)
+  val audienceFailed = stringResource(R.string.moment_audience_failed)
   var menu by remember { mutableStateOf(false) }
   val name = if (mineView) stringResource(R.string.status_my) else state.names[authorId] ?: ChatList.DELETED_ACCOUNT
 
@@ -336,6 +343,7 @@ fun StatusViewerScreen(container: AppContainer, me: String, authorId: String, on
           IconButton(onClick = { menu = true; menuPaused = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.cd_more), tint = if (dark) Color.White else fg) }
           DropdownMenu(menu, onDismissRequest = { menu = false; menuPaused = false }) {
             if (mineView) {
+              DropdownMenuItem(text = { Text(stringResource(R.string.moment_change_audience)) }, onClick = { menu = false; audienceDraft = item.audience to item.audienceList.toSet(); audienceEdit = true })
               DropdownMenuItem(text = { Text(stringResource(R.string.status_delete)) }, onClick = { menu = false; menuPaused = false; vm.delete(item) })
             } else {
               DropdownMenuItem(text = { Text(stringResource(R.string.status_mute)) }, onClick = { menu = false; menuPaused = false; vm.mute(authorId, true); onBack() })
@@ -358,23 +366,12 @@ fun StatusViewerScreen(container: AppContainer, me: String, authorId: String, on
           Text(stringResource(R.string.status_viewers, viewers.size), style = MaterialTheme.typography.labelLarge, color = Color.White, modifier = Modifier.padding(start = 8.dp))
         }
       } else {
-        var reply by remember(item.id) { mutableStateOf("") }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 8.dp)) {
           listOf("❤️", "😂", "😮", "😢", "👍", "🙏").forEach { e ->
             Text(e, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.clip(CircleShape).background(Color.Black.copy(alpha = 0.35f)).clickable(role = Role.Button, onClickLabel = stringResource(R.string.status_react)) { vm.react(item, e) }.padding(8.dp))
           }
         }
-        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(Color.Black.copy(alpha = 0.45f)).padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-          BasicTextField(
-            value = reply,
-            onValueChange = { reply = it },
-            textStyle = TextStyle(color = Color.White, fontSize = MaterialTheme.typography.bodyLarge.fontSize),
-            cursorBrush = SolidColor(Color.White),
-            modifier = Modifier.weight(1f).defaultMinSize(minHeight = 44.dp).padding(vertical = 12.dp).pointerInput(Unit) { detectTapGestures(onPress = { typing = true }) },
-            decorationBox = { inner -> Box { if (reply.isEmpty()) Text(stringResource(R.string.status_reply_hint), color = Color.White.copy(alpha = 0.7f)); inner() } },
-          )
-          TextButton(onClick = { vm.reply(item, reply) { reply = ""; typing = false } }, enabled = reply.isNotBlank()) { Text(stringResource(R.string.status_send), color = Color.White) }
-        }
+        MomentReplyBar(vm, item, onTyping = { typing = it }, onMessage = { msg -> scope.launch { snackbar.showSnackbar(msg) } })
       }
     }
     androidx.compose.material3.SnackbarHost(snackbar, Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(top = 64.dp))
@@ -408,6 +405,27 @@ fun StatusViewerScreen(container: AppContainer, me: String, authorId: String, on
       vm.clearReportResult()
       snackbar.showSnackbar(reportText)
     }
+  }
+
+  if (audienceEdit && mineView) {
+    val (draftAudience, draftChosen) = audienceDraft
+    // Closing the dialog saves, unless "only"/"except" has nobody picked (the server needs at least one person).
+    val canSave = draftAudience == StatusAudience.ALL || draftChosen.isNotEmpty()
+    AudienceDialog(
+      audience = draftAudience, onAudience = { audienceDraft = it to draftChosen },
+      chosen = draftChosen, onChosen = { audienceDraft = draftAudience to it },
+      people = people,
+      onDone = {
+        audienceEdit = false
+        menuPaused = false
+        val unchanged = draftAudience == item.audience && (draftAudience == StatusAudience.ALL || draftChosen == item.audienceList.toSet())
+        if (canSave && !unchanged) {
+          vm.setAudience(item, draftAudience, if (draftAudience == StatusAudience.ALL) emptyList() else draftChosen.toList()) { ok ->
+            scope.launch { snackbar.showSnackbar(if (ok) audienceSaved else audienceFailed) }
+          }
+        }
+      },
+    )
   }
 
   if (viewersOpen) {

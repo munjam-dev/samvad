@@ -26,6 +26,8 @@ object ActiveChat {
 object Notifications {
   const val CHANNEL_MESSAGES = "messages"
   const val CHANNEL_SECURITY = "security"
+  const val CHANNEL_MOMENTS = "moments"
+  const val EXTRA_MOMENTS = "samvad.moments"
   private const val SECURITY_ID = 0x5EC
   const val EXTRA_CONVERSATION = "samvad.conversationId"
   const val EXTRA_OTHER = "samvad.otherUid"
@@ -42,7 +44,12 @@ object Notifications {
       context.getString(R.string.notif_channel_security),
       NotificationManager.IMPORTANCE_HIGH,
     ).apply { description = context.getString(R.string.notif_channel_security_desc) }
-    context.getSystemService(NotificationManager::class.java).createNotificationChannels(listOf(channel, security))
+    val moments = NotificationChannel(
+      CHANNEL_MOMENTS,
+      context.getString(R.string.notif_channel_moments),
+      NotificationManager.IMPORTANCE_DEFAULT,
+    ).apply { description = context.getString(R.string.notif_channel_moments_desc) }
+    context.getSystemService(NotificationManager::class.java).createNotificationChannels(listOf(channel, security, moments))
   }
 
   /**
@@ -69,6 +76,44 @@ object Notifications {
       NotificationManagerCompat.from(context).notify(SECURITY_ID, notification)
     } catch (_: SecurityException) {
       // Permission revoked between the check and the post.
+    }
+  }
+
+  /**
+   * Someone you chat with posted a moment. The push carries only their name; tapping opens the Moments tab. One
+   * notification per author, so a second post replaces the first. [silent] is quiet hours.
+   */
+  fun showMoment(context: Context, authorId: String, authorName: String, showName: Boolean, silent: Boolean) {
+    if (!canPost(context)) return
+    val open = Intent(context, MainActivity::class.java)
+      .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+      .putExtra(EXTRA_MOMENTS, true)
+    val id = "moment:$authorId".hashCode()
+    val pending = PendingIntent.getActivity(context, id, open, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+    val body = if (showName && authorName.isNotBlank()) context.getString(R.string.notif_moment_new, authorName) else context.getString(R.string.notif_moment_generic)
+    val public = NotificationCompat.Builder(context, CHANNEL_MOMENTS)
+      .setSmallIcon(R.drawable.ic_notification)
+      .setColor(ContextCompat.getColor(context, R.color.notification_accent))
+      .setContentTitle(context.getString(R.string.app_name))
+      .setContentText(context.getString(R.string.notif_moment_generic))
+      .build()
+    val notification = NotificationCompat.Builder(context, CHANNEL_MOMENTS)
+      .setSmallIcon(R.drawable.ic_notification)
+      .setColor(ContextCompat.getColor(context, R.color.notification_accent))
+      .setContentTitle(context.getString(R.string.nav_status))
+      .setContentText(body)
+      .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+      .setPublicVersion(public)
+      .setCategory(NotificationCompat.CATEGORY_SOCIAL)
+      .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+      .setAutoCancel(true)
+      .setContentIntent(pending)
+      .setSilent(silent)
+      .build()
+    try {
+      NotificationManagerCompat.from(context).notify(id, notification)
+    } catch (_: SecurityException) {
+      // Permission revoked between the check and the post; nothing to show.
     }
   }
 

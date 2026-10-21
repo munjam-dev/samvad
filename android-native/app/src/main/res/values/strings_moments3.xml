@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Moments, phase 3: new-moment notifications, replies off, change audience, voice replies -->
+
+    <string name="notif_channel_moments">Moments</string>
+    <string name="notif_channel_moments_desc">Tells you when someone you chat with posts a moment</string>
+    <string name="notif_moment_new">%1$s posted a moment</string>
+    <string name="notif_moment_generic">New moment</string>
+
+    <string name="moment_allow_replies">Allow replies</string>
+    <string name="moment_allow_replies_hint">People can answer privately in your chat. You cannot change this after posting.</string>
+    <string name="moment_replies_off">Replies are off</string>
+
+    <string name="moment_change_audience">Change who can see this</string>
+    <string name="moment_audience_saved">Who can see this moment is updated</string>
+    <string name="moment_audience_failed">Could not change who can see this. Try again.</string>
+
+    <string name="moment_voice_reply">Reply with a voice note</string>
+    <string name="moment_voice_reply_send">Stop and send voice reply</string>
+    <string name="moment_voice_reply_cancel">Discard voice reply</string>
+    <string name="moment_voice_reply_recording">Recording %1$s of %2$s</string>
+    <string name="moment_voice_reply_sent">Voice reply sent</string>
+    <string name="moment_voice_reply_failed">Could not send the voice reply. Try again.</string>
+</resources>

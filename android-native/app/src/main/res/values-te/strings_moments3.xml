@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- మోమెంట్స్, మూడో దశ: కొత్త మోమెంట్ నోటిఫికేషన్, జవాబులు ఆపడం, ప్రేక్షకులను మార్చడం, వాయిస్ జవాబు -->
+
+    <string name="notif_channel_moments">మోమెంట్స్</string>
+    <string name="notif_channel_moments_desc">మీరు చాట్ చేసే ఎవరైనా మోమెంట్ పోస్ట్ చేసినప్పుడు తెలియజేస్తుంది</string>
+    <string name="notif_moment_new">%1$s మోమెంట్ పోస్ట్ చేశారు</string>
+    <string name="notif_moment_generic">కొత్త మోమెంట్</string>
+
+    <string name="moment_allow_replies">జవాబులను అనుమతించండి</string>
+    <string name="moment_allow_replies_hint">వ్యక్తులు మీ చాట్‌లో ప్రైవేట్‌గా జవాబివ్వగలరు. పోస్ట్ చేసిన తర్వాత దీన్ని మార్చలేరు.</string>
+    <string name="moment_replies_off">జవాబులు ఆఫ్‌లో ఉన్నాయి</string>
+
+    <string name="moment_change_audience">దీన్ని ఎవరు చూడగలరో మార్చండి</string>
+    <string name="moment_audience_saved">ఈ మోమెంట్‌ను చూడగలవారు అప్‌డేట్ అయ్యారు</string>
+    <string name="moment_audience_failed">దీన్ని మార్చలేకపోయాం. మళ్లీ ప్రయత్నించండి.</string>
+
+    <string name="moment_voice_reply">వాయిస్ నోట్‌తో జవాబివ్వండి</string>
+    <string name="moment_voice_reply_send">ఆపి వాయిస్ జవాబు పంపండి</string>
+    <string name="moment_voice_reply_cancel">వాయిస్ జవాబును వదిలేయండి</string>
+    <string name="moment_voice_reply_recording">రికార్డింగ్ %1$s / %2$s</string>
+    <string name="moment_voice_reply_sent">వాయిస్ జవాబు పంపబడింది</string>
+    <string name="moment_voice_reply_failed">వాయిస్ జవాబును పంపలేకపోయాం. మళ్లీ ప్రయత్నించండి.</string>
+</resources>

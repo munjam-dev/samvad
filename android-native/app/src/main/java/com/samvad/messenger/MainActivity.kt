@@ -30,7 +30,7 @@ import com.samvad.messenger.ui.security.LockScreen
 import com.samvad.messenger.ui.theme.SamvadTheme
 
 /** A chat to open because the user tapped its notification; [otherUid] is null for a group. */
-data class ChatLink(val conversationId: String, val otherUid: String?)
+data class ChatLink(val conversationId: String, val otherUid: String?, val moments: Boolean = false)
 
 /** A FragmentActivity because BiometricPrompt (app lock) needs one. */
 class MainActivity : FragmentActivity() {
@@ -104,6 +104,7 @@ class MainActivity : FragmentActivity() {
 
   /** The activity is exported (launcher), so any app can send extras: accept only well-formed chat links. */
   private fun linkFrom(intent: Intent?): ChatLink? {
+    if (intent?.getBooleanExtra(Notifications.EXTRA_MOMENTS, false) == true) return ChatLink("", null, moments = true)
     val cid = intent?.getStringExtra(Notifications.EXTRA_CONVERSATION) ?: return null
     if (intent.getBooleanExtra(Notifications.EXTRA_GROUP, false)) {
       return if (ConversationIds.isGroupId(cid)) ChatLink(cid, null) else null

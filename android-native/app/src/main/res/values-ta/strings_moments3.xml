@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- தருணங்கள், மூன்றாம் கட்டம்: புதிய தருணம் அறிவிப்பு, பதில்களை நிறுத்துதல், பார்வையாளர்களை மாற்றுதல், குரல் பதில் -->
+
+    <string name="notif_channel_moments">தருணங்கள்</string>
+    <string name="notif_channel_moments_desc">நீங்கள் அரட்டையடிக்கும் ஒருவர் தருணத்தைப் பகிரும்போது தெரிவிக்கும்</string>
+    <string name="notif_moment_new">%1$s ஒரு தருணத்தைப் பகிர்ந்தார்</string>
+    <string name="notif_moment_generic">புதிய தருணம்</string>
+
+    <string name="moment_allow_replies">பதில்களை அனுமதி</string>
+    <string name="moment_allow_replies_hint">உங்கள் அரட்டையில் மக்கள் தனிப்பட்ட முறையில் பதிலளிக்கலாம். பகிர்ந்த பிறகு இதை மாற்ற முடியாது.</string>
+    <string name="moment_replies_off">பதில்கள் அணைக்கப்பட்டுள்ளன</string>
+
+    <string name="moment_change_audience">இதை யார் பார்க்கலாம் என்பதை மாற்று</string>
+    <string name="moment_audience_saved">இந்தத் தருணத்தைப் பார்ப்பவர்கள் புதுப்பிக்கப்பட்டனர்</string>
+    <string name="moment_audience_failed">இதை மாற்ற முடியவில்லை. மீண்டும் முயலவும்.</string>
+
+    <string name="moment_voice_reply">குரல் குறிப்பால் பதிலளி</string>
+    <string name="moment_voice_reply_send">நிறுத்தி குரல் பதிலை அனுப்பு</string>
+    <string name="moment_voice_reply_cancel">குரல் பதிலை நீக்கு</string>
+    <string name="moment_voice_reply_recording">பதிவு %1$s / %2$s</string>
+    <string name="moment_voice_reply_sent">குரல் பதில் அனுப்பப்பட்டது</string>
+    <string name="moment_voice_reply_failed">குரல் பதிலை அனுப்ப முடியவில்லை. மீண்டும் முயலவும்.</string>
+</resources>

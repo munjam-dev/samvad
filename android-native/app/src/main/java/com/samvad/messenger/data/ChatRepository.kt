@@ -212,6 +212,8 @@ class ChatRepository(private val db: FirebaseFirestore) {
     id: String = UUID.randomUUID().toString(),
     forwarded: Boolean = false,
     mentions: List<String> = emptyList(),
+    /** A reply to a moment: (author, status id). The rules refuse it when replies are off or the moment is not visible to me. */
+    momentRef: Pair<String, String>? = null,
   ) {
     failed.update { it - id }
     try {
@@ -223,6 +225,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
         put("createdAt", FieldValue.serverTimestamp())
         if (forwarded) put("forwarded", true)
         if (mentions.isNotEmpty()) put("mentions", mentions)
+        momentRef?.let { put("momentRef", mapOf("author" to it.first, "sid" to it.second)) }
       }
       db.document("conversations/$conversationId/messages/$id").set(doc).await()
     } catch (e: Exception) {
@@ -241,6 +244,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
     caption: String,
     replyTo: String?,
     forwarded: Boolean = false,
+    momentRef: Pair<String, String>? = null,
   ) {
     val map = buildMap<String, Any> {
       put("path", media.path)
@@ -261,7 +265,8 @@ class ChatRepository(private val db: FirebaseFirestore) {
         "replyTo" to replyTo,
         "createdAt" to FieldValue.serverTimestamp(),
         "media" to map,
-      ) + (if (forwarded) mapOf("forwarded" to true) else emptyMap()),
+      ) + (if (forwarded) mapOf("forwarded" to true) else emptyMap()) +
+        (momentRef?.let { mapOf("momentRef" to mapOf("author" to it.first, "sid" to it.second)) } ?: emptyMap()),
     ).await()
   }
 

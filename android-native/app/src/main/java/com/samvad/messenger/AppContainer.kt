@@ -64,7 +64,7 @@ class AppContainer(context: Context) {
   val twoStep: TwoStepRepository? = firebase?.let { TwoStepRepository(it.auth, it.functions) }
   val groups: GroupRepository? = firebase?.let { GroupRepository(it.functions) }
   val communities: CommunityRepository? = firebase?.let { CommunityRepository(it.db, it.functions) }
-  val status: StatusRepository? = firebase?.let { StatusRepository(it.db, it.storage) }
+  val status: StatusRepository? = firebase?.let { StatusRepository(it.db, it.storage, it.functions) }
   val privacy: PrivacyRepository? = firebase?.let { PrivacyRepository(it.db, it.rtdb) }
   val devices: DevicesRepository? = firebase?.let { DevicesRepository(it.db, it.functions) }
   val appeals: AppealsRepository? = firebase?.let { AppealsRepository(it.db, it.functions) }
