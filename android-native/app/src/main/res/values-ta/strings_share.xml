@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Attach sheet -->
+    <string name="attach_video">வீடியோ</string>
+    <string name="attach_contact">தொடர்பு</string>
+
+    <!-- Contact sharing -->
+    <string name="contact_pick_title">தொடர்பைப் பகிர்</string>
+    <string name="contact_pick_device">தொடர்புகளில் இருந்து தேர்வு செய்</string>
+    <string name="contact_pick_samvad">Samvad தொடர்பைப் பகிர்</string>
+    <string name="contact_card_message">செய்தி அனுப்பு</string>
+    <string name="contact_card_save">தொடர்பைச் சேமி</string>
+    <string name="contact_no_name">இந்தத் தொடர்புக்கு ஒரு பெயரைச் சேர்க்கவும்.</string>
+    <string name="contact_no_phone">இந்தத் தொடர்புக்கு குறைந்தது ஒரு சரியான தொலைபேசி எண் வேண்டும்.</string>
+    <string name="contact_save_failed">தொடர்பைச் சேமிக்கும் திரையைத் திறக்க முடியவில்லை.</string>
+    <string name="cd_contact_card">தொடர்பு அட்டை</string>
+    <plurals name="contact_phone_count">
+        <item quantity="one">%1$d தொலைபேசி எண்</item>
+        <item quantity="other">%1$d தொலைபேசி எண்கள்</item>
+    </plurals>
+
+    <!-- Video sharing -->
+    <string name="video_too_long">சாட்களில் வீடியோக்கள் அதிகபட்சம் 60 வினாடிகள் இருக்கலாம். அதைக் குறைத்து மீண்டும் முயலவும்.</string>
+    <string name="video_wrong_type">இந்த வீடியோ வடிவமைப்பு இங்கே இயங்காது. ஒரு MP4 வீடியோவைப் பகிரவும்.</string>
+    <string name="video_play">வீடியோவை இயக்கு</string>
+    <string name="video_pause">வீடியோவை நிறுத்து</string>
+    <string name="cd_video_thumbnail">வீடியோ, %1$s</string>
+    <string name="export_video">வீடியோ</string>
+    <string name="export_contact">தொடர்பு</string>
+    <string name="starred_kind_video">வீடியோ</string>
+    <string name="starred_kind_contact">தொடர்பு</string>
+    <string name="pinmsg_video">வீடியோ</string>
+    <string name="pinmsg_video_caption">வீடியோ: %1$s</string>
+    <string name="pinmsg_contact">தொடர்பு: %1$s</string>
+
+    <!-- Global message search -->
+    <string name="gsearch_title">செய்திகளைத் தேடு</string>
+    <string name="gsearch_placeholder">செய்திகளைத் தேடு</string>
+    <string name="gsearch_on_device_notice">இது இந்தச் சாதனத்தில் ஏற்றப்பட்ட செய்திகளில் மட்டுமே தேடுகிறது, உங்கள் முழு வரலாற்றிலும் அல்ல.</string>
+    <string name="gsearch_filter_all">அனைத்தும்</string>
+    <string name="gsearch_filter_photos">புகைப்படங்கள்</string>
+    <string name="gsearch_filter_documents">ஆவணங்கள்</string>
+    <string name="gsearch_filter_links">இணைப்புகள்</string>
+    <string name="gsearch_empty_title">செய்திகள் எதுவும் இல்லை</string>
+    <string name="gsearch_empty_body">வேறு ஒரு சொல்லை முயலவும், அல்லது சாட்டைத் திறந்து மேலே ஸ்க்ரோல் செய்யவும், அப்போது இந்தச் சாதனம் பழைய செய்திகளையும் தேடும்.</string>
+    <string name="gsearch_too_short">குறைந்தது 2 எழுத்துகளைத் தட்டச்சு செய்யவும்.</string>
+    <string name="gsearch_you">நீங்கள்</string>
+    <plurals name="gsearch_show_more">
+        <item quantity="one">மேலும் %1$d செய்தியைக் காட்டு</item>
+        <item quantity="other">மேலும் %1$d செய்திகளைக் காட்டு</item>
+    </plurals>
+    <string name="cd_search_messages">செய்திகளைத் தேடு</string>
+</resources>

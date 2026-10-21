@@ -107,7 +107,10 @@ data class GroupStatus(
   val allNames: List<String> = emptyList(),
 )
 
-enum class MediaError { TOO_LARGE, TYPE_BLOCKED, UNREADABLE, DOWNLOAD, OPEN }
+enum class MediaError { TOO_LARGE, TYPE_BLOCKED, UNREADABLE, DOWNLOAD, OPEN, VIDEO_TOO_LONG, VIDEO_WRONG_TYPE }
+
+/** Why a contact card could not be built from what was picked. */
+enum class ContactCardResultProblem { NO_NAME, NO_PHONE }
 
 /** One-shot feedback for block / report actions, shown as a snackbar. */
 enum class SafetyNotice { REPORTED, REPORTED_AND_BLOCKED, REPORT_LIMIT, FAILED }
@@ -263,6 +266,10 @@ class ConversationViewModel(
           clock.value = System.currentTimeMillis()
         }
       }
+    }
+    // Global search is entirely on-device: index each page of messages this chat screen loads.
+    viewModelScope.launch {
+      page.collect { p -> if (p.messages.isNotEmpty()) container.searchIndexer.indexAll(conversationId, p.messages) }
     }
   }
 
@@ -468,6 +475,48 @@ class ConversationViewModel(
   fun sendImage(uri: Uri, original: Boolean = false) =
     prepareAndSend { mediaRepo.prepareImage(uri, container.preferences.preferences.first().dataSaver, original = original) }
   fun sendDocument(uri: Uri) = prepareAndSend { mediaRepo.prepareDocument(uri) }
+
+  fun sendVideo(uri: Uri) = viewModelScope.launch {
+    if (blocked.value) return@launch
+    val media = try {
+      mediaRepo.prepareChatVideo(uri)
+    } catch (e: com.samvad.messenger.data.MediaRepository.ChatVideoException) {
+      _mediaError.value = when (e.problem) {
+        com.samvad.core.media.ChatVideoProblem.TOO_LONG -> MediaError.VIDEO_TOO_LONG
+        com.samvad.core.media.ChatVideoProblem.TOO_BIG -> MediaError.TOO_LARGE
+        com.samvad.core.media.ChatVideoProblem.WRONG_TYPE -> MediaError.VIDEO_WRONG_TYPE
+        com.samvad.core.media.ChatVideoProblem.UNREADABLE -> MediaError.UNREADABLE
+      }
+      return@launch
+    } catch (e: Exception) {
+      _mediaError.value = MediaError.UNREADABLE; return@launch
+    }
+    val caption = _composer.value.text.trim().takeIf { it.length <= MessageRules.MAX_LENGTH }.orEmpty()
+    val replyTo = _composer.value.replyTo?.id
+    if (caption.isNotEmpty() || replyTo != null) {
+      _composer.value = ComposerState()
+      clearDraft()
+    }
+    // The queue uploads the poster frame, then the video, then writes the message (see PendingUploadManager).
+    try {
+      pendingUploads.enqueue(conversationId, me, media, caption, replyTo)
+    } catch (e: java.io.IOException) {
+      _mediaError.value = MediaError.UNREADABLE
+    }
+  }
+
+  /** Builds and sends a contact card; [problem] explains what to tell the user when the card cannot be built. */
+  fun sendContact(name: String?, phones: List<String>, organisation: String?, region: String, onProblem: (ContactCardResultProblem) -> Unit) {
+    val replyTo = _composer.value.replyTo?.id
+    when (val result = com.samvad.core.chat.ContactCards.build(name, phones, organisation, region)) {
+      is com.samvad.core.chat.ContactCardResult.Ok -> {
+        if (replyTo != null) { _composer.value = ComposerState(); clearDraft() }
+        viewModelScope.launch { runCatching { chats.sendContact(conversationId, me, result.card, replyTo) } }
+      }
+      com.samvad.core.chat.ContactCardResult.NoName -> onProblem(ContactCardResultProblem.NO_NAME)
+      com.samvad.core.chat.ContactCardResult.NoPhone -> onProblem(ContactCardResultProblem.NO_PHONE)
+    }
+  }
 
   fun startRecording(): Boolean = recorder.start()
   fun cancelRecording() = recorder.cancel()

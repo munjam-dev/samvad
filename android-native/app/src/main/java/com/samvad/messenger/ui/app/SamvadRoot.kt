@@ -141,11 +141,27 @@ private fun SignedInNav(
         onOpenVault = { nav.navigate(VAULT_ROUTE) },
         onOpenCommunity = { id -> nav.navigate("community/$id") },
         onNewCommunity = { nav.navigate("newcommunity") },
+        onOpenSearchMessages = { nav.navigate("search") },
+      )
+    }
+    composable("search") {
+      com.samvad.messenger.ui.search.GlobalSearchScreen(
+        container = container,
+        me = uid,
+        onBack = { nav.popBackStack() },
+        onOpenMessage = { cid, other, mid ->
+          val route = if (other == null) "group/$cid?mid=$mid" else "chat/$cid/$other?mid=$mid"
+          nav.navigate(route)
+        },
       )
     }
     composable(
-      "chat/{cid}/{other}",
-      arguments = listOf(navArgument("cid") { type = NavType.StringType }, navArgument("other") { type = NavType.StringType }),
+      "chat/{cid}/{other}?mid={mid}",
+      arguments = listOf(
+        navArgument("cid") { type = NavType.StringType },
+        navArgument("other") { type = NavType.StringType },
+        navArgument("mid") { type = NavType.StringType; nullable = true; defaultValue = null },
+      ),
     ) { entry ->
       ConversationScreen(
         container = container,
@@ -156,9 +172,17 @@ private fun SignedInNav(
         onOpenChatTheme = { nav.navigate("chattheme/${entry.arguments!!.getString("cid")}") },
         onOpenStarred = { nav.navigate("starred/${entry.arguments!!.getString("cid")}") },
         onOpenMedia = { nav.navigate("media/${entry.arguments!!.getString("cid")}") },
+        onOpenContact = { cid, other -> nav.navigate("chat/$cid/$other") },
+        initialJumpId = entry.arguments?.getString("mid"),
       )
     }
-    composable("group/{cid}", arguments = listOf(navArgument("cid") { type = NavType.StringType })) { entry ->
+    composable(
+      "group/{cid}?mid={mid}",
+      arguments = listOf(
+        navArgument("cid") { type = NavType.StringType },
+        navArgument("mid") { type = NavType.StringType; nullable = true; defaultValue = null },
+      ),
+    ) { entry ->
       val cid = entry.arguments!!.getString("cid")!!
       ConversationScreen(
         container = container,
@@ -171,6 +195,8 @@ private fun SignedInNav(
         onOpenStarred = { nav.navigate("starred/$cid") },
         onOpenEvents = { nav.navigate("groupevents/$cid") },
         onOpenMedia = { nav.navigate("media/$cid") },
+        onOpenContact = { chat, other -> nav.navigate("chat/$chat/$other") },
+        initialJumpId = entry.arguments?.getString("mid"),
       )
     }
     composable("groupinfo/{cid}", arguments = listOf(navArgument("cid") { type = NavType.StringType })) { entry ->

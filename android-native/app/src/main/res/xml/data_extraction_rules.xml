@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Nothing is backed up or transferred: sessions and caches stay on this device. -->
+<!-- Nothing is backed up or transferred: sessions and caches stay on this device.
+     The "database" exclusion below also covers samvad_search.db (the on-device message search index,
+     added for global message search): it never leaves the device, backed up or otherwise. -->
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="root" />

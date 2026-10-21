@@ -24,6 +24,7 @@ import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Image
+import androidx.compose.material.icons.outlined.Videocam
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.CircularProgressIndicator
@@ -123,6 +124,7 @@ fun PendingUploadRow(upload: UploadItem, onRetry: () -> Unit, onCancel: () -> Un
         MediaKind.IMAGE -> Icons.Outlined.Image
         MediaKind.VOICE -> Icons.Outlined.Mic
         MediaKind.FILE -> Icons.Outlined.Description
+        MediaKind.VIDEO -> Icons.Outlined.Videocam
       },
       null,
       tint = colors.bubbleMeta,

@@ -14,6 +14,9 @@ data class ExportLabels(
   val file: String,
   val edited: String,
   val unknownSender: String,
+  /** "Video" and "Contact": shown as <Video>, <Contact: Asha Rao, +91 98765 43210>. */
+  val video: String = "Video",
+  val contact: String = "Contact",
 )
 
 /**
@@ -43,6 +46,8 @@ object ChatExport {
       "image" -> "<${labels.photo}>"
       "voice" -> "<${labels.voice}>"
       "file" -> "<${labels.file}: ${m.media?.name.orEmpty()}>"
+      "video" -> "<${labels.video}>"
+      "contact" -> m.contact?.let { c -> "<${labels.contact}: ${(listOf(c.name) + c.phones).joinToString(", ")}>" } ?: "<${labels.contact}>"
       else -> null
     }
     val text = listOfNotNull(media, m.text.takeIf { it.isNotBlank() }).joinToString(" ")

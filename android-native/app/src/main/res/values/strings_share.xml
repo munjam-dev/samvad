@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Attach sheet -->
+    <string name="attach_video">Video</string>
+    <string name="attach_contact">Contact</string>
+
+    <!-- Contact sharing -->
+    <string name="contact_pick_title">Share a contact</string>
+    <string name="contact_pick_device">Choose from contacts</string>
+    <string name="contact_pick_samvad">Share a Samvad contact</string>
+    <string name="contact_card_message">Message</string>
+    <string name="contact_card_save">Save contact</string>
+    <string name="contact_no_name">Add a name for this contact.</string>
+    <string name="contact_no_phone">This contact needs at least one valid phone number.</string>
+    <string name="contact_save_failed">Couldn\'t open the save-contact screen.</string>
+    <string name="cd_contact_card">Contact card</string>
+    <plurals name="contact_phone_count">
+        <item quantity="one">%1$d phone number</item>
+        <item quantity="other">%1$d phone numbers</item>
+    </plurals>
+
+    <!-- Video sharing -->
+    <string name="video_too_long">Videos in chats can be up to 60 seconds. Trim it and try again.</string>
+    <string name="video_wrong_type">This video format isn\'t supported here. Share an MP4 video.</string>
+    <string name="video_play">Play video</string>
+    <string name="video_pause">Pause video</string>
+    <string name="cd_video_thumbnail">Video, %1$s</string>
+    <string name="export_video">Video</string>
+    <string name="export_contact">Contact</string>
+    <string name="starred_kind_video">Video</string>
+    <string name="starred_kind_contact">Contact</string>
+    <string name="pinmsg_video">Video</string>
+    <string name="pinmsg_video_caption">Video: %1$s</string>
+    <string name="pinmsg_contact">Contact: %1$s</string>
+
+    <!-- Global message search -->
+    <string name="gsearch_title">Search messages</string>
+    <string name="gsearch_placeholder">Search messages</string>
+    <string name="gsearch_on_device_notice">Searches only messages already loaded on this device, not your whole history.</string>
+    <string name="gsearch_filter_all">All</string>
+    <string name="gsearch_filter_photos">Photos</string>
+    <string name="gsearch_filter_documents">Documents</string>
+    <string name="gsearch_filter_links">Links</string>
+    <string name="gsearch_empty_title">No messages found</string>
+    <string name="gsearch_empty_body">Try a different word, or open the chat and scroll up so this device can search its older messages too.</string>
+    <string name="gsearch_too_short">Type at least 2 characters.</string>
+    <string name="gsearch_you">You</string>
+    <plurals name="gsearch_show_more">
+        <item quantity="one">Show %1$d more message</item>
+        <item quantity="other">Show %1$d more messages</item>
+    </plurals>
+    <string name="cd_search_messages">Search messages</string>
+</resources>

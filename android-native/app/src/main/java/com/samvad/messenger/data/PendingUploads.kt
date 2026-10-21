@@ -68,8 +68,11 @@ data class PendingUploadRecord(
   val stage: UploadStage = UploadStage.UPLOAD,
   /** Resumable-upload session of the last attempt, so the next attempt continues instead of restarting. */
   val sessionUri: String? = null,
+  /** Videos: object name of the small poster frame (thumb.jpg), uploaded before the video itself. */
+  val thumbName: String? = null,
 ) {
   val storagePath: String get() = "conversations/$conversationId/$id/$storageName"
+  val thumbPath: String? get() = thumbName?.let { "conversations/$conversationId/$id/$it" }
 }
 
 /** Small JSON file in the app's private storage; there is at most a handful of records at a time. */
@@ -82,6 +85,12 @@ class PendingUploadStore(context: Context) {
   fun mediaFile(id: String): File {
     require(ID.matches(id)) { "bad id" }
     return File(dir, "$id.bin")
+  }
+
+  /** The private copy of a video's poster frame. */
+  fun thumbFile(id: String): File {
+    require(ID.matches(id)) { "bad id" }
+    return File(dir, "$id.thumb")
   }
 
   fun load(): List<PendingUploadRecord> = synchronized(lock) { read() }
@@ -105,6 +114,7 @@ class PendingUploadStore(context: Context) {
   fun remove(id: String) = synchronized(lock) {
     write(read().filterNot { it.id == id })
     runCatching { mediaFile(id).delete() }
+    runCatching { thumbFile(id).delete() }
     Unit
   }
 
@@ -115,7 +125,7 @@ class PendingUploadStore(context: Context) {
 
   /** Deletes files left behind by a crash between writing a file and its record. */
   fun sweepOrphans() = synchronized(lock) {
-    val known = read().map { "${it.id}.bin" }.toSet()
+    val known = read().flatMap { listOf("${it.id}.bin", "${it.id}.thumb") }.toSet()
     dir.listFiles()?.forEach { f -> if (f != index && f.name !in known) f.delete() }
   }
 
@@ -157,6 +167,7 @@ class PendingUploadStore(context: Context) {
     put("failed", r.retry.status == RetryStatus.FAILED)
     put("stage", r.stage.name)
     r.sessionUri?.let { put("sessionUri", it) }
+    r.thumbName?.let { put("thumbName", it) }
   }
 
   private fun decode(o: JSONObject): PendingUploadRecord? = runCatching {
@@ -185,6 +196,7 @@ class PendingUploadStore(context: Context) {
       ),
       stage = runCatching { UploadStage.valueOf(o.getString("stage")) }.getOrDefault(UploadStage.UPLOAD),
       sessionUri = if (o.has("sessionUri")) o.getString("sessionUri") else null,
+      thumbName = if (o.has("thumbName")) o.getString("thumbName") else null,
     )
   }.getOrNull()
 
@@ -303,9 +315,11 @@ class PendingUploadManager(
       caption = caption,
       replyTo = replyTo,
       createdAtMs = System.currentTimeMillis(),
+      thumbName = if (prepared.thumbBytes != null) "thumb.jpg" else null,
     )
     withContext(Dispatchers.IO) {
       store.mediaFile(id).writeBytes(prepared.bytes)
+      prepared.thumbBytes?.let { store.thumbFile(id).writeBytes(it) }
       store.put(record)
     }
     start(record)
@@ -406,6 +420,21 @@ class PendingUploadManager(
       if (!file.exists() || file.length() == 0L) throw FileNotFoundException("pending file is gone")
       var lastSession = record.sessionUri
       var lastPercent = -1
+      val thumb = store.thumbFile(id)
+      val thumbPath = record.thumbPath
+      if (thumbPath != null) {
+        if (!thumb.exists() || thumb.length() == 0L) throw FileNotFoundException("pending poster is gone")
+        // The poster is small, so it goes first without a resumable session; a retry simply sends it again.
+        media.uploadFile(
+          path = thumbPath,
+          file = thumb,
+          mime = "image/jpeg",
+          me = record.me,
+          sessionUri = null,
+          onSession = {},
+          onProgress = { _, _ -> },
+        )
+      }
       media.uploadFile(
         path = record.storagePath,
         file = file,
@@ -436,7 +465,7 @@ class PendingUploadManager(
     try {
       chats.sendMedia(
         record.conversationId, record.me, id, record.kind.wire,
-        Media(record.storagePath, record.displayName, record.size, record.mime, record.width, record.height, record.durationMs, record.waveform),
+        Media(record.storagePath, record.displayName, record.size, record.mime, record.width, record.height, record.durationMs, record.waveform, record.thumbPath),
         record.caption, record.replyTo,
       )
     } catch (e: FirebaseFirestoreException) {

@@ -9,6 +9,7 @@ import com.google.firebase.firestore.MetadataChanges
 import com.google.firebase.firestore.Query
 import com.samvad.core.chat.Conversation
 import com.samvad.core.chat.ConversationIds
+import com.samvad.core.chat.ContactCard
 import com.samvad.core.chat.DisplayNames
 import com.samvad.core.chat.LastMessage
 import com.samvad.core.chat.MemberState
@@ -243,6 +244,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
       media.height?.let { put("height", it) }
       media.durationMs?.let { put("durationMs", it) }
       if (media.waveform.isNotEmpty()) put("waveform", media.waveform)
+      media.thumbPath?.let { put("thumbPath", it) }
     }
     db.document("conversations/$conversationId/messages/$id").set(
       mapOf(
@@ -309,6 +311,24 @@ class ChatRepository(private val db: FirebaseFirestore) {
         "replyTo" to null,
         "createdAt" to FieldValue.serverTimestamp(),
         "poll" to mapOf("question" to poll.question, "options" to poll.options, "ids" to poll.ids, "multi" to poll.multi),
+      ),
+    ).await()
+  }
+
+  /** Phase 2: shares a contact card (validated by ContactCards.build and again by the rules). */
+  suspend fun sendContact(conversationId: String, me: String, card: ContactCard, replyTo: String? = null, id: String = UUID.randomUUID().toString()) {
+    db.document("conversations/$conversationId/messages/$id").set(
+      mapOf(
+        "senderId" to me,
+        "kind" to "contact",
+        "text" to "",
+        "replyTo" to replyTo,
+        "createdAt" to FieldValue.serverTimestamp(),
+        "contact" to buildMap<String, Any> {
+          put("name", card.name)
+          put("phones", card.phones)
+          card.organisation?.let { put("organisation", it) }
+        },
       ),
     ).await()
   }
@@ -509,6 +529,12 @@ class ChatRepository(private val db: FirebaseFirestore) {
     return SystemInfo(event, (m["targets"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(), m["name"] as? String, (m["seconds"] as? Number)?.toLong())
   }
 
+  private fun toContact(m: Map<*, *>): ContactCard? {
+    val name = m["name"] as? String ?: return null
+    val phones = (m["phones"] as? List<*>)?.filterIsInstance<String>() ?: return null
+    return ContactCard(name, phones, m["organisation"] as? String)
+  }
+
   private fun toPoll(m: Map<*, *>): Poll? {
     val question = m["question"] as? String ?: return null
     val options = (m["options"] as? List<*>)?.filterIsInstance<String>() ?: return null
@@ -539,6 +565,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
       height = (m["height"] as? Number)?.toInt(),
       durationMs = (m["durationMs"] as? Number)?.toLong(),
       waveform = (m["waveform"] as? List<*>)?.mapNotNull { (it as? Number)?.toInt() } ?: emptyList(),
+      thumbPath = m["thumbPath"] as? String,
     )
   }
 
@@ -564,6 +591,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
       poll = (d.get("poll") as? Map<*, *>)?.let(::toPoll),
       eventId = d.getString("eventId"),
       eventTitle = d.getString("eventTitle"),
+      contact = (d.get("contact") as? Map<*, *>)?.let(::toContact),
     )
   }
 

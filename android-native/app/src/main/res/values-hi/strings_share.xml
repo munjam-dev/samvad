@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Attach sheet -->
+    <string name="attach_video">वीडियो</string>
+    <string name="attach_contact">कॉन्टैक्ट</string>
+
+    <!-- Contact sharing -->
+    <string name="contact_pick_title">कॉन्टैक्ट शेयर करें</string>
+    <string name="contact_pick_device">कॉन्टैक्ट्स से चुनें</string>
+    <string name="contact_pick_samvad">Samvad कॉन्टैक्ट शेयर करें</string>
+    <string name="contact_card_message">मैसेज करें</string>
+    <string name="contact_card_save">कॉन्टैक्ट सेव करें</string>
+    <string name="contact_no_name">इस कॉन्टैक्ट के लिए एक नाम जोड़ें।</string>
+    <string name="contact_no_phone">इस कॉन्टैक्ट में कम से कम एक सही फ़ोन नंबर होना चाहिए।</string>
+    <string name="contact_save_failed">कॉन्टैक्ट सेव करने वाली स्क्रीन नहीं खुल सकी।</string>
+    <string name="cd_contact_card">कॉन्टैक्ट कार्ड</string>
+    <plurals name="contact_phone_count">
+        <item quantity="one">%1$d फ़ोन नंबर</item>
+        <item quantity="other">%1$d फ़ोन नंबर</item>
+    </plurals>
+
+    <!-- Video sharing -->
+    <string name="video_too_long">चैट में वीडियो ज़्यादा से ज़्यादा 60 सेकंड का हो सकता है। इसे छोटा करें और फिर कोशिश करें।</string>
+    <string name="video_wrong_type">यह वीडियो फ़ॉर्मैट यहाँ नहीं चलता। MP4 वीडियो शेयर करें।</string>
+    <string name="video_play">वीडियो चलाएँ</string>
+    <string name="video_pause">वीडियो रोकें</string>
+    <string name="cd_video_thumbnail">वीडियो, %1$s</string>
+    <string name="export_video">वीडियो</string>
+    <string name="export_contact">कॉन्टैक्ट</string>
+    <string name="starred_kind_video">वीडियो</string>
+    <string name="starred_kind_contact">कॉन्टैक्ट</string>
+    <string name="pinmsg_video">वीडियो</string>
+    <string name="pinmsg_video_caption">वीडियो: %1$s</string>
+    <string name="pinmsg_contact">कॉन्टैक्ट: %1$s</string>
+
+    <!-- Global message search -->
+    <string name="gsearch_title">संदेश खोजें</string>
+    <string name="gsearch_placeholder">संदेश खोजें</string>
+    <string name="gsearch_on_device_notice">यह केवल इस डिवाइस पर पहले से मौजूद संदेशों में खोजता है, आपके पूरे इतिहास में नहीं।</string>
+    <string name="gsearch_filter_all">सभी</string>
+    <string name="gsearch_filter_photos">फ़ोटो</string>
+    <string name="gsearch_filter_documents">दस्तावेज़</string>
+    <string name="gsearch_filter_links">लिंक</string>
+    <string name="gsearch_empty_title">कोई संदेश नहीं मिला</string>
+    <string name="gsearch_empty_body">कोई दूसरा शब्द आज़माएँ, या चैट खोलकर ऊपर स्क्रॉल करें ताकि यह डिवाइस पुराने संदेश भी खोज सके।</string>
+    <string name="gsearch_too_short">कम से कम 2 अक्षर टाइप करें।</string>
+    <string name="gsearch_you">आप</string>
+    <plurals name="gsearch_show_more">
+        <item quantity="one">%1$d और संदेश दिखाएँ</item>
+        <item quantity="other">%1$d और संदेश दिखाएँ</item>
+    </plurals>
+    <string name="cd_search_messages">संदेश खोजें</string>
+</resources>

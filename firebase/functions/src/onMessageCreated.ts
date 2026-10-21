@@ -25,6 +25,8 @@ export interface CreatedMessage {
     /** Group events (Phase 6): the card in the timeline, written only by createGroupEvent. */
     eventId?: string;
     eventTitle?: string;
+    /** Shared contact card; only its name is used in previews (never the phone numbers). */
+    contact?: { name?: string };
   };
 }
 
@@ -38,6 +40,8 @@ export function previewOf(data: CreatedMessage['data']): string {
       case 'file': return `📄 ${data.media?.name ?? 'File'}`;
       case 'poll': return `📊 ${data.poll?.question ?? 'Poll'}`;
       case 'event': return `📅 ${data.eventTitle ?? 'Event'}`;
+      case 'video': return '🎬 Video';
+      case 'contact': return `👤 ${data.contact?.name ?? 'Contact'}`;
       default: return '';
     }
   })();

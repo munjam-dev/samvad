@@ -33,8 +33,10 @@ import androidx.compose.material.icons.outlined.Poll
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Pause
+import androidx.compose.material.icons.outlined.PersonOutline
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Videocam
 import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -337,7 +339,13 @@ fun RecorderBar(state: RecordingState, onCancel: () -> Unit, onSend: () -> Unit)
 }
 
 @Composable
-fun AttachOptions(onPhoto: () -> Unit, onDocument: () -> Unit, onPoll: (() -> Unit)? = null) {
+fun AttachOptions(
+  onPhoto: () -> Unit,
+  onDocument: () -> Unit,
+  onVideo: () -> Unit = {},
+  onContact: () -> Unit = {},
+  onPoll: (() -> Unit)? = null,
+) {
   val colors = com.samvad.messenger.ui.theme.SamvadTheme.colors
   Column(Modifier.fillMaxWidth().padding(bottom = 28.dp)) {
     Text(
@@ -346,11 +354,17 @@ fun AttachOptions(onPhoto: () -> Unit, onDocument: () -> Unit, onPoll: (() -> Un
       color = colors.onSurface,
       modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
     )
-    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-      AttachTile(Icons.Outlined.Image, stringResource(R.string.attach_photo), colors.primaryContainer, colors.onPrimaryContainer, onPhoto)
-      AttachTile(Icons.Outlined.Description, stringResource(R.string.attach_document), colors.tertiaryContainer, colors.onTertiaryContainer, onDocument)
+    androidx.compose.foundation.lazy.LazyRow(
+      Modifier.fillMaxWidth(),
+      contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
+      horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+      item { AttachTile(Icons.Outlined.Image, stringResource(R.string.attach_photo), colors.primaryContainer, colors.onPrimaryContainer, onPhoto) }
+      item { AttachTile(Icons.Outlined.Videocam, stringResource(R.string.attach_video), colors.tertiaryContainer, colors.onTertiaryContainer, onVideo) }
+      item { AttachTile(Icons.Outlined.Description, stringResource(R.string.attach_document), colors.tertiaryContainer, colors.onTertiaryContainer, onDocument) }
+      item { AttachTile(Icons.Outlined.PersonOutline, stringResource(R.string.attach_contact), colors.secondaryContainer, colors.onSecondaryContainer, onContact) }
       if (onPoll != null) {
-        AttachTile(Icons.Outlined.Poll, stringResource(R.string.attach_poll), colors.secondaryContainer, colors.onSecondaryContainer, onPoll)
+        item { AttachTile(Icons.Outlined.Poll, stringResource(R.string.attach_poll), colors.secondaryContainer, colors.onSecondaryContainer, onPoll) }
       }
     }
   }

@@ -21,7 +21,7 @@ object ChatSearch {
     return items.mapNotNull { item ->
       val m = (item as? TimelineItem.Bubble)?.message ?: return@mapNotNull null
       if (m.deleted) return@mapNotNull null
-      val haystack = fold(listOfNotNull(m.text, m.media?.name).joinToString(" "))
+      val haystack = fold(listOfNotNull(m.text, m.media?.name, m.contact?.name, m.contact?.organisation).joinToString(" "))
       if (haystack.contains(q)) item.key else null
     }
   }

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Attach sheet -->
+    <string name="attach_video">వీడియో</string>
+    <string name="attach_contact">కాంటాక్ట్</string>
+
+    <!-- Contact sharing -->
+    <string name="contact_pick_title">కాంటాక్ట్ షేర్ చేయండి</string>
+    <string name="contact_pick_device">కాంటాక్ట్‌ల నుండి ఎంచుకోండి</string>
+    <string name="contact_pick_samvad">Samvad కాంటాక్ట్‌ను షేర్ చేయండి</string>
+    <string name="contact_card_message">మెసేజ్ చేయండి</string>
+    <string name="contact_card_save">కాంటాక్ట్‌ను సేవ్ చేయండి</string>
+    <string name="contact_no_name">ఈ కాంటాక్ట్‌కు ఒక పేరు జోడించండి.</string>
+    <string name="contact_no_phone">ఈ కాంటాక్ట్‌లో కనీసం ఒక సరైన ఫోన్ నంబర్ ఉండాలి.</string>
+    <string name="contact_save_failed">కాంటాక్ట్ సేవ్ చేసే స్క్రీన్ తెరవలేకపోయాం.</string>
+    <string name="cd_contact_card">కాంటాక్ట్ కార్డ్</string>
+    <plurals name="contact_phone_count">
+        <item quantity="one">%1$d ఫోన్ నంబర్</item>
+        <item quantity="other">%1$d ఫోన్ నంబర్లు</item>
+    </plurals>
+
+    <!-- Video sharing -->
+    <string name="video_too_long">చాట్‌లలో వీడియోలు గరిష్ఠంగా 60 సెకన్లు ఉండగలవు. దీన్ని కుదించి మళ్లీ ప్రయత్నించండి.</string>
+    <string name="video_wrong_type">ఈ వీడియో ఫార్మాట్ ఇక్కడ పనిచేయదు. MP4 వీడియోను షేర్ చేయండి.</string>
+    <string name="video_play">వీడియో ప్లే చేయండి</string>
+    <string name="video_pause">వీడియో పాజ్ చేయండి</string>
+    <string name="cd_video_thumbnail">వీడియో, %1$s</string>
+    <string name="export_video">వీడియో</string>
+    <string name="export_contact">కాంటాక్ట్</string>
+    <string name="starred_kind_video">వీడియో</string>
+    <string name="starred_kind_contact">కాంటాక్ట్</string>
+    <string name="pinmsg_video">వీడియో</string>
+    <string name="pinmsg_video_caption">వీడియో: %1$s</string>
+    <string name="pinmsg_contact">కాంటాక్ట్: %1$s</string>
+
+    <!-- Global message search -->
+    <string name="gsearch_title">సందేశాలు వెతకండి</string>
+    <string name="gsearch_placeholder">సందేశాలు వెతకండి</string>
+    <string name="gsearch_on_device_notice">ఇది ఈ డివైస్‌లో ఇప్పటికే లోడ్ అయిన సందేశాల్లోనే వెతుకుతుంది, మీ పూర్తి చరిత్రలో కాదు.</string>
+    <string name="gsearch_filter_all">అన్నీ</string>
+    <string name="gsearch_filter_photos">ఫోటోలు</string>
+    <string name="gsearch_filter_documents">డాక్యుమెంట్లు</string>
+    <string name="gsearch_filter_links">లింక్‌లు</string>
+    <string name="gsearch_empty_title">సందేశాలు కనుగొనబడలేదు</string>
+    <string name="gsearch_empty_body">మరో పదాన్ని ప్రయత్నించండి, లేదా చాట్ తెరిచి పైకి స్క్రోల్ చేయండి, అప్పుడు ఈ డివైస్ పాత సందేశాలను కూడా వెతకగలుగుతుంది.</string>
+    <string name="gsearch_too_short">కనీసం 2 అక్షరాలు టైప్ చేయండి.</string>
+    <string name="gsearch_you">మీరు</string>
+    <plurals name="gsearch_show_more">
+        <item quantity="one">మరో %1$d సందేశం చూపించు</item>
+        <item quantity="other">మరో %1$d సందేశాలు చూపించు</item>
+    </plurals>
+    <string name="cd_search_messages">సందేశాలు వెతకండి</string>
+</resources>
