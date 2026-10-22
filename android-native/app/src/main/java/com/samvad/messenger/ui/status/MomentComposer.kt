@@ -69,6 +69,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -92,7 +93,7 @@ private fun styleColorsOf(style: String?): Pair<Color, Color> {
   return Color(t.background) to Color(t.text)
 }
 
-private fun clock(ms: Long): String = "%d:%02d".format(ms / 60_000, (ms / 1000) % 60)
+internal fun clock(ms: Long): String = "%d:%02d".format(ms / 60_000, (ms / 1000) % 60)
 
 /** Make a moment: text, a photo, a short video, or a voice note, with a choice of who sees it. */
 @Composable
@@ -120,6 +121,7 @@ fun StatusComposerScreen(container: AppContainer, me: String, startWithPhoto: Bo
   var audience by remember { mutableStateOf(StatusAudience.ALL) }
   var chosen by remember { mutableStateOf(setOf<String>()) }
   var audienceOpen by remember { mutableStateOf(false) }
+  var repliesOn by rememberSaveable { mutableStateOf(true) }
 
   val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
     if (uri != null) {
@@ -276,6 +278,17 @@ fun StatusComposerScreen(container: AppContainer, me: String, startWithPhoto: Bo
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 2.dp),
       )
     }
+    Row(
+      Modifier.fillMaxWidth().defaultMinSize(minHeight = 48.dp).padding(horizontal = 16.dp)
+        .toggleable(value = repliesOn, enabled = !posting, role = Role.Switch, onValueChange = { repliesOn = it }),
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      Column(Modifier.weight(1f)) {
+        Text(stringResource(R.string.moment_allow_replies), style = MaterialTheme.typography.bodyLarge, color = onColor)
+        Text(stringResource(R.string.moment_allow_replies_hint), style = MaterialTheme.typography.bodySmall, color = onColor.copy(alpha = 0.8f))
+      }
+      androidx.compose.material3.Switch(checked = repliesOn, onCheckedChange = null, enabled = !posting)
+    }
     Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
       val audienceName = when (audience) {
         StatusAudience.ALL -> stringResource(R.string.status_audience_all)
@@ -295,10 +308,10 @@ fun StatusComposerScreen(container: AppContainer, me: String, startWithPhoto: Bo
         onClick = {
           val list = if (audience == StatusAudience.ALL) emptyList() else chosen.toList()
           when (mode) {
-            MomentMode.TEXT -> vm.postText(text, style, audience, list)
-            MomentMode.PHOTO -> vm.postPhoto(photo!!, caption, audience, list, photoEdits)
-            MomentMode.VIDEO -> vm.postVideo(video!!, caption, audience, list)
-            MomentMode.VOICE -> vm.postVoice(recorded!!, audience, list)
+            MomentMode.TEXT -> vm.postText(text, style, audience, list, !repliesOn)
+            MomentMode.PHOTO -> vm.postPhoto(photo!!, caption, audience, list, photoEdits, !repliesOn)
+            MomentMode.VIDEO -> vm.postVideo(video!!, caption, audience, list, !repliesOn)
+            MomentMode.VOICE -> vm.postVoice(recorded!!, audience, list, !repliesOn)
           }
         },
       ) { Text(stringResource(if (posting) R.string.status_posting else R.string.status_post)) }
@@ -360,7 +373,7 @@ internal fun Waveform(levels: List<Int>, color: Color, modifier: Modifier = Modi
 }
 
 @Composable
-private fun AudienceDialog(
+internal fun AudienceDialog(
   audience: StatusAudience, onAudience: (StatusAudience) -> Unit,
   chosen: Set<String>, onChosen: (Set<String>) -> Unit,
   people: List<StatusPerson>, onDone: () -> Unit,

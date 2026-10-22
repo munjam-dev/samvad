@@ -113,7 +113,12 @@ private fun SignedInNav(
 ) {
   val nav = rememberNavController()
   LaunchedEffect(link) {
-    if (link != null) {
+    if (link != null && link.moments) {
+      // A new-moment notification: back to home, on the Moments tab.
+      nav.popBackStack("home", false)
+      com.samvad.messenger.ui.home.HomeTabRequest.openMoments()
+      onLinkHandled()
+    } else if (link != null) {
       val route = link.otherUid?.let { "chat/${link.conversationId}/$it" } ?: "group/${link.conversationId}"
       nav.navigate(route) { popUpTo("home") }
       onLinkHandled()

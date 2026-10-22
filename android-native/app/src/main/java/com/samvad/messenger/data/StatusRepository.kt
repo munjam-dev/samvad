@@ -21,7 +21,8 @@ data class StatusViewer(val uid: String, val viewedAt: Long, val reaction: Strin
  * Status (Phase 4): text and photo posts that last 24 hours. Who can see a post and when it expires are decided
  * by the server (the rules stop clients writing either), so a post appears for others a moment after it is made.
  */
-class StatusRepository(private val db: FirebaseFirestore, private val storage: FirebaseStorage) {
+class StatusRepository(private val db: FirebaseFirestore, private val storage: FirebaseStorage, private val functions: com.google.firebase.functions.FirebaseFunctions) {
+  private val limitedUse = com.google.firebase.functions.HttpsCallableOptions.Builder().setLimitedUseAppCheckTokens(true).build()
 
   /** Everything people I chat with have shared with me. One listener for the whole feed. */
   fun feed(me: String): Flow<List<StatusItem>> = callbackFlow {
@@ -47,13 +48,13 @@ class StatusRepository(private val db: FirebaseFirestore, private val storage: F
     awaitClose { reg.remove() }
   }
 
-  suspend fun postText(me: String, text: String, style: String, audience: StatusAudience, list: List<String>) {
+  suspend fun postText(me: String, text: String, style: String, audience: StatusAudience, list: List<String>, repliesOff: Boolean = false) {
     val id = UUID.randomUUID().toString()
     db.document("statuses/$me/items/$id").set(
       mapOf(
         "kind" to "text", "text" to text.trim(), "style" to style,
         "audience" to audience.wire, "list" to list, "createdAt" to FieldValue.serverTimestamp(),
-      ),
+      ) + (if (repliesOff) mapOf("repliesOff" to true) else emptyMap()),
     ).await()
   }
 
@@ -65,11 +66,11 @@ class StatusRepository(private val db: FirebaseFirestore, private val storage: F
     task.await()
   }
 
-  private suspend fun publish(me: String, id: String, fields: Map<String, Any?>) {
-    db.document("statuses/$me/items/$id").set(fields + ("createdAt" to FieldValue.serverTimestamp())).await()
+  private suspend fun publish(me: String, id: String, fields: Map<String, Any?>, repliesOff: Boolean = false) {
+    db.document("statuses/$me/items/$id").set(fields + ("createdAt" to FieldValue.serverTimestamp()) + (if (repliesOff) mapOf("repliesOff" to true) else emptyMap())).await()
   }
 
-  suspend fun postImage(me: String, media: PreparedMedia, caption: String, audience: StatusAudience, list: List<String>, onProgress: (Float) -> Unit = {}) {
+  suspend fun postImage(me: String, media: PreparedMedia, caption: String, audience: StatusAudience, list: List<String>, onProgress: (Float) -> Unit = {}, repliesOff: Boolean = false) {
     val id = UUID.randomUUID().toString()
     val path = "statuses/$me/$id/photo.jpg"
     upload(path, media.bytes, "image/jpeg", onProgress)
@@ -79,10 +80,11 @@ class StatusRepository(private val db: FirebaseFirestore, private val storage: F
         "kind" to "image", "text" to caption.trim(), "audience" to audience.wire, "list" to list,
         "media" to mapOf("path" to path, "width" to (media.width ?: 0), "height" to (media.height ?: 0), "size" to media.bytes.size),
       ),
+      repliesOff,
     )
   }
 
-  suspend fun postVideo(me: String, video: MediaRepository.PreparedVideo, caption: String, audience: StatusAudience, list: List<String>, onProgress: (Float) -> Unit = {}) {
+  suspend fun postVideo(me: String, video: MediaRepository.PreparedVideo, caption: String, audience: StatusAudience, list: List<String>, onProgress: (Float) -> Unit = {}, repliesOff: Boolean = false) {
     val id = UUID.randomUUID().toString()
     val path = "statuses/$me/$id/video.mp4"
     upload(path, video.bytes, "video/mp4", onProgress)
@@ -92,10 +94,11 @@ class StatusRepository(private val db: FirebaseFirestore, private val storage: F
         "kind" to "video", "text" to caption.trim(), "audience" to audience.wire, "list" to list,
         "media" to mapOf("path" to path, "width" to video.width, "height" to video.height, "size" to video.bytes.size, "durationMs" to video.durationMs),
       ),
+      repliesOff,
     )
   }
 
-  suspend fun postVoice(me: String, bytes: ByteArray, durationMs: Long, waveform: List<Int>, audience: StatusAudience, list: List<String>, onProgress: (Float) -> Unit = {}) {
+  suspend fun postVoice(me: String, bytes: ByteArray, durationMs: Long, waveform: List<Int>, audience: StatusAudience, list: List<String>, onProgress: (Float) -> Unit = {}, repliesOff: Boolean = false) {
     val id = UUID.randomUUID().toString()
     val path = "statuses/$me/$id/voice.m4a"
     upload(path, bytes, "audio/mp4", onProgress)
@@ -105,7 +108,14 @@ class StatusRepository(private val db: FirebaseFirestore, private val storage: F
         "kind" to "voice", "text" to "", "audience" to audience.wire, "list" to list,
         "media" to mapOf("path" to path, "size" to bytes.size, "durationMs" to durationMs, "waveform" to waveform.take(64)),
       ),
+      repliesOff,
     )
+  }
+
+  /** Author only: changes who can see a live moment. The server re-checks and re-stamps visibleTo like at posting. */
+  suspend fun setAudience(id: String, audience: StatusAudience, list: List<String>) {
+    functions.getHttpsCallable("setStatusAudience", limitedUse)
+      .call(mapOf("statusId" to id, "audience" to audience.wire, "list" to list)).await()
   }
 
   suspend fun delete(me: String, id: String) {
@@ -152,6 +162,9 @@ class StatusRepository(private val db: FirebaseFirestore, private val storage: F
       expiresAt = (d.get("expiresAt") as? Timestamp)?.toDate()?.time,
       durationMs = (media?.get("durationMs") as? Number)?.toLong(),
       waveform = (media?.get("waveform") as? List<*>)?.mapNotNull { (it as? Number)?.toInt() } ?: emptyList(),
+      repliesOff = d.getBoolean("repliesOff") == true,
+      audience = StatusAudience.parse(d.getString("audience")),
+      audienceList = (d.get("list") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
     )
   }
 }

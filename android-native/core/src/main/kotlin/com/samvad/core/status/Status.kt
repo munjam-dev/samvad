@@ -25,6 +25,11 @@ data class StatusItem(
   val durationMs: Long? = null,
   /** Voice moments: bar heights for the waveform. */
   val waveform: List<Int> = emptyList(),
+  /** The author turned replies off when posting; the viewer shows "Replies are off". */
+  val repliesOff: Boolean = false,
+  /** Who it was shared with, as the server stamped it (the author's own posts only need the audience for editing). */
+  val audience: StatusAudience = StatusAudience.ALL,
+  val audienceList: List<String> = emptyList(),
 )
 
 /** Everything one person has posted that is still live, oldest first, with whether I have seen it all. */
@@ -76,6 +81,14 @@ object StatusRules {
   /** The next moment the feed changes by itself (a status expiring), or null. */
   fun nextExpiry(items: List<StatusItem>, nowMs: Long): Long? =
     items.mapNotNull { it.expiresAt ?: (it.createdAt + LIFETIME_MS) }.filter { it > nowMs }.minOrNull()
+
+  /** A voice reply to a moment is at most 30 seconds (the rules check this too). */
+  const val MAX_VOICE_REPLY_MS = 30_000L
+
+  fun voiceReplyOk(durationMs: Long): Boolean = durationMs in 1..MAX_VOICE_REPLY_MS
+
+  /** Replies are for other people's moments, and only when the author left them on. */
+  fun canReply(item: StatusItem, me: String): Boolean = item.authorId != me && !item.repliesOff
 
   const val MAX_VIDEO_MS = 30_000L
   const val MAX_VOICE_MS = 60_000L

@@ -57,7 +57,7 @@ export const fcmPushSender: PushSender = {
         data,
         android: {
           priority: 'high',
-          collapseKey: data.cid ?? data.callId,
+          collapseKey: data.cid ?? data.callId ?? data.momentAuthor,
           // A ring is worthless after the ring window.
           ...(data.type === 'incoming_call' ? { ttl: 45_000 } : {}),
         },

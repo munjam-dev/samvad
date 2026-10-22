@@ -117,6 +117,14 @@ import com.samvad.messenger.ui.theme.SamvadTheme
 
 private enum class Tab { CHATS, STATUS, COMMUNITIES, CALLS }
 
+/** Lets a notification ask the open Home screen to show the Moments tab. */
+object HomeTabRequest {
+  private val _moments = kotlinx.coroutines.flow.MutableStateFlow(false)
+  val moments: kotlinx.coroutines.flow.StateFlow<Boolean> = _moments
+  fun openMoments() { _moments.value = true }
+  fun consume() { _moments.value = false }
+}
+
 /** What the three-dot menu at the top of every tab does. Settings is the last entry. */
 class HomeMenu(
   val newGroup: () -> Unit,
@@ -155,6 +163,8 @@ fun HomeScreen(
   val colors = SamvadTheme.colors
   val reduced = LocalReducedMotion.current
   var tab by rememberSaveable { mutableIntStateOf(0) }
+  val momentsRequest = HomeTabRequest.moments.collectAsStateWithLifecycle().value
+  LaunchedEffect(momentsRequest) { if (momentsRequest) { tab = Tab.STATUS.ordinal; HomeTabRequest.consume() } }
 
   Box(Modifier.fillMaxSize().background(colors.background)) {
     AnimatedContent(
