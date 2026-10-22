@@ -43,6 +43,8 @@ export function previewOf(data: CreatedMessage['data']): string {
       case 'poll': return `📊 ${data.poll?.question ?? 'Poll'}`;
       case 'event': return `📅 ${data.eventTitle ?? 'Event'}`;
       case 'video': return '🎬 Video';
+      case 'gif': return 'GIF';
+      case 'sticker': return 'Sticker';
       case 'contact': return `👤 ${data.contact?.name ?? 'Contact'}`;
       case 'meeting': return `📅 ${data.meeting?.title ?? 'Meeting'}`;
       default: return '';
