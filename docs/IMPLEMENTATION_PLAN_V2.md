@@ -69,12 +69,8 @@ shows only those that are finished. Urdu needs right-to-left testing before it i
 
 ## Phase 4: Personal Vault (local-first)
 
-**Local vault: Have** (built, see `docs/VAULT_DESIGN.md`: Room + Keystore-wrapped AES-256-GCM files, gated by the app unlock, import/view/rename/delete/export, search and filters). **Drive backup: still Missing and blocked** on the two decisions below; `VaultBackup` is an interface with no implementation.
+**Local vault: Have** (built, see `docs/VAULT_DESIGN.md`: Room + Keystore-wrapped AES-256-GCM files, gated by the app unlock, import/view/rename/delete/export, search and filters). **Drive backup: Have in code, needs owner Google Cloud setup** (`docs/VAULT_BACKUP_SETUP.md`); not yet tried on a device. Decided by the owner: scope `drive.appdata` only (hidden app-data folder), recovery code or passphrase held by the user.
 
-Backup needs the **Google Drive API with explicit user authorization**. Two decisions are needed first: the backup
-recovery key design (passphrase or generated key shown to the user) and whether Drive scope `drive.file` (app-created
-files only, but not visible in the user's normal Drive listing) or the visible-folder scope is acceptable, because
-the visible-folder scope is a restricted scope that requires a Google security review before production.
 
 ## Phase 5: HD media and weak networks
 
@@ -121,4 +117,4 @@ airplane-mode tests, accessibility and font-scale audit, cost audit, release bui
 
 - Licence answer on publishing the Android source (blocks shipping libsignal).
 - Calling: managed service or self-hosted.
-- Google Drive scope for Vault backup (see Phase 4).
+- Vault backup: create the Google Cloud OAuth client (see `docs/VAULT_BACKUP_SETUP.md`).

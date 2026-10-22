@@ -1,12 +1,12 @@
 ---
 title: Privacy Policy
 summary: What Samvad collects, why, where it is stored, how long we keep it, and your rights under Indian law.
-updated: 2026-10-21
+updated: 2026-10-22
 order: 1
 group: privacy
 ---
 
-> **In short.** We collect what a messenger needs to work: your phone number, your profile, and the messages and files you send. We do not show ads, sell your data, or use advertising or analytics trackers. Messages are encrypted in transit and stored on Google Cloud, but **neither messages nor calls are end-to-end encrypted**, which means our systems could technically access messages. Your Personal Vault stays on your phone and is never uploaded. We are building end-to-end encryption and will update this policy and tell you in the app when it is live. You can delete your account at any time.
+> **In short.** We collect what a messenger needs to work: your phone number, your profile, and the messages and files you send. We do not show ads, sell your data, or use advertising or analytics trackers. Messages are encrypted in transit and stored on Google Cloud, but **neither messages nor calls are end-to-end encrypted**, which means our systems could technically access messages. Your Personal Vault stays on your phone unless you choose to turn on Vault backup, which saves an encrypted copy to your own Google Drive that we cannot read. We are building end-to-end encryption and will update this policy and tell you in the app when it is live. You can delete your account at any time.
 
 ## 1. Who we are and how this policy applies
 
@@ -106,7 +106,9 @@ Samvad builds a search index of messages **on your phone only**, so you can sear
 
 ### 3.14 Personal Vault
 
-The Personal Vault is a private space for your own documents, photos, notes and ID copies. Its contents are encrypted on your phone with a key protected by the Android Keystore, are opened only after you confirm with your fingerprint, face or screen lock, and are **never uploaded to our servers or anywhere else**. They are excluded from Android backup and device transfer. There is currently **no cloud backup** of the vault: if you uninstall the app, clear its data or lose or reset your phone, the vault is lost and cannot be recovered. If you export an item, the copy you create is not encrypted.
+The Personal Vault is a private space for your own documents, photos, notes and ID copies. Its contents are encrypted on your phone with a key protected by the Android Keystore, are opened only after you confirm with your fingerprint, face or screen lock, and are **never uploaded to our servers**. They are excluded from Android's own backup and device transfer. If you export an item, the copy you create is not encrypted.
+
+**Vault backup (optional, off by default).** If you turn it on, the app packs your vault's files, notes and titles into one archive and encrypts it on your phone, before it leaves the phone, with a key made from a recovery code (or passphrase) that only you keep. The encrypted archive is then uploaded to a hidden app-data folder in your own Google Drive, using access you grant to Google that lets Samvad see only that folder and not your other files. It uses your Google storage and is covered by Google's terms and privacy policy; Google can see that the file exists and roughly how large it is, but cannot read it. Samvad's servers never receive the archive or your recovery code, and we do not keep a copy of the recovery code, so **we cannot open or recover your backup, and if you lose the recovery code the backup cannot be opened**. You can turn backup off in the app, which deletes the backup from your Drive; if your phone cannot reach Google at that moment, you can delete the copy yourself from the hidden app data in your Google Drive settings. Without a backup, if you uninstall the app, clear its data or lose or reset your phone, the vault is lost and cannot be recovered.
 
 ### 3.15 Linked devices
 
@@ -118,7 +120,7 @@ If you ask us to review a decision we made about your account or content (Settin
 
 ### 3.17 Data that stays on your phone
 
-Chat themes, wallpaper photos you choose, names from your contacts, the on-device search index, the Personal Vault, app lock settings and other preferences stay on your phone and are not uploaded. Chats you export are files you create and control.
+Chat themes, wallpaper photos you choose, names from your contacts, the on-device search index, the Personal Vault (unless you turn on Vault backup, see 3.14), app lock settings and other preferences stay on your phone and are not uploaded. Chats you export are files you create and control.
 
 ### 3.18 This website
 
@@ -166,6 +168,8 @@ We use **Google Cloud and Firebase** (Google LLC and its affiliates) to host our
 
 We use **LiveKit Cloud** (LiveKit, Inc.) to carry the audio and video of voice calls, video calls and group meetings. LiveKit processes this media only to relay it between participants and does not receive your messages.
 
+If you turn on the optional Vault backup, an encrypted copy of your vault is stored in your own **Google Drive** account (see section 3.14). That is your account with Google, not a service we run for you: Samvad does not receive the copy or the key to open it.
+
 The full list is on our [Service Providers](/legal/service-providers) page.
 
 ### 6.3 Authorities
@@ -196,7 +200,7 @@ Any transfer of personal data outside India is made in line with section 16 of t
 | Moments | 24 hours, unless you delete them sooner |
 | Call and meeting records | Kept as call history after you delete your account (any live call is ended and you are removed from meetings). Call audio and video is not recorded or stored by Samvad |
 | Linked-device records | Until you sign the device out or delete your account |
-| Personal Vault and on-device search index | Only on your phone, until you delete them, sign out (search index) or uninstall the app |
+| Personal Vault and on-device search index | Only on your phone, until you delete them, sign out (search index) or uninstall the app. If you turn on Vault backup, an encrypted copy is also kept in your own Google Drive until you turn backup off or delete it there |
 | Scheduled messages | Until sent, cancelled or failed, then 7 days; deleted at once when you delete your account |
 | Contact phone numbers checked for matches | Not stored |
 | Safety reports | 90 days, unless the law requires us to keep them longer |

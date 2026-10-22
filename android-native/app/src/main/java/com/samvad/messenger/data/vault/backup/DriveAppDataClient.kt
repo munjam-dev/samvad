@@ -130,7 +130,6 @@ class DriveAppDataClient(private val token: suspend () -> String) : VaultBackupR
       val status = conn.responseCode
       if (status != 204 && status != 200 && status != 404) throw failure(conn, status)
     } catch (e: IOException) {
-      if (e is BackupException) throw e
       throw networkError(e)
     } finally {
       conn.disconnect()
@@ -161,7 +160,6 @@ class DriveAppDataClient(private val token: suspend () -> String) : VaultBackupR
       if (status != 200) throw failure(conn, status)
       return conn.getHeaderField("Location") ?: throw BackupException(BackupFailure.FAILED)
     } catch (e: IOException) {
-      if (e is BackupException) throw e
       throw networkError(e)
     } finally {
       conn.disconnect()
@@ -284,7 +282,6 @@ class DriveAppDataClient(private val token: suspend () -> String) : VaultBackupR
       if (status != 200) throw failure(conn, status)
       return conn.inputStream.use { it.readBytes().toString(Charsets.UTF_8) }
     } catch (e: IOException) {
-      if (e is BackupException) throw e
       throw networkError(e)
     } finally {
       conn.disconnect()
