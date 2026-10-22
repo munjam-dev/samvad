@@ -83,6 +83,10 @@ service firebase.storage {
       return c.type != 'community_announcements' || request.auth.uid in c.admins;
     }
 
+    function isE2ee(cid) {
+      return firestore.get(/databases/(default)/documents/conversations/$(cid)).data.get('e2ee', false) == true;
+    }
+
     // conversations/{cid}/{messageId}/{file}: uploaded once by a member before the message doc is written.
     match /conversations/{cid}/{mid}/{file} {
       allow read: if isMember(cid);
@@ -94,11 +98,17 @@ service firebase.storage {
         && mid.matches('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
         && file.matches('^[A-Za-z0-9._-]{1,100}$')
         && request.resource.size > 0
-        && request.resource.size <= 16 * 1024 * 1024
-        && allowedType(request.resource.contentType)
-        // Chat video: video/mp4 only as video.mp4 (and video.mp4 only as video/mp4); its poster frame is a small JPEG.
-        && ((request.resource.contentType == 'video/mp4') == (file == 'video.mp4'))
-        && (file != 'thumb.jpg' || (request.resource.contentType == 'image/jpeg' && request.resource.size <= 256 * 1024))
+        && (isE2ee(cid)
+            // End-to-end encrypted chat: only ciphertext, as blob.bin or thumb.bin (the real name and type are in the
+            // encrypted message). Plaintext media types are refused there. 28 bytes of IV and tag on top of 16 MB.
+            ? (request.resource.contentType == 'application/octet-stream'
+                && file.matches('^(blob|thumb)[.]bin$')
+                && request.resource.size <= 16 * 1024 * 1024 + 64)
+            : (request.resource.size <= 16 * 1024 * 1024
+                && allowedType(request.resource.contentType)
+                // Chat video: video/mp4 only as video.mp4 (and video.mp4 only as video/mp4); its poster frame is a small JPEG.
+                && ((request.resource.contentType == 'video/mp4') == (file == 'video.mp4'))
+                && (file != 'thumb.jpg' || (request.resource.contentType == 'image/jpeg' && request.resource.size <= 256 * 1024))))
         && request.resource.metadata.senderId == request.auth.uid
         && !firestore.exists(/databases/(default)/documents/conversations/$(cid)/messages/$(mid));
 

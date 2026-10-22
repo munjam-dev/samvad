@@ -90,6 +90,7 @@ async function refreshLastMessage(deps: Deps, cid: string, gone: string): Promis
       senderId: data.senderId,
       preview: data.deleted ? '' : previewOf({ ...data, createdAt: data.createdAt } as any),
       kind: data.kind,
+      ...(data.enc ? { encrypted: true } : {}),
       createdAt: data.createdAt,
       ...(data.kind === 'system' && data.system ? { system: data.system } : {}),
       ...(timer ? { expiresAt: timer } : {}),

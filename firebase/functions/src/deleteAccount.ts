@@ -66,6 +66,8 @@ export async function deleteAccountCore(deps: Deps, uid: string): Promise<void> 
   await cleanupMeetingsForDeletedAccount(deps, uid);
   await db.doc(`rateLimits/${uid}`).delete();
   await db.doc(`twoStep/${uid}`).delete();
+  // End-to-end encryption: the public key bundle and its one-time keys go with the account.
+  await db.recursiveDelete(db.doc(`e2eeKeys/${uid}`));
   await deps.deleteFiles(`avatars/${uid}/`);
   try {
     await auth.deleteUser(uid);
