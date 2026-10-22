@@ -95,9 +95,10 @@ internal fun VaultScreen(
   onBack: () -> Unit,
   onViewImage: (String) -> Unit,
   onEditNote: (String?) -> Unit,
+  onOpenBackup: () -> Unit,
 ) {
   VaultGate(container, onBack) {
-    VaultList(container, onBack, onViewImage, onEditNote)
+    VaultList(container, onBack, onViewImage, onEditNote, onOpenBackup)
   }
 }
 
@@ -108,6 +109,7 @@ private fun VaultList(
   onBack: () -> Unit,
   onViewImage: (String) -> Unit,
   onEditNote: (String?) -> Unit,
+  onOpenBackup: () -> Unit,
 ) {
   val colors = SamvadTheme.colors
   val vm: VaultViewModel = viewModel(factory = VaultViewModel.factory(container))
@@ -159,6 +161,7 @@ private fun VaultList(
             Icon(Icons.Outlined.MoreVert, stringResource(R.string.cd_more), tint = colors.onSurface)
           }
           DropdownMenu(menuOpen, onDismissRequest = { menuOpen = false }) {
+            DropdownMenuItem(text = { Text(stringResource(R.string.vbk_menu)) }, onClick = { menuOpen = false; onOpenBackup() })
             DropdownMenuItem(text = { Text(stringResource(R.string.vault_about)) }, onClick = { menuOpen = false; about = true })
           }
         }

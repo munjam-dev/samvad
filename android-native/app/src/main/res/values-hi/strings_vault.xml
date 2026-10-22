@@ -35,7 +35,7 @@
     <string name="vault_type_notes">नोट</string>
     <string name="vault_type_id_copies">पहचान-पत्र की प्रतियाँ</string>
     <string name="vault_empty_title">यहाँ अभी कुछ नहीं है</string>
-    <string name="vault_empty_body">दस्तावेज़, फ़ोटो, नोट और अपने पहचान-पत्रों की प्रतियाँ यहाँ रखें। वे एन्क्रिप्ट होकर केवल इसी फ़ोन में रहते हैं।</string>
+    <string name="vault_empty_body">दस्तावेज़, फ़ोटो, नोट और अपने पहचान-पत्रों की प्रतियाँ यहाँ रखें। वे एन्क्रिप्ट होकर इसी फ़ोन में रहते हैं, जब तक आप बैकअप चालू न करें।</string>
     <string name="vault_no_results_title">कोई मिलान नहीं</string>
     <string name="vault_no_results_body">कोई दूसरा शब्द आज़माएँ, या फ़िल्टर हटाएँ।</string>
     <string name="vault_clear_filters">फ़िल्टर हटाएँ</string>
@@ -53,7 +53,7 @@
     <string name="vault_add_note_body">निजी नोट लिखें</string>
     <string name="vault_lock_now">अभी लॉक करें</string>
     <string name="vault_about">इस वॉल्ट के बारे में</string>
-    <string name="vault_about_body">चीज़ें इस फ़ोन पर एक कुंजी से एन्क्रिप्ट होती हैं, जो फ़ोन के सुरक्षित कुंजी-भंडार में रहती है। कुछ भी अपलोड नहीं होता, और वॉल्ट बैकअप या फ़ोन-से-फ़ोन ट्रांसफ़र में शामिल नहीं है। फ़ोन खो जाने पर ये चीज़ें भी खो जाएँगी।</string>
+    <string name="vault_about_body">चीज़ें इस फ़ोन पर एक कुंजी से एन्क्रिप्ट होती हैं, जो फ़ोन के सुरक्षित कुंजी-भंडार में रहती है। जब तक आप वॉल्ट बैकअप चालू नहीं करते, कुछ भी अपलोड नहीं होता; बैकअप चालू करने पर एक एन्क्रिप्टेड कॉपी आपके अपने Google Drive में जाती है। वॉल्ट Android के अपने बैकअप या फ़ोन-से-फ़ोन ट्रांसफ़र में शामिल नहीं है। वॉल्ट बैकअप के बिना फ़ोन खो जाने पर ये चीज़ें भी खो जाएँगी।</string>
     <string name="vault_protection_strongbox">कुंजी की सुरक्षा: समर्पित सुरक्षा चिप</string>
     <string name="vault_protection_hardware">कुंजी की सुरक्षा: सुरक्षित हार्डवेयर</string>
     <string name="vault_protection_software">कुंजी की सुरक्षा: केवल सॉफ़्टवेयर। इस फ़ोन में कुंजियों के लिए सुरक्षित हार्डवेयर नहीं है।</string>

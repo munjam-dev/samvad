@@ -35,7 +35,7 @@
     <string name="vault_type_notes">నోట్‌లు</string>
     <string name="vault_type_id_copies">ID కాపీలు</string>
     <string name="vault_empty_title">ఇంకా ఏమీ లేదు</string>
-    <string name="vault_empty_body">డాక్యుమెంట్‌లు, ఫోటోలు, నోట్‌లు, మీ IDల కాపీలను ఇక్కడ భద్రపరచండి. అవి ఎన్‌క్రిప్ట్ అయి, ఈ ఫోన్‌లో మాత్రమే ఉంటాయి.</string>
+    <string name="vault_empty_body">డాక్యుమెంట్‌లు, ఫోటోలు, నోట్‌లు, మీ IDల కాపీలను ఇక్కడ భద్రపరచండి. అవి ఎన్‌క్రిప్ట్ అయి, మీరు బ్యాకప్ ఆన్ చేసేవరకు ఈ ఫోన్‌లోనే ఉంటాయి.</string>
     <string name="vault_no_results_title">ఏమీ దొరకలేదు</string>
     <string name="vault_no_results_body">వేరే పదం ప్రయత్నించండి, లేదా ఫిల్టర్‌లను క్లియర్ చేయండి.</string>
     <string name="vault_clear_filters">ఫిల్టర్‌లు క్లియర్ చేయండి</string>
@@ -53,7 +53,7 @@
     <string name="vault_add_note_body">ప్రైవేట్ నోట్ రాయండి</string>
     <string name="vault_lock_now">ఇప్పుడే లాక్ చేయండి</string>
     <string name="vault_about">ఈ వాల్ట్ గురించి</string>
-    <string name="vault_about_body">అంశాలు ఈ ఫోన్‌లో, ఫోన్ సురక్షిత కీ స్టోర్‌లో ఉంచిన కీతో ఎన్‌క్రిప్ట్ అవుతాయి. ఏదీ అప్‌లోడ్ కాదు, వాల్ట్ బ్యాకప్‌లలో లేదా ఫోన్ నుండి ఫోన్‌కు బదిలీలలో భాగం కాదు. ఈ ఫోన్ పోతే, అంశాలు కూడా పోతాయి.</string>
+    <string name="vault_about_body">అంశాలు ఈ ఫోన్‌లో, ఫోన్ సురక్షిత కీ స్టోర్‌లో ఉంచిన కీతో ఎన్‌క్రిప్ట్ అవుతాయి. మీరు వాల్ట్ బ్యాకప్ ఆన్ చేసేవరకు ఏదీ అప్‌లోడ్ కాదు; ఆన్ చేస్తే ఎన్‌క్రిప్ట్ చేసిన కాపీ మీ స్వంత Google Driveకు వెళ్తుంది. వాల్ట్ Android సొంత బ్యాకప్‌లలో లేదా ఫోన్ నుండి ఫోన్‌కు బదిలీలలో భాగం కాదు. వాల్ట్ బ్యాకప్ లేకుండా ఈ ఫోన్ పోతే, అంశాలు కూడా పోతాయి.</string>
     <string name="vault_protection_strongbox">కీ రక్షణ: ప్రత్యేక సెక్యూరిటీ చిప్</string>
     <string name="vault_protection_hardware">కీ రక్షణ: సురక్షిత హార్డ్‌వేర్</string>
     <string name="vault_protection_software">కీ రక్షణ: సాఫ్ట్‌వేర్ మాత్రమే. ఈ ఫోన్‌లో కీల కోసం సురక్షిత హార్డ్‌వేర్ లేదు.</string>

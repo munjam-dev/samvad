@@ -44,8 +44,18 @@ confirm the processor position for LiveKit (no signed data processing agreement 
 
 Notes for the form:
 
-- Search index of messages, the Personal Vault, themes, wallpapers and app-lock settings stay on the device and are
-  never sent, so they are not "collected" under Play's definition. The vault is excluded from Android backup.
+- Search index of messages, themes, wallpapers and app-lock settings stay on the device and are never sent, so they
+  are not "collected" under Play's definition. The vault is excluded from Android's own backup and device transfer.
+- **Vault backup to the user's own Google Drive (optional, off by default).** If the user turns it on, the vault's
+  files, notes and titles are packed into one archive and encrypted on the phone with a key derived from a recovery
+  code or passphrase that only the user holds, then uploaded to the hidden app-data folder of the user's own Google
+  Drive (OAuth scope `drive.appdata` only; Samvad cannot see the user's other Drive files). Samvad's servers never
+  receive the archive or the key, and Samvad cannot decrypt it. Proposed answer: not "collected" or "shared" by
+  Samvad, because the transfer is initiated by the user to their own account and the data is encrypted with a key
+  Samvad does not have. If Play review disagrees, declare it as Files and docs and Photos and videos, collected, not
+  shared, optional, encrypted in transit, "user can request deletion" (Settings, Vault, Backup, Turn off and delete).
+  CHECK: owner or lawyer to confirm the position before submission. The Google Cloud OAuth consent screen and the
+  Play Data safety form must describe the same thing (see `docs/VAULT_BACKUP_SETUP.md`).
 - Reports: the reported account and the last 5 messages of that chat are sent to Samvad's safety team (user-initiated).
   Declared under Messages; retained 90 days.
 - Appeals: text the user submits; deleted with the account.
@@ -78,6 +88,7 @@ manifest by Samvad's own code; AndroidX Biometric may merge it in, so check the 
 | FOREGROUND_SERVICE_CAMERA | Keep camera capture alive during a video call or meeting | Install time (normal) | n/a |
 | USE_FULL_SCREEN_INTENT | Show the incoming-call screen over the lock screen | Special access, revocable on Android 14+ | Incoming call arrives as a heads-up notification |
 | USE_BIOMETRIC (if merged) | Optional app lock and Personal Vault unlock; handled by Android, nothing is sent to us | When the user turns on app lock or opens the vault | App lock off; vault cannot be opened |
+| (none new) Vault backup | Uses INTERNET and ACCESS_NETWORK_STATE; scheduled backups use WorkManager, which merges RECEIVE_BOOT_COMPLETED so the daily job survives a restart | n/a | Backup stays off |
 
 Hardware features `camera` and `microphone` are declared `required="false"`.
 
