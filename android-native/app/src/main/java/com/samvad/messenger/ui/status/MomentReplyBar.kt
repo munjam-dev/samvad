@@ -119,7 +119,8 @@ internal fun MomentReplyBar(vm: StatusViewModel, item: StatusItem, onTyping: (Bo
           Icon(Icons.Outlined.Mic, stringResource(R.string.moment_voice_reply), tint = Color.White)
         }
       } else {
-        TextButton(onClick = { vm.reply(item, reply) { reply = ""; onTyping(false) } }) { Text(stringResource(R.string.status_send), color = Color.White) }
+        val encryptedChat = stringResource(R.string.e2ee_moment_reply_blocked)
+        TextButton(onClick = { vm.reply(item, reply, onBlockedByEncryption = { onMessage(encryptedChat) }) { reply = ""; onTyping(false) } }) { Text(stringResource(R.string.status_send), color = Color.White) }
       }
     }
   }

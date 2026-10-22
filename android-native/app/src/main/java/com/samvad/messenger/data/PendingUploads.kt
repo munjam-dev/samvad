@@ -70,6 +70,10 @@ data class PendingUploadRecord(
   val sessionUri: String? = null,
   /** Videos: object name of the small poster frame (thumb.jpg), uploaded before the video itself. */
   val thumbName: String? = null,
+  /** End-to-end encrypted chat: the private copy and the poster are ciphertext, and Storage gets opaque bytes. */
+  val e2ee: Boolean = false,
+  /** Encrypted chat: the file keys and digests, sealed with the Keystore-backed key (never stored in the clear). */
+  val secret: String? = null,
 ) {
   val storagePath: String get() = "conversations/$conversationId/$id/$storageName"
   val thumbPath: String? get() = thumbName?.let { "conversations/$conversationId/$id/$it" }
@@ -168,6 +172,8 @@ class PendingUploadStore(context: Context) {
     put("stage", r.stage.name)
     r.sessionUri?.let { put("sessionUri", it) }
     r.thumbName?.let { put("thumbName", it) }
+    if (r.e2ee) put("e2ee", true)
+    r.secret?.let { put("secret", it) }
   }
 
   private fun decode(o: JSONObject): PendingUploadRecord? = runCatching {
@@ -197,6 +203,8 @@ class PendingUploadStore(context: Context) {
       stage = runCatching { UploadStage.valueOf(o.getString("stage")) }.getOrDefault(UploadStage.UPLOAD),
       sessionUri = if (o.has("sessionUri")) o.getString("sessionUri") else null,
       thumbName = if (o.has("thumbName")) o.getString("thumbName") else null,
+      e2ee = o.optBoolean("e2ee", false),
+      secret = if (o.has("secret")) o.getString("secret") else null,
     )
   }.getOrNull()
 
@@ -243,6 +251,7 @@ class PendingUploadManager(
   private val media: MediaRepository,
   private val chats: ChatRepository,
   private val network: NetworkMonitor,
+  private val e2ee: com.samvad.messenger.data.e2ee.E2eeService?,
   private val currentUid: () -> String?,
 ) {
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -299,15 +308,23 @@ class PendingUploadManager(
     replyTo: String?,
   ): String {
     val id = UUID.randomUUID().toString()
+    // In an end-to-end encrypted chat the file is encrypted here, before anything is saved or uploaded.
+    val sealed = if (e2ee != null && e2ee.enabled && chats.isE2ee(conversationId)) {
+      withContext(Dispatchers.Default) { e2ee.sealMedia(prepared) }
+    } else {
+      null
+    }
+    val fileBytes = sealed?.file?.cipherBytes ?: prepared.bytes
+    val thumbBytes = if (sealed != null) sealed.thumb?.cipherBytes else prepared.thumbBytes
     val record = PendingUploadRecord(
       id = id,
       conversationId = conversationId,
       me = me,
       kind = prepared.kind,
-      storageName = prepared.fileName,
+      storageName = if (sealed != null) "blob.bin" else prepared.fileName,
       displayName = prepared.displayName,
       mime = prepared.mime,
-      size = prepared.bytes.size.toLong(),
+      size = fileBytes.size.toLong(),
       width = prepared.width,
       height = prepared.height,
       durationMs = prepared.durationMs,
@@ -315,11 +332,13 @@ class PendingUploadManager(
       caption = caption,
       replyTo = replyTo,
       createdAtMs = System.currentTimeMillis(),
-      thumbName = if (prepared.thumbBytes != null) "thumb.jpg" else null,
+      thumbName = if (thumbBytes != null) (if (sealed != null) "thumb.bin" else "thumb.jpg") else null,
+      e2ee = sealed != null,
+      secret = sealed?.let { sealSecret(id, it.ref()) },
     )
     withContext(Dispatchers.IO) {
-      store.mediaFile(id).writeBytes(prepared.bytes)
-      prepared.thumbBytes?.let { store.thumbFile(id).writeBytes(it) }
+      store.mediaFile(id).writeBytes(fileBytes)
+      thumbBytes?.let { store.thumbFile(id).writeBytes(it) }
       store.put(record)
     }
     start(record)
@@ -428,7 +447,7 @@ class PendingUploadManager(
         media.uploadFile(
           path = thumbPath,
           file = thumb,
-          mime = "image/jpeg",
+          mime = if (record.e2ee) OPAQUE else "image/jpeg",
           me = record.me,
           sessionUri = null,
           onSession = {},
@@ -438,7 +457,7 @@ class PendingUploadManager(
       media.uploadFile(
         path = record.storagePath,
         file = file,
-        mime = record.mime,
+        mime = if (record.e2ee) OPAQUE else record.mime,
         me = record.me,
         sessionUri = record.sessionUri?.let(Uri::parse),
         onSession = { uri ->
@@ -457,17 +476,23 @@ class PendingUploadManager(
           }
         },
       )
-      media.adoptLocal(record.storagePath, file)
+      // An encrypted file on disk is ciphertext: it must not be mistaken for the photo in the media cache.
+      if (!record.e2ee) media.adoptLocal(record.storagePath, file)
       withContext(Dispatchers.IO) { store.update(id) { it.copy(stage = UploadStage.WRITE, sessionUri = null) } }
     }
     _items.update { map -> map[id]?.let { map + (id to it.copy(progress = 1f, canCancel = false)) } ?: map }
     if (chats.messageExists(record.conversationId, id)) return
     try {
-      chats.sendMedia(
-        record.conversationId, record.me, id, record.kind.wire,
-        Media(record.storagePath, record.displayName, record.size, record.mime, record.width, record.height, record.durationMs, record.waveform, record.thumbPath),
-        record.caption, record.replyTo,
-      )
+      if (record.e2ee) {
+        val ref = openSecret(record) ?: throw FileNotFoundException("encryption keys of this attachment are gone")
+        chats.sendEncryptedMedia(record.conversationId, record.me, id, ref, record.caption, record.replyTo)
+      } else {
+        chats.sendMedia(
+          record.conversationId, record.me, id, record.kind.wire,
+          Media(record.storagePath, record.displayName, record.size, record.mime, record.width, record.height, record.durationMs, record.waveform, record.thumbPath),
+          record.caption, record.replyTo,
+        )
+      }
     } catch (e: FirebaseFirestoreException) {
       // A write queued by an earlier run can land first and make this one look like a forbidden update.
       val alreadyThere = e.code == FirebaseFirestoreException.Code.PERMISSION_DENIED &&
@@ -476,9 +501,40 @@ class PendingUploadManager(
     }
   }
 
+  /** Keys and digests of an encrypted attachment, sealed so they never sit on disk in the clear. */
+  private fun sealSecret(id: String, ref: com.samvad.messenger.data.e2ee.EncryptedMediaRef): String {
+    val b64 = java.util.Base64.getEncoder()
+    val json = JSONObject().apply {
+      put("fk", b64.encodeToString(ref.fileKey))
+      put("fd", ref.fileDigest)
+      put("fs", ref.fileSize)
+      ref.thumbKey?.let { put("tk", b64.encodeToString(it)) }
+      ref.thumbDigest?.let { put("td", it) }
+      ref.thumbSize?.let { put("ts", it) }
+    }
+    val sealed = e2ee!!.sealLocal(json.toString().toByteArray(Charsets.UTF_8), "pending:$id")
+    return b64.encodeToString(sealed)
+  }
+
+  private fun openSecret(r: PendingUploadRecord): com.samvad.messenger.data.e2ee.EncryptedMediaRef? = runCatching {
+    val b64 = java.util.Base64.getDecoder()
+    val json = JSONObject(String(e2ee!!.openLocal(b64.decode(r.secret!!), "pending:${r.id}"), Charsets.UTF_8))
+    com.samvad.messenger.data.e2ee.EncryptedMediaRef(
+      kind = r.kind.wire, name = r.displayName, mime = r.mime, width = r.width, height = r.height,
+      durationMs = r.durationMs, waveform = r.waveform,
+      fileKey = b64.decode(json.getString("fk")), fileDigest = json.getString("fd"), fileSize = json.getLong("fs"),
+      thumbKey = if (json.has("tk")) b64.decode(json.getString("tk")) else null,
+      thumbDigest = if (json.has("td")) json.getString("td") else null,
+      thumbSize = if (json.has("ts")) json.getLong("ts") else null,
+    )
+  }.getOrNull()
+
   private fun classify(e: Throwable): FailureKind {
     if (!network.isOnline) return FailureKind.OFFLINE
     return when (e) {
+      is com.samvad.messenger.data.e2ee.E2eeSendException ->
+        // A changed security code or missing keys need the person; a network hiccup does not.
+        if (e.peer == com.samvad.messenger.data.e2ee.PeerKeys.UNAVAILABLE) FailureKind.TRANSIENT else FailureKind.PERMANENT
       is FileNotFoundException -> FailureKind.PERMANENT
       is StorageException -> when (e.errorCode) {
         StorageException.ERROR_NOT_AUTHORIZED,
@@ -516,3 +572,6 @@ class PendingUploadManager(
     }
   }
 }
+
+/** Content type of encrypted files in Storage: the real type is inside the encrypted message. */
+private const val OPAQUE = "application/octet-stream"

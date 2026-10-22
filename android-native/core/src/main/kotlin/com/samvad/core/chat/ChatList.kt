@@ -28,6 +28,8 @@ object ChatList {
   const val DELETED_ACCOUNT = "Deleted account"
   const val DELETED_MESSAGE = "Message deleted"
   const val EXPIRED_MESSAGE = "This message has disappeared"
+  /** An end-to-end encrypted message this device has not decrypted (yet). */
+  const val ENCRYPTED_MESSAGE = "Encrypted message"
   const val NEW_CHAT = "Say hello 👋"
   const val GROUP = "Group"
 
@@ -57,6 +59,7 @@ object ChatList {
         last == null -> NEW_CHAT
         system != null -> SystemText.describe(system, last.senderId, me, nameOf)
         Disappearing.isExpired(last.expiresAt, nowMs) -> EXPIRED_MESSAGE
+        last.preview.isEmpty() && last.encrypted -> ENCRYPTED_MESSAGE
         last.preview.isEmpty() -> DELETED_MESSAGE
         else -> last.preview
       }

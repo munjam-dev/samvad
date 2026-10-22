@@ -202,6 +202,15 @@ export async function preKeyStatusCore(deps: Deps, uid: string): Promise<{ publi
 }
 
 /**
+ * Removes the caller's public bundle (sign-out): from then on other people's apps cannot start or continue encrypted
+ * sessions with this account until it publishes again, instead of sending messages nobody can read.
+ */
+export async function deletePreKeysCore(deps: Deps, uid: string): Promise<{ ok: true }> {
+  await deps.db.recursiveDelete(deps.db.doc(`e2eeKeys/${uid}`));
+  return { ok: true };
+}
+
+/**
  * Turns on end-to-end encryption for an existing direct chat. Only NEW messages are protected; history stays as it
  * is. Both people must have published keys. Irreversible: the chat refuses plaintext from then on.
  */
@@ -263,6 +272,11 @@ export const handlePreKeyStatus = async (r: Req, deps: Deps = defaultDeps()) => 
   return guarded('prekey_status', () => preKeyStatusCore(deps, uid));
 };
 
+export const handleDeletePreKeys = async (r: Req, deps: Deps = defaultDeps()) => {
+  const { uid } = requirePhoneAuth(r);
+  return guarded('prekeys_deleted', () => deletePreKeysCore(deps, uid));
+};
+
 export const handleUpgradeConversation = async (r: Req, deps: Deps = defaultDeps()) => {
   const { uid } = requirePhoneAuth(r);
   const cid = (r.data as { conversationId?: unknown } | null)?.conversationId;
@@ -273,4 +287,5 @@ export const handleUpgradeConversation = async (r: Req, deps: Deps = defaultDeps
 export const publishPreKeys = onCall(buildCallableOptions(process.env), (r) => handlePublishPreKeys(r));
 export const fetchPreKeyBundle = onCall(buildCallableOptions(process.env), (r) => handleFetchPreKeyBundle(r));
 export const preKeyStatus = onCall(buildCallableOptions(process.env), (r) => handlePreKeyStatus(r));
+export const deletePreKeys = onCall(buildCallableOptions(process.env), (r) => handleDeletePreKeys(r));
 export const upgradeConversationE2ee = onCall(buildCallableOptions(process.env), (r) => handleUpgradeConversation(r));

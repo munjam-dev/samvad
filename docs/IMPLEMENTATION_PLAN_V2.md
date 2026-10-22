@@ -13,7 +13,7 @@ emulators (`npm test`), app logic tests in `:core`.
 |---|---|
 | 1 Onboarding, profile, language | **Built.** Username (backend deployed, UI, live availability check), language picker, English/Hindi/Telugu/Tamil (AI-written, native review pending: `docs/LOCALIZATION.md`). Username check on a device is blocked only by the owner registering the App Check debug token. |
 | 2 Core messaging | **Built and merged.** Drafts, multi-select, pinned messages (backend deployed), contact cards, video sharing, on-device global search. |
-| 3 Privacy and security | **Built and merged (not deployed):** profile visibility, who can add me to groups, contact-discovery switch, linked devices, appeals. **End-to-end encryption is not started** (AGPL licence gate). Lost Phone Recovery deferred by the owner. |
+| 3 Privacy and security | **Built and merged (not deployed):** profile visibility, who can add me to groups, contact-discovery switch, linked devices, appeals. **End-to-end encryption for one-to-one chats is built behind a build flag and not deployed or externally reviewed** (`docs/security/E2EE_DESIGN.md`; AGPL licence gate still applies). Lost Phone Recovery deferred by the owner. |
 | 4 Personal Vault | **Built and merged**, local-first. Google Drive backup blocked on the scope decision. |
 | 5 HD media, weak networks | **Built and merged:** original quality, resumable pending uploads, download progress, network hints. Device-to-device transfer not built (design decision needed). |
 | 6 Groups and communities | **Built and merged (not deployed):** announcement mode, member approval, events with reminders, shared media tab, quiet hours, Communities. |
@@ -60,7 +60,7 @@ shows only those that are finished. Urdu needs right-to-left testing before it i
 |---|---|---|
 | App lock, biometric, notification previews, two-step PIN, block, report, account deletion | Have | |
 | Disappearing messages | Have | see Phase 2 |
-| **End-to-end encryption** | Missing, library chosen | libsignal added to the build; **no message is encrypted**. See `docs/security/E2EE_DECISION.md`. **Release gate:** AGPL-3.0, lawyer must confirm before any distribution |
+| **End-to-end encryption** | Built for 1:1 chats (flag `samvad.e2ee`, off in release by default), not deployed, not externally reviewed | Signal Protocol via libsignal: key directory callables, envelope rules, encrypted attachments, safety numbers, key-change holds. Groups, polls, Moments and calls are not encrypted. `docs/security/E2EE_DESIGN.md`, `docs/security/E2EE_DECISION.md`. **Release gate:** AGPL-3.0, lawyer must confirm before any distribution |
 | Linked devices and sessions | Have (single device sign-out) | Settings → Linked devices: `revokeDevice` deletes the device doc, writes a server-only marker and sends an FCM message; the phone signs out when it next opens the app or gets the message (Firebase cannot revoke one refresh token). Real multi-device needs E2EE first |
 | Profile visibility, contact-discovery controls, group-invite permissions | Have, enforced in rules/callables | Last seen, About, photo: Everyone / People I chat with / Nobody. "People I chat with" = a direct chat the person started or has written in (`conversations/{cid}.engagedBy`, set by functions). Run `firebase/scripts/migrate-privacy.mjs` once after deploy |
 

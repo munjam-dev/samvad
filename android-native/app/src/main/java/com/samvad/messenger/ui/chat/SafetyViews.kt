@@ -99,16 +99,26 @@ internal fun ReportDialog(
   onDismiss: () -> Unit,
   /** Replaces the default explanation, for reports that start somewhere other than a chat. */
   body: String? = null,
+  /** End-to-end encrypted chat: the server has no readable copy, so the person may choose to attach what their phone decrypted. */
+  encryptedChat: Boolean = false,
+  attachableCount: Int = 0,
+  onSendEncrypted: ((ReportReason, Boolean, Boolean) -> Unit)? = null,
 ) {
   val colors = SamvadTheme.colors
   var reason by rememberSaveable { mutableStateOf(ReportReason.SPAM) }
   var alsoBlock by rememberSaveable { mutableStateOf(!alreadyBlocked) }
+  // Off until the person ticks it: nothing from an encrypted chat is attached without a clear yes.
+  var attach by rememberSaveable { mutableStateOf(false) }
   AlertDialog(
     onDismissRequest = { if (!sending) onDismiss() },
     title = { Text(stringResource(R.string.report_title, name)) },
     text = {
       Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(body ?: stringResource(R.string.report_body), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+        Text(
+          body ?: stringResource(if (encryptedChat) R.string.e2ee_report_body else R.string.report_body),
+          style = MaterialTheme.typography.bodyMedium,
+          color = colors.onSurfaceVariant,
+        )
         Column(Modifier.selectableGroup().padding(top = 8.dp)) {
           REASON_LABELS.forEach { (value, label) ->
             Row(
@@ -127,6 +137,23 @@ internal fun ReportDialog(
             }
           }
         }
+        if (encryptedChat && attachableCount > 0) {
+          Row(
+            Modifier
+              .fillMaxWidth()
+              .toggleable(attach, role = Role.Checkbox, onValueChange = { attach = it })
+              .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+          ) {
+            Checkbox(checked = attach, onCheckedChange = null, colors = CheckboxDefaults.colors(checkedColor = colors.primary))
+            Text(
+              androidx.compose.ui.res.pluralStringResource(R.plurals.e2ee_report_attach, attachableCount, attachableCount, name),
+              style = MaterialTheme.typography.bodyLarge,
+              color = colors.onSurface,
+              modifier = Modifier.padding(start = 12.dp),
+            )
+          }
+        }
         if (!alreadyBlocked) {
           Row(
             Modifier
@@ -142,7 +169,13 @@ internal fun ReportDialog(
       }
     },
     confirmButton = {
-      TextButton(enabled = !sending, onClick = { onSend(reason, alsoBlock && !alreadyBlocked) }) {
+      TextButton(
+        enabled = !sending,
+        onClick = {
+          val block = alsoBlock && !alreadyBlocked
+          if (encryptedChat && onSendEncrypted != null) onSendEncrypted(reason, block, attach && attachableCount > 0) else onSend(reason, block)
+        },
+      ) {
         Text(stringResource(R.string.chat_report), color = colors.error)
       }
     },

@@ -6,6 +6,7 @@ import {
   DAILY_FETCHES_PER_PAIR,
   DAILY_PUBLISHES,
   MAX_ONE_TIME_STORED,
+  handleDeletePreKeys,
   handleFetchPreKeyBundle,
   handlePreKeyStatus,
   handlePublishPreKeys,
@@ -246,6 +247,19 @@ describe('upgradeConversationE2ee', () => {
     expect(await codeOf(upgrade('alice'))).toBe('permission-denied');
     await deps.db.doc('conversations/GroupGroupGroup_Other').set({ type: 'group', members: ['alice', 'bina'], createdAt: Timestamp.now() });
     expect(await codeOf(upgrade('alice', 'GroupGroupGroup_Other'))).toBe('permission-denied');
+  });
+});
+
+describe('deletePreKeys (sign-out)', () => {
+  it('removes only the caller's own bundle, so nobody can start a session with a signed-out account', async () => {
+    await publish('alice', upload(3));
+    await publish('bina', upload(3));
+    await handleDeletePreKeys(phoneRequest('alice'), deps);
+    expect(await keysDoc('alice')).toBeUndefined();
+    expect(await oneTimeIds('alice')).toEqual([]);
+    expect(await keysDoc('bina')).toBeDefined();
+    expect(await codeOf(fetchBundle('bina', 'alice'))).toBe('not-found');
+    expect(await codeOf(handleDeletePreKeys({ data: {} } as any, deps))).toBe('unauthenticated');
   });
 });
 

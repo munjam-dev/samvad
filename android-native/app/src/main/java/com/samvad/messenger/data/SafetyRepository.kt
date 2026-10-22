@@ -18,6 +18,9 @@ sealed class ReportException(message: String) : Exception(message) {
   }
 }
 
+/** One message the person chose to attach to a report from an end-to-end encrypted chat. */
+data class ReportEvidence(val messageId: String, val kind: String, val text: String)
+
 /**
  * Block list and reports (Phase 1.3). Blocking is enforced by Firestore and RTDB rules; this class
  * only writes the owner's own list. Reports go through the reportContact callable.
@@ -46,15 +49,26 @@ class SafetyRepository(private val db: FirebaseFirestore, private val functions:
    * Reports the other member of [conversationId]. Reuse [requestId] when retrying the same report:
    * the server stores it once.
    */
-  suspend fun report(requestId: String, conversationId: String, reason: ReportReason, alsoBlock: Boolean) {
+  suspend fun report(
+    requestId: String,
+    conversationId: String,
+    reason: ReportReason,
+    alsoBlock: Boolean,
+    /** Encrypted chats only: messages this phone decrypted, attached after the person agreed. Empty otherwise. */
+    evidence: List<ReportEvidence> = emptyList(),
+  ) {
     try {
       functions.getHttpsCallable("reportContact", limitedUse).call(
-        mapOf(
-          "requestId" to requestId,
-          "conversationId" to conversationId,
-          "reason" to reason.wire,
-          "block" to alsoBlock,
-        ),
+        buildMap<String, Any> {
+          put("requestId", requestId)
+          put("conversationId", conversationId)
+          put("reason", reason.wire)
+          put("block", alsoBlock)
+          if (evidence.isNotEmpty()) {
+            put("evidenceConsent", true)
+            put("evidence", evidence.map { mapOf("messageId" to it.messageId, "kind" to it.kind, "text" to it.text) })
+          }
+        },
       ).await()
     } catch (e: FirebaseFunctionsException) {
       throw if (e.code == FirebaseFunctionsException.Code.RESOURCE_EXHAUSTED) ReportException.LimitReached() else ReportException.Failed(e)

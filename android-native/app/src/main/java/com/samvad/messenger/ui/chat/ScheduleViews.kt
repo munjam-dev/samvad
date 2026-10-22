@@ -236,6 +236,7 @@ private fun failureText(failure: String?): String = stringResource(
     "not_member" -> R.string.scheduled_failed_not_member
     "blocked" -> R.string.scheduled_failed_blocked
     "account_deleted" -> R.string.scheduled_failed_account
+    "encrypted" -> R.string.e2ee_scheduled_failed
     else -> R.string.scheduled_failed_invalid
   },
 )

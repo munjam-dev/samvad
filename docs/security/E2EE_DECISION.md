@@ -1,8 +1,16 @@
 # End-to-end encryption: decision record
 
 Status: **libsignal added to the build on the owner's instruction (2026-10-15). A release gate applies, see below.**
-The Android app does not use it yet: only the version catalog, the `:core` module (compile-only, for tests)
-and a spike test of the protocol are in place.
+**Update 2026-10-22: end-to-end encryption for one-to-one chats is implemented behind `BuildConfig.E2EE_ENABLED`
+(on in debug builds, off in release unless `-Psamvad.e2ee=true`) and a per-conversation server flag.
+Design, limits and the list of what an external cryptography review must examine: `docs/security/E2EE_DESIGN.md`.
+The owner accepts the AGPL-3.0 obligations; the lawyer's written confirmation and the published source remain a condition
+of distributing any build that links libsignal, flag on or off. Website, policies and Settings text still say there
+is no end-to-end encryption and must be changed together with the release, after the review.**
+
+(Older text below describes the situation before the implementation.)
+The Android app did not use it yet: only the version catalog, the `:core` module (compile-only, for tests)
+and a spike test of the protocol were in place.
 
 ## Why this matters
 

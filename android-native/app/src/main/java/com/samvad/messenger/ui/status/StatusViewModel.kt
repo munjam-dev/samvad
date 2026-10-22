@@ -189,7 +189,7 @@ class StatusViewModel(private val container: AppContainer, private val me: Strin
   }
 
   /** A private reply goes into our one-to-one chat, quoting a short piece of the status. */
-  fun reply(item: StatusItem, text: String, onSent: () -> Unit) {
+  fun reply(item: StatusItem, text: String, onBlockedByEncryption: () -> Unit = {}, onSent: () -> Unit) {
     val body = text.trim()
     if (body.isEmpty() || !StatusRules.canReply(item, me)) return
     viewModelScope.launch {
@@ -197,7 +197,10 @@ class StatusViewModel(private val container: AppContainer, private val me: Strin
         val cid = chats.openDirect(me, item.authorId, container::applyDefaultTimer)
         val quote = item.text.take(60).let { if (it.isBlank()) "your status" else "\"$it\"" }
         chats.send(cid, me, "Replying to $quote\n$body", replyTo = null, momentRef = item.authorId to item.id)
-      }.onSuccess { onSent() }
+      }.onSuccess { onSent() }.onFailure {
+        // A moment reply names the moment in the clear, which an end-to-end encrypted chat does not allow.
+        if (it is com.samvad.messenger.data.E2eeUnsupportedException) onBlockedByEncryption()
+      }
     }
   }
 
@@ -220,6 +223,8 @@ class StatusViewModel(private val container: AppContainer, private val me: Strin
         val media = container.media!!
         val prepared = media.prepareVoice(voice.file, voice.durationMs, voice.waveform)
         val cid = chats.openDirect(me, item.authorId, container::applyDefaultTimer)
+        // Moment replies are not end-to-end encrypted, so they are not allowed into an encrypted chat.
+        if (chats.isE2ee(cid)) throw com.samvad.messenger.data.E2eeUnsupportedException()
         val mid = java.util.UUID.randomUUID().toString()
         val path = media.upload(cid, mid, me, prepared)
         val quote = item.text.take(60).let { if (it.isBlank()) "your status" else "\"$it\"" }

@@ -54,7 +54,12 @@ sealed class MediaException(message: String) : Exception(message) {
  * Prepares, uploads and downloads attachments. Downloads go through the Storage SDK so the
  * membership rules apply to every read; public download URLs (bearer links) are never used.
  */
-class MediaRepository(private val context: Context, private val storage: FirebaseStorage) {
+class MediaRepository(
+  private val context: Context,
+  private val storage: FirebaseStorage,
+  /** Keys of encrypted attachments, learned while messages are opened (end-to-end encrypted chats). */
+  private val keys: com.samvad.messenger.data.e2ee.AttachmentKeys? = null,
+) {
   private companion object {
     const val AVATAR_PX = 512
   }
@@ -317,16 +322,65 @@ class MediaRepository(private val context: Context, private val storage: Firebas
       withContext(NonCancellable + Dispatchers.IO) { tmp.delete() }
       throw e
     }
-    return withContext(Dispatchers.IO) {
-      if (!tmp.renameTo(file)) throw java.io.IOException("could not store download")
-      file
+    return withContext(Dispatchers.IO) { finishDownload(path, tmp, file) }
+  }
+
+  /**
+   * Moves a finished download into the cache. Files of encrypted chats are ciphertext in Storage: they are verified
+   * (digest, then authentication tag) and decrypted with the key from the message, and only the plain file is kept.
+   * A ciphertext is never cached as if it were the photo, and a file without a known key is never stored.
+   */
+  private fun finishDownload(path: String, tmp: File, file: File): File {
+    val key = keys?.get(path)
+    if (key != null) {
+      try {
+        file.writeBytes(com.samvad.core.e2ee.AttachmentCrypto.decrypt(tmp.readBytes(), key.key, key.digestHex))
+      } catch (e: com.samvad.core.e2ee.AttachmentException) {
+        file.delete()
+        throw java.io.IOException("encrypted file failed verification")
+      } finally {
+        tmp.delete()
+      }
+      return file
+    }
+    if (isEncryptedPath(path)) {
+      tmp.delete()
+      throw java.io.IOException("no key for this encrypted file")
+    }
+    if (!tmp.renameTo(file)) throw java.io.IOException("could not store download")
+    return file
+  }
+
+  private fun isEncryptedPath(path: String) = path.endsWith("/blob.bin") || path.endsWith("/thumb.bin")
+
+  /** Uploads the ciphertext of an encrypted attachment (and its thumbnail) as opaque bytes. No plaintext is cached. */
+  suspend fun uploadCipher(conversationId: String, messageId: String, me: String, sealed: com.samvad.messenger.data.e2ee.SealedMedia) {
+    putCipher("conversations/$conversationId/$messageId/blob.bin", me, sealed.file.cipherBytes)
+    sealed.thumb?.let { putCipher("conversations/$conversationId/$messageId/thumb.bin", me, it.cipherBytes) }
+  }
+
+  private suspend fun putCipher(path: String, me: String, bytes: ByteArray) {
+    val meta = StorageMetadata.Builder()
+      .setContentType("application/octet-stream")
+      .setCustomMetadata("senderId", me)
+      .build()
+    var attempt = 0
+    while (true) {
+      try {
+        storage.reference.child(path).putBytes(bytes, meta).await()
+        return
+      } catch (e: Exception) {
+        if (++attempt >= 3) throw e
+        delay(1000L * attempt)
+      }
     }
   }
 
   private fun cacheFile(path: String): File {
     val digest = MessageDigest.getInstance("SHA-256").digest(path.toByteArray())
       .joinToString("") { "%02x".format(it) }.take(32)
-    val ext = path.substringAfterLast('.', "bin").take(8)
+    // Encrypted files are stored as blob.bin; the cached plain copy takes its real extension from the message.
+    val ext = keys?.get(path)?.fileExtension ?: path.substringAfterLast('.', "bin").take(8)
     return File(cacheDir, "$digest.$ext")
   }
 
@@ -425,7 +479,7 @@ class MediaRepository(private val context: Context, private val storage: Firebas
     if (!file.exists() || file.length() == 0L) {
       val tmp = File(file.path + ".part")
       storage.reference.child(path).getFile(tmp).await()
-      tmp.renameTo(file)
+      finishDownload(path, tmp, file)
     }
     file
   }

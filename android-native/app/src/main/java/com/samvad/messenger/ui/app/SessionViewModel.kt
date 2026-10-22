@@ -63,6 +63,7 @@ class SessionViewModel(private val container: AppContainer) : ViewModel() {
               )
               if (dest == Destination.HOME) {
                 registerDevice(user.uid)
+                prepareEncryption(user.uid)
                 container.presence?.goOnline(user.uid)
                 useSavedNames(user.uid)
               }
@@ -97,6 +98,16 @@ class SessionViewModel(private val container: AppContainer) : ViewModel() {
     }
   }
 
+  private var encryptionFor: String? = null
+
+  /** End-to-end encryption: creates this install's keys on first use and keeps the published bundle topped up. */
+  private fun prepareEncryption(uid: String) {
+    val service = container.e2ee ?: return
+    if (!service.enabled || encryptionFor == uid) return
+    encryptionFor = uid
+    viewModelScope.launch { if (!service.ensureReady(uid)) encryptionFor = null }
+  }
+
   private var namesJob: Job? = null
 
   /** Names people as saved in my contacts (US-002); refreshed at most daily by the repository. */
@@ -122,6 +133,11 @@ class SessionViewModel(private val container: AppContainer) : ViewModel() {
       container.accounts?.unregisterDevice(uid, container.preferences.deviceId())
     }
     registeredUid = null
+    encryptionFor = null
+    // Needs the session, so it runs before sign-out: the key server forgets this account's public keys, then every
+    // key and decrypted message is erased from this phone. Old encrypted history cannot be recovered afterwards.
+    runCatching { container.e2ee?.unpublishAndWipe() }
+    container.attachmentKeys.clear()
     namesJob?.cancel()
     container.savedNames?.clear()
     container.scamPrefs.clear()

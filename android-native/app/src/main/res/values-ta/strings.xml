@@ -555,7 +555,7 @@
     <string name="privacy_notice_title">உங்கள் செய்திகள் பாதுகாக்கப்படுகின்றன</string>
     <string name="privacy_notice_body">செய்திகள் பயணத்தின்போது என்கிரிப்ட் செய்யப்பட்டு, Google Cloud இல் பாதுகாப்பாகச் சேமிக்கப்படுகின்றன. எண்ட்-டு-எண்ட் என்கிரிப்ஷன் Samvad-க்கு விரைவில் வருகிறது.</string>
     <string name="privacy_notice_title_e2ee">உங்கள் உரையாடல்கள் தனிப்பட்டவை</string>
-    <string name="privacy_notice_body_e2ee">செய்திகளும் அழைப்புகளும் எண்ட்-டு-எண்ட் என்கிரிப்ட் செய்யப்பட்டவை. இந்த சாட்டில் உள்ளவர்கள் மட்டுமே படிக்க, கேட்க, பகிர முடியும்.</string>
+    <string name="privacy_notice_body_e2ee">இந்த அரட்டையின் செய்திகளும் இணைப்புகளும் எண்ட்-டு-எண்ட் என்கிரிப்ட் செய்யப்பட்டவை. இந்த அரட்டையில் உள்ளவர்கள் மட்டுமே படிக்க முடியும். அழைப்புகள் எண்ட்-டு-எண்ட் என்கிரிப்ட் செய்யப்படுவதில்லை.</string>
     <string name="privacy_learn_more">மேலும் அறிக</string>
     <string name="privacy_sheet_title">Samvad உங்கள் சாட்களை எப்படிப் பாதுகாக்கிறது</string>
     <string name="privacy_sheet_now_title">இன்று பாதுகாக்கப்படுவது</string>

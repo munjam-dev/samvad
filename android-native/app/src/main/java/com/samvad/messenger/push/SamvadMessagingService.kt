@@ -61,7 +61,27 @@ class SamvadMessagingService : FirebaseMessagingService() {
     val cid = data["cid"] ?: return
     val sender = data["senderId"] ?: return
     val showPreview = runCatching { runBlocking { prefs.preferences.first().notificationPreviews } }.getOrDefault(false)
-    Notifications.showMessage(this, cid, sender, data["title"].orEmpty(), data["body"].orEmpty(), showPreview, group = data["group"] == "1", silent = quiet)
+    var body = data["body"].orEmpty()
+    if (data["e2ee"] == "1") {
+      // End-to-end encrypted: the server sent no text. The preview is decrypted here, on the phone, and only when the
+      // person allows previews; otherwise (or if it cannot be read) the notification stays generic.
+      val container = (application as SamvadApplication).container
+      val service = container.e2ee
+      val me = container.auth?.currentUser?.uid
+      val cipher = data["encCipher"]
+      body = ""
+      if (service != null && me != null && cipher != null &&
+        com.samvad.core.e2ee.E2eePolicy.mayDecryptForNotification(showPreview, service.enabled, hasCiphertext = true)
+      ) {
+        body = runCatching {
+          runBlocking {
+            service.previewFromPush(me, cid, data["mid"].orEmpty(), sender, data["encType"].orEmpty(), cipher, data["encReg"].orEmpty())
+          }
+        }.getOrNull().orEmpty()
+      }
+      if (body.isEmpty()) body = getString(com.samvad.messenger.R.string.e2ee_notification_generic)
+    }
+    Notifications.showMessage(this, cid, sender, data["title"].orEmpty(), body, showPreview, group = data["group"] == "1", silent = quiet)
   }
 
   override fun onNewToken(token: String) {

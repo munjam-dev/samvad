@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- End-to-end encryption (docs/security/E2EE_DESIGN.md). Rule for every string here: it may say "end-to-end encrypted" only
+     about a chat that really is, and must say plainly what is not (groups, polls, Moments, calls, older messages). -->
+<resources>
+    <!-- Note at the top of a chat -->
+    <string name="e2ee_notice_title_on">End-to-end encrypted</string>
+    <string name="e2ee_notice_body_on">Messages and attachments you send in this chat can be read only by you and %1$s. Not even Samvad can read them. Reaction emoji, who you talk to and when are not hidden, and calls are not end-to-end encrypted.</string>
+    <string name="e2ee_notice_title_later">Encryption was turned on later</string>
+    <string name="e2ee_notice_body_later">Messages sent since %1$s are end-to-end encrypted: only you and %2$s can read them. Earlier messages were not encrypted and stay as they are.</string>
+    <string name="e2ee_notice_title_plain">Not end-to-end encrypted</string>
+    <string name="e2ee_notice_body_upgrade">Samvad\'s servers can read the messages in this chat. You can turn on end-to-end encryption for new messages. Earlier messages stay as they are and will not be encrypted.</string>
+    <string name="e2ee_notice_body_peer_no_keys">Samvad\'s servers can read the messages in this chat. %1$s can\'t use end-to-end encryption yet, for example because their app is older, so this chat stays as it is.</string>
+    <string name="e2ee_notice_title_group">Groups are not end-to-end encrypted</string>
+    <string name="e2ee_notice_body_group">Messages, polls and Moments in groups can be read by Samvad\'s servers. End-to-end encryption works only in one-to-one chats.</string>
+    <string name="e2ee_notice_title_unsupported">Encrypted chat</string>
+    <string name="e2ee_notice_body_unsupported">This chat is end-to-end encrypted, but this version of Samvad does not include encryption, so its messages can\'t be read or sent here.</string>
+    <string name="e2ee_upgrade_action">Upgrade this chat</string>
+    <string name="e2ee_verify_action">Verify security code</string>
+    <string name="e2ee_verified_action">Verified. View security code</string>
+    <string name="e2ee_message_cd">End-to-end encrypted</string>
+
+    <!-- Results of actions in an encrypted chat -->
+    <string name="e2ee_upgraded">Done. New messages in this chat are end-to-end encrypted.</string>
+    <string name="e2ee_peer_no_keys">%1$s can\'t use end-to-end encryption yet. This chat stays as it is, and nothing was sent.</string>
+    <string name="e2ee_send_blocked_code">%1$s\'s security code changed. Review it before sending. Nothing was sent.</string>
+    <string name="e2ee_unavailable">Couldn\'t set up encryption right now. Nothing was sent. Try again later.</string>
+    <string name="e2ee_not_available_here">This isn\'t available in an end-to-end encrypted chat.</string>
+    <string name="e2ee_scheduled_failed">Not sent: scheduled messages can\'t be sent in a chat that became end-to-end encrypted.</string>
+    <string name="e2ee_moment_reply_blocked">Moment replies can\'t be sent in an end-to-end encrypted chat, because Moments are not end-to-end encrypted.</string>
+    <string name="e2ee_notification_generic">New encrypted message</string>
+
+    <!-- Security code changed -->
+    <string name="e2ee_code_changed_title">Security code changed</string>
+    <string name="e2ee_code_changed_body">%1$s may have a new phone or may have reinstalled Samvad. Messages to and from them are on hold until you review the new code.</string>
+    <string name="e2ee_code_changed_action">Review</string>
+
+    <!-- A message that cannot be shown -->
+    <string name="e2ee_locked_identity">On hold: the sender\'s security code changed. Review it to read this message.</string>
+    <string name="e2ee_locked_no_session">This message can\'t be read on this phone. Encrypted messages are not restored when you sign in on a new phone.</string>
+    <string name="e2ee_locked_unreadable">This encrypted message can\'t be read.</string>
+    <string name="e2ee_locked_own">You sent this message before this phone\'s data was reset. It can\'t be shown here.</string>
+    <string name="e2ee_locked_disabled">Encrypted message. This version of Samvad can\'t read it.</string>
+
+    <!-- Security code screen -->
+    <string name="e2ee_verify_title">Security code</string>
+    <string name="e2ee_verify_intro">To check that this chat is private, compare this number with the one on %1$s\'s phone, or scan their code. If they match, nobody is in between.</string>
+    <string name="e2ee_verify_new_intro">This is the new security code. Check it with the person before you continue.</string>
+    <string name="e2ee_verify_changed_body">%1$s\'s security code changed. This happens when they get a new phone or reinstall Samvad, but it can also mean someone is interfering. Messages stay on hold until you decide.</string>
+    <string name="e2ee_verify_none">The security code appears after the first message is sent or received in this chat.</string>
+    <string name="e2ee_verify_qr_cd">QR code of the security code</string>
+    <string name="e2ee_verify_scan">Scan their code</string>
+    <string name="e2ee_verify_scan_match">The codes match. This chat is verified.</string>
+    <string name="e2ee_verify_scan_mismatch">The codes do not match. Don\'t share anything private until you have checked with them in person or on a call.</string>
+    <string name="e2ee_verify_scan_unreadable">That is not a Samvad security code.</string>
+    <string name="e2ee_verify_status_done">Verified on this phone</string>
+    <string name="e2ee_verify_status_not">Not verified yet</string>
+    <string name="e2ee_verify_mark">Mark as verified</string>
+    <string name="e2ee_verify_unmark">Remove verified mark</string>
+    <string name="e2ee_verify_accept">Continue with the new code</string>
+    <string name="e2ee_verify_accept_note">Continuing trusts the new code. The chat will no longer be marked as verified.</string>
+    <string name="e2ee_verify_footer">The verified mark is kept only on this phone. Samvad uses one phone per account: signing in on a new phone creates new keys, and your contacts then see a “Security code changed” notice.</string>
+
+    <!-- Learn more -->
+    <string name="e2ee_sheet_title">How end-to-end encryption works in Samvad</string>
+    <string name="e2ee_sheet_protected_title">Protected in encrypted chats</string>
+    <string name="e2ee_sheet_protected">• Text, replies, edits, deletions, shared contacts, photos, voice notes, videos and files are encrypted on your phone before they are sent. Only you and the other person can read them.\n• Samvad\'s servers can\'t read them, and neither can anyone who gets hold of the server\'s data.</string>
+    <string name="e2ee_sheet_visible_title">Still visible to Samvad</string>
+    <string name="e2ee_sheet_visible">• Who talks to whom, when, and the kind of message (text, photo, voice and so on).\n• Reaction emoji, delivered and read times, and the size of what you send.\n• Your name and profile.</string>
+    <string name="e2ee_sheet_not_title">Not end-to-end encrypted</string>
+    <string name="e2ee_sheet_not">• Group chats, polls and Moments.\n• Voice and video calls: they are encrypted on their way, but not end-to-end.\n• Chats marked “Not end-to-end encrypted”, and messages sent before a chat was upgraded.\n• Scheduled messages, which are not available in encrypted chats.</string>
+    <string name="e2ee_sheet_phone_title">One phone per account</string>
+    <string name="e2ee_sheet_phone">• Your keys live only on this phone and are never backed up. If you sign in on a new phone, old encrypted messages can\'t be recovered, and your contacts see “Security code changed”.\n• Signing out erases the keys and the decrypted messages from this phone.</string>
+    <string name="e2ee_sheet_report_title">Reporting</string>
+    <string name="e2ee_sheet_report">Samvad can\'t see messages in an encrypted chat. If you report someone, you choose whether to include their latest messages, which your phone decrypts and sends. Samvad cannot check that they are genuine.</string>
+
+    <!-- Report dialog -->
+    <string name="e2ee_report_body">This chat is end-to-end encrypted, so Samvad can\'t see its messages. You can choose to include the person\'s latest messages with your report.</string>
+    <plurals name="e2ee_report_attach">
+        <item quantity="one">Include the last %1$d message from %2$s</item>
+        <item quantity="other">Include the last %1$d messages from %2$s</item>
+    </plurals>
+</resources>

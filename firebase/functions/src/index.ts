@@ -69,4 +69,4 @@ export {
 } from './twoStep';
 export { startCall, answerCall, declineCall, endCall, getCallToken, cleanupMissedCalls } from './calls';
 export { scheduleMeeting, getMeetingToken, endMeeting } from './meetings';
-export { publishPreKeys, fetchPreKeyBundle, preKeyStatus, upgradeConversationE2ee } from './prekeys';
+export { publishPreKeys, fetchPreKeyBundle, preKeyStatus, deletePreKeys, upgradeConversationE2ee } from './prekeys';

@@ -32,6 +32,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 /**
  * Manual dependency container. A DI framework (Hilt) is deferred until the build can be verified
@@ -49,13 +50,16 @@ class AppContainer(context: Context) {
 
   val auth: AuthRepository? = firebase?.let { AuthRepository(it.auth) }
   val accounts: AccountRepository? = firebase?.let { AccountRepository(it.db, it.functions) }
-  val chats: ChatRepository? = firebase?.let { ChatRepository(it.db) }
+  /** End-to-end encryption: keys, sessions and decrypted messages on this phone (docs/security/E2EE_DESIGN.md). */
+  val attachmentKeys = com.samvad.messenger.data.e2ee.AttachmentKeys()
+  val e2ee: com.samvad.messenger.data.e2ee.E2eeService? = firebase?.let { com.samvad.messenger.data.e2ee.E2eeService(context, it.functions) }
+  val chats: ChatRepository? = firebase?.let { ChatRepository(it.db, e2ee, attachmentKeys) }
   val presence: PresenceRepository? = firebase?.let { PresenceRepository(it.rtdb) }
-  val media: MediaRepository? = firebase?.let { MediaRepository(context, it.storage) }
+  val media: MediaRepository? = firebase?.let { MediaRepository(context, it.storage, attachmentKeys) }
   val downloads: MediaDownloads? = media?.let { MediaDownloads(it) }
   val networkHints = NetworkHints(context)
   val pendingUploads: PendingUploadManager? = firebase?.let { fb ->
-    PendingUploadManager(context, media!!, chats!!, network) { fb.auth.currentUser?.uid }
+    PendingUploadManager(context, media!!, chats!!, network, e2ee) { fb.auth.currentUser?.uid }
   }
   val contacts: ContactsRepository? = firebase?.let { ContactsRepository(context, it.functions) }
   val savedNames: SavedNamesRepository? = contacts?.let { SavedNamesRepository(context, it) }
@@ -76,6 +80,23 @@ class AppContainer(context: Context) {
   val searchRepo = SearchRepository(context)
 
   val isConfigured: Boolean get() = firebase != null
+
+  init {
+    // Whatever way the session ends (sign-out, account deletion, a device signed out remotely), the keys and the
+    // decrypted messages of that account are erased from this phone.
+    firebase?.auth?.let { auth ->
+      var lastUid: String? = auth.currentUser?.uid
+      val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+      auth.addAuthStateListener { a ->
+        val uid = a.currentUser?.uid
+        if (lastUid != null && uid == null) {
+          attachmentKeys.clear()
+          scope.launch { e2ee?.wipe() }
+        }
+        lastUid = uid
+      }
+    }
+  }
 
   /** Gives a chat the user just created their default disappearing-message timer (off by default). Never throws. */
   suspend fun applyDefaultTimer(cid: String) {
