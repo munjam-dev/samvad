@@ -1127,7 +1127,7 @@ private fun MessageBubble(
             Text(replied.message.text.ifBlank { gifReplyLabel(replied.message) }, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
           }
         }
-        if (!m.deleted && (m.media != null || m.poll != null || m.gif != null)) {
+        if (!m.deleted && (m.media != null || m.poll != null || m.gif != null || m.contact != null || m.meeting != null || m.kind == "event")) {
           mediaContent()
           if (m.text.isNotBlank()) Spacer(Modifier.size(6.dp))
         }
