@@ -31,6 +31,7 @@ import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Poll
 import androidx.compose.material.icons.outlined.Image
+import androidx.compose.material.icons.outlined.Gif
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PersonOutline
@@ -345,6 +346,7 @@ fun AttachOptions(
   onVideo: () -> Unit = {},
   onContact: () -> Unit = {},
   onPoll: (() -> Unit)? = null,
+  onGif: (() -> Unit)? = null,
 ) {
   val colors = com.samvad.messenger.ui.theme.SamvadTheme.colors
   Column(Modifier.fillMaxWidth().padding(bottom = 28.dp)) {
@@ -363,6 +365,9 @@ fun AttachOptions(
       item { AttachTile(Icons.Outlined.Videocam, stringResource(R.string.attach_video), colors.tertiaryContainer, colors.onTertiaryContainer, onVideo) }
       item { AttachTile(Icons.Outlined.Description, stringResource(R.string.attach_document), colors.tertiaryContainer, colors.onTertiaryContainer, onDocument) }
       item { AttachTile(Icons.Outlined.PersonOutline, stringResource(R.string.attach_contact), colors.secondaryContainer, colors.onSecondaryContainer, onContact) }
+      if (onGif != null) {
+        item { AttachTile(Icons.Outlined.Gif, stringResource(R.string.gifs_open), colors.primaryContainer, colors.onPrimaryContainer, onGif) }
+      }
       if (onPoll != null) {
         item { AttachTile(Icons.Outlined.Poll, stringResource(R.string.attach_poll), colors.secondaryContainer, colors.onSecondaryContainer, onPoll) }
       }

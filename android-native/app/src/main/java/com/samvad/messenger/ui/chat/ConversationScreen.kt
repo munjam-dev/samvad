@@ -138,6 +138,7 @@ import androidx.compose.animation.togetherWith
 import com.samvad.messenger.AppContainer
 import com.samvad.messenger.R
 import com.samvad.core.chat.ExportLabels
+import com.samvad.core.gifs.GifKind
 import com.samvad.messenger.ui.components.LocalPhotoSource
 import com.samvad.messenger.push.ActiveChat
 import com.samvad.messenger.push.Notifications
@@ -181,6 +182,7 @@ fun ConversationScreen(
   val pinnedIds = vm.pinnedIds.collectAsStateWithLifecycle().value
   val pinNotice = vm.pinNotice.collectAsStateWithLifecycle().value
   var composingPoll by remember { mutableStateOf(false) }
+  var pickingGif by remember { mutableStateOf(false) }
   var schedulingMeeting by remember { mutableStateOf(false) }
   val themeSettings = container.chatThemes.settings.collectAsStateWithLifecycle(null).value
   val backdrop = themeSettings?.backgroundFor(conversationId) ?: ChatBackground.Theme(ChatThemes.DEFAULT.id)
@@ -330,6 +332,8 @@ fun ConversationScreen(
     unknownSender = stringResource(R.string.export_unknown),
     video = stringResource(R.string.export_video),
     contact = stringResource(R.string.export_contact),
+    gif = stringResource(R.string.gifs_kind_gif),
+    sticker = stringResource(R.string.gifs_kind_sticker),
   )
   val you = stringResource(R.string.chat_you)
   val exportFailed = stringResource(R.string.export_failed)
@@ -360,6 +364,7 @@ fun ConversationScreen(
   val contactProblemName = stringResource(R.string.contact_no_name)
   val contactProblemPhone = stringResource(R.string.contact_no_phone)
   val contactSaveFailed = stringResource(R.string.contact_save_failed)
+  val gifSendFailed = stringResource(R.string.gifs_send_failed)
   val region = java.util.Locale.getDefault().country.ifBlank { com.samvad.core.phone.PhoneNumbers.DEFAULT_REGION }
   val pickContactPhone = rememberDevicePhonePicker { name, phone ->
     if (phone != null) {
@@ -714,6 +719,11 @@ fun ConversationScreen(
                         }
                       }
                     }
+                    val gifRef = item.message.gif
+                    val gifKind = GifKind.fromWire(item.message.kind)
+                    if (gifRef != null && gifKind != null && !item.message.deleted) {
+                      GifBubble(gifRef, gifKind, autoLoad = autoLoadPhotos, selecting = selecting, onSelectTap = toggle)
+                    }
                     val poll = item.message.poll
                     if (item.message.kind == "poll" && poll != null && !item.message.deleted) {
                       val votes = remember(item.message.id) { vm.votes(item.message.id) }.collectAsStateWithLifecycle(emptyMap()).value
@@ -834,6 +844,7 @@ fun ConversationScreen(
           pickContactPhone()
         },
         onPoll = { attaching = false; composingPoll = true },
+        onGif = { attaching = false; pickingGif = true },
       )
     }
   }
@@ -887,6 +898,22 @@ fun ConversationScreen(
         container, conversationId,
         onClose = { schedulingMeeting = false },
         onResult = { ok -> scope.launch { snackbar.showSnackbar(if (ok) meetingScheduled else meetingFailed) } },
+      )
+    }
+  }
+  if (pickingGif) {
+    ModalBottomSheet(
+      onDismissRequest = { pickingGif = false },
+      sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    ) {
+      GifPickerContent(
+        container = container,
+        autoLoad = autoLoadPhotos,
+        onPick = { kind, gif ->
+          pickingGif = false
+          vm.sendGif(kind, gif) { scope.launch { snackbar.showSnackbar(gifSendFailed) } }
+        },
+        onClose = { pickingGif = false },
       )
     }
   }
@@ -1031,7 +1058,9 @@ private fun MessageBubble(
   val indent = if (mine) 0.dp else AVATAR_SIZE + AVATAR_GAP
   val viewSender = item.senderName?.let { stringResource(R.string.chat_view_person, it) }
   val bg = if (mine) colors.bubbleOutgoing else colors.bubbleIncoming
-  val meta = colors.bubbleMeta
+  // A sticker on its own sits directly on the chat, with no bubble around it.
+  val bare = m.kind == "sticker" && m.gif != null && !m.deleted && m.text.isBlank() && replied == null && !m.forwarded && item.senderName == null
+  val meta = if (bare) colors.onSurfaceVariant else colors.bubbleMeta
   val retryLabel = stringResource(R.string.chat_retry)
   val reduced = LocalReducedMotion.current
   val appear = remember(m.id) { Animatable(if (animateIn && !reduced) 0f else 1f) }
@@ -1069,9 +1098,8 @@ private fun MessageBubble(
       Column(
         Modifier
           .widthIn(max = 300.dp)
-          .clip(shape)
-          .background(bg)
-          .then(if (!mine) Modifier.border(1.dp, colors.outlineVariant, shape) else Modifier)
+          .then(if (bare) Modifier else Modifier.clip(shape).background(bg))
+          .then(if (!mine && !bare) Modifier.border(1.dp, colors.outlineVariant, shape) else Modifier)
           .combinedClickable(
             onClick = { if (selecting) onToggle() else if (m.failed) onRetry() },
             onClickLabel = if (!selecting && m.failed) retryLabel else null,
@@ -1080,7 +1108,7 @@ private fun MessageBubble(
             onLongClick = { if (!m.deleted && !m.pending) onLongPress() },
           )
           .then(if (selecting) Modifier.semantics { this.selected = picked } else Modifier)
-          .padding(horizontal = 12.dp, vertical = 8.dp),
+          .then(if (bare) Modifier else Modifier.padding(horizontal = 12.dp, vertical = 8.dp)),
       ) {
         item.senderName?.let { SenderLabel(it, m.senderId) }
         if (m.forwarded && !m.deleted) ForwardedLabel(tint = meta)
@@ -1096,10 +1124,10 @@ private fun MessageBubble(
               style = MaterialTheme.typography.labelMedium,
               color = colors.primary,
             )
-            Text(replied.message.text, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(replied.message.text.ifBlank { gifReplyLabel(replied.message) }, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
           }
         }
-        if (!m.deleted && (m.media != null || m.poll != null)) {
+        if (!m.deleted && (m.media != null || m.poll != null || m.gif != null)) {
           mediaContent()
           if (m.text.isNotBlank()) Spacer(Modifier.size(6.dp))
         }

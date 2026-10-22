@@ -126,6 +126,7 @@ class SessionViewModel(private val container: AppContainer) : ViewModel() {
     container.savedNames?.clear()
     container.scamPrefs.clear()
     container.chatThemes.clear()
+    container.gifLibrary.clear()
     container.drafts.clearAll()
     container.pendingUploads?.discardAll()
     container.searchIndexer.clearAll()

@@ -1,5 +1,6 @@
 package com.samvad.core.chat
 
+import com.samvad.core.gifs.GifRef
 import com.samvad.core.media.Media
 
 /** Domain models shared by the data layer and the UI. Times are epoch milliseconds. */
@@ -69,9 +70,11 @@ data class Message(
   val pending: Boolean = false,
   /** True when the local write was rejected and needs a retry. */
   val failed: Boolean = false,
-  /** "text", "image", "file", "voice", "video", "contact", "poll" or "system". */
+  /** "text", "image", "file", "voice", "video", "gif", "sticker", "contact", "poll" or "system". */
   val kind: String = "text",
   val media: Media? = null,
+  /** Kinds "gif" and "sticker": the image is loaded by link from the provider, never from our storage. */
+  val gif: GifRef? = null,
   /** A copy forwarded from another chat (Phase 1.6). */
   val forwarded: Boolean = false,
   /** Phase 2: @mentioned members, a server-written group event, or a poll. */

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- GIFs and stickers -->
+    <string name="gifs_open">GIF மற்றும் ஸ்டிக்கர்கள்</string>
+    <string name="gifs_title">GIF மற்றும் ஸ்டிக்கர்கள்</string>
+    <string name="gifs_tab_gifs">GIF</string>
+    <string name="gifs_tab_stickers">ஸ்டிக்கர்கள்</string>
+    <string name="gifs_search_gifs">GIF தேடுங்கள்</string>
+    <string name="gifs_search_stickers">ஸ்டிக்கர் தேடுங்கள்</string>
+    <string name="gifs_search_clear">தேடலை அழிக்கவும்</string>
+    <string name="gifs_close">மூடு</string>
+    <string name="gifs_section_trending">டிரெண்டிங்</string>
+    <string name="gifs_section_yours">உங்களுடையவை</string>
+    <string name="gifs_cd_gif">GIF: %1$s</string>
+    <string name="gifs_cd_sticker">ஸ்டிக்கர்: %1$s</string>
+    <string name="gifs_untitled">தலைப்பு இல்லை</string>
+    <string name="gifs_favourite_add">பிடித்தவையில் சேர்க்கவும்</string>
+    <string name="gifs_favourite_remove">பிடித்தவையிலிருந்து நீக்கவும்</string>
+    <string name="gifs_not_set_up_title">GIF இன்னும் அமைக்கப்படவில்லை</string>
+    <string name="gifs_not_set_up_body">இதை இயக்கும் பணி இன்னும் முடியவில்லை. அதுவரை நீங்கள் செய்திகள், படங்கள் மற்றும் பலவற்றை அனுப்பலாம்.</string>
+    <string name="gifs_error_title">GIF ஏற்றப்படவில்லை</string>
+    <string name="gifs_error_body">உங்கள் இணைப்பைச் சரிபார்த்து மீண்டும் முயலுங்கள்.</string>
+    <string name="gifs_offline">நீங்கள் ஆஃப்லைனில் இருக்கிறீர்கள். GIF-க்கு இணையம் தேவை.</string>
+    <string name="gifs_retry">மீண்டும் முயலுங்கள்</string>
+    <string name="gifs_no_results">“%1$s”-க்கு முடிவுகள் இல்லை. வேறு சொல்லை முயலுங்கள்.</string>
+    <string name="gifs_yours_empty">நீங்கள் அனுப்பும் அல்லது பிடித்தவையாகச் சேர்க்கும் GIF-களும் ஸ்டிக்கர்களும் இங்கே தோன்றும்.</string>
+    <string name="gifs_limit">இன்று நிறையத் தேடிவிட்டீர்கள். நாளை மீண்டும் முயலுங்கள்.</string>
+    <string name="gifs_powered_by">Powered by GIPHY</string>
+    <string name="gifs_privacy_note">உங்கள் தேடல் சொற்கள் எங்கள் சேவையகம் வழியாக GIPHY-க்குச் செல்கின்றன. GIF-ஐப் பெறும் தொலைபேசி அதை GIPHY-இலிருந்தே ஏற்றுவதால், அந்தத் தொலைபேசியின் IP முகவரி GIPHY-க்குத் தெரியலாம். உங்கள் கணக்கு விவரங்கள் பகிரப்படாது.</string>
+    <string name="gifs_tap_to_play">இயக்கத் தட்டவும்</string>
+    <string name="gifs_send_failed">இதை அனுப்ப முடியவில்லை. மீண்டும் முயலுங்கள்.</string>
+    <string name="gifs_loading">ஏற்றப்படுகிறது</string>
+    <string name="gifs_kind_gif">GIF</string>
+    <string name="gifs_kind_sticker">ஸ்டிக்கர்</string>
+    <string name="gifs_pinned_gif_caption">GIF: %1$s</string>
+</resources>

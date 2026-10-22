@@ -53,6 +53,10 @@ Notes for the form:
 - Privacy settings (last seen, about, photo visibility, who can add me to groups, phone-number discovery) are stored
   on our servers so they can be enforced; deleted with the account.
 - Two-step PIN: stored only as a salted scrypt hash.
+- GIFs and stickers: search words are sent to our server and on to the GIF provider (GIPHY), with no account data; a
+  sent GIF is a link, and the receiving phone loads the image from GIPHY's servers, so GIPHY can see that phone's IP
+  address. Recent and favourite GIFs stay on the phone. No new Play data type applies (search words are not stored by us).
+  CHECK: confirm this against GIPHY's current terms and privacy policy before filing the form.
 
 ## 3. Permissions justification
 
