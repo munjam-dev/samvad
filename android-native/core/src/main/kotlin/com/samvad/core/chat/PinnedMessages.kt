@@ -13,6 +13,8 @@ sealed interface PinnedPreview {
   data class Poll(val question: String) : PinnedPreview
   data class Video(val caption: String) : PinnedPreview
   data class Contact(val name: String) : PinnedPreview
+  data class Gif(val caption: String) : PinnedPreview
+  data object Sticker : PinnedPreview
   /** The message is not on this device yet, or this person cannot read it. */
   data object Unavailable : PinnedPreview
 }
@@ -66,6 +68,8 @@ object PinnedMessages {
       "poll" -> PinnedPreview.Poll(oneLine(message.poll?.question.orEmpty()))
       "video" -> PinnedPreview.Video(oneLine(message.text))
       "contact" -> PinnedPreview.Contact(oneLine(message.contact?.name.orEmpty()))
+      "gif" -> PinnedPreview.Gif(oneLine(message.text))
+      "sticker" -> PinnedPreview.Sticker
       else -> PinnedPreview.Unavailable
     }
   }

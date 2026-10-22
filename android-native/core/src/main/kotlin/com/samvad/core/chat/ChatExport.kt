@@ -17,6 +17,9 @@ data class ExportLabels(
   /** "Video" and "Contact": shown as <Video>, <Contact: Asha Rao, +91 98765 43210>. */
   val video: String = "Video",
   val contact: String = "Contact",
+  /** "GIF" and "Sticker": shown as <GIF> and <Sticker>. */
+  val gif: String = "GIF",
+  val sticker: String = "Sticker",
 )
 
 /**
@@ -47,6 +50,8 @@ object ChatExport {
       "voice" -> "<${labels.voice}>"
       "file" -> "<${labels.file}: ${m.media?.name.orEmpty()}>"
       "video" -> "<${labels.video}>"
+      "gif" -> "<${labels.gif}>"
+      "sticker" -> "<${labels.sticker}>"
       "contact" -> m.contact?.let { c -> "<${labels.contact}: ${(listOf(c.name) + c.phones).joinToString(", ")}>" } ?: "<${labels.contact}>"
       else -> null
     }

@@ -18,6 +18,9 @@ import com.samvad.core.chat.Pin
 import com.samvad.core.chat.Poll
 import com.samvad.core.chat.SystemInfo
 import com.samvad.core.chat.Profile
+import com.samvad.core.gifs.GifKind
+import com.samvad.core.gifs.GifRef
+import com.samvad.core.gifs.GifRules
 import com.samvad.core.media.Media
 import java.util.Date
 import java.util.UUID
@@ -271,6 +274,36 @@ class ChatRepository(private val db: FirebaseFirestore) {
   }
 
   /**
+   * Sends a GIF or sticker by link (nothing is uploaded). Throws IllegalArgumentException for a link the rules would
+   * refuse. A client ID makes a retry harmless.
+   */
+  suspend fun sendGif(
+    conversationId: String,
+    me: String,
+    kind: GifKind,
+    gif: GifRef,
+    caption: String = "",
+    replyTo: String? = null,
+    forwarded: Boolean = false,
+    id: String = UUID.randomUUID().toString(),
+  ) {
+    require(GifRules.isValid(gif)) { "GIF link is not allowed" }
+    db.document("conversations/$conversationId/messages/$id").set(
+      mapOf(
+        "senderId" to me,
+        "kind" to kind.wire,
+        "text" to GifRules.captionFor(kind, caption),
+        "replyTo" to replyTo,
+        "createdAt" to FieldValue.serverTimestamp(),
+        "gif" to mapOf(
+          "url" to gif.url, "previewUrl" to gif.previewUrl, "width" to gif.width, "height" to gif.height,
+          "provider" to gif.provider, "id" to gif.id,
+        ),
+      ) + (if (forwarded) mapOf("forwarded" to true) else emptyMap()),
+    ).await()
+  }
+
+  /**
    * True when the message document already exists (written, or queued locally by an earlier attempt), so a
    * resumed upload never creates a second message with the same client ID.
    */
@@ -281,6 +314,12 @@ class ChatRepository(private val db: FirebaseFirestore) {
     val existing = runCatching { db.document("conversations/$conversationId/messages/${message.id}").get().await() }.getOrNull()
     if (existing?.exists() == true && existing.metadata.hasPendingWrites().not()) {
       failed.update { it - message.id }
+      return
+    }
+    val gif = message.gif
+    val gifKind = GifKind.fromWire(message.kind)
+    if (gif != null && gifKind != null) {
+      sendGif(conversationId, me, gifKind, gif, message.text, message.replyTo, id = message.id)
       return
     }
     send(conversationId, me, message.text, message.replyTo, message.id)
@@ -581,6 +620,20 @@ class ChatRepository(private val db: FirebaseFirestore) {
     )
   }
 
+  /** A GIF or sticker link; one that is not on the provider allow-list is ignored, so it is never loaded. */
+  private fun toGif(m: Map<*, *>): GifRef? {
+    val ref = GifRef(
+      id = m["id"] as? String ?: return null,
+      title = "",
+      previewUrl = m["previewUrl"] as? String ?: return null,
+      url = m["url"] as? String ?: return null,
+      width = (m["width"] as? Number)?.toInt() ?: return null,
+      height = (m["height"] as? Number)?.toInt() ?: return null,
+      provider = m["provider"] as? String ?: "",
+    )
+    return ref.takeIf(GifRules::isValid)
+  }
+
   private fun toMeetingCard(m: Map<*, *>): com.samvad.core.chat.MeetingCard? {
     val id = m["meetingId"] as? String ?: return null
     val startsAt = (m["startsAt"] as? com.google.firebase.Timestamp)?.toDate()?.time ?: return null
@@ -602,6 +655,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
       pending = d.metadata.hasPendingWrites(),
       kind = d.getString("kind") ?: "text",
       media = (d.get("media") as? Map<*, *>)?.let(::toMedia),
+      gif = (d.get("gif") as? Map<*, *>)?.let(::toGif),
       forwarded = d.getBoolean("forwarded") ?: false,
       mentions = (d.get("mentions") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
       system = (d.get("system") as? Map<*, *>)?.let(::toSystem),

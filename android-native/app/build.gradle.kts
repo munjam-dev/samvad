@@ -157,6 +157,11 @@ dependencies {
   // Calls and meetings (Phase 7): LiveKit client SDK (Apache-2.0) with its bundled WebRTC.
   implementation(libs.livekit.android)
 
+  // GIFs and stickers: Coil loads them from the provider CDN (animated through coil-gif; OkHttp does the network).
+  implementation(libs.coil.compose)
+  implementation(libs.coil.gif)
+  implementation(libs.coil.network.okhttp)
+
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.kotlinx.coroutines.play.services)
 

@@ -166,6 +166,8 @@ We use **Google Cloud and Firebase** (Google LLC and its affiliates) to host our
 
 We use **LiveKit Cloud** (LiveKit, Inc.) to carry the audio and video of voice calls, video calls and group meetings. LiveKit processes this media only to relay it between participants and does not receive your messages.
 
+When you search for a GIF or sticker, your search words go to our server and on to our GIF provider, GIPHY, with no account details, and the phone that receives a GIF loads it from GIPHY's servers, so GIPHY can see that phone's IP address.
+
 The full list is on our [Service Providers](/legal/service-providers) page.
 
 ### 6.3 Authorities

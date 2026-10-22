@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- GIFs and stickers -->
+    <string name="gifs_open">GIFs and stickers</string>
+    <string name="gifs_title">GIFs and stickers</string>
+    <string name="gifs_tab_gifs">GIFs</string>
+    <string name="gifs_tab_stickers">Stickers</string>
+    <string name="gifs_search_gifs">Search GIFs</string>
+    <string name="gifs_search_stickers">Search stickers</string>
+    <string name="gifs_search_clear">Clear search</string>
+    <string name="gifs_close">Close</string>
+    <string name="gifs_section_trending">Trending</string>
+    <string name="gifs_section_yours">Yours</string>
+    <string name="gifs_cd_gif">GIF: %1$s</string>
+    <string name="gifs_cd_sticker">Sticker: %1$s</string>
+    <string name="gifs_untitled">Untitled</string>
+    <string name="gifs_favourite_add">Add to favourites</string>
+    <string name="gifs_favourite_remove">Remove from favourites</string>
+    <string name="gifs_not_set_up_title">GIFs aren\'t set up yet</string>
+    <string name="gifs_not_set_up_body">Setting them up is still to be done. Until then you can send messages, photos and more.</string>
+    <string name="gifs_error_title">Couldn\'t load GIFs</string>
+    <string name="gifs_error_body">Check your connection and try again.</string>
+    <string name="gifs_offline">You\'re offline. GIFs need an internet connection.</string>
+    <string name="gifs_retry">Try again</string>
+    <string name="gifs_no_results">No results for “%1$s”. Try a different word.</string>
+    <string name="gifs_yours_empty">GIFs and stickers you send or favourite will show here.</string>
+    <string name="gifs_limit">You\'ve searched a lot today. Try again tomorrow.</string>
+    <string name="gifs_powered_by">Powered by GIPHY</string>
+    <string name="gifs_privacy_note">Your search words go to GIPHY through our server. The phone that receives a GIF loads it from GIPHY, so GIPHY can see that phone\'s IP address. Your account details are not shared.</string>
+    <string name="gifs_tap_to_play">Tap to play</string>
+    <string name="gifs_send_failed">Couldn\'t send that. Please try again.</string>
+    <string name="gifs_loading">Loading</string>
+    <string name="gifs_kind_gif">GIF</string>
+    <string name="gifs_kind_sticker">Sticker</string>
+    <string name="gifs_pinned_gif_caption">GIF: %1$s</string>
+</resources>

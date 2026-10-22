@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- GIFs and stickers -->
+    <string name="gifs_open">GIF और स्टिकर</string>
+    <string name="gifs_title">GIF और स्टिकर</string>
+    <string name="gifs_tab_gifs">GIF</string>
+    <string name="gifs_tab_stickers">स्टिकर</string>
+    <string name="gifs_search_gifs">GIF खोजें</string>
+    <string name="gifs_search_stickers">स्टिकर खोजें</string>
+    <string name="gifs_search_clear">खोज साफ़ करें</string>
+    <string name="gifs_close">बंद करें</string>
+    <string name="gifs_section_trending">ट्रेंडिंग</string>
+    <string name="gifs_section_yours">आपके</string>
+    <string name="gifs_cd_gif">GIF: %1$s</string>
+    <string name="gifs_cd_sticker">स्टिकर: %1$s</string>
+    <string name="gifs_untitled">बिना शीर्षक</string>
+    <string name="gifs_favourite_add">पसंदीदा में जोड़ें</string>
+    <string name="gifs_favourite_remove">पसंदीदा से हटाएँ</string>
+    <string name="gifs_not_set_up_title">GIF अभी सेट नहीं हैं</string>
+    <string name="gifs_not_set_up_body">इन्हें चालू करने का काम अभी बाकी है। तब तक आप संदेश, फ़ोटो और बहुत कुछ भेज सकते हैं।</string>
+    <string name="gifs_error_title">GIF लोड नहीं हो सके</string>
+    <string name="gifs_error_body">अपना कनेक्शन जाँचें और फिर कोशिश करें।</string>
+    <string name="gifs_offline">आप ऑफ़लाइन हैं। GIF के लिए इंटरनेट चाहिए।</string>
+    <string name="gifs_retry">फिर कोशिश करें</string>
+    <string name="gifs_no_results">“%1$s” के लिए कोई नतीजा नहीं मिला। कोई दूसरा शब्द आज़माएँ।</string>
+    <string name="gifs_yours_empty">आप जो GIF और स्टिकर भेजेंगे या पसंदीदा बनाएँगे, वे यहाँ दिखेंगे।</string>
+    <string name="gifs_limit">आपने आज बहुत खोज की है। कल फिर कोशिश करें।</string>
+    <string name="gifs_powered_by">Powered by GIPHY</string>
+    <string name="gifs_privacy_note">आपके खोज के शब्द हमारे सर्वर से होकर GIPHY तक जाते हैं। GIF पाने वाले का फ़ोन उसे GIPHY से ही लोड करता है, इसलिए GIPHY को उस फ़ोन का IP पता दिख सकता है। आपके खाते की जानकारी साझा नहीं होती।</string>
+    <string name="gifs_tap_to_play">चलाने के लिए टैप करें</string>
+    <string name="gifs_send_failed">यह भेजा नहीं जा सका। कृपया फिर कोशिश करें।</string>
+    <string name="gifs_loading">लोड हो रहा है</string>
+    <string name="gifs_kind_gif">GIF</string>
+    <string name="gifs_kind_sticker">स्टिकर</string>
+    <string name="gifs_pinned_gif_caption">GIF: %1$s</string>
+</resources>

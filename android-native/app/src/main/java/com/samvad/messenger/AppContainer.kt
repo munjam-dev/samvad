@@ -4,6 +4,8 @@ import android.content.Context
 import com.samvad.messenger.data.AccountRepository
 import com.samvad.messenger.data.AppealsRepository
 import com.samvad.messenger.data.AuthRepository
+import com.samvad.messenger.data.GifLibraryStore
+import com.samvad.messenger.data.GifRepository
 import com.samvad.messenger.data.ChatRepository
 import com.samvad.messenger.data.StatusRepository
 import com.samvad.messenger.data.ChatThemeRepository
@@ -69,6 +71,9 @@ class AppContainer(context: Context) {
   val devices: DevicesRepository? = firebase?.let { DevicesRepository(it.db, it.functions) }
   val appeals: AppealsRepository? = firebase?.let { AppealsRepository(it.db, it.functions) }
   val calls: com.samvad.messenger.data.CallRepository? = firebase?.let { com.samvad.messenger.data.CallRepository(it.db, it.functions) }
+  val gifs: GifRepository? = firebase?.let { GifRepository(it.functions) }
+  /** Recent and favourite GIFs: on this phone only, cleared on sign-out. */
+  val gifLibrary = GifLibraryStore(context)
   val callEngine = com.samvad.messenger.ui.call.CallEngine(context.applicationContext, calls)
   val push = PushTokens(enabled = firebase != null && !com.samvad.messenger.BuildConfig.USE_EMULATORS)
   /** Local, on-device message search index (Room/FTS). Never uploaded; cleared on sign-out and account deletion. */

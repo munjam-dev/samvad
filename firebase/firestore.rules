@@ -294,6 +294,24 @@ service cloud.firestore {
         && (!('organisation' in c) || (c.organisation is string && c.organisation.size() <= 100));
     }
 
+    // GIFs and stickers are sent by link: the image stays on the provider's CDN. The link must be https on an
+    // allow-listed provider host (keep in step with functions/src/lib/gifs.ts and the app's GifRules).
+    function validGifUrl(u) {
+      return u is string && u.size() <= 500
+        && u.matches('^https://(media[0-9]{0,2}|i)[.]giphy[.]com/[A-Za-z0-9._~/%=&?+-]{1,400}$');
+    }
+
+    function validGif(g) {
+      return g is map
+        && g.keys().hasOnly(['url', 'previewUrl', 'width', 'height', 'provider', 'id'])
+        && g.keys().hasAll(['url', 'previewUrl', 'width', 'height', 'provider', 'id'])
+        && validGifUrl(g.url) && validGifUrl(g.previewUrl)
+        && g.provider == 'giphy'
+        && g.id is string && g.id.matches('^[A-Za-z0-9]{3,40}$')
+        && g.width is int && g.width > 0 && g.width <= 1000
+        && g.height is int && g.height > 0 && g.height <= 1000;
+    }
+
     // Post-write view, so a conversation and its member docs can be created in one batch.
     function convAfter(cid) {
       return getAfter(/databases/$(database)/documents/conversations/$(cid)).data;
@@ -426,7 +444,7 @@ service cloud.firestore {
 
         allow create: if isMemberOf(cid)
           && isUuid(mid)
-          && request.resource.data.keys().hasOnly(['senderId', 'kind', 'text', 'replyTo', 'createdAt', 'deleted', 'reactions', 'media', 'forwarded', 'mentions', 'poll', 'contact', 'momentRef'])
+          && request.resource.data.keys().hasOnly(['senderId', 'kind', 'text', 'replyTo', 'createdAt', 'deleted', 'reactions', 'media', 'forwarded', 'mentions', 'poll', 'contact', 'momentRef', 'gif'])
           && request.resource.data.keys().hasAll(['senderId', 'kind', 'text', 'replyTo', 'createdAt'])
           && request.resource.data.senderId == request.auth.uid
           && (
@@ -437,6 +455,11 @@ service cloud.firestore {
               && request.resource.data.text is string
               && request.resource.data.text.size() <= 4096
               && validMedia(cid, mid, request.resource.data.kind, request.resource.data.media))
+            || (request.resource.data.kind in ['gif', 'sticker']
+              && request.resource.data.text is string
+              && request.resource.data.text.size() <= (request.resource.data.kind == 'sticker' ? 0 : 1000)
+              && !('media' in request.resource.data)
+              && validGif(request.resource.data.get('gif', null)))
             || (request.resource.data.kind == 'poll'
               && request.resource.data.text == ''
               && !('media' in request.resource.data)
@@ -448,6 +471,7 @@ service cloud.firestore {
           )
           && (request.resource.data.kind == 'poll' || !('poll' in request.resource.data))
           && (request.resource.data.kind == 'contact' || !('contact' in request.resource.data))
+          && (request.resource.data.kind in ['gif', 'sticker'] || !('gif' in request.resource.data))
           && validMentions(cid, request.resource.data)
           && (!('momentRef' in request.resource.data) || validMomentReply(cid, request.resource.data))
           && mayPost(cid)

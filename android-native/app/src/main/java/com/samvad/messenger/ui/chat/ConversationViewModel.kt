@@ -41,6 +41,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import android.app.Application
 import android.net.Uri
+import com.samvad.core.gifs.GifKind
+import com.samvad.core.gifs.GifRef
 import com.samvad.core.media.Media
 import com.samvad.core.media.MediaKind
 import com.samvad.messenger.data.GroupException
@@ -518,6 +520,20 @@ class ConversationViewModel(
     }
   }
 
+  /**
+   * Sends a GIF or sticker picked from the picker (by link; nothing is uploaded) and remembers it as a recent on
+   * this phone. [onFailed] runs when the rules refuse it. Offline, the write waits in the local queue like text does.
+   */
+  fun sendGif(kind: GifKind, gif: GifRef, onFailed: () -> Unit = {}) {
+    if (blocked.value) return
+    val replyTo = _composer.value.replyTo?.id
+    if (replyTo != null) { _composer.value = ComposerState(); clearDraft() }
+    viewModelScope.launch {
+      runCatching { container.gifLibrary.addRecent(kind, gif) }
+      runCatching { chats.sendGif(conversationId, me, kind, gif, replyTo = replyTo) }.onFailure { onFailed() }
+    }
+  }
+
   fun startRecording(): Boolean = recorder.start()
   fun cancelRecording() = recorder.cancel()
   fun finishRecording() {
@@ -816,6 +832,14 @@ class ConversationViewModel(
 
   /** Sends one message to each chat in [chosen]; true at an index when that chat received it. */
   private suspend fun forwardOne(message: Message, chosen: List<ForwardTarget>): List<Boolean> = coroutineScope {
+    val gif = message.gif
+    val gifKind = GifKind.fromWire(message.kind)
+    if (gif != null && gifKind != null) {
+      // A GIF or sticker is sent again by link; there is nothing to upload.
+      return@coroutineScope chosen.map { t ->
+        async { runCatching { chats.sendGif(t.conversationId, me, gifKind, gif, message.text, forwarded = true) }.isSuccess }
+      }.awaitAll()
+    }
     val kind = MediaKind.fromWire(message.kind)
     val media = message.media
     val prepared = if (kind != null && media != null) {

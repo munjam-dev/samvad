@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- GIFs and stickers -->
+    <string name="gifs_open">GIFలు మరియు స్టిక్కర్లు</string>
+    <string name="gifs_title">GIFలు మరియు స్టిక్కర్లు</string>
+    <string name="gifs_tab_gifs">GIFలు</string>
+    <string name="gifs_tab_stickers">స్టిక్కర్లు</string>
+    <string name="gifs_search_gifs">GIFలను వెతకండి</string>
+    <string name="gifs_search_stickers">స్టిక్కర్లను వెతకండి</string>
+    <string name="gifs_search_clear">శోధనను తొలగించండి</string>
+    <string name="gifs_close">మూసివేయండి</string>
+    <string name="gifs_section_trending">ట్రెండింగ్</string>
+    <string name="gifs_section_yours">మీవి</string>
+    <string name="gifs_cd_gif">GIF: %1$s</string>
+    <string name="gifs_cd_sticker">స్టిక్కర్: %1$s</string>
+    <string name="gifs_untitled">పేరు లేనిది</string>
+    <string name="gifs_favourite_add">ఇష్టమైన వాటిలో చేర్చండి</string>
+    <string name="gifs_favourite_remove">ఇష్టమైన వాటి నుండి తొలగించండి</string>
+    <string name="gifs_not_set_up_title">GIFలు ఇంకా సిద్ధంగా లేవు</string>
+    <string name="gifs_not_set_up_body">వీటిని ఆన్ చేసే పని ఇంకా పూర్తి కాలేదు. అప్పటి వరకు మీరు సందేశాలు, ఫోటోలు మరియు మరిన్నింటిని పంపవచ్చు.</string>
+    <string name="gifs_error_title">GIFలు లోడ్ కాలేదు</string>
+    <string name="gifs_error_body">మీ కనెక్షన్‌ను తనిఖీ చేసి మళ్లీ ప్రయత్నించండి.</string>
+    <string name="gifs_offline">మీరు ఆఫ్‌లైన్‌లో ఉన్నారు. GIFలకు ఇంటర్నెట్ కావాలి.</string>
+    <string name="gifs_retry">మళ్లీ ప్రయత్నించండి</string>
+    <string name="gifs_no_results">“%1$s” కోసం ఫలితాలు లేవు. వేరే పదాన్ని ప్రయత్నించండి.</string>
+    <string name="gifs_yours_empty">మీరు పంపిన లేదా ఇష్టమైనవిగా పెట్టిన GIFలు, స్టిక్కర్లు ఇక్కడ కనిపిస్తాయి.</string>
+    <string name="gifs_limit">మీరు ఈ రోజు చాలా వెతికారు. రేపు మళ్లీ ప్రయత్నించండి.</string>
+    <string name="gifs_powered_by">Powered by GIPHY</string>
+    <string name="gifs_privacy_note">మీ శోధన పదాలు మా సర్వర్ ద్వారా GIPHYకి వెళ్తాయి. GIF అందుకున్న ఫోన్ దాన్ని GIPHY నుండే లోడ్ చేస్తుంది, కాబట్టి ఆ ఫోన్ IP చిరునామా GIPHYకి కనిపించవచ్చు. మీ ఖాతా వివరాలు పంచుకోబడవు.</string>
+    <string name="gifs_tap_to_play">ప్లే చేయడానికి నొక్కండి</string>
+    <string name="gifs_send_failed">దీన్ని పంపలేకపోయాం. దయచేసి మళ్లీ ప్రయత్నించండి.</string>
+    <string name="gifs_loading">లోడ్ అవుతోంది</string>
+    <string name="gifs_kind_gif">GIF</string>
+    <string name="gifs_kind_sticker">స్టిక్కర్</string>
+    <string name="gifs_pinned_gif_caption">GIF: %1$s</string>
+</resources>
