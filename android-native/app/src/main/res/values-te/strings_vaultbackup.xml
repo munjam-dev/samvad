@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vbk_menu">బ్యాకప్</string>
+    <string name="vbk_title">వాల్ట్ బ్యాకప్</string>
+
+    <!-- Backup screen: off -->
+    <string name="vbk_off_title">మీ వాల్ట్‌ను బ్యాకప్ చేయండి</string>
+    <string name="vbk_off_body">ఫోన్ పోయినా, మార్చినా తిరిగి పొందేందుకు మీ వాల్ట్ ఎన్‌క్రిప్ట్ చేసిన కాపీని మీ స్వంత Google Driveలో ఉంచండి. మీరు ఆన్ చేసేవరకు ఇది ఆఫ్‌లోనే ఉంటుంది.</string>
+    <string name="vbk_setup">బ్యాకప్ సెటప్ చేయండి</string>
+    <string name="vbk_restore_hint">కొత్త ఫోన్ వాడుతున్నారా? మీరు భద్రపరచిన రికవరీ కోడ్‌తో మీ వాల్ట్‌ను తిరిగి పొందండి.</string>
+    <string name="vbk_restore">బ్యాకప్ నుండి తిరిగి పొందండి</string>
+    <string name="vbk_unavailable_title">బ్యాకప్ ఇంకా సిద్ధంగా లేదు</string>
+    <string name="vbk_unavailable_body">వాల్ట్ బ్యాకప్ ఇంకా Googleకు కనెక్ట్ కాలేకపోతోంది. మీ వాల్ట్ యథావిధిగా పనిచేస్తుంది, ఈ ఫోన్‌లోనే ఉంటుంది. Samvad తదుపరి అప్‌డేట్ తర్వాత మళ్లీ ప్రయత్నించండి.</string>
+
+    <!-- Backup screen: on -->
+    <string name="vbk_account">%1$sలో బ్యాకప్ అవుతోంది</string>
+    <string name="vbk_account_unknown">మీ Google Driveలో బ్యాకప్ అవుతోంది</string>
+    <string name="vbk_never">ఇంకా బ్యాకప్ కాలేదు</string>
+    <string name="vbk_last">చివరి బ్యాకప్: %1$s</string>
+    <string name="vbk_last_detail">%1$s, %2$s</string>
+    <plurals name="vbk_item_count">
+        <item quantity="one">%d అంశం</item>
+        <item quantity="other">%d అంశాలు</item>
+    </plurals>
+    <string name="vbk_now">ఇప్పుడే బ్యాకప్ చేయండి</string>
+    <string name="vbk_backing_up">బ్యాకప్ అవుతోంది…</string>
+    <string name="vbk_backing_up_percent">బ్యాకప్ అవుతోంది… %1$d%%</string>
+    <string name="vbk_restoring">తిరిగి పొందుతోంది…</string>
+    <string name="vbk_restoring_percent">డౌన్‌లోడ్ అవుతోంది… %1$d%%</string>
+    <string name="vbk_turning_off">ఆఫ్ చేస్తోంది…</string>
+    <string name="vbk_auto">ఆటోమేటిక్‌గా బ్యాకప్ చేయండి</string>
+    <string name="vbk_auto_body">రోజుకు ఒకసారి, ఏదైనా మారినప్పుడు మాత్రమే.</string>
+    <string name="vbk_wifi">Wi-Fiలో మాత్రమే</string>
+    <string name="vbk_charging">ఛార్జ్ అవుతున్నప్పుడు మాత్రమే</string>
+    <string name="vbk_privacy_note">మీ బ్యాకప్ అప్‌లోడ్ అయ్యే ముందు ఈ ఫోన్‌లోనే ఎన్‌క్రిప్ట్ అవుతుంది. Google, Samvad దీన్ని చదవలేవు. ఇది మీ Google Driveలోని దాచిన ఫోల్డర్‌లో ఉంటుంది, దాన్ని Samvad మాత్రమే తెరవగలదు, ఇది మీ Drive స్టోరేజ్‌ను వాడుతుంది.</string>
+    <string name="vbk_turn_off">ఆఫ్ చేసి బ్యాకప్‌ను తొలగించండి</string>
+    <string name="vbk_problem_title">బ్యాకప్‌కు శ్రద్ధ అవసరం</string>
+
+    <!-- Messages and errors -->
+    <string name="vbk_err_no_network">Google Driveను చేరుకోలేకపోయాం. ఇంటర్నెట్ కనెక్షన్ చూసి మళ్లీ ప్రయత్నించండి.</string>
+    <string name="vbk_err_quota">మీ Google Drive స్టోరేజ్ నిండిపోయింది. కొంత స్థలం ఖాళీ చేసి మళ్లీ ప్రయత్నించండి.</string>
+    <string name="vbk_err_auth">మీ Google Driveకు Samvadకు ఇక యాక్సెస్ లేదు. బ్యాకప్ కొనసాగాలంటే మళ్లీ కనెక్ట్ చేయండి.</string>
+    <string name="vbk_err_not_configured">బ్యాకప్ ఇంకా సిద్ధంగా లేదు. మీ వాల్ట్ ఈ ఫోన్‌లో సురక్షితంగా ఉంది.</string>
+    <string name="vbk_err_too_new">ఈ బ్యాకప్ Samvad కొత్త వెర్షన్‌తో తయారైంది. యాప్‌ను అప్‌డేట్ చేసి మళ్లీ ప్రయత్నించండి.</string>
+    <string name="vbk_err_wrong_secret">ఈ రికవరీ కోడ్ లేదా పాస్‌ఫ్రేజ్ ఈ బ్యాకప్‌ను తెరవడం లేదు. దాన్ని సరిచూసి మళ్లీ ప్రయత్నించండి.</string>
+    <string name="vbk_err_no_backup">ఈ Google ఖాతాలో Samvad బ్యాకప్ ఏదీ లేదు.</string>
+    <string name="vbk_err_no_space">ఈ ఫోన్‌లో తగినంత ఖాళీ స్థలం లేదు.</string>
+    <string name="vbk_err_locked">మీ వాల్ట్‌ను అన్‌లాక్ చేసి మళ్లీ ప్రయత్నించండి.</string>
+    <string name="vbk_err_changed">బ్యాకప్ సెటప్ చేసిన తర్వాత వాల్ట్‌ను తొలగించారు లేదా మార్చారు, అందుకే ఈ బ్యాకప్‌ను అప్‌డేట్ చేయలేం. బ్యాకప్ ఆఫ్ చేసి, మళ్లీ సెటప్ చేయండి.</string>
+    <string name="vbk_err_damaged">బ్యాకప్ లేదా దాని భద్రపరిచిన కీని చదవలేకపోయాం. అది పాడై ఉండవచ్చు. బ్యాకప్ ఆఫ్ చేసి మళ్లీ సెటప్ చేయండి.</string>
+    <string name="vbk_err_transient">Google Drive ఇప్పుడు బిజీగా ఉంది. Samvad తర్వాత మళ్లీ ప్రయత్నిస్తుంది.</string>
+    <string name="vbk_err_failed">ఏదో తప్పు జరిగింది. కొద్దిసేపట్లో మళ్లీ ప్రయత్నించండి.</string>
+    <string name="vbk_connect_again">మళ్లీ కనెక్ట్ చేయండి</string>
+    <string name="vbk_connected">Google Driveకు కనెక్ట్ అయింది.</string>
+    <string name="vbk_backup_done">బ్యాకప్ పూర్తయింది.</string>
+
+    <!-- Turn off -->
+    <string name="vbk_off_dialog_title">బ్యాకప్‌ను ఆఫ్ చేసి తొలగించాలా?</string>
+    <string name="vbk_off_dialog_body">Samvad మీ ఎన్‌క్రిప్ట్ చేసిన బ్యాకప్‌ను Google Drive నుండి తొలగించి, బ్యాకప్ చేయడం ఆపేస్తుంది. ఈ ఫోన్‌లోని మీ వాల్ట్ మారదు. తర్వాత మళ్లీ బ్యాకప్ సెటప్ చేసుకోవచ్చు.</string>
+    <string name="vbk_off_confirm">ఆఫ్ చేసి తొలగించండి</string>
+    <string name="vbk_off_done">బ్యాకప్ ఆఫ్ అయింది. Google Drive నుండి కాపీ తొలగించబడింది.</string>
+    <string name="vbk_off_anyway_title">బ్యాకప్‌ను తొలగించలేకపోయాం</string>
+    <string name="vbk_off_anyway_body">మీ Google Driveలోని కాపీ తొలగించబడలేదు. అయినా ఈ ఫోన్‌లో బ్యాకప్‌ను ఆఫ్ చేయవచ్చు. మీరు అక్కడ తొలగించే వరకు ఆ కాపీ మీ Drive దాచిన యాప్ డేటాలో ఉంటుంది.</string>
+    <string name="vbk_off_anyway">అయినా ఆఫ్ చేయండి</string>
+    <string name="vbk_off_local_done">ఈ ఫోన్‌లో బ్యాకప్ ఆఫ్ అయింది.</string>
+
+    <!-- Restore -->
+    <string name="vbk_restore_title">బ్యాకప్ నుండి తిరిగి పొందండి</string>
+    <string name="vbk_restore_body">బ్యాకప్ సెటప్ చేసినప్పుడు మీరు భద్రపరచిన రికవరీ కోడ్ లేదా పాస్‌ఫ్రేజ్ నమోదు చేయండి. ఈ వాల్ట్‌లో ఇప్పటికే ఉన్న అంశాలు ఉన్నట్టే ఉంటాయి.</string>
+    <string name="vbk_restore_field">రికవరీ కోడ్ లేదా పాస్‌ఫ్రేజ్</string>
+    <string name="vbk_restore_go">తిరిగి పొందండి</string>
+    <string name="vbk_restore_working">మీ వాల్ట్‌ను తిరిగి తెస్తోంది. పెద్ద వాల్ట్‌కు కొన్ని నిమిషాలు పట్టవచ్చు.</string>
+    <plurals name="vbk_restored">
+        <item quantity="one">%d అంశం మీ వాల్ట్‌కు తిరిగి వచ్చింది.</item>
+        <item quantity="other">%d అంశాలు మీ వాల్ట్‌కు తిరిగి వచ్చాయి.</item>
+    </plurals>
+    <string name="vbk_restored_nothing">తిరిగి తెచ్చేందుకు కొత్తవి ఏవీ లేవు. బ్యాకప్‌లోని అన్నీ ఇప్పటికే ఈ వాల్ట్‌లో ఉన్నాయి.</string>
+
+    <!-- Setup: step 1 -->
+    <string name="vbk_setup_title">బ్యాకప్ సెటప్ చేయండి</string>
+    <string name="vbk_s1_title">బ్యాకప్ ఆన్ చేసే ముందు</string>
+    <string name="vbk_s1_uploads">ఏమి అప్‌లోడ్ అవుతుంది: మీ వాల్ట్‌లోని ఫైళ్లు, నోట్‌లు, వాటి శీర్షికలు, అన్నీ కలిపి ఒకే ఎన్‌క్రిప్ట్ చేసిన ఫైల్‌గా.</string>
+    <string name="vbk_s1_encrypted">ఇది ఫోన్ నుండి వెళ్లే ముందే ఈ ఫోన్‌లో ఎన్‌క్రిప్ట్ అవుతుంది. Google, Samvad దీన్ని చదవలేవు.</string>
+    <string name="vbk_s1_where">ఇది మీ స్వంత Google Driveలోని, Samvad మాత్రమే తెరవగల దాచిన ఫోల్డర్‌కు వెళ్తుంది. ఇది మీ Drive స్టోరేజ్‌ను వాడుతుంది. Samvad Google నుండి ఆ ఫోల్డర్‌కు మాత్రమే యాక్సెస్ అడుగుతుంది, మీ ఇతర ఫైళ్లకు కాదు.</string>
+    <string name="vbk_s1_lose">మీరు భద్రంగా ఉంచుకోవాల్సిన రికవరీ కోడ్ వస్తుంది. అది పోతే బ్యాకప్‌ను ఎవరూ తెరవలేరు, Samvad కూడా.</string>
+    <string name="vbk_s1_off">మీరు ఎప్పుడైనా బ్యాకప్‌ను ఆఫ్ చేయవచ్చు, Drive నుండి తొలగించవచ్చు.</string>
+    <string name="vbk_s1_allow">Google Drive యాక్సెస్ ఇవ్వండి</string>
+
+    <!-- Setup: step 2 -->
+    <string name="vbk_s2_title">బ్యాకప్‌ను ఎలా రక్షించాలో ఎంచుకోండి</string>
+    <string name="vbk_s2_code">రికవరీ కోడ్</string>
+    <string name="vbk_s2_code_body">Samvad మీ కోసం పొడవైన యాదృచ్ఛిక కోడ్ తయారు చేస్తుంది, మీరు దాన్ని భద్రపరచాలి. ఇది అత్యంత బలమైన ఎంపిక.</string>
+    <string name="vbk_s2_pass">పాస్‌ఫ్రేజ్</string>
+    <string name="vbk_s2_pass_body">మీరు కనీసం 12 అక్షరాల పాస్‌ఫ్రేజ్ ఎంచుకుంటారు. మీరు ఎంచుకునే పదాలు ఎంత బలంగా ఉంటే, ఇది అంత బలంగా ఉంటుంది.</string>
+    <string name="vbk_continue">కొనసాగించండి</string>
+
+    <!-- Setup: step 3 -->
+    <string name="vbk_s3_title">మీ రికవరీ కోడ్‌ను భద్రపరచండి</string>
+    <string name="vbk_s3_body">దీన్ని రాసిపెట్టుకోండి లేదా పాస్‌వర్డ్ మేనేజర్ వంటి సురక్షిత చోట ఉంచండి. కొత్త ఫోన్‌లో వాల్ట్‌ను తిరిగి పొందడానికి ఇది కావాలి. Samvad దీని కాపీ ఉంచుకోదు.</string>
+    <string name="vbk_code_description">రికవరీ కోడ్: %1$s</string>
+    <string name="vbk_copy">కోడ్ కాపీ చేయండి</string>
+    <string name="vbk_copied">కోడ్ కాపీ అయింది. భద్రపరిచాక మీ క్లిప్‌బోర్డ్‌ను క్లియర్ చేయండి.</string>
+    <string name="vbk_share">కోడ్ షేర్ చేయండి</string>
+    <string name="vbk_share_text">Samvad వాల్ట్ రికవరీ కోడ్: %1$s</string>
+    <string name="vbk_s3_saved">నేను రికవరీ కోడ్‌ను భద్రపరిచాను</string>
+    <string name="vbk_pass_title">పాస్‌ఫ్రేజ్ ఎంచుకోండి</string>
+    <string name="vbk_pass_body">కనీసం 12 అక్షరాలు వాడండి, మీకు మాత్రమే తట్టే పదాలతో. మర్చిపోతే బ్యాకప్‌ను తెరవలేం.</string>
+    <string name="vbk_pass_field">పాస్‌ఫ్రేజ్</string>
+    <string name="vbk_pass_again">మళ్లీ టైప్ చేయండి</string>
+    <string name="vbk_pass_short">కనీసం 12 అక్షరాలు వాడండి.</string>
+    <string name="vbk_pass_mismatch">ఈ రెండూ సరిపోలడం లేదు.</string>
+    <string name="vbk_pass_working">మీ బ్యాకప్‌ను సురక్షితం చేస్తోంది…</string>
+
+    <!-- Setup: step 4 -->
+    <string name="vbk_s4_title">మీ రికవరీ కోడ్‌ను సరిచూసుకోండి</string>
+    <string name="vbk_s4_body">మీరు భద్రపరిచిన కోడ్ నుండి ఈ గుంపులను టైప్ చేయండి. తర్వాత మీరు దాన్ని చదవగలరని ఇది నిర్ధారిస్తుంది.</string>
+    <string name="vbk_s4_group">గుంపు %1$d</string>
+    <string name="vbk_s4_wrong">ఒక గుంపు సరిపోలడం లేదు. మీరు భద్రపరిచినదాన్ని సరిచూడండి.</string>
+    <string name="vbk_s4_show_again">కోడ్‌ను మళ్లీ చూపించండి</string>
+    <string name="vbk_s4_turn_on">బ్యాకప్ ఆన్ చేయండి</string>
+    <string name="vbk_enabling">బ్యాకప్ ఆన్ చేస్తోంది…</string>
+</resources>

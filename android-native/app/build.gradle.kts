@@ -143,6 +143,9 @@ dependencies {
   implementation(libs.androidx.room.runtime)
   implementation(libs.androidx.room.ktx)
   ksp(libs.androidx.room.compiler)
+  // Vault backup to the hidden Google Drive app-data folder (scope drive.appdata only).
+  implementation(libs.androidx.work.runtime)
+  implementation(libs.gms.play.services.auth)
 
   implementation(platform(libs.firebase.bom))
   implementation(libs.firebase.auth)

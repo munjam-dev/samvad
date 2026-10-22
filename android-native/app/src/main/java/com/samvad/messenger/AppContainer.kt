@@ -46,6 +46,8 @@ class AppContainer(context: Context) {
   val firebase: FirebaseServices? = FirebaseServices.create(context)
   /** Personal Vault: local-only, never uses [firebase]. */
   val vault = com.samvad.messenger.data.vault.VaultRepository(context, appLock, CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate))
+  /** Optional encrypted backup of the vault to the person's own Google Drive app-data folder (off until they turn it on). */
+  val vaultBackup = com.samvad.messenger.data.vault.backup.VaultBackupManager(context, vault, CoroutineScope(SupervisorJob() + Dispatchers.Default))
 
   val auth: AuthRepository? = firebase?.let { AuthRepository(it.auth) }
   val accounts: AccountRepository? = firebase?.let { AccountRepository(it.db, it.functions) }

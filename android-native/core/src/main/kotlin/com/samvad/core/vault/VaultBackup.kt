@@ -26,6 +26,7 @@ enum class BackupFailure {
   NO_BACKUP,
   NO_SPACE,
   VAULT_LOCKED,
+  VAULT_CHANGED,
   DAMAGED,
   TRANSIENT,
   FAILED,

@@ -35,7 +35,7 @@
     <string name="vault_type_notes">Notes</string>
     <string name="vault_type_id_copies">ID copies</string>
     <string name="vault_empty_title">Nothing here yet</string>
-    <string name="vault_empty_body">Keep documents, photos, notes and copies of your IDs here. They are encrypted and stay only on this phone.</string>
+    <string name="vault_empty_body">Keep documents, photos, notes and copies of your IDs here. They are encrypted and stay on this phone unless you turn on backup.</string>
     <string name="vault_no_results_title">No matches</string>
     <string name="vault_no_results_body">Try another word, or clear the filters.</string>
     <string name="vault_clear_filters">Clear filters</string>
@@ -53,7 +53,7 @@
     <string name="vault_add_note_body">Write a private note</string>
     <string name="vault_lock_now">Lock now</string>
     <string name="vault_about">About this vault</string>
-    <string name="vault_about_body">Items are encrypted on this phone with a key that is kept in the phone\'s secure key store. Nothing is uploaded, and the vault is not part of backups or phone-to-phone transfers. If you lose this phone, the items are lost with it.</string>
+    <string name="vault_about_body">Items are encrypted on this phone with a key that is kept in the phone\'s secure key store. Nothing is uploaded unless you turn on Vault backup, which sends an encrypted copy to your own Google Drive. The vault is not part of Android\'s own backups or phone-to-phone transfers. If you lose this phone and have no Vault backup, the items are lost with it.</string>
     <string name="vault_protection_strongbox">Key protection: dedicated security chip</string>
     <string name="vault_protection_hardware">Key protection: secure hardware</string>
     <string name="vault_protection_software">Key protection: software only. This phone has no secure hardware for keys.</string>

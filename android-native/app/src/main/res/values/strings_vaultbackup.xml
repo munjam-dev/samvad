@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Vault backup to the person's own Google Drive (hidden app-data folder). Everything is encrypted on the phone first.
+     Never promise more than that: Samvad cannot recover a lost recovery code. -->
+<resources>
+    <string name="vbk_menu">Backup</string>
+    <string name="vbk_title">Vault backup</string>
+
+    <!-- Backup screen: off -->
+    <string name="vbk_off_title">Back up your vault</string>
+    <string name="vbk_off_body">Keep an encrypted copy of your vault in your own Google Drive, so you can get it back if you lose or change your phone. It stays off until you turn it on.</string>
+    <string name="vbk_setup">Set up backup</string>
+    <string name="vbk_restore_hint">Using a new phone? Restore your vault with the recovery code you saved.</string>
+    <string name="vbk_restore">Restore from backup</string>
+    <string name="vbk_unavailable_title">Backup isn\'t set up yet</string>
+    <string name="vbk_unavailable_body">Vault backup can\'t connect to Google yet. Your vault still works and stays on this phone. Try again after the next update of Samvad.</string>
+
+    <!-- Backup screen: on -->
+    <string name="vbk_account">Backing up to %1$s</string>
+    <string name="vbk_account_unknown">Backing up to your Google Drive</string>
+    <string name="vbk_never">Not backed up yet</string>
+    <string name="vbk_last">Last backup: %1$s</string>
+    <string name="vbk_last_detail">%1$s, %2$s</string>
+    <plurals name="vbk_item_count">
+        <item quantity="one">%d item</item>
+        <item quantity="other">%d items</item>
+    </plurals>
+    <string name="vbk_now">Back up now</string>
+    <string name="vbk_backing_up">Backing up…</string>
+    <string name="vbk_backing_up_percent">Backing up… %1$d%%</string>
+    <string name="vbk_restoring">Restoring…</string>
+    <string name="vbk_restoring_percent">Downloading… %1$d%%</string>
+    <string name="vbk_turning_off">Turning off…</string>
+    <string name="vbk_auto">Back up automatically</string>
+    <string name="vbk_auto_body">Once a day, only when something changed.</string>
+    <string name="vbk_wifi">Only on Wi-Fi</string>
+    <string name="vbk_charging">Only while charging</string>
+    <string name="vbk_privacy_note">Your backup is encrypted on this phone before it is uploaded. Google and Samvad can\'t read it. It is kept in a hidden folder in your Google Drive that only Samvad can open, and it uses your Drive storage.</string>
+    <string name="vbk_turn_off">Turn off and delete backup</string>
+    <string name="vbk_problem_title">Backup needs attention</string>
+
+    <!-- Messages and errors -->
+    <string name="vbk_err_no_network">Couldn\'t reach Google Drive. Check your internet connection and try again.</string>
+    <string name="vbk_err_quota">Your Google Drive storage is full. Free some space, then try again.</string>
+    <string name="vbk_err_auth">Samvad no longer has access to your Google Drive. Connect again to keep backing up.</string>
+    <string name="vbk_err_not_configured">Backup isn\'t set up yet. Your vault is safe on this phone.</string>
+    <string name="vbk_err_too_new">This backup was made by a newer version of Samvad. Update the app, then try again.</string>
+    <string name="vbk_err_wrong_secret">That recovery code or passphrase doesn\'t open this backup. Check it and try again.</string>
+    <string name="vbk_err_no_backup">There is no Samvad backup in this Google account.</string>
+    <string name="vbk_err_no_space">There isn\'t enough free space on this phone.</string>
+    <string name="vbk_err_locked">Unlock your vault and try again.</string>
+    <string name="vbk_err_changed">The vault was erased or replaced after backup was set up, so this backup can\'t be updated. Turn backup off, then set it up again.</string>
+    <string name="vbk_err_damaged">The backup or its saved key couldn\'t be read. It may be damaged. Turn backup off and set it up again.</string>
+    <string name="vbk_err_transient">Google Drive is busy right now. Samvad will try again later.</string>
+    <string name="vbk_err_failed">Something went wrong. Try again in a moment.</string>
+    <string name="vbk_connect_again">Connect again</string>
+    <string name="vbk_connected">Connected to Google Drive.</string>
+    <string name="vbk_backup_done">Backup finished.</string>
+
+    <!-- Turn off -->
+    <string name="vbk_off_dialog_title">Turn off and delete backup?</string>
+    <string name="vbk_off_dialog_body">Samvad will delete your encrypted backup from Google Drive and stop backing up. Your vault on this phone is not changed. You can set up backup again later.</string>
+    <string name="vbk_off_confirm">Turn off and delete</string>
+    <string name="vbk_off_done">Backup is off. The copy was deleted from Google Drive.</string>
+    <string name="vbk_off_anyway_title">Couldn\'t delete the backup</string>
+    <string name="vbk_off_anyway_body">The copy in your Google Drive was not deleted. You can turn backup off on this phone anyway. The copy stays in your Drive\'s hidden app data until you delete it there.</string>
+    <string name="vbk_off_anyway">Turn off anyway</string>
+    <string name="vbk_off_local_done">Backup is off on this phone.</string>
+
+    <!-- Restore -->
+    <string name="vbk_restore_title">Restore from backup</string>
+    <string name="vbk_restore_body">Enter the recovery code or passphrase you saved when you set up backup. Items that are already in this vault are kept as they are.</string>
+    <string name="vbk_restore_field">Recovery code or passphrase</string>
+    <string name="vbk_restore_go">Restore</string>
+    <string name="vbk_restore_working">Restoring your vault. This can take a few minutes for a large vault.</string>
+    <plurals name="vbk_restored">
+        <item quantity="one">Restored %d item to your vault.</item>
+        <item quantity="other">Restored %d items to your vault.</item>
+    </plurals>
+    <string name="vbk_restored_nothing">Nothing new to restore. Everything in the backup is already in this vault.</string>
+
+    <!-- Setup: step 1 -->
+    <string name="vbk_setup_title">Set up backup</string>
+    <string name="vbk_s1_title">Before you turn on backup</string>
+    <string name="vbk_s1_uploads">What is uploaded: your vault\'s files, notes and their titles, packed into one encrypted file.</string>
+    <string name="vbk_s1_encrypted">It is encrypted on this phone before it leaves. Google and Samvad can\'t read it.</string>
+    <string name="vbk_s1_where">It goes to a hidden folder in your own Google Drive that only Samvad can open. It counts toward your Drive storage. Samvad asks Google for access to that folder only, not to your other files.</string>
+    <string name="vbk_s1_lose">You will get a recovery code to keep. If you lose it, nobody can open the backup, including Samvad.</string>
+    <string name="vbk_s1_off">You can turn backup off, and delete it from Drive, at any time.</string>
+    <string name="vbk_s1_allow">Allow Google Drive access</string>
+
+    <!-- Setup: step 2 -->
+    <string name="vbk_s2_title">Choose how to protect your backup</string>
+    <string name="vbk_s2_code">Recovery code</string>
+    <string name="vbk_s2_code_body">Samvad makes a long random code for you to save. This is the strongest choice.</string>
+    <string name="vbk_s2_pass">Passphrase</string>
+    <string name="vbk_s2_pass_body">You choose a passphrase of at least 12 characters. It is only as strong as the words you pick.</string>
+    <string name="vbk_continue">Continue</string>
+
+    <!-- Setup: step 3 -->
+    <string name="vbk_s3_title">Save your recovery code</string>
+    <string name="vbk_s3_body">Write it down or keep it in a safe place, such as a password manager. You need it to restore your vault on a new phone. Samvad doesn\'t keep a copy.</string>
+    <string name="vbk_code_description">Recovery code: %1$s</string>
+    <string name="vbk_copy">Copy code</string>
+    <string name="vbk_copied">Code copied. Clear your clipboard once you have saved it.</string>
+    <string name="vbk_share">Share code</string>
+    <string name="vbk_share_text">Samvad vault recovery code: %1$s</string>
+    <string name="vbk_s3_saved">I saved my recovery code</string>
+    <string name="vbk_pass_title">Choose a passphrase</string>
+    <string name="vbk_pass_body">Use at least 12 characters, with words only you would think of. If you forget it, the backup can\'t be opened.</string>
+    <string name="vbk_pass_field">Passphrase</string>
+    <string name="vbk_pass_again">Type it again</string>
+    <string name="vbk_pass_short">Use at least 12 characters.</string>
+    <string name="vbk_pass_mismatch">These two don\'t match.</string>
+    <string name="vbk_pass_working">Securing your backup…</string>
+
+    <!-- Setup: step 4 -->
+    <string name="vbk_s4_title">Check your recovery code</string>
+    <string name="vbk_s4_body">Type these groups from the code you saved. This makes sure you can read it back later.</string>
+    <string name="vbk_s4_group">Group %1$d</string>
+    <string name="vbk_s4_wrong">One of the groups doesn\'t match. Check what you saved.</string>
+    <string name="vbk_s4_show_again">Show the code again</string>
+    <string name="vbk_s4_turn_on">Turn on backup</string>
+    <string name="vbk_enabling">Turning on backup…</string>
+</resources>

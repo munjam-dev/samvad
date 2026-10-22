@@ -1,6 +1,19 @@
 package com.samvad.messenger.data.vault
 
 import android.content.Context
+import androidx.room.withTransaction
+import com.samvad.core.vault.ArchiveBlob
+import com.samvad.core.vault.ArchiveHeader
+import com.samvad.core.vault.ArchiveManifest
+import com.samvad.core.vault.ArchiveSink
+import com.samvad.core.vault.ArchivedItem
+import com.samvad.core.vault.BackupException
+import com.samvad.core.vault.BackupFailure
+import com.samvad.core.vault.VaultArchive
+import com.samvad.core.vault.VaultFingerprint
+import com.samvad.core.vault.VaultFormatException
+import com.samvad.core.vault.VaultReseal
+import com.samvad.core.vault.VaultTamperedException
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -426,6 +439,194 @@ class VaultRepository(
   /** Suggested file name for [exportTo]. */
   fun exportName(item: VaultItem): String = VaultTitles.exportFileName(item.title, item.mime)
 
+  // ---- backup support (see data/vault/backup/VaultBackupManager) ----
+
+  /** Where backup scratch files go: no-backup storage, only ever holds ciphertext. */
+  val backupWorkDir: File get() = File(root, "backup_tmp")
+
+  /** Where the backup key material is kept (wrapped by the Keystore). */
+  val backupKeyFile: File get() = File(root, "backupkey.bin")
+
+  fun keyWrapper(): AndroidKeystoreKeyWrapper = wrapper
+
+  /**
+   * A stamp of the current data key: changes when the vault was erased and started again. A backup made with
+   * another data key could not be restored into this vault, so backups are tied to this stamp.
+   */
+  fun dataKeyStamp(): String? {
+    val bytes = FileWrappedKeyStore(File(root, "datakey.bin")).read() ?: return null
+    return java.security.MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
+  }
+
+  /** Runs [block] with a copy of the vault data key (vault must be unlocked) and wipes the copy afterwards. */
+  suspend fun <T> withDataKey(block: (ByteArray) -> T): T = withContext(Dispatchers.IO) {
+    requireCrypto()
+    val key = try {
+      keyring.load(createIfMissing = false)
+    } catch (_: VaultKeyUnavailableException) {
+      throw VaultException(VaultException.Reason.FAILED)
+    }
+    try {
+      block(key)
+    } finally {
+      key.fill(0)
+    }
+  }
+
+  val isUnlocked: Boolean get() = crypto != null
+
+  private fun archived(row: VaultItemEntity, hasThumb: Boolean) =
+    ArchivedItem(row.id, row.type, row.sizeBytes, row.createdAt, row.updatedAt, hasThumb, row.meta)
+
+  /** A fingerprint of what a backup would contain now. Needs no key. */
+  suspend fun backupFingerprint(): String = withContext(Dispatchers.IO) {
+    // Same rows and thumbnails that writeBackupArchive would include.
+    VaultFingerprint.of(db.dao().all().filter { blob(it.id).isFile }.map { archived(it, it.hasThumb && thumb(it.id).isFile) })
+  }
+
+  class BackupArchive(val itemCount: Int, val bytes: Long, val fingerprint: String)
+
+  /**
+   * Writes the encrypted backup archive to [target]. Needs no vault key: files are copied as the ciphertext they
+   * already are, and the data key travels as [sealedDataKey], sealed earlier with the archive key. Holds the vault's
+   * write lock so imports and deletes wait, which keeps the archive consistent. Throws [BackupException].
+   */
+  suspend fun writeBackupArchive(
+    target: File,
+    header: ArchiveHeader,
+    archiveKey: ByteArray,
+    sealedDataKey: ByteArray,
+    appVersion: Int,
+  ): BackupArchive = withContext(Dispatchers.IO) {
+    ioLock.withLock {
+      val rows = db.dao().all()
+      val items = ArrayList<ArchivedItem>(rows.size)
+      val blobs = ArrayList<ArchiveBlob>(rows.size * 2)
+      for (row in rows) {
+        val file = blob(row.id)
+        if (!file.isFile) continue // no file, nothing to restore for this row
+        val thumbFile = thumb(row.id)
+        val hasThumb = row.hasThumb && thumbFile.isFile
+        items += archived(row, hasThumb)
+        blobs += ArchiveBlob(file.name, file.length()) { java.io.FileInputStream(file) }
+        if (hasThumb) blobs += ArchiveBlob(thumbFile.name, thumbFile.length()) { java.io.FileInputStream(thumbFile) }
+      }
+      val manifest = ArchiveManifest(System.currentTimeMillis(), appVersion, items.size)
+      val planned = VaultArchive.plannedSize(header, sealedDataKey, manifest, items, blobs)
+      target.parentFile?.mkdirs()
+      if ((target.parentFile?.usableSpace ?: 0L) < planned + FREE_SPACE_MARGIN) throw BackupException(BackupFailure.NO_SPACE)
+      try {
+        FileOutputStream(target).use { fos ->
+          val out = fos.buffered(64 * 1024)
+          VaultArchive.write(out, header, archiveKey, sealedDataKey, manifest, items, blobs)
+          out.flush()
+          fos.fd.sync()
+        }
+        if (target.length() != planned) throw BackupException(BackupFailure.FAILED)
+      } catch (e: BackupException) {
+        target.delete()
+        throw e
+      } catch (e: IOException) {
+        target.delete()
+        throw BackupException(if (spaceLow(target.parentFile)) BackupFailure.NO_SPACE else BackupFailure.FAILED, e)
+      }
+      BackupArchive(items.size, planned, VaultFingerprint.of(items))
+    }
+  }
+
+  private fun spaceLow(dir: File?) = (dir?.usableSpace ?: 0L) < FREE_SPACE_MARGIN
+
+  class RestoreResult(val restored: Int, val alreadyHere: Int)
+
+  /**
+   * Restores a downloaded backup into this vault. The archive is first opened and fully verified into a scratch folder
+   * (nothing in the vault changes yet); each file is then re-sealed under THIS phone's data key; only when every file
+   * is ready are they moved in and the rows added in one transaction. Items already in the vault are left alone.
+   * On any failure the scratch folder is wiped and the vault is as it was. The vault must be unlocked.
+   * Throws the core crypto exceptions ([VaultTamperedException] for a wrong secret) or [BackupException].
+   */
+  suspend fun restoreFromArchive(archive: File, secret: String): RestoreResult = withContext(Dispatchers.IO) {
+    val c = requireCrypto()
+    val work = File(root, "restore_tmp")
+    deleteTree(work)
+    val raw = File(work, "raw").also { it.mkdirs() }
+    val ready = File(work, "ready").also { it.mkdirs() }
+    var backupCrypto: AesGcmVaultCrypto? = null
+    try {
+      val items = ArrayList<ArchivedItem>()
+      var backupKey: ByteArray? = null
+      val sink = object : ArchiveSink {
+        override fun onDataKey(key: ByteArray) { backupKey = key.copyOf() }
+        override fun onManifest(manifest: ArchiveManifest) = Unit
+        override fun onItem(item: ArchivedItem) { items += item }
+        override fun openBlob(name: String): java.io.OutputStream = FileOutputStream(File(raw, name)).buffered(64 * 1024)
+      }
+      try {
+        archive.inputStream().buffered(64 * 1024).use { VaultArchive.read(it, secret, sink) }
+      } catch (e: IOException) {
+        if (e is VaultCryptoException) throw e
+        throw BackupException(if (spaceLow(work)) BackupFailure.NO_SPACE else BackupFailure.FAILED, e)
+      }
+      val key = backupKey ?: throw VaultTamperedException()
+      val src = AesGcmVaultCrypto(key)
+      backupCrypto = src
+      key.fill(0)
+      archive.delete() // the verified bytes now live in raw/, free the space
+
+      ioLock.withLock {
+        blobDir.mkdirs()
+        val existing = db.dao().all().map { it.id }.toSet()
+        val fresh = items.filter { it.id !in existing }
+        val rows = ArrayList<VaultItemEntity>(fresh.size)
+        try {
+          for (item in fresh) {
+            val plainMeta = src.open(item.meta, VaultContexts.meta(item.id))
+            VaultMetaCodec.decode(plainMeta) // must be metadata this version understands
+            VaultItemType.valueOf(item.type)
+            val rawFile = File(raw, item.id + ".svl")
+            if (!rawFile.isFile) throw VaultFormatException("Backup is damaged")
+            resealFile(src, c, rawFile, File(ready, item.id + ".svl"), VaultContexts.file(item.id))
+            val rawThumb = File(raw, item.id + ".thumb")
+            val hasThumb = item.hasThumb && rawThumb.isFile
+            if (hasThumb) resealFile(src, c, rawThumb, File(ready, item.id + ".thumb"), VaultContexts.thumbnail(item.id))
+            rows += VaultItemEntity(item.id, item.type, item.sizeBytes, item.createdAt, item.updatedAt, hasThumb, c.seal(plainMeta, VaultContexts.meta(item.id)))
+          }
+        } catch (e: IllegalArgumentException) {
+          throw VaultFormatException("Backup is damaged")
+        } catch (e: IOException) {
+          if (e is VaultCryptoException) throw e
+          throw BackupException(if (spaceLow(work)) BackupFailure.NO_SPACE else BackupFailure.FAILED, e)
+        }
+        // Swap in: files first (renames inside one folder tree), then the rows in one transaction.
+        val moved = ArrayList<File>()
+        try {
+          for (f in ready.listFiles().orEmpty()) {
+            val dest = File(blobDir, f.name)
+            if (dest.exists() || !f.renameTo(dest)) throw IOException("Could not move a restored file")
+            moved += dest
+          }
+          db.withTransaction { rows.forEach { db.dao().put(it) } }
+        } catch (e: Exception) {
+          moved.forEach { it.delete() }
+          throw BackupException(BackupFailure.FAILED, e)
+        }
+        RestoreResult(rows.size, items.size - fresh.size)
+      }
+    } finally {
+      backupCrypto?.wipe()
+      deleteTree(work)
+    }
+  }
+
+  private fun resealFile(from: AesGcmVaultCrypto, to: AesGcmVaultCrypto, source: File, target: File, context: ByteArray) {
+    FileOutputStream(target).use { fos ->
+      val out = fos.buffered(64 * 1024)
+      source.inputStream().buffered(64 * 1024).use { VaultReseal.reseal(from, context, to, context, it, out) }
+      out.flush()
+      fos.fd.sync()
+    }
+  }
+
   // ---- internals ----
 
   private fun toItem(row: VaultItemEntity): VaultItem? {
@@ -557,6 +758,9 @@ class VaultRepository(
 
   companion object {
     const val VIEW_DIR = "vault_view"
+
+    /** Free space to leave on the phone when writing a backup file. */
+    private const val FREE_SPACE_MARGIN = 50L * 1024 * 1024
     private val ID_PATTERN = Regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
   }
 }

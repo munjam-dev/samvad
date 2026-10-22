@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vbk_menu">बैकअप</string>
+    <string name="vbk_title">वॉल्ट बैकअप</string>
+
+    <!-- Backup screen: off -->
+    <string name="vbk_off_title">अपने वॉल्ट का बैकअप लें</string>
+    <string name="vbk_off_body">अपने वॉल्ट की एक एन्क्रिप्टेड कॉपी अपने Google Drive में रखें, ताकि फ़ोन खोने या बदलने पर आप उसे वापस पा सकें। यह तब तक बंद रहता है जब तक आप इसे चालू नहीं करते।</string>
+    <string name="vbk_setup">बैकअप सेट करें</string>
+    <string name="vbk_restore_hint">नया फ़ोन इस्तेमाल कर रहे हैं? सहेजे हुए रिकवरी कोड से अपना वॉल्ट वापस पाएँ।</string>
+    <string name="vbk_restore">बैकअप से वापस पाएँ</string>
+    <string name="vbk_unavailable_title">बैकअप अभी सेट नहीं है</string>
+    <string name="vbk_unavailable_body">वॉल्ट बैकअप अभी Google से जुड़ नहीं पा रहा है। आपका वॉल्ट ठीक से काम करता रहेगा और इसी फ़ोन में रहेगा। Samvad के अगले अपडेट के बाद फिर कोशिश करें।</string>
+
+    <!-- Backup screen: on -->
+    <string name="vbk_account">%1$s में बैकअप हो रहा है</string>
+    <string name="vbk_account_unknown">आपके Google Drive में बैकअप हो रहा है</string>
+    <string name="vbk_never">अभी तक बैकअप नहीं हुआ</string>
+    <string name="vbk_last">पिछला बैकअप: %1$s</string>
+    <string name="vbk_last_detail">%1$s, %2$s</string>
+    <plurals name="vbk_item_count">
+        <item quantity="one">%d चीज़</item>
+        <item quantity="other">%d चीज़ें</item>
+    </plurals>
+    <string name="vbk_now">अभी बैकअप लें</string>
+    <string name="vbk_backing_up">बैकअप हो रहा है…</string>
+    <string name="vbk_backing_up_percent">बैकअप हो रहा है… %1$d%%</string>
+    <string name="vbk_restoring">वापस पा रहे हैं…</string>
+    <string name="vbk_restoring_percent">डाउनलोड हो रहा है… %1$d%%</string>
+    <string name="vbk_turning_off">बंद किया जा रहा है…</string>
+    <string name="vbk_auto">अपने-आप बैकअप लें</string>
+    <string name="vbk_auto_body">दिन में एक बार, केवल तब जब कुछ बदला हो।</string>
+    <string name="vbk_wifi">केवल वाई-फ़ाई पर</string>
+    <string name="vbk_charging">केवल चार्ज होते समय</string>
+    <string name="vbk_privacy_note">आपका बैकअप अपलोड होने से पहले इसी फ़ोन पर एन्क्रिप्ट हो जाता है। Google और Samvad उसे पढ़ नहीं सकते। वह आपके Google Drive के एक छिपे फ़ोल्डर में रहता है, जिसे केवल Samvad खोल सकता है, और वह आपके Drive की जगह इस्तेमाल करता है।</string>
+    <string name="vbk_turn_off">बंद करें और बैकअप हटाएँ</string>
+    <string name="vbk_problem_title">बैकअप पर ध्यान चाहिए</string>
+
+    <!-- Messages and errors -->
+    <string name="vbk_err_no_network">Google Drive तक नहीं पहुँच पाए। इंटरनेट कनेक्शन जाँचें और फिर कोशिश करें।</string>
+    <string name="vbk_err_quota">आपके Google Drive में जगह भर गई है। कुछ जगह खाली करें, फिर कोशिश करें।</string>
+    <string name="vbk_err_auth">Samvad के पास अब आपके Google Drive की पहुँच नहीं है। बैकअप जारी रखने के लिए फिर से जोड़ें।</string>
+    <string name="vbk_err_not_configured">बैकअप अभी सेट नहीं है। आपका वॉल्ट इस फ़ोन पर सुरक्षित है।</string>
+    <string name="vbk_err_too_new">यह बैकअप Samvad के नए संस्करण से बना है। ऐप अपडेट करें, फिर कोशिश करें।</string>
+    <string name="vbk_err_wrong_secret">यह रिकवरी कोड या पासफ़्रेज़ इस बैकअप को नहीं खोलता। उसे जाँचें और फिर कोशिश करें।</string>
+    <string name="vbk_err_no_backup">इस Google खाते में Samvad का कोई बैकअप नहीं है।</string>
+    <string name="vbk_err_no_space">इस फ़ोन में पर्याप्त खाली जगह नहीं है।</string>
+    <string name="vbk_err_locked">अपना वॉल्ट अनलॉक करें और फिर कोशिश करें।</string>
+    <string name="vbk_err_changed">बैकअप सेट करने के बाद वॉल्ट मिटा दिया गया या बदल दिया गया, इसलिए यह बैकअप अपडेट नहीं हो सकता। बैकअप बंद करें, फिर उसे दोबारा सेट करें।</string>
+    <string name="vbk_err_damaged">बैकअप या उसकी सहेजी हुई कुंजी पढ़ी नहीं जा सकी। हो सकता है वह खराब हो गई हो। बैकअप बंद करें और उसे दोबारा सेट करें।</string>
+    <string name="vbk_err_transient">Google Drive अभी व्यस्त है। Samvad बाद में फिर कोशिश करेगा।</string>
+    <string name="vbk_err_failed">कुछ गड़बड़ हो गई। थोड़ी देर में फिर कोशिश करें।</string>
+    <string name="vbk_connect_again">फिर से जोड़ें</string>
+    <string name="vbk_connected">Google Drive से जुड़ गया।</string>
+    <string name="vbk_backup_done">बैकअप पूरा हुआ।</string>
+
+    <!-- Turn off -->
+    <string name="vbk_off_dialog_title">बैकअप बंद करके हटाएँ?</string>
+    <string name="vbk_off_dialog_body">Samvad आपका एन्क्रिप्टेड बैकअप Google Drive से हटा देगा और बैकअप लेना बंद कर देगा। इस फ़ोन का वॉल्ट नहीं बदलेगा। आप बाद में फिर से बैकअप सेट कर सकते हैं।</string>
+    <string name="vbk_off_confirm">बंद करें और हटाएँ</string>
+    <string name="vbk_off_done">बैकअप बंद हो गया। Google Drive से कॉपी हटा दी गई।</string>
+    <string name="vbk_off_anyway_title">बैकअप हटाया नहीं जा सका</string>
+    <string name="vbk_off_anyway_body">आपके Google Drive की कॉपी नहीं हटी। आप फिर भी इस फ़ोन पर बैकअप बंद कर सकते हैं। कॉपी आपके Drive के छिपे ऐप डेटा में तब तक रहेगी जब तक आप उसे वहाँ से नहीं हटाते।</string>
+    <string name="vbk_off_anyway">फिर भी बंद करें</string>
+    <string name="vbk_off_local_done">इस फ़ोन पर बैकअप बंद हो गया।</string>
+
+    <!-- Restore -->
+    <string name="vbk_restore_title">बैकअप से वापस पाएँ</string>
+    <string name="vbk_restore_body">बैकअप सेट करते समय आपने जो रिकवरी कोड या पासफ़्रेज़ सहेजा था, उसे लिखें। जो चीज़ें इस वॉल्ट में पहले से हैं, वे जैसी हैं वैसी ही रहेंगी।</string>
+    <string name="vbk_restore_field">रिकवरी कोड या पासफ़्रेज़</string>
+    <string name="vbk_restore_go">वापस पाएँ</string>
+    <string name="vbk_restore_working">आपका वॉल्ट वापस लाया जा रहा है। बड़े वॉल्ट में कुछ मिनट लग सकते हैं।</string>
+    <plurals name="vbk_restored">
+        <item quantity="one">%d चीज़ आपके वॉल्ट में वापस आ गई।</item>
+        <item quantity="other">%d चीज़ें आपके वॉल्ट में वापस आ गईं।</item>
+    </plurals>
+    <string name="vbk_restored_nothing">वापस लाने के लिए कुछ नया नहीं है। बैकअप की सभी चीज़ें इस वॉल्ट में पहले से हैं।</string>
+
+    <!-- Setup: step 1 -->
+    <string name="vbk_setup_title">बैकअप सेट करें</string>
+    <string name="vbk_s1_title">बैकअप चालू करने से पहले</string>
+    <string name="vbk_s1_uploads">क्या अपलोड होता है: आपके वॉल्ट की फ़ाइलें, नोट और उनके शीर्षक, जो एक एन्क्रिप्टेड फ़ाइल में बाँधे जाते हैं।</string>
+    <string name="vbk_s1_encrypted">यह फ़ोन से निकलने से पहले इसी फ़ोन पर एन्क्रिप्ट हो जाता है। Google और Samvad इसे पढ़ नहीं सकते।</string>
+    <string name="vbk_s1_where">यह आपके अपने Google Drive के एक छिपे फ़ोल्डर में जाता है, जिसे केवल Samvad खोल सकता है। यह आपके Drive की जगह इस्तेमाल करता है। Samvad Google से केवल उसी फ़ोल्डर की पहुँच माँगता है, आपकी दूसरी फ़ाइलों की नहीं।</string>
+    <string name="vbk_s1_lose">आपको सँभालकर रखने के लिए एक रिकवरी कोड मिलेगा। उसके खो जाने पर बैकअप कोई नहीं खोल सकता, Samvad भी नहीं।</string>
+    <string name="vbk_s1_off">आप कभी भी बैकअप बंद कर सकते हैं और उसे Drive से हटा सकते हैं।</string>
+    <string name="vbk_s1_allow">Google Drive की पहुँच दें</string>
+
+    <!-- Setup: step 2 -->
+    <string name="vbk_s2_title">चुनें कि बैकअप कैसे सुरक्षित हो</string>
+    <string name="vbk_s2_code">रिकवरी कोड</string>
+    <string name="vbk_s2_code_body">Samvad आपके लिए एक लंबा यादृच्छिक कोड बनाता है, जिसे आप सहेजते हैं। यह सबसे मज़बूत विकल्प है।</string>
+    <string name="vbk_s2_pass">पासफ़्रेज़</string>
+    <string name="vbk_s2_pass_body">आप कम से कम 12 अक्षरों का पासफ़्रेज़ चुनते हैं। यह उतना ही मज़बूत है जितने मज़बूत शब्द आप चुनें।</string>
+    <string name="vbk_continue">आगे बढ़ें</string>
+
+    <!-- Setup: step 3 -->
+    <string name="vbk_s3_title">अपना रिकवरी कोड सहेजें</string>
+    <string name="vbk_s3_body">इसे कागज़ पर लिख लें या किसी सुरक्षित जगह रखें, जैसे पासवर्ड मैनेजर। नए फ़ोन पर वॉल्ट वापस पाने के लिए यह चाहिए। Samvad इसकी कोई कॉपी नहीं रखता।</string>
+    <string name="vbk_code_description">रिकवरी कोड: %1$s</string>
+    <string name="vbk_copy">कोड कॉपी करें</string>
+    <string name="vbk_copied">कोड कॉपी हो गया। सहेजने के बाद अपना क्लिपबोर्ड साफ़ कर दें।</string>
+    <string name="vbk_share">कोड भेजें</string>
+    <string name="vbk_share_text">Samvad वॉल्ट रिकवरी कोड: %1$s</string>
+    <string name="vbk_s3_saved">मैंने रिकवरी कोड सहेज लिया</string>
+    <string name="vbk_pass_title">पासफ़्रेज़ चुनें</string>
+    <string name="vbk_pass_body">कम से कम 12 अक्षर रखें, ऐसे शब्दों के साथ जो केवल आप सोच सकें। इसे भूल गए तो बैकअप खोला नहीं जा सकेगा।</string>
+    <string name="vbk_pass_field">पासफ़्रेज़</string>
+    <string name="vbk_pass_again">इसे फिर से लिखें</string>
+    <string name="vbk_pass_short">कम से कम 12 अक्षर रखें।</string>
+    <string name="vbk_pass_mismatch">ये दोनों मेल नहीं खाते।</string>
+    <string name="vbk_pass_working">आपका बैकअप सुरक्षित किया जा रहा है…</string>
+
+    <!-- Setup: step 4 -->
+    <string name="vbk_s4_title">अपना रिकवरी कोड जाँचें</string>
+    <string name="vbk_s4_body">सहेजे हुए कोड से ये समूह लिखें। इससे पक्का होता है कि आप उसे बाद में पढ़ सकेंगे।</string>
+    <string name="vbk_s4_group">समूह %1$d</string>
+    <string name="vbk_s4_wrong">कोई समूह मेल नहीं खाता। जो आपने सहेजा है उसे जाँचें।</string>
+    <string name="vbk_s4_show_again">कोड फिर से दिखाएँ</string>
+    <string name="vbk_s4_turn_on">बैकअप चालू करें</string>
+    <string name="vbk_enabling">बैकअप चालू किया जा रहा है…</string>
+</resources>
