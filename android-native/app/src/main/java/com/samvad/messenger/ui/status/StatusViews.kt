@@ -1,5 +1,6 @@
 package com.samvad.messenger.ui.status
 
+import androidx.compose.material3.minimumInteractiveComponentSize
 import android.graphics.Bitmap
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -358,7 +359,7 @@ fun StatusViewerScreen(container: AppContainer, me: String, authorId: String, on
     Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth().navigationBarsPadding().imePadding().padding(12.dp)) {
       if (mineView) {
         Row(
-          Modifier.clip(RoundedCornerShape(20.dp)).background(Color.Black.copy(alpha = 0.45f)).clickable { viewersOpen = true; menuPaused = true }.padding(horizontal = 14.dp, vertical = 8.dp),
+          Modifier.clip(RoundedCornerShape(20.dp)).background(Color.Black.copy(alpha = 0.45f)).minimumInteractiveComponentSize().clickable(role = Role.Button, onClickLabel = stringResource(R.string.a11y_see_viewers)) { viewersOpen = true; menuPaused = true }.padding(horizontal = 14.dp, vertical = 8.dp),
           verticalAlignment = Alignment.CenterVertically,
         ) {
           Icon(Icons.Outlined.Visibility, null, tint = Color.White, modifier = Modifier.size(18.dp))

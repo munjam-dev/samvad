@@ -1,5 +1,6 @@
 package com.samvad.messenger.ui.chat
 
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -46,7 +47,7 @@ internal fun DisappearingSheet(
           Modifier
             .fillMaxWidth()
             .defaultMinSize(minHeight = 48.dp)
-            .clickable(enabled = canChange && !saving, role = Role.RadioButton) { if (seconds != current) onPick(seconds) },
+            .selectable(seconds == current, enabled = canChange && !saving, role = Role.RadioButton) { if (seconds != current) onPick(seconds) },
           verticalAlignment = Alignment.CenterVertically,
         ) {
           RadioButton(selected = seconds == current, onClick = null, enabled = canChange && !saving)

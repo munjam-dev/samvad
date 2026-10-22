@@ -1,5 +1,7 @@
 package com.samvad.messenger.ui.groups
 
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.selection.toggleable
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -171,7 +173,7 @@ fun GroupInfoScreen(
           }
           item(key = "mute") {
             Row(
-              Modifier.fillMaxWidth().clickable { vm.toggleMute() }.padding(horizontal = 20.dp, vertical = 10.dp),
+              Modifier.fillMaxWidth().toggleable(state.muted, role = Role.Switch) { vm.toggleMute() }.padding(horizontal = 20.dp, vertical = 10.dp),
               verticalAlignment = Alignment.CenterVertically,
               horizontalArrangement = Arrangement.spacedBy(14.dp),
             ) {
@@ -416,7 +418,7 @@ private fun TextDialog(
         onValueChange = { text = it.take(maxLength) },
         singleLine = singleLine,
         minLines = if (singleLine) 1 else 3,
-        supportingText = { Text("${text.length} / $maxLength") },
+        supportingText = { Text(stringResource(R.string.a11y_character_count, text.length, maxLength)) },
       )
     },
     confirmButton = { TextButton({ onDone(text.trim()) }, enabled = !singleLine || text.isNotBlank()) { Text(stringResource(R.string.save)) } },

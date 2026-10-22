@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="a11y_clear_search">தேடலை அழிக்கவும்</string>
+  <string name="a11y_react_thumbs_up">கட்டைவிரல் உயர்த்திய எதிர்வினையைச் சேர்க்கவும்</string>
+  <string name="a11y_open_media">புகைப்படம் அல்லது வீடியோவைத் திறக்கவும்</string>
+  <string name="a11y_character_count">%1$d / %2$d</string>
+  <string name="a11y_see_viewers">பார்த்தவர்களைப் பார்க்கவும்</string>
+</resources>

@@ -1,5 +1,6 @@
 package com.samvad.messenger.ui.media
 
+import androidx.compose.ui.semantics.Role
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -115,7 +116,7 @@ private fun PhotosGrid(vm: SharedMediaViewModel, items: List<SharedMediaItem>, o
       var bitmap by remember(item.media.path) { mutableStateOf<android.graphics.Bitmap?>(null) }
       LaunchedEffect(item.media.path) { bitmap = runCatching { vm.bitmap(item.media.path, 300) }.getOrNull() }
       Box(
-        Modifier.aspectRatio(1f).padding(2.dp).background(colors.surfaceContainer).clickable { onOpen(item.media.path) },
+        Modifier.aspectRatio(1f).padding(2.dp).background(colors.surfaceContainer).clickable(role = Role.Button, onClickLabel = stringResource(R.string.a11y_open_media)) { onOpen(item.media.path) },
       ) {
         bitmap?.let {
           androidx.compose.foundation.Image(

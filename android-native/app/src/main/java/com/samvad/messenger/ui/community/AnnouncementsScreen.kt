@@ -1,5 +1,7 @@
 package com.samvad.messenger.ui.community
 
+import androidx.compose.ui.semantics.Role
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -138,12 +140,11 @@ private fun AnnouncementCard(message: Message, senderName: String, mine: Boolean
         message.reactions.values.toSet().joinToString(" "),
         style = MaterialTheme.typography.bodyMedium,
         color = colors.onSurfaceVariant,
-        modifier = Modifier.toggleableReaction(mine, onReact),
+        modifier = Modifier
+          .minimumInteractiveComponentSize()
+          .clickable(role = Role.Button, onClickLabel = stringResource(R.string.a11y_react_thumbs_up)) { onReact("👍") },
       )
     }
   }
 }
 
-/** Taps a reaction summary to add or clear your own 👍, a quick way to acknowledge an announcement. */
-private fun Modifier.toggleableReaction(mine: Boolean, onReact: (String?) -> Unit): Modifier =
-  this.then(Modifier.clickable { onReact("👍") })

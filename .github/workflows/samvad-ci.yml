@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   firebase:
-    name: Firebase rules + functions (Emulator Suite)
+    name: Backend tests (rules + functions on the Emulator Suite, no secrets)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -64,6 +64,18 @@ jobs:
         run: echo "sdk.dir=$ANDROID_HOME" > local.properties
       - run: ./gradlew :core:test --stacktrace
       - run: ./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug --stacktrace
+      # Release build with R8 and resource shrinking, unsigned: signing values are never set in CI.
+      - run: ./gradlew :app:lintRelease :app:assembleRelease :app:bundleRelease --stacktrace
+      - run: ./gradlew :app:assembleDebugAndroidTest --stacktrace
+      - name: Upload unsigned release outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: samvad-release-unsigned
+          path: |
+            android-native/app/build/outputs/apk/release/*.apk
+            android-native/app/build/outputs/bundle/release/*.aab
+            android-native/app/build/outputs/mapping/release/mapping.txt
+          if-no-files-found: ignore
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
@@ -75,5 +87,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: lint-report
-          path: android-native/app/build/reports/lint-results-debug.html
+          path: |
+            android-native/app/build/reports/lint-results-debug.html
+            android-native/app/build/reports/lint-results-release.html
           if-no-files-found: ignore
