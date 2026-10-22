@@ -251,7 +251,7 @@ describe('upgradeConversationE2ee', () => {
 });
 
 describe('deletePreKeys (sign-out)', () => {
-  it('removes only the caller's own bundle, so nobody can start a session with a signed-out account', async () => {
+  it('removes only the callers own bundle, so nobody can start a session with a signed-out account', async () => {
     await publish('alice', upload(3));
     await publish('bina', upload(3));
     await handleDeletePreKeys(phoneRequest('alice'), deps);
