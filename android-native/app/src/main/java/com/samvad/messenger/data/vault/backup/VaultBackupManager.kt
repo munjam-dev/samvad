@@ -76,7 +76,7 @@ class VaultBackupManager(
   }
 
   private fun appVersion(): Int = runCatching {
-    app.packageManager.getPackageInfo(app.packageName, 0).longVersionCode.toInt()
+    androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(app.packageManager.getPackageInfo(app.packageName, 0)).toInt()
   }.getOrDefault(0)
 
   // ---- setting up ----
