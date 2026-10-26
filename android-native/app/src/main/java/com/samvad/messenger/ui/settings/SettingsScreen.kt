@@ -127,6 +127,7 @@ fun SettingsScreen(
   onOpenPrivacy: () -> Unit = {},
   onOpenDevices: () -> Unit = {},
   onOpenAppeal: () -> Unit = {},
+  onOpenProfile: () -> Unit = {},
 ) {
   val colors = SamvadTheme.colors
   val scope = rememberCoroutineScope()
@@ -204,7 +205,7 @@ fun SettingsScreen(
           if (!profile?.about.isNullOrBlank()) Text(profile!!.about, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
           Text(phone, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
         }
-        IconButton(onClick = { editing = true }, modifier = Modifier.background(colors.surface, RoundedCornerShape(14.dp))) {
+        IconButton(onClick = onOpenProfile, modifier = Modifier.background(colors.surface, RoundedCornerShape(14.dp))) {
           Icon(Icons.Outlined.Edit, stringResource(R.string.settings_edit_profile), tint = colors.primary)
         }
       }

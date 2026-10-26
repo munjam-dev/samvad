@@ -309,6 +309,15 @@ private fun SignedInNav(
         onOpenPrivacy = { nav.navigate("privacy") },
         onOpenDevices = { nav.navigate("devices") },
         onOpenAppeal = { nav.navigate("appeal") },
+        onOpenProfile = { nav.navigate("profile") },
+      )
+    }
+    composable("profile") {
+      com.samvad.messenger.ui.profile.ProfileScreen(
+        container = container,
+        me = uid,
+        onBack = { nav.popBackStack() },
+        onOpenPrivacy = { nav.navigate("privacy") },
       )
     }
     vaultRoutes(nav, container)

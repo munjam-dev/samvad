@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="profile_title">சுயவிவரம்</string>
+    <string name="profile_photo_sheet_title">சுயவிவரப் படம்</string>
+    <string name="profile_photo_view">படத்தைப் பார்க்கவும்</string>
+    <string name="profile_photo_camera">படம் எடுக்கவும்</string>
+    <string name="profile_photo_gallery">படங்கள், ஆல்பங்களில் இருந்து தேர்வு செய்யவும்</string>
+    <string name="profile_photo_remove_title">உங்கள் படத்தை நீக்கவா?</string>
+    <string name="profile_photo_remove_body">அதற்குப் பதிலாக உங்கள் பெயரின் முதல் எழுத்துகள் காட்டப்படும்.</string>
+    <string name="profile_photo_remove_confirm">நீக்கு</string>
+    <string name="profile_photo_uploading">உங்கள் படம் புதுப்பிக்கப்படுகிறது</string>
+    <string name="profile_camera_denied">கேமரா அனுமதி முடக்கப்பட்டுள்ளது. ஃபோன் அமைப்புகளில் அனுமதிக்கவும், அல்லது ஒரு படத்தைத் தேர்வு செய்யவும்.</string>
+    <string name="profile_name_edit">பெயரை மாற்று</string>
+    <string name="profile_about_edit">அறிமுகத்தை மாற்று</string>
+    <string name="profile_name_blank">மற்றவர்கள் உங்களை அறிய ஒரு பெயரை உள்ளிடவும்.</string>
+    <string name="profile_about_empty">உங்களைப் பற்றி சில வார்த்தைகள் சேர்க்கவும்</string>
+    <string name="profile_about_counter">%1$d எழுத்துகள் மீதமுள்ளன</string>
+    <string name="profile_username_add">பயனர்பெயரைச் சேர்க்கவும்</string>
+    <string name="profile_username_edit">பயனர்பெயரை மாற்று</string>
+    <string name="profile_phone_label">ஃபோன் எண்</string>
+    <string name="profile_phone_find_on">இந்த எண்ணால் மற்றவர்கள் உங்களைக் கண்டறியலாம்</string>
+    <string name="profile_phone_find_off">இந்த எண்ணால் மற்றவர்கள் உங்களைக் கண்டறிய முடியாது</string>
+    <string name="profile_phone_chip_cd">%1$s. தனியுரிமை அமைப்புகள் திறக்கும்.</string>
+    <string name="settings_open_profile">உங்கள் சுயவிவரத்தைத் திற</string>
+</resources>
