@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="footer_made_for">భారతీయుల కోసం, ప్రేమతో నిర్మించబడింది</string>
+    <string name="footer_by">%1$s ద్వారా</string>
+    <string name="footer_heart_desc">ప్రేమ</string>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="footer_made_for">இந்தியர்களுக்காக, அன்புடன் உருவாக்கப்பட்டது</string>
+    <string name="footer_by">%1$s மூலம்</string>
+    <string name="footer_heart_desc">அன்பு</string>
+</resources>

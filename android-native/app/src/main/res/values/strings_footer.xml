@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="footer_made_for">Built for Indians, with love</string>
+    <string name="footer_by">by %1$s</string>
+    <string name="footer_heart_desc">love</string>
+</resources>

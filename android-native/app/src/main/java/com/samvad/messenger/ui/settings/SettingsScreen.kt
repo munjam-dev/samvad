@@ -379,6 +379,7 @@ fun SettingsScreen(
         color = colors.onSurfaceVariant,
         modifier = Modifier.align(Alignment.CenterHorizontally).padding(vertical = 16.dp),
       )
+      BuiltWithLove()
     }
   }
   SnackbarHost(snackbar, Modifier.fillMaxSize().navigationBarsPadding().padding(16.dp).wrapContentSize(Alignment.BottomCenter))

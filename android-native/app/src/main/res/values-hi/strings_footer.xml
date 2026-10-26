@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="footer_made_for">भारतीयों के लिए, प्यार से बनाया</string>
+    <string name="footer_by">%1$s द्वारा</string>
+    <string name="footer_heart_desc">प्यार</string>
+</resources>
