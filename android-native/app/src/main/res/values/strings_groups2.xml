@@ -44,6 +44,10 @@
     <string name="group_event_place_hint">Place (optional)</string>
     <string name="group_event_description_hint">Description (optional)</string>
     <string name="group_event_pick_time">Choose when it starts</string>
+    <string name="group_event_counts_full">%1$d going · %2$d maybe · %3$d can\'t go</string>
+    <string name="group_event_edit">Edit event</string>
+    <string name="group_event_edit_title">Edit event</string>
+    <string name="group_event_save">Save changes</string>
     <string name="group_event_create">Create event</string>
     <string name="group_event_error_past">Choose a time that hasn\'t happened yet.</string>
     <string name="group_event_error_too_far">Choose a time within the next two years.</string>

@@ -69,6 +69,10 @@ object EventRules {
   fun canCancel(event: GroupEvent, group: Conversation, uid: String): Boolean =
     !event.cancelled && (event.createdBy == uid || uid in group.admins)
 
+  /** The creator or an admin may edit an event until it starts or is cancelled. */
+  fun canEdit(event: GroupEvent, group: Conversation, uid: String, nowMs: Long): Boolean =
+    !hasStarted(event, nowMs) && canCancel(event, group, uid)
+
   /** Upcoming (not cancelled, not started) soonest first; then earlier and cancelled ones, newest first. */
   fun split(events: List<GroupEvent>, nowMs: Long): Pair<List<GroupEvent>, List<GroupEvent>> {
     val (upcoming, earlier) = events.partition { !it.cancelled && it.startsAt > nowMs }

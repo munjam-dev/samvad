@@ -40,6 +40,10 @@
     <string name="group_event_place_hint">இடம் (விருப்பத்தேர்வு)</string>
     <string name="group_event_description_hint">விளக்கம் (விருப்பத்தேர்வு)</string>
     <string name="group_event_pick_time">தொடங்கும் நேரத்தைத் தேர்வு செய்யவும்</string>
+    <string name="group_event_counts_full">%1$d வருகிறார்கள் · %2$d ஒருவேளை · %3$d வர முடியாது</string>
+    <string name="group_event_edit">நிகழ்வை மாற்று</string>
+    <string name="group_event_edit_title">நிகழ்வை மாற்று</string>
+    <string name="group_event_save">மாற்றங்களைச் சேமி</string>
     <string name="group_event_create">நிகழ்வை உருவாக்கு</string>
     <string name="group_event_error_past">இன்னும் நடக்காத ஒரு நேரத்தைத் தேர்வு செய்யவும்.</string>
     <string name="group_event_error_too_far">வரும் இரண்டு ஆண்டுகளுக்குள் ஒரு நேரத்தைத் தேர்வு செய்யவும்.</string>

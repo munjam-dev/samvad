@@ -5,6 +5,7 @@ import {
   handleCancelGroupEvent,
   handleCreateGroupEvent,
   handleDecideJoinRequest,
+  handleEditGroupEvent,
   handleRsvpGroupEvent,
   handleSetGroupSettings,
   MAX_EVENT_DESCRIPTION,
@@ -284,6 +285,29 @@ describe('events', () => {
     const { eventId: gone } = await newEvent(cid, 'anil');
     await call(handleCancelGroupEvent, 'anil', { cid, eid: gone });
     expect(await errorOf(call(handleRsvpGroupEvent, 'bina', { cid, eid: gone, answer: 'going' }))).toBe('event-cancelled');
+  });
+
+  it('the creator or an admin edits an upcoming event; others cannot; invalid and finished events are refused', async () => {
+    const cid = await group();
+    await settings(cid, 'anil', { eventsByMembers: true });
+    const { eventId } = await newEvent(cid, 'bina');
+    const ref = deps.db.doc(`conversations/${cid}/events/${eventId}`);
+    const edit = (uid: string, extra: Record<string, unknown> = {}) =>
+      call(handleEditGroupEvent, uid, { cid, eid: eventId, title: 'Brunch', description: '', place: 'Cubbon', startsAt: inHours(72), ...extra });
+    expect(await errorOf(edit('chetan'))).toBe('permission-denied');
+    expect(await errorOf(edit('esha'))).toBe('not-found');
+    expect(await errorOf(edit('bina', { title: ' ' }))).toBe('invalid-argument');
+    expect(await errorOf(edit('bina', { startsAt: Date.now() - 1000 }))).toBe('event-in-past');
+    await ref.update({ reminderSent: true });
+    await edit('bina');
+    expect((await ref.get()).data()).toMatchObject({ title: 'Brunch', place: 'Cubbon', reminderSent: false });
+    await edit('anil', { title: 'Brunch 2' }); // an admin may edit someone else's event
+    expect((await ref.get()).get('title')).toBe('Brunch 2');
+    await call(handleCancelGroupEvent, 'anil', { cid, eid: eventId });
+    expect(await errorOf(edit('bina'))).toBe('event-cancelled');
+    const { eventId: old } = await newEvent(cid, 'anil');
+    await deps.db.doc(`conversations/${cid}/events/${old}`).update({ startsAt: Timestamp.fromMillis(Date.now() - 1000) });
+    expect(await errorOf(call(handleEditGroupEvent, 'anil', { cid, eid: old, title: 'x', startsAt: inHours(5) }))).toBe('event-over');
   });
 
   it('the creator or an admin cancels; other members cannot; a chat line is written once', async () => {

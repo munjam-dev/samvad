@@ -629,7 +629,7 @@ service cloud.firestore {
       }
 
       // Phase 6: group events and RSVPs. Members read; only the group functions write (createGroupEvent,
-      // rsvpGroupEvent, cancelGroupEvent), which check admin rights, the member setting, dates and caps.
+      // rsvpGroupEvent, cancelGroupEvent, editGroupEvent), which check admin rights, the member setting, dates and caps.
       match /events/{eid} {
         allow read: if isMemberOf(cid);
 

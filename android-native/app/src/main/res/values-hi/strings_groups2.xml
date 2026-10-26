@@ -40,6 +40,10 @@
     <string name="group_event_place_hint">जगह (वैकल्पिक)</string>
     <string name="group_event_description_hint">विवरण (वैकल्पिक)</string>
     <string name="group_event_pick_time">शुरू होने का समय चुनें</string>
+    <string name="group_event_counts_full">%1$d आ रहे हैं · %2$d शायद · %3$d नहीं आ सकते</string>
+    <string name="group_event_edit">इवेंट बदलें</string>
+    <string name="group_event_edit_title">इवेंट बदलें</string>
+    <string name="group_event_save">बदलाव सहेजें</string>
     <string name="group_event_create">इवेंट बनाएँ</string>
     <string name="group_event_error_past">ऐसा समय चुनें जो अभी बीता न हो।</string>
     <string name="group_event_error_too_far">आने वाले दो साल के भीतर का समय चुनें।</string>

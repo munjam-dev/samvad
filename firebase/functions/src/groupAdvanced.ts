@@ -244,6 +244,35 @@ export async function cancelEventCore(deps: Deps, actor: string, cid: string, ei
   });
 }
 
+/**
+ * The creator or any admin edits an event that is still ahead: same validation as creating. Moving the
+ * start re-arms the reminder. The card in the chat reads the event live, so it needs no new message.
+ */
+export async function editEventCore(deps: Deps, actor: string, cid: string, eid: string, input: EventInput): Promise<void> {
+  await consumeDailyBudget(deps, actor, 'eventRsvps', DAILY_RSVPS);
+  await deps.db.runTransaction(async (tx) => {
+    const g = await loadGroup(tx, deps, cid, actor, false);
+    const eventRef = g.ref.collection('events').doc(eid);
+    const event = await tx.get(eventRef);
+    if (!event.exists) throw new HttpsError('not-found', 'Unknown event.');
+    if (event.get('createdBy') !== actor && !g.admins.includes(actor)) {
+      throw new HttpsError('permission-denied', 'Only the creator or an admin can edit this event.');
+    }
+    if (event.get('cancelled') === true) throw new HttpsError('failed-precondition', 'event-cancelled');
+    const oldStart = (event.get('startsAt') as Timestamp).toMillis();
+    if (oldStart <= deps.nowMs()) throw new HttpsError('failed-precondition', 'event-over');
+    const update: Record<string, unknown> = {
+      title: input.title,
+      description: input.description,
+      place: input.place,
+      startsAt: Timestamp.fromMillis(input.startsAtMs),
+      editedAt: FieldValue.serverTimestamp(),
+    };
+    if (input.startsAtMs !== oldStart) update.reminderSent = false;
+    tx.update(eventRef, update);
+  });
+}
+
 // ---- reminders ----------------------------------------------------------------------------------
 
 /** Device tokens for [uids] (revoked or empty ones skipped), each mapped back to its device document. */
@@ -366,12 +395,21 @@ export const handleCancelGroupEvent = async (r: Req, deps: Deps = defaultDeps())
   return run('group_event_cancelled', async () => (await cancelEventCore(deps, uid, cid, eid), { ok: true }));
 };
 
+export const handleEditGroupEvent = async (r: Req, deps: Deps = defaultDeps()) => {
+  const { uid } = requirePhoneAuth(r);
+  const cid = cidOf(r.data);
+  const eid = eventIdOf(r.data);
+  const input = parseEvent(r.data, deps.nowMs());
+  return run('group_event_edited', async () => (await editEventCore(deps, uid, cid, eid, input), { ok: true }));
+};
+
 const options = buildCallableOptions(process.env);
 export const setGroupSettings = onCall(options, (r) => handleSetGroupSettings(r));
 export const decideGroupJoinRequest = onCall(options, (r) => handleDecideJoinRequest(r));
 export const createGroupEvent = onCall(options, (r) => handleCreateGroupEvent(r));
 export const rsvpGroupEvent = onCall(options, (r) => handleRsvpGroupEvent(r));
 export const cancelGroupEvent = onCall(options, (r) => handleCancelGroupEvent(r));
+export const editGroupEvent = onCall(options, (r) => handleEditGroupEvent(r));
 
 /** Every 5 minutes, like the scheduled-message sender: one instance, short run, nothing to do most of the time. */
 export const sendEventReminders = onSchedule(

@@ -40,6 +40,10 @@
     <string name="group_event_place_hint">స్థలం (ఐచ్ఛికం)</string>
     <string name="group_event_description_hint">వివరణ (ఐచ్ఛికం)</string>
     <string name="group_event_pick_time">ఎప్పుడు మొదలవుతుందో ఎంచుకోండి</string>
+    <string name="group_event_counts_full">%1$d వస్తున్నారు · %2$d బహుశా · %3$d రాలేరు</string>
+    <string name="group_event_edit">ఈవెంట్‌ను మార్చు</string>
+    <string name="group_event_edit_title">ఈవెంట్‌ను మార్చు</string>
+    <string name="group_event_save">మార్పులను సేవ్ చేయి</string>
     <string name="group_event_create">ఈవెంట్ సృష్టించు</string>
     <string name="group_event_error_past">ఇంకా జరగని సమయాన్ని ఎంచుకోండి.</string>
     <string name="group_event_error_too_far">వచ్చే రెండు సంవత్సరాల లోపు సమయాన్ని ఎంచుకోండి.</string>
