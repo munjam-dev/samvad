@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings: Source code and licences -->
+    <string name="settings_licences">सोर्स कोड और लाइसेंस</string>
+    <string name="licences_title">सोर्स कोड और लाइसेंस</string>
+    <string name="licences_intro">Samvad ओपन सोर्स है। Android ऐप GNU Affero General Public License, संस्करण 3 (AGPL-3.0) के तहत प्रकाशित है। कोई भी कोड पढ़ सकता है, जाँच सकता है कि ऐप कैसे काम करता है, और उसी लाइसेंस के तहत उसे दोबारा इस्तेमाल कर सकता है।</string>
+    <string name="licences_server">सर्वर कोड उसी रिपॉज़िटरी में है। उसमें कोई पासवर्ड या गुप्त कुंजी नहीं है।</string>
+    <string name="licences_open_repo">सोर्स कोड खोलें</string>
+    <string name="licences_libs_title">तीसरे पक्ष की लाइब्रेरी</string>
+    <string name="licences_libs_body">• Signal Protocol लाइब्रेरी (libsignal), AGPL-3.0: एक-से-एक चैट का एंड-टू-एंड एन्क्रिप्शन\n• LiveKit Android SDK, Apache-2.0: कॉल और मीटिंग\n• Firebase Android SDK, Apache-2.0, Google की Firebase शर्तों के साथ: साइन-इन, डेटाबेस, फ़ाइलें, सूचनाएँ, ऐप जाँच\n• Google Play services (Drive साइन-इन, कोड स्कैनर), Google की शर्तों के तहत\n• AndroidX, Jetpack Compose, Material 3, Room, DataStore, WorkManager, Biometric, Apache-2.0\n• Coil, Apache-2.0: तस्वीरें और GIF\n• ZXing core, Apache-2.0: सुरक्षा-नंबर QR कोड\n• Kotlin coroutines, Apache-2.0\n• Plus Jakarta Sans फ़ॉन्ट, SIL Open Font License 1.1</string>
+    <string name="licences_notice">पूरी सूची और लाइसेंस के पाठ रिपॉज़िटरी की NOTICE और LICENSE फ़ाइलों में हैं।</string>
+</resources>

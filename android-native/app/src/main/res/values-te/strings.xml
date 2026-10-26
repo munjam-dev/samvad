@@ -205,7 +205,7 @@
     <string name="settings_layout_bold">బోల్డ్ హెడర్</string>
     <string name="settings_layout_bento">కార్డ్ &amp; బెంటో</string>
     <string name="settings_privacy">గోప్యత &amp; భద్రత</string>
-    <string name="settings_privacy_body">మీ ఫోన్ నంబర్ మీకు మాత్రమే కనిపిస్తుంది. సందేశాలు Firebase ద్వారా ప్రయాణంలో, నిల్వలో రక్షించబడతాయి; Samvad ఇంకా ఎండ్-టు-ఎండ్ ఎన్‌క్రిప్షన్ అందించదు.</string>
+    <string name="settings_privacy_body">మీ ఫోన్ నంబర్ మీకు మాత్రమే కనిపిస్తుంది. సందేశాలు Firebase ద్వారా ప్రయాణంలో మరియు నిల్వలో రక్షించబడతాయి. Samvad యొక్క ఈ వెర్షన్‌లో ఎండ్-టు-ఎండ్ ఎన్‌క్రిప్షన్ లేదు.</string>
     <string name="settings_help">సహాయం &amp; అభిప్రాయం</string>
     <string name="settings_sign_out">సైన్ అవుట్</string>
     <string name="settings_sign_out_all">అన్ని పరికరాల్లో సైన్ అవుట్</string>
@@ -553,7 +553,7 @@
     <string name="chat_theme_night_garden">రాత్రి తోట</string>
     <string name="close">మూసివేయి</string>
     <string name="privacy_notice_title">మీ సందేశాలు రక్షించబడ్డాయి</string>
-    <string name="privacy_notice_body">సందేశాలు ప్రయాణంలో ఎన్‌క్రిప్ట్ అవుతాయి, Google Cloudలో సురక్షితంగా నిల్వ అవుతాయి. ఎండ్-టు-ఎండ్ ఎన్‌క్రిప్షన్ త్వరలో Samvadకు వస్తుంది.</string>
+    <string name="privacy_notice_body">సందేశాలు ప్రయాణంలో ఎన్‌క్రిప్ట్ అవుతాయి, Google Cloudలో సురక్షితంగా నిల్వ అవుతాయి. Samvad యొక్క ఈ వెర్షన్‌లో ఎండ్-టు-ఎండ్ ఎన్‌క్రిప్షన్ లేదు.</string>
     <string name="privacy_notice_title_e2ee">మీ సంభాషణలు ప్రైవేట్</string>
     <string name="privacy_notice_body_e2ee">ఈ చాట్‌లోని సందేశాలు, అటాచ్‌మెంట్‌లు ఎండ్-టు-ఎండ్ ఎన్‌క్రిప్ట్ అయి ఉంటాయి. ఈ చాట్‌లోని వ్యక్తులు మాత్రమే వాటిని చదవగలరు. కాల్స్ ఎండ్-టు-ఎండ్ ఎన్‌క్రిప్ట్ కావు.</string>
     <string name="privacy_learn_more">మరింత తెలుసుకోండి</string>
@@ -561,9 +561,9 @@
     <string name="privacy_sheet_now_title">ఈరోజు రక్షణలో ఉన్నవి</string>
     <string name="privacy_sheet_now">• సందేశాలు, ఫోటోలు, వాయిస్ నోట్‌లు, ఫైల్‌లు ప్రయాణంలో, Google Cloudలో నిల్వ అయ్యేటప్పుడు ఎన్‌క్రిప్ట్ అవుతాయి.\n• చాట్‌లోని వ్యక్తులు మాత్రమే దాన్ని తెరవగలరు: మా సర్వర్‌లు ప్రతి అభ్యర్థనను తనిఖీ చేస్తాయి.\n• టూ-స్టెప్ PIN, యాప్ లాక్, స్క్రీన్‌షాట్ నిరోధం, ప్రైవేట్ నోటిఫికేషన్‌లు సెట్టింగ్‌లలో ఉన్నాయి.</string>
     <string name="privacy_sheet_not_title">ఇంకా రక్షణ లేనివి</string>
-    <string name="privacy_sheet_not">• ఎండ్-టు-ఎండ్ ఎన్‌క్రిప్షన్ వచ్చే వరకు, Samvad సర్వర్‌లు సాంకేతికంగా సందేశ విషయాన్ని చదవగలవు.\n• మీరు ఎవరినైనా రిపోర్ట్ చేస్తే, వారి చివరి 5 సందేశాలు Samvad భద్రతా బృందంతో షేర్ అవుతాయి.\n• ఎక్స్‌పోర్ట్ చేసిన చాట్‌లు మీ నియంత్రణలో ఉండే సాధారణ టెక్స్ట్ ఫైల్‌లు.</string>
+    <string name="privacy_sheet_not">• ఈ వెర్షన్‌లో Samvad సర్వర్లు సాంకేతికంగా సందేశ విషయాన్ని చదవగలవు.\n• మీరు ఎవరినైనా రిపోర్ట్ చేస్తే, వారి చివరి 5 సందేశాలు Samvad భద్రతా బృందంతో పంచుకోబడతాయి.\n• ఎగుమతి చేసిన చాట్‌లు సాధారణ టెక్స్ట్ ఫైళ్లు, అవి మీ నియంత్రణలో ఉంటాయి.</string>
     <string name="privacy_sheet_next_title">తర్వాత రానున్నది</string>
-    <string name="privacy_sheet_next">ఎండ్-టు-ఎండ్ ఎన్‌క్రిప్షన్, దీనితో చాట్‌లోని వ్యక్తులు మాత్రమే చదవగలరు, వినగలరు. Samvad కూడా చదవలేదు.</string>
+    <string name="privacy_sheet_next">ఇద్దరి మధ్య చాట్‌ల కోసం ఎండ్-టు-ఎండ్ ఎన్‌క్రిప్షన్, దీనితో చాట్‌లోని ఇద్దరే దాన్ని చదవగలరు లేదా వినగలరు. గ్రూపులు, కాల్స్ ఇందులో లేవు.</string>
     <string name="privacy_sheet_depends">మీ గోప్యత మీ ఖాతా భద్రత, మీరు సైన్ ఇన్ అయిన పరికరాలు, మీ చాట్‌లను ఎలా షేర్ చేస్తారన్న దానిపై కూడా ఆధారపడి ఉంటుంది.</string>
     <string name="home_footer_tag">#SamvadBeginsHere</string>
     <string name="home_footer_line1">హైదరాబాద్, భారతదేశంలో గర్వంగా రూపొందించబడింది.</string>

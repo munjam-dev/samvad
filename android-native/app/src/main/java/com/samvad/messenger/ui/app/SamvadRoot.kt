@@ -309,7 +309,11 @@ private fun SignedInNav(
         onOpenPrivacy = { nav.navigate("privacy") },
         onOpenDevices = { nav.navigate("devices") },
         onOpenAppeal = { nav.navigate("appeal") },
+        onOpenLicences = { nav.navigate("licences") },
       )
+    }
+    composable("licences") {
+      com.samvad.messenger.ui.settings.LicencesScreen(onBack = { nav.popBackStack() })
     }
     vaultRoutes(nav, container)
     composable("privacy") {

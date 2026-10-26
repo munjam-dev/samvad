@@ -205,7 +205,7 @@
     <string name="settings_layout_bold">Bold header</string>
     <string name="settings_layout_bento">Card &amp; bento</string>
     <string name="settings_privacy">Privacy &amp; security</string>
-    <string name="settings_privacy_body">Your phone number is visible only to you. Messages are protected in transit and at rest by Firebase; Samvad does not yet offer end-to-end encryption.</string>
+    <string name="settings_privacy_body">Your phone number is visible only to you. Messages are protected in transit and at rest by Firebase. This version of Samvad does not offer end-to-end encryption.</string>
     <string name="settings_help">Help &amp; feedback</string>
     <string name="settings_sign_out">Sign out</string>
     <string name="settings_sign_out_all">Sign out of all devices</string>
@@ -553,7 +553,7 @@
     <string name="chat_theme_night_garden">Night Garden</string>
     <string name="close">Close</string>
     <string name="privacy_notice_title">Your messages are protected</string>
-    <string name="privacy_notice_body">Messages are encrypted while they travel and stored securely on Google Cloud. End-to-end encryption is coming to Samvad.</string>
+    <string name="privacy_notice_body">Messages are encrypted while they travel and stored securely on Google Cloud. This version of Samvad does not offer end-to-end encryption.</string>
     <string name="privacy_notice_title_e2ee">Your conversations are private</string>
     <string name="privacy_notice_body_e2ee">Messages and attachments in this chat are end-to-end encrypted. Only the people in this chat can read them. Calls are not end-to-end encrypted.</string>
     <string name="privacy_learn_more">Learn more</string>
@@ -561,9 +561,9 @@
     <string name="privacy_sheet_now_title">Protected today</string>
     <string name="privacy_sheet_now">• Messages, photos, voice notes and files are encrypted while they travel and while stored on Google Cloud.\n• Only the people in a chat can open it: our servers check every request.\n• Two-step PIN, app lock, screenshot blocking and private notifications are in Settings.</string>
     <string name="privacy_sheet_not_title">Not protected yet</string>
-    <string name="privacy_sheet_not">• Until end-to-end encryption arrives, Samvad\'s servers could technically read message content.\n• If you report someone, their last 5 messages are shared with Samvad\'s safety team.\n• Exported chats are plain text files that you control.</string>
+    <string name="privacy_sheet_not">• In this version, Samvad\'s servers could technically read message content.\n• If you report someone, their last 5 messages are shared with Samvad\'s safety team.\n• Exported chats are plain text files that you control.</string>
     <string name="privacy_sheet_next_title">Coming next</string>
-    <string name="privacy_sheet_next">End-to-end encryption, so only the people in a chat can read or listen to it. Not even Samvad will be able to.</string>
+    <string name="privacy_sheet_next">End-to-end encryption for one-to-one chats, so only the two people in a chat can read or listen to it. Groups and calls are not included.</string>
     <string name="privacy_sheet_depends">Your privacy also depends on your account security, the devices you are signed in on and how you share your chats.</string>
     <string name="home_footer_tag">#SamvadBeginsHere</string>
     <string name="home_footer_line1">Proudly built in Hyderabad, India.</string>
