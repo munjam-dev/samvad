@@ -15,12 +15,23 @@ const WINDOW_MS = 24 * 60 * 60 * 1000;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const DIRECT_CID = /^[A-Za-z0-9]{1,128}_[A-Za-z0-9]{1,128}$/;
 
+/** What the reporter's app attaches from an end-to-end encrypted chat, after the person agreed. The server cannot check the text. */
+export interface ReporterEvidence {
+  messageId: string;
+  kind: string;
+  text: string;
+}
+
 export interface ReportInput {
   requestId: string;
   conversationId: string;
   reason: ReportReason;
   block: boolean;
+  /** Plaintext of the reported messages, decrypted on the reporter's phone; only used for encrypted chats. */
+  evidence: ReporterEvidence[];
 }
+
+const EVIDENCE_KINDS = ['text', 'image', 'file', 'voice', 'video', 'contact'];
 
 export function parseReport(data: unknown): ReportInput {
   const d = (data ?? {}) as Record<string, unknown>;
@@ -41,7 +52,22 @@ export function parseReport(data: unknown): ReportInput {
     conversationId: d.conversationId,
     reason: d.reason as ReportReason,
     block: d.block === true,
+    evidence: parseEvidence(d.evidence, d.evidenceConsent),
   };
+}
+
+/** Attached evidence needs the explicit consent flag, is capped, and is plain strings only. */
+function parseEvidence(raw: unknown, consent: unknown): ReporterEvidence[] {
+  if (raw === undefined || raw === null) return [];
+  if (consent !== true) throw new HttpsError('invalid-argument', 'Consent is required to attach messages.');
+  if (!Array.isArray(raw) || raw.length > EVIDENCE_MESSAGES) throw new HttpsError('invalid-argument', 'Too many messages attached.');
+  return raw.map((item) => {
+    const e = (item ?? {}) as Record<string, unknown>;
+    if (typeof e.messageId !== 'string' || !UUID.test(e.messageId)) throw new HttpsError('invalid-argument', 'Unknown message.');
+    if (typeof e.kind !== 'string' || !EVIDENCE_KINDS.includes(e.kind)) throw new HttpsError('invalid-argument', 'Unknown message kind.');
+    if (typeof e.text !== 'string' || e.text.length > 4096) throw new HttpsError('invalid-argument', 'Message text is too long.');
+    return { messageId: e.messageId, kind: e.kind, text: e.text };
+  });
 }
 
 interface Evidence {
@@ -49,6 +75,14 @@ interface Evidence {
   kind: string;
   text: string;
   mediaPath?: string;
+  createdAt: Timestamp | null;
+  /** End-to-end encrypted chat: the server holds only ciphertext, so `text` is empty and nothing here is readable. */
+  encrypted?: boolean;
+}
+
+/** Text the reporter's phone decrypted. The server cannot verify it; reviewers must treat it as the reporter's claim. */
+interface ReporterClaim extends ReporterEvidence {
+  unverified: true;
   createdAt: Timestamp | null;
 }
 
@@ -89,20 +123,32 @@ export async function reportCore(
     }
 
     const messages = await tx.get(recent);
-    const evidence: Evidence[] = messages.docs
-      .filter((m) => m.get('senderId') === reported && m.get('deleted') !== true)
+    const encryptedChat = conv.get('e2ee') === true;
+    const reportedDocs = messages.docs.filter((m) => m.get('senderId') === reported && m.get('deleted') !== true);
+    const evidence: Evidence[] = reportedDocs
       .slice(0, EVIDENCE_MESSAGES)
       .map((m) => {
         const item: Evidence = {
           messageId: m.id,
           kind: String(m.get('kind') ?? 'text'),
-          text: String(m.get('text') ?? '').slice(0, 4096),
+          // Encrypted chats: ciphertext is useless as evidence and is not copied. Only metadata is kept.
+          text: m.get('enc') ? '' : String(m.get('text') ?? '').slice(0, 4096),
           createdAt: (m.get('createdAt') as Timestamp | undefined) ?? null,
+          ...(m.get('enc') ? { encrypted: true } : {}),
         };
         const path = m.get('media.path');
-        if (typeof path === 'string') item.mediaPath = path;
+        if (typeof path === 'string' && !m.get('enc')) item.mediaPath = path;
         return item;
       });
+    // Text the reporter chose to attach from an encrypted chat. Only messages that really are the reported
+    // person's messages in this chat are kept, so a report cannot attach words to someone who never wrote them.
+    const reportedById = new Map(reportedDocs.map((m) => [m.id, m]));
+    const claims: ReporterClaim[] = encryptedChat
+      ? input.evidence.flatMap((e) => {
+          const doc = reportedById.get(e.messageId);
+          return doc ? [{ ...e, unverified: true as const, createdAt: (doc.get('createdAt') as Timestamp | undefined) ?? null }] : [];
+        })
+      : [];
 
     tx.set(budgetRef, {
       reportWindowStart: fresh ? Timestamp.fromMillis(now) : windowStart,
@@ -114,6 +160,7 @@ export async function reportCore(
       conversationId: input.conversationId,
       reason: input.reason,
       evidence,
+      ...(encryptedChat ? { encryptedChat: true, reporterEvidence: claims } : {}),
       status: 'open',
       createdAt: FieldValue.serverTimestamp(),
       expireAt: Timestamp.fromMillis(now + REPORT_RETENTION_MS),

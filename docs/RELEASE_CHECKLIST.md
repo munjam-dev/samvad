@@ -9,20 +9,24 @@ and release builds are unsigned until you supply signing values.
 records that the owner is "not sure" whether the Android source can be published under AGPL-3.0 and that a lawyer
 must confirm. Until then no build that goes to the Play Store, a tester group, or any other person may contain it.
 
-Today the app does **not call libsignal anywhere**: the only reference in app code is the Gradle dependency, so it
-adds weight and a licence obligation and no feature. To make a release that excludes it:
+The app now uses libsignal for end-to-end encryption of one-to-one chats (`docs/security/E2EE_DESIGN.md`). The Gradle
+property `samvad.e2ee` (default false in release) switches the feature off at run time, but **libsignal is still linked**,
+so the licence gate applies to every build that contains it. To make a release that contains no libsignal code at all:
 
 1. In `android-native/app/build.gradle.kts` delete the line `implementation(libs.libsignal.android)`
    (under the comment "Signal Protocol, AGPL-3.0").
-2. Nothing else needs to change: `:core` uses `libs.libsignal.client` only as `compileOnly` and for tests
-   (`SignalSpikeTest`), which never ship in the app. If you also want the repository itself free of AGPL code before
+2. Delete `app/src/main/java/com/samvad/messenger/data/e2ee/` and the references to it (`AppContainer`, `ChatRepository`,
+   `MediaRepository`, `PendingUploads`, `SessionViewModel`, `SamvadMessagingService`, the conversation screens), or build
+   with a variant that stubs `E2eeService`. `:core` uses `libs.libsignal.client` only as `compileOnly` and for tests, which never ship in the app. If you also want the repository itself free of AGPL code before
    it is shared, delete `core/src/test/kotlin/com/samvad/core/SignalSpikeTest.kt` and the two `libsignal` lines in
    `core/build.gradle.kts`.
 3. In `android-native/app/proguard-rules.pro` the `org.signal.libsignal` keep rule is harmless when the library is
    absent; remove it for tidiness.
 4. Build `:app:assembleRelease` and check the APK has no `libsignal_jni.so`
    (`unzip -l app-release-unsigned.apk | grep -i signal` must print nothing).
-5. Keep the in-app and website wording that messages are **not** end-to-end encrypted. Do not add E2EE claims.
+5. Keep the in-app and website wording that messages are **not** end-to-end encrypted. Do not add E2EE claims until the
+   encrypted build is released with `-Psamvad.e2ee=true`, the external review in `E2EE_DESIGN.md` is done, and the website,
+   privacy policy, Play data-safety form and Settings text are all changed together.
 
 When the lawyer confirms, re-add the dependency, publish the app source under AGPL-3.0 as advised, and only then
 build the encrypted-message features listed in the decision record.

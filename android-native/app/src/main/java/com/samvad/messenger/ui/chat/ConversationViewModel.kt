@@ -5,6 +5,12 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.samvad.core.chat.DraftChange
+import com.samvad.core.e2ee.E2eePolicy
+import com.samvad.core.e2ee.EncryptionBanner
+import com.samvad.messenger.data.E2eeUnsupportedException
+import com.samvad.messenger.data.e2ee.E2eeSendException
+import com.samvad.messenger.data.e2ee.PeerKeys
+import com.samvad.messenger.data.e2ee.PeerTrust
 import com.samvad.core.chat.Drafts
 import com.samvad.core.chat.Selection
 import com.samvad.core.chat.StarAction
@@ -249,8 +255,11 @@ class ConversationViewModel(
   private val since: kotlinx.coroutines.flow.Flow<Long?> =
     if (isGroup) myState.map { it?.joinedAt }.distinctUntilChanged() else flowOf(null)
 
+  /** Changes when a security-code decision may have unlocked held-back encrypted messages: the page is read again. */
+  private val trustTick: kotlinx.coroutines.flow.Flow<Int> = container.e2ee?.trustVersion ?: flowOf(0)
+
   @OptIn(ExperimentalCoroutinesApi::class)
-  private val page = combine(limit, reload, since) { n, _, from -> n to from }.flatMapLatest { (n, from) ->
+  private val page = combine(limit, reload, since, trustTick) { n, _, from, _ -> n to from }.flatMapLatest { (n, from) ->
     if (isGroup && from == null) flowOf(MessagesPage(emptyList(), hasMore = false, fromCache = true))
     else chats.messages(conversationId, n, from).catch { failed.value = true }
   }
@@ -513,7 +522,7 @@ class ConversationViewModel(
     when (val result = com.samvad.core.chat.ContactCards.build(name, phones, organisation, region)) {
       is com.samvad.core.chat.ContactCardResult.Ok -> {
         if (replyTo != null) { _composer.value = ComposerState(); clearDraft() }
-        viewModelScope.launch { runCatching { chats.sendContact(conversationId, me, result.card, replyTo) } }
+        viewModelScope.launch { runCatching { chats.sendContact(conversationId, me, result.card, replyTo) }.onFailure(::onEncryptionFailure) }
       }
       com.samvad.core.chat.ContactCardResult.NoName -> onProblem(ContactCardResultProblem.NO_NAME)
       com.samvad.core.chat.ContactCardResult.NoPhone -> onProblem(ContactCardResultProblem.NO_PHONE)
@@ -667,9 +676,9 @@ class ConversationViewModel(
     picked.clear()
     viewModelScope.launch {
       runCatching {
-        if (c.editing != null) chats.edit(conversationId, c.editing.id, text)
+        if (c.editing != null) chats.edit(conversationId, c.editing.id, text, me, c.editing)
         else chats.send(conversationId, me, text, c.replyTo?.id, mentions = mentions)
-      }
+      }.onFailure(::onEncryptionFailure)
     }
   }
 
@@ -716,6 +725,120 @@ class ConversationViewModel(
     return check
   }
 
+  // ---- end-to-end encryption -----------------------------------------------------------------------------------
+
+  private val e2ee = container.e2ee
+
+  /** This build can encrypt (BuildConfig.E2EE_ENABLED). */
+  val e2eeEnabled: Boolean = e2ee?.enabled == true
+
+  /** The conversation document of a direct chat (its encryption flag); groups use [group]. */
+  private val conversationDoc: StateFlow<Conversation?> =
+    (if (isGroup) flowOf(null) else chats.conversation(conversationId).catch { emit(null) })
+      .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+  /** The server says every new message in this chat is end-to-end encrypted. */
+  val encrypted: StateFlow<Boolean> = conversationDoc.map { it?.e2ee == true }.distinctUntilChanged()
+    .stateIn(viewModelScope, SharingStarted.Eagerly, chats.isKnownE2ee(conversationId))
+
+  private val peerTrust: StateFlow<PeerTrust?> =
+    (run {
+      val service = e2ee
+      val peer = otherUid
+      if (service != null && peer != null && service.enabled) {
+        service.trustVersion.map { runCatching { service.trust(me, peer) }.getOrNull() }
+      } else {
+        null
+      }
+    } ?: run {
+      flowOf(null)
+    }).stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+  private val upgrading = MutableStateFlow(false)
+
+  /** What the chat says about encryption, and what the person can do about it. */
+  data class EncryptionUi(
+    val banner: EncryptionBanner,
+    /** Encryption was switched on later: only messages after this moment are protected. */
+    val sinceMs: Long?,
+    /** The other person's security code changed and waits for a decision. */
+    val codeChanged: Boolean,
+    val verified: Boolean,
+    val upgrading: Boolean,
+  )
+
+  val encryption: StateFlow<EncryptionUi> = combine(conversationDoc, peerTrust, upgrading) { conv, trust, busy ->
+    EncryptionUi(
+      banner = E2eePolicy.banner(
+        isGroup = isGroup,
+        featureEnabled = e2eeEnabled,
+        chatIsEncrypted = conv?.e2ee == true,
+        encryptedSinceMs = conv?.e2eeSince,
+        peerHasKeys = otherUid?.let { e2ee?.knownPeerHasKeys(it) },
+      ),
+      sinceMs = conv?.e2eeSince,
+      codeChanged = trust?.changePending == true,
+      verified = trust?.verified == true,
+      upgrading = busy,
+    )
+  }.stateIn(
+    viewModelScope, SharingStarted.WhileSubscribed(5_000),
+    EncryptionUi(E2eePolicy.banner(isGroup, e2eeEnabled, chats.isKnownE2ee(conversationId), null, null), null, false, false, false),
+  )
+
+  /** One-shot messages about encryption, shown as a snackbar or dialog by the screen. */
+  enum class E2eeNotice { UPGRADED, PEER_NO_KEYS, CODE_CHANGED, UNAVAILABLE, NOT_AVAILABLE_HERE }
+
+  private val _e2eeNotice = MutableStateFlow<E2eeNotice?>(null)
+  val e2eeNotice: StateFlow<E2eeNotice?> = _e2eeNotice
+  fun clearE2eeNotice() { _e2eeNotice.value = null }
+
+  private fun onEncryptionFailure(e: Throwable) {
+    _e2eeNotice.value = when (e) {
+      is E2eeSendException -> when (e.peer) {
+        PeerKeys.IDENTITY_CHANGED -> E2eeNotice.CODE_CHANGED
+        PeerKeys.NO_KEYS -> E2eeNotice.PEER_NO_KEYS
+        else -> E2eeNotice.UNAVAILABLE
+      }
+      is E2eeUnsupportedException -> E2eeNotice.NOT_AVAILABLE_HERE
+      else -> return
+    }
+  }
+
+  /** "Upgrade this chat": protects NEW messages only; what was sent before stays as it is. */
+  fun upgradeToEncrypted() {
+    if (upgrading.value || isGroup) return
+    upgrading.value = true
+    viewModelScope.launch {
+      val problem = runCatching { chats.upgradeToE2ee(conversationId, me) }.getOrDefault(PeerKeys.UNAVAILABLE)
+      _e2eeNotice.value = when (problem) {
+        null -> E2eeNotice.UPGRADED
+        PeerKeys.NO_KEYS -> E2eeNotice.PEER_NO_KEYS
+        PeerKeys.IDENTITY_CHANGED -> E2eeNotice.CODE_CHANGED
+        else -> E2eeNotice.UNAVAILABLE
+      }
+      upgrading.value = false
+    }
+  }
+
+  /** Up to five of the other person's newest messages that this phone has decrypted, for a report the person agreed to attach. */
+  private fun reportableMessages(): List<com.samvad.messenger.data.ReportEvidence> {
+    val other = otherUid ?: return emptyList()
+    return state.value.items.asSequence()
+      .filterIsInstance<TimelineItem.Bubble>()
+      .map { it.message }
+      .filter { it.senderId == other && it.encrypted && it.lock == null && !it.deleted }
+      .take(5)
+      .map { m ->
+        val text = m.contact?.let { c -> "${c.name}: ${c.phones.joinToString(", ")}" } ?: m.text
+        com.samvad.messenger.data.ReportEvidence(m.id, m.kind, text.take(4096))
+      }
+      .toList()
+  }
+
+  /** How many decrypted messages from the other person a report could include. */
+  fun reportableCount(): Int = reportableMessages().size
+
   fun reschedule(item: ScheduledItem, sendAtMs: Long): ScheduleCheck {
     val check = ScheduleRules.check(sendAtMs, System.currentTimeMillis())
     if (check == ScheduleCheck.OK) viewModelScope.launch { runCatching { chats.updateScheduled(item.id, sendAtMs = sendAtMs) } }
@@ -756,15 +879,17 @@ class ConversationViewModel(
   }
 
   /** Sends a report; a retry after a failure reuses the request ID so the server stores it once. */
-  fun report(reason: ReportReason, alsoBlock: Boolean) {
+  fun report(reason: ReportReason, alsoBlock: Boolean, attachMessages: Boolean = false) {
     val s = safety ?: return
     if (_reporting.value) return
+    // Encrypted chat: the server holds no readable copy, so the reporter may choose to attach what this phone decrypted.
+    val evidence = if (attachMessages && encrypted.value) reportableMessages() else emptyList()
     val requestId = reportRequestId ?: UUID.randomUUID().toString().also { reportRequestId = it }
     _reporting.value = true
     if (alsoBlock) stopTyping()
     viewModelScope.launch {
       _notice.value = try {
-        s.report(requestId, conversationId, reason, alsoBlock)
+        s.report(requestId, conversationId, reason, alsoBlock, evidence)
         reportRequestId = null
         if (alsoBlock) SafetyNotice.REPORTED_AND_BLOCKED else SafetyNotice.REPORTED
       } catch (e: ReportException.LimitReached) {
@@ -854,6 +979,13 @@ class ConversationViewModel(
             chats.send(t.conversationId, me, message.text, replyTo = null, forwarded = true)
           } else {
             val id = UUID.randomUUID().toString()
+            if (chats.isE2ee(t.conversationId)) {
+              // The target chat is end-to-end encrypted: the copy is encrypted again with a new key before upload.
+              val sealed = container.e2ee!!.sealMedia(prepared)
+              mediaRepo.uploadCipher(t.conversationId, id, me, sealed)
+              chats.sendEncryptedMedia(t.conversationId, me, id, sealed.ref(), message.text, replyTo = null, forwarded = true)
+              return@runCatching
+            }
             val path = mediaRepo.upload(t.conversationId, id, me, prepared)
             chats.sendMedia(
               t.conversationId, me, id, prepared.kind.wire,
@@ -881,7 +1013,8 @@ class ConversationViewModel(
     for (m in messages) runCatching { chats.deleteForEveryone(conversationId, m.id) }
   }
 
-  fun canEdit(message: Message) = MessageRules.canEdit(message, me, System.currentTimeMillis())
+  fun canEdit(message: Message) =
+    MessageRules.canEdit(message, me, System.currentTimeMillis()) && E2eePolicy.canEdit(encrypted.value, message.encrypted)
 
   fun retryLoad() {
     failed.value = false

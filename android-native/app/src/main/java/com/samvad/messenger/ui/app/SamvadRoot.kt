@@ -182,6 +182,15 @@ private fun SignedInNav(
         onOpenMedia = { nav.navigate("media/${entry.arguments!!.getString("cid")}") },
         onOpenContact = { cid, other -> nav.navigate("chat/$cid/$other") },
         initialJumpId = entry.arguments?.getString("mid"),
+        onOpenVerify = { other -> nav.navigate("verify/$other") },
+      )
+    }
+    composable("verify/{other}", arguments = listOf(navArgument("other") { type = NavType.StringType })) { entry ->
+      com.samvad.messenger.ui.chat.VerifyScreen(
+        container = container,
+        me = uid,
+        other = entry.arguments!!.getString("other")!!,
+        onBack = { nav.popBackStack() },
       )
     }
     composable(

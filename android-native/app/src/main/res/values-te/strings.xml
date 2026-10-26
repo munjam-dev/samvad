@@ -555,7 +555,7 @@
     <string name="privacy_notice_title">మీ సందేశాలు రక్షించబడ్డాయి</string>
     <string name="privacy_notice_body">సందేశాలు ప్రయాణంలో ఎన్‌క్రిప్ట్ అవుతాయి, Google Cloudలో సురక్షితంగా నిల్వ అవుతాయి. ఎండ్-టు-ఎండ్ ఎన్‌క్రిప్షన్ త్వరలో Samvadకు వస్తుంది.</string>
     <string name="privacy_notice_title_e2ee">మీ సంభాషణలు ప్రైవేట్</string>
-    <string name="privacy_notice_body_e2ee">సందేశాలు, కాల్స్ ఎండ్-టు-ఎండ్ ఎన్‌క్రిప్ట్ అయి ఉంటాయి. ఈ చాట్‌లోని వ్యక్తులు మాత్రమే వాటిని చదవగలరు, వినగలరు, షేర్ చేయగలరు.</string>
+    <string name="privacy_notice_body_e2ee">ఈ చాట్‌లోని సందేశాలు, అటాచ్‌మెంట్‌లు ఎండ్-టు-ఎండ్ ఎన్‌క్రిప్ట్ అయి ఉంటాయి. ఈ చాట్‌లోని వ్యక్తులు మాత్రమే వాటిని చదవగలరు. కాల్స్ ఎండ్-టు-ఎండ్ ఎన్‌క్రిప్ట్ కావు.</string>
     <string name="privacy_learn_more">మరింత తెలుసుకోండి</string>
     <string name="privacy_sheet_title">Samvad మీ చాట్‌లను ఎలా రక్షిస్తుంది</string>
     <string name="privacy_sheet_now_title">ఈరోజు రక్షణలో ఉన్నవి</string>

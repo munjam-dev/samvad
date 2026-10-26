@@ -22,6 +22,24 @@ import com.samvad.core.gifs.GifKind
 import com.samvad.core.gifs.GifRef
 import com.samvad.core.gifs.GifRules
 import com.samvad.core.media.Media
+import com.samvad.core.e2ee.AttachmentCrypto
+import com.samvad.core.e2ee.AttachmentRef
+import com.samvad.core.e2ee.E2eePolicy
+import com.samvad.core.e2ee.Payload
+import com.samvad.messenger.data.e2ee.AttachmentKey
+import com.samvad.messenger.data.e2ee.AttachmentKeys
+import com.samvad.messenger.data.e2ee.E2eeSendException
+import com.samvad.messenger.data.e2ee.E2eeService
+import com.samvad.messenger.data.e2ee.Opened
+import com.samvad.messenger.data.e2ee.PeerKeys
+import com.samvad.messenger.data.e2ee.EncryptedMediaRef
+import com.google.firebase.firestore.FirebaseFirestoreException
+import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.launch
 import java.util.Date
 import java.util.UUID
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -56,7 +74,39 @@ data class ScheduledItem(
 const val ANNOUNCEMENTS_TYPE = "community_announcements"
 
 /** Conversations, member state and messages (B2). Firestore's offline cache provides offline mode. */
-class ChatRepository(private val db: FirebaseFirestore) {
+class ChatRepository(
+  private val db: FirebaseFirestore,
+  /** End-to-end encryption; null when the build has no Firebase. Chats the server marks encrypted never fall back to plaintext. */
+  private val e2ee: E2eeService? = null,
+  private val attachmentKeys: AttachmentKeys? = null,
+) {
+  private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+  /** Conversation id to "the server says it is end-to-end encrypted", learned from the conversation documents. */
+  private val e2eeChats = ConcurrentHashMap<String, Boolean>()
+  private val previewTick = MutableStateFlow(0)
+  private val prefetching = ConcurrentHashMap.newKeySet<String>()
+  private val attempted = ConcurrentHashMap.newKeySet<String>()
+
+  init {
+    // A trust decision can unlock messages that were held back, so previews are tried again.
+    e2ee?.let { service -> scope.launch { service.trustVersion.collect { attempted.clear(); previewTick.update { it + 1 } } } }
+  }
+
+  /** True when the chat is end-to-end encrypted. Reads the document once when it has not been seen yet. */
+  suspend fun isE2ee(conversationId: String): Boolean {
+    if (e2ee == null || !e2ee.enabled) return e2eeChats[conversationId] == true
+    e2eeChats[conversationId]?.let { return it }
+    val snap = runCatching { db.document("conversations/$conversationId").get().await() }.getOrNull()
+    val value = snap?.getBoolean("e2ee") == true
+    if (snap?.exists() == true) e2eeChats[conversationId] = value
+    return value
+  }
+
+  fun isKnownE2ee(conversationId: String): Boolean = e2eeChats[conversationId] == true
+
+  private fun otherOf(conversationId: String, me: String): String =
+    conversationId.split('_').firstOrNull { it != me } ?: throw IllegalArgumentException("not a direct chat")
 
   private val profileCache = MutableStateFlow<Map<String, Profile>>(emptyMap())
 
@@ -87,7 +137,39 @@ class ChatRepository(private val db: FirebaseFirestore) {
 
   private val failed = MutableStateFlow<Set<String>>(emptySet())
 
-  fun conversations(me: String): Flow<Snapshot<List<Conversation>>> = callbackFlow {
+  fun conversations(me: String): Flow<Snapshot<List<Conversation>>> =
+    combine(rawConversations(me), previewTick) { snap, _ -> snap }
+      .mapLatest { snap -> Snapshot(resolveLastMessages(me, snap.value), snap.fromCache) }
+
+  /**
+   * An encrypted chat's last message has no preview on the server. Show what this phone has decrypted; for a
+   * message it has not opened yet, fetch and decrypt that one message in the background and refresh the list.
+   */
+  private fun resolveLastMessages(me: String, list: List<Conversation>): List<Conversation> = list.map { c ->
+    val last = c.lastMessage
+    if (e2ee == null || !c.e2ee || last == null || !last.encrypted) return@map c
+    val preview = e2ee.cachedPreview(c.id, last.id)
+    if (preview != null) return@map c.copy(lastMessage = last.copy(preview = preview))
+    val key = "${c.id}/${last.id}"
+    if (attempted.add(key) && prefetching.add(key)) {
+      scope.launch {
+        try {
+          val doc = db.document("conversations/${c.id}/messages/${last.id}").get().await()
+          if (doc.exists() && doc.get("enc") is Map<*, *>) {
+            val opened = e2ee.open(me, c.id, last.id, doc.getString("senderId") ?: "", doc.get("enc") as Map<*, *>)
+            if (opened is Opened.Ready) previewTick.update { it + 1 }
+          }
+        } catch (_: Exception) {
+          // The list simply keeps its generic "Encrypted message" line.
+        } finally {
+          prefetching.remove(key)
+        }
+      }
+    }
+    c
+  }
+
+  private fun rawConversations(me: String): Flow<Snapshot<List<Conversation>>> = callbackFlow {
     val reg = db.collection("conversations")
       .whereArrayContains("members", me)
       .orderBy("lastMessageAt", Query.Direction.DESCENDING)
@@ -150,31 +232,61 @@ class ChatRepository(private val db: FirebaseFirestore) {
     val exists = runCatching { ref.get().await().exists() }.getOrDefault(false)
     if (!exists) {
       val members = listOf(me, other).sorted()
-      val batch = db.batch()
-      batch.set(
-        ref,
-        mapOf(
-          "type" to "direct",
-          "members" to members,
-          "createdBy" to me,
-          "createdAt" to FieldValue.serverTimestamp(),
-          "lastMessage" to null,
-          "lastMessageAt" to FieldValue.serverTimestamp(),
-        ),
+      // A new chat is end-to-end encrypted from its first message when this build can encrypt and both people have
+      // published keys. Otherwise it is created as an ordinary chat and says so (see EncryptionBanner).
+      val encrypted = e2ee != null && E2eePolicy.newChatShouldBeEncrypted(
+        e2ee.enabled, isGroup = false, peerHasKeys = e2ee.ensureReady(me) && e2ee.peerHasKeys(me, other),
       )
-      members.forEach { uid ->
+      suspend fun create(withEncryption: Boolean) {
+        val batch = db.batch()
         batch.set(
-          db.document("conversations/$id/members/$uid"),
-          mapOf(
-            "uid" to uid, "lastReadAt" to null, "lastDeliveredAt" to null, "unreadCount" to 0,
-            "muted" to false, "pinned" to false, "archived" to false,
-          ),
+          ref,
+          buildMap<String, Any?> {
+            put("type", "direct")
+            put("members", members)
+            put("createdBy", me)
+            put("createdAt", FieldValue.serverTimestamp())
+            put("lastMessage", null)
+            put("lastMessageAt", FieldValue.serverTimestamp())
+            if (withEncryption) put("e2ee", true)
+          },
         )
+        members.forEach { uid ->
+          batch.set(
+            db.document("conversations/$id/members/$uid"),
+            mapOf(
+              "uid" to uid, "lastReadAt" to null, "lastDeliveredAt" to null, "unreadCount" to 0,
+              "muted" to false, "pinned" to false, "archived" to false,
+            ),
+          )
+        }
+        batch.commit().await()
       }
-      batch.commit().await()
+      try {
+        create(encrypted)
+        if (encrypted) e2eeChats[id] = true
+      } catch (e: FirebaseFirestoreException) {
+        // The server refused the encryption flag (the other person's keys were removed in the meantime): plain chat.
+        if (!encrypted || e.code != FirebaseFirestoreException.Code.PERMISSION_DENIED) throw e
+        create(false)
+      }
       onCreated(id)
     }
     return id
+  }
+
+  /**
+   * Switches an existing chat to end-to-end encryption. Only messages sent from now on are protected; history stays
+   * as it is. Returns null on success, otherwise what stands in the way.
+   */
+  suspend fun upgradeToE2ee(conversationId: String, me: String): PeerKeys? {
+    val service = e2ee ?: return PeerKeys.UNAVAILABLE
+    if (!service.enabled) return PeerKeys.UNAVAILABLE
+    val other = otherOf(conversationId, me)
+    if (!service.ensureReady(me)) return PeerKeys.UNAVAILABLE
+    val peer = service.ensureSession(me, other)
+    if (peer != PeerKeys.READY) return peer
+    return if (service.upgradeConversation(conversationId)) null else PeerKeys.UNAVAILABLE
   }
 
   /** Newest [limit] messages, ascending. Growing [limit] pages back through history. */
@@ -183,11 +295,25 @@ class ChatRepository(private val db: FirebaseFirestore) {
    * messages from when they joined, so the query must say so.
    */
   fun messages(conversationId: String, limit: Long, since: Long? = null): Flow<MessagesPage> =
-    combine(rawMessages(conversationId, limit, since), failed) { page, failedIds ->
+    combine(
+      rawMessages(conversationId, limit, since).mapLatest { raw ->
+        // Oldest first, so the first message of a new session is opened before the ones that follow it.
+        val resolved = raw.docs.map { toMessageResolved(conversationId, it) }
+        // A server-confirmed page is the truth about which encrypted messages still exist: the phone's decrypted copy
+        // of anything that disappeared or was deleted is removed too.
+        if (e2ee != null && !raw.fromCache && isKnownE2ee(conversationId) && resolved.isNotEmpty()) {
+          e2ee.pruneChat(conversationId, resolved.map { it.id }.toSet(), resolved.minOf { it.createdAt })
+        }
+        MessagesPage(resolved, raw.hasMore, raw.fromCache)
+      },
+      failed,
+    ) { page, failedIds ->
       page.copy(messages = page.messages.map { if (it.id in failedIds) it.copy(failed = true) else it })
     }
 
-  private fun rawMessages(conversationId: String, limit: Long, since: Long?): Flow<MessagesPage> = callbackFlow {
+  private class RawPage(val docs: List<DocumentSnapshot>, val hasMore: Boolean, val fromCache: Boolean)
+
+  private fun rawMessages(conversationId: String, limit: Long, since: Long?): Flow<RawPage> = callbackFlow {
     var query: Query = db.collection("conversations/$conversationId/messages")
     if (since != null) query = query.whereGreaterThanOrEqualTo("createdAt", Timestamp(Date(since)))
     val reg = query
@@ -199,8 +325,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
           return@addSnapshotListener
         }
         if (snap != null) {
-          val list = snap.documents.map(::toMessage).reversed()
-          trySend(MessagesPage(list, hasMore = snap.size() >= limit, fromCache = snap.metadata.isFromCache))
+          trySend(RawPage(snap.documents.reversed(), hasMore = snap.size() >= limit, fromCache = snap.metadata.isFromCache))
         }
       }
     awaitClose { reg.remove() }
@@ -220,6 +345,12 @@ class ChatRepository(private val db: FirebaseFirestore) {
   ) {
     failed.update { it - id }
     try {
+      if (isE2ee(conversationId)) {
+        // Moment replies, @mentions and forwarding labels would be readable by the server, so they are not carried.
+        if (momentRef != null) throw E2eeUnsupportedException()
+        writeEncrypted(conversationId, me, id, "text", Payload.Text(text, replyTo, forwarded), null)
+        return
+      }
       val doc = buildMap<String, Any?> {
         put("senderId", me)
         put("kind", "text")
@@ -304,6 +435,65 @@ class ChatRepository(private val db: FirebaseFirestore) {
   }
 
   /**
+   * Writes an encrypted attachment message. The files are already uploaded as ciphertext ([SealedMedia] holds the keys);
+   * the document carries only the envelope and the two storage paths. Name, type, size and dimensions are inside the envelope.
+   */
+  suspend fun sendEncryptedMedia(
+    conversationId: String,
+    me: String,
+    id: String,
+    sealed: EncryptedMediaRef,
+    caption: String,
+    replyTo: String?,
+    forwarded: Boolean = false,
+  ) {
+    val folder = "conversations/$conversationId/$id"
+    val b64 = java.util.Base64.getEncoder()
+    val file = AttachmentRef("$folder/blob.bin", b64.encodeToString(sealed.fileKey), sealed.fileDigest, sealed.fileSize)
+    val thumb = sealed.thumbKey?.let { AttachmentRef("$folder/thumb.bin", b64.encodeToString(it), sealed.thumbDigest!!, sealed.thumbSize!!) }
+    val payload = Payload.Media(
+      kind = sealed.kind, name = sealed.name, mime = sealed.mime, caption = caption, file = file, thumb = thumb,
+      width = sealed.width, height = sealed.height, durationMs = sealed.durationMs, waveform = sealed.waveform,
+      replyTo = replyTo, forwarded = forwarded,
+    )
+    val media = buildMap<String, Any> {
+      put("path", file.path)
+      put("size", file.size)
+      thumb?.let { put("thumbPath", it.path) }
+    }
+    writeEncrypted(conversationId, me, id, sealed.kind, payload, media)
+  }
+
+  /**
+   * Encrypts [payload] for the other person and writes the message document. Never writes plaintext: when
+   * encryption is impossible this throws [E2eeSendException]. If the server refuses the envelope because the other
+   * person's keys changed (a new phone), the session is rebuilt once; a changed security code then waits for the user.
+   */
+  private suspend fun writeEncrypted(conversationId: String, me: String, id: String, kind: String, payload: Payload, media: Map<String, Any>?) {
+    val service = e2ee ?: throw E2eeSendException(PeerKeys.UNAVAILABLE)
+    val other = otherOf(conversationId, me)
+    val path = "conversations/$conversationId/messages/$id"
+    fun document(env: com.samvad.core.e2ee.Envelope) = buildMap<String, Any?> {
+      put("senderId", me)
+      put("kind", kind)
+      put("text", "")
+      put("replyTo", null)
+      put("createdAt", FieldValue.serverTimestamp())
+      put("enc", env.toMap())
+      media?.let { put("media", it) }
+    }
+    val first = service.seal(me, other, conversationId, id, payload)
+    try {
+      db.document(path).set(document(first)).await()
+    } catch (e: FirebaseFirestoreException) {
+      if (e.code != FirebaseFirestoreException.Code.PERMISSION_DENIED) throw e
+      val peer = service.ensureSession(me, other, rebuild = true)
+      if (peer != PeerKeys.READY) throw E2eeSendException(peer)
+      db.document(path).set(document(service.seal(me, other, conversationId, id, payload))).await()
+    }
+  }
+
+  /**
    * True when the message document already exists (written, or queued locally by an earlier attempt), so a
    * resumed upload never creates a second message with the same client ID.
    */
@@ -325,14 +515,40 @@ class ChatRepository(private val db: FirebaseFirestore) {
     send(conversationId, me, message.text, message.replyTo, message.id)
   }
 
-  suspend fun edit(conversationId: String, messageId: String, text: String) {
+  /** [me] and [original] are needed in an encrypted chat: the edit is a new ciphertext that keeps the reply link. */
+  suspend fun edit(conversationId: String, messageId: String, text: String, me: String? = null, original: Message? = null) {
+    if (isE2ee(conversationId) && original?.encrypted == true) {
+      val self = me ?: throw IllegalArgumentException("edit needs the sender")
+      val other = otherOf(conversationId, self)
+      val payload = Payload.Text(text, original.replyTo, original.forwarded)
+      var envelope = e2ee!!.seal(self, other, conversationId, messageId, payload)
+      try {
+        db.document("conversations/$conversationId/messages/$messageId")
+          .update(mapOf("enc" to envelope.toMap(), "editedAt" to FieldValue.serverTimestamp())).await()
+      } catch (e: FirebaseFirestoreException) {
+        if (e.code != FirebaseFirestoreException.Code.PERMISSION_DENIED) throw e
+        val peer = e2ee.ensureSession(self, other, rebuild = true)
+        if (peer != PeerKeys.READY) throw E2eeSendException(peer)
+        envelope = e2ee.seal(self, other, conversationId, messageId, payload)
+        db.document("conversations/$conversationId/messages/$messageId")
+          .update(mapOf("enc" to envelope.toMap(), "editedAt" to FieldValue.serverTimestamp())).await()
+      }
+      return
+    }
+    if (isE2ee(conversationId)) throw E2eeUnsupportedException()
     db.document("conversations/$conversationId/messages/$messageId")
       .update(mapOf("text" to text, "editedAt" to FieldValue.serverTimestamp())).await()
   }
 
   suspend fun deleteForEveryone(conversationId: String, messageId: String) {
-    db.document("conversations/$conversationId/messages/$messageId")
-      .update(mapOf("deleted" to true, "text" to "")).await()
+    val changes = buildMap<String, Any> {
+      put("deleted", true)
+      put("text", "")
+      // An encrypted message loses its ciphertext too; nothing of it is kept on the server.
+      if (isE2ee(conversationId)) put("enc", FieldValue.delete())
+    }
+    db.document("conversations/$conversationId/messages/$messageId").update(changes).await()
+    e2ee?.forgetMessage(conversationId, messageId)
   }
 
   suspend fun react(conversationId: String, messageId: String, me: String, emoji: String?) {
@@ -354,6 +570,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
 
   /** Phase 2: posts a poll (validated by Polls.create and again by the rules). */
   suspend fun sendPoll(conversationId: String, me: String, poll: Poll) {
+    if (isE2ee(conversationId)) throw E2eeUnsupportedException()
     db.document("conversations/$conversationId/messages/${UUID.randomUUID()}").set(
       mapOf(
         "senderId" to me,
@@ -368,6 +585,10 @@ class ChatRepository(private val db: FirebaseFirestore) {
 
   /** Phase 2: shares a contact card (validated by ContactCards.build and again by the rules). */
   suspend fun sendContact(conversationId: String, me: String, card: ContactCard, replyTo: String? = null, id: String = UUID.randomUUID().toString()) {
+    if (isE2ee(conversationId)) {
+      writeEncrypted(conversationId, me, id, "contact", Payload.Contact(card, replyTo), null)
+      return
+    }
     db.document("conversations/$conversationId/messages/$id").set(
       mapOf(
         "senderId" to me,
@@ -425,7 +646,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
       .orderBy("createdAt", Query.Direction.DESCENDING)
       .limit(limit.toLong())
       .get().await()
-      .documents.map(::toMessage).reversed()
+      .documents.reversed().map { toMessageResolved(conversationId, it) }
 
   suspend fun markDelivered(conversationId: String, me: String) {
     runCatching {
@@ -497,6 +718,8 @@ class ChatRepository(private val db: FirebaseFirestore) {
   }
 
   suspend fun schedule(me: String, conversationId: String, text: String, replyTo: String?, sendAtMs: Long) {
+    // The server would have to write the text in the clear, which an encrypted chat refuses.
+    if (isE2ee(conversationId)) throw E2eeUnsupportedException()
     db.collection("scheduledMessages").document().set(
       mapOf(
         "senderId" to me, "conversationId" to conversationId, "text" to text, "replyTo" to replyTo,
@@ -526,7 +749,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
   /** One message, or null when it no longer exists or I may no longer read it (e.g. left the group). */
   suspend fun message(conversationId: String, messageId: String): Message? =
     runCatching { db.document("conversations/$conversationId/messages/$messageId").get().await() }
-      .getOrNull()?.takeIf { it.exists() }?.let(::toMessage)
+      .getOrNull()?.takeIf { it.exists() }?.let { toMessageResolved(conversationId, it) }
 
   suspend fun setFlag(conversationId: String, me: String, field: String, value: Boolean) {
     require(field in setOf("muted", "pinned", "archived"))
@@ -539,6 +762,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
   private fun toConversation(d: DocumentSnapshot): Conversation {
     @Suppress("UNCHECKED_CAST")
     val last = d.get("lastMessage") as? Map<String, Any?>
+    e2eeChats[d.id] = d.getBoolean("e2ee") == true
     return Conversation(
       id = d.id,
       members = (d.get("members") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
@@ -551,6 +775,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
           createdAt = (it["createdAt"] as? com.google.firebase.Timestamp)?.toDate()?.time ?: 0L,
           system = (it["system"] as? Map<*, *>)?.let(::toSystem),
           expiresAt = (it["expiresAt"] as? com.google.firebase.Timestamp)?.toDate()?.time,
+          encrypted = it["encrypted"] == true,
         )
       },
       lastMessageAt = d.millis("lastMessageAt") ?: 0L,
@@ -564,6 +789,8 @@ class ChatRepository(private val db: FirebaseFirestore) {
       approveMembers = d.getBoolean("approveMembers") ?: false,
       eventsByMembers = d.getBoolean("eventsByMembers") ?: false,
       communityId = d.getString("communityId"),
+      e2ee = d.getBoolean("e2ee") == true,
+      e2eeSince = d.millis("e2eeSince"),
       pinnedMessages = (d.get("pinnedMessages") as? List<*>).orEmpty().mapNotNull { raw ->
         val m = raw as? Map<*, *> ?: return@mapNotNull null
         Pin(
@@ -638,6 +865,60 @@ class ChatRepository(private val db: FirebaseFirestore) {
     val id = m["meetingId"] as? String ?: return null
     val startsAt = (m["startsAt"] as? com.google.firebase.Timestamp)?.toDate()?.time ?: return null
     return com.samvad.core.chat.MeetingCard(id, m["title"] as? String ?: "", startsAt, m["kind"] as? String ?: "audio")
+  }
+
+  /**
+   * A message as the screens use it. Encrypted ones (they carry an `enc` envelope) are opened on this phone: the
+   * server never held their text. A message that cannot be opened comes back with [Message.lock] set and empty text.
+   */
+  private suspend fun toMessageResolved(conversationId: String, d: DocumentSnapshot): Message {
+    val enc = d.get("enc") as? Map<*, *> ?: return toMessage(d)
+    val base = toMessage(d).copy(encrypted = true)
+    if (base.deleted) return base
+    val service = e2ee ?: return base.copy(lock = com.samvad.core.e2ee.LockReason.DISABLED.name)
+    val self = me ?: return base.copy(lock = com.samvad.core.e2ee.LockReason.UNREADABLE.name)
+    return when (val opened = service.open(self, conversationId, d.id, base.senderId, enc)) {
+      is Opened.Locked -> base.copy(lock = opened.reason.name)
+      is Opened.Ready -> when (val p = opened.payload) {
+        is Payload.Text -> base.copy(text = p.text, replyTo = p.replyTo, forwarded = p.forwarded)
+        is Payload.Contact -> base.copy(contact = ContactCard(p.card.name, p.card.phones, p.card.organisation), replyTo = p.replyTo, forwarded = p.forwarded)
+        is Payload.Media -> {
+          val ext = extensionFor(p.name, p.mime)
+          attachmentKeys?.put(p.file.path, AttachmentKey(p.file.keyBytes(), p.file.digest, ext))
+          p.thumb?.let { attachmentKeys?.put(it.path, AttachmentKey(it.keyBytes(), it.digest, "jpg")) }
+          base.copy(
+            text = p.caption,
+            replyTo = p.replyTo,
+            forwarded = p.forwarded,
+            media = Media(
+              path = p.file.path,
+              name = p.name,
+              size = (p.file.size - AttachmentCrypto.OVERHEAD).coerceAtLeast(0),
+              mime = p.mime,
+              width = p.width,
+              height = p.height,
+              durationMs = p.durationMs,
+              waveform = p.waveform,
+              thumbPath = p.thumb?.path,
+            ),
+          )
+        }
+      }
+    }
+  }
+
+  private fun extensionFor(name: String, mime: String): String {
+    name.substringAfterLast('.', "").lowercase().takeIf { it.length in 1..5 && it.all { c -> c.isLetterOrDigit() } }?.let { return it }
+    return when (mime) {
+      "image/jpeg" -> "jpg"
+      "image/png" -> "png"
+      "image/webp" -> "webp"
+      "video/mp4" -> "mp4"
+      "audio/mp4" -> "m4a"
+      "audio/aac" -> "aac"
+      "application/pdf" -> "pdf"
+      else -> "bin"
+    }
   }
 
   private fun toMessage(d: DocumentSnapshot): Message {
@@ -731,3 +1012,6 @@ class ChatRepository(private val db: FirebaseFirestore) {
     awaitClose { reg.remove() }
   }
 }
+
+/** The action needs the server to read message content, which an end-to-end encrypted chat does not allow. */
+class E2eeUnsupportedException : Exception("not available in an encrypted chat")

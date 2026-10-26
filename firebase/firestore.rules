@@ -395,6 +395,66 @@ service cloud.firestore {
         && request.time < get(/databases/$(database)/documents/statuses/$(r.author)/items/$(r.sid)).data.get('expiresAt', timestamp.date(1970, 1, 1));
     }
 
+    // ---- end-to-end encryption (docs/security/E2EE_DESIGN.md) -------------------------------------------
+    // A direct chat with e2ee == true carries only Signal Protocol envelopes (`enc`): plaintext text, polls, mentions,
+    // contact fields, reply links and moment replies are refused there, so the server never receives message content.
+    // The flag is written at creation (both people must have published keys) or by upgradeConversationE2ee, never by
+    // a client update. Public key bundles live in e2eeKeys/{uid}, which no client can read or write.
+
+    function isE2eeConv(cid) {
+      return convAfter(cid).get('e2ee', false) == true;
+    }
+
+    function hasKeys(uid) {
+      return exists(/databases/$(database)/documents/e2eeKeys/$(uid));
+    }
+
+    // The registration ID the recipient currently has published. A message addressed to an older one (the recipient
+    // got a new phone) is refused, so the sender's app learns the keys changed instead of sending into the void.
+    function recipientRegistrationId(cid) {
+      let m = convAfter(cid).members;
+      let other = m[0] == request.auth.uid ? m[1] : m[0];
+      return get(/databases/$(database)/documents/e2eeKeys/$(other)).data.registrationId;
+    }
+
+    function validEnc(cid, enc) {
+      return enc is map
+        && enc.keys().hasOnly(['v', 'type', 'ciphertext', 'registrationId'])
+        && enc.keys().hasAll(['v', 'type', 'ciphertext', 'registrationId'])
+        && enc.v == 1
+        && enc.type in ['prekey', 'whisper']
+        && enc.ciphertext is string
+        && enc.ciphertext.size() >= 8
+        && enc.ciphertext.size() <= 32768
+        && enc.ciphertext.matches('^[A-Za-z0-9+/]+={0,2}$')
+        && enc.registrationId is int
+        && enc.registrationId >= 1
+        && enc.registrationId <= 16380
+        && enc.registrationId == recipientRegistrationId(cid);
+    }
+
+    // The stored file is ciphertext named blob.bin (and thumb.bin); name, type and size of the real file are inside
+    // the envelope. Ciphertext is the file plus 28 bytes (IV and tag).
+    function validEncMedia(cid, mid, m) {
+      return m is map
+        && m.keys().hasAll(['path', 'size'])
+        && m.keys().hasOnly(['path', 'size', 'thumbPath'])
+        && m.path == 'conversations/' + cid + '/' + mid + '/blob.bin'
+        && m.size is int && m.size > 0 && m.size <= 16 * 1024 * 1024 + 64
+        && (!('thumbPath' in m) || m.thumbPath == 'conversations/' + cid + '/' + mid + '/thumb.bin');
+    }
+
+    function validEncMessage(cid, mid, d) {
+      return d.text == ''
+        && d.replyTo == null
+        && !('mentions' in d) && !('momentRef' in d) && !('forwarded' in d) && !('poll' in d) && !('contact' in d)
+        && d.kind in ['text', 'image', 'file', 'voice', 'video', 'contact']
+        && validEnc(cid, d.get('enc', null))
+        && ((d.kind in ['text', 'contact'])
+            ? !('media' in d)
+            : ('media' in d && validEncMedia(cid, mid, d.media)));
+    }
+
     function notBlocked(cid) {
       let c = convAfter(cid);
       return c.type != 'direct'
@@ -422,8 +482,12 @@ service cloud.firestore {
       allow get, list: if signedIn() && request.auth.uid in resource.data.members;
 
       allow create: if signedIn()
-        && request.resource.data.keys().hasOnly(['type', 'members', 'createdBy', 'createdAt', 'lastMessage', 'lastMessageAt'])
+        && request.resource.data.keys().hasOnly(['type', 'members', 'createdBy', 'createdAt', 'lastMessage', 'lastMessageAt', 'e2ee'])
         && request.resource.data.keys().hasAll(['type', 'members', 'createdBy', 'createdAt', 'lastMessageAt'])
+        && (!('e2ee' in request.resource.data)
+            || (request.resource.data.e2ee == true
+                && hasKeys(request.resource.data.members[0])
+                && hasKeys(request.resource.data.members[1])))
         && request.resource.data.type == 'direct'
         && request.resource.data.members is list
         && request.resource.data.members.size() == 2
@@ -444,10 +508,12 @@ service cloud.firestore {
 
         allow create: if isMemberOf(cid)
           && isUuid(mid)
-          && request.resource.data.keys().hasOnly(['senderId', 'kind', 'text', 'replyTo', 'createdAt', 'deleted', 'reactions', 'media', 'forwarded', 'mentions', 'poll', 'contact', 'momentRef', 'gif'])
+          && request.resource.data.keys().hasOnly(['senderId', 'kind', 'text', 'replyTo', 'createdAt', 'deleted', 'reactions', 'media', 'forwarded', 'mentions', 'poll', 'contact', 'momentRef', 'gif', 'enc'])
           && request.resource.data.keys().hasAll(['senderId', 'kind', 'text', 'replyTo', 'createdAt'])
           && request.resource.data.senderId == request.auth.uid
           && (
+            (isE2eeConv(cid) && validEncMessage(cid, mid, request.resource.data))
+            || (!isE2eeConv(cid) && !('enc' in request.resource.data) && (
             (request.resource.data.kind == 'text'
               && validText(request.resource.data.text)
               && !('media' in request.resource.data))
@@ -468,6 +534,7 @@ service cloud.firestore {
               && request.resource.data.text == ''
               && !('media' in request.resource.data)
               && validContact(request.resource.data.get('contact', null)))
+            ))
           )
           && (request.resource.data.kind == 'poll' || !('poll' in request.resource.data))
           && (request.resource.data.kind == 'contact' || !('contact' in request.resource.data))
@@ -489,8 +556,22 @@ service cloud.firestore {
           return resource.data.get('deleted', false) == false;
         }
 
+        // Encrypted chat: an edit replaces the envelope; the new text exists only inside the new ciphertext.
+        function isEncEdit() {
+          return isE2eeConv(cid)
+            && 'enc' in resource.data
+            && resource.data.senderId == request.auth.uid
+            && resource.data.kind == 'text'
+            && notDeletedMessage()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['enc', 'editedAt'])
+            && validEnc(cid, request.resource.data.get('enc', null))
+            && request.resource.data.editedAt == request.time
+            && request.time < resource.data.createdAt + duration.value(15, 'm');
+        }
+
         function isEdit() {
-          return resource.data.senderId == request.auth.uid
+          return !isE2eeConv(cid)
+            && resource.data.senderId == request.auth.uid
             && resource.data.kind == 'text'
             && notDeletedMessage()
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'editedAt'])
@@ -502,9 +583,11 @@ service cloud.firestore {
         function isSoftDelete() {
           return resource.data.senderId == request.auth.uid
             && notDeletedMessage()
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deleted', 'text'])
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deleted', 'text', 'enc'])
             && request.resource.data.deleted == true
-            && request.resource.data.text == '';
+            && request.resource.data.text == ''
+            // Deleting an encrypted message also removes its ciphertext.
+            && !('enc' in request.resource.data);
         }
 
         function isOwnReaction() {
@@ -518,7 +601,7 @@ service cloud.firestore {
                     && after[request.auth.uid].size() <= 16));
         }
 
-        allow update: if isMemberOf(cid) && (isSoftDelete() || ((isEdit() || isOwnReaction()) && notBlocked(cid)));
+        allow update: if isMemberOf(cid) && (isSoftDelete() || ((isEdit() || isEncEdit() || isOwnReaction()) && notBlocked(cid)));
 
         // Phase 2: one vote document per member on a poll; members see all votes (results).
         match /votes/{voterId} {
@@ -754,6 +837,8 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time
         && notDeleted(request.auth.uid)
         && isMemberOf(request.resource.data.conversationId)
+        // The server cannot encrypt, so nothing can be scheduled in an end-to-end encrypted chat.
+        && !isE2eeConv(request.resource.data.conversationId)
         && notBlocked(request.resource.data.conversationId)
         && groupAllowsSend(request.resource.data.conversationId)
         && mayPost(request.resource.data.conversationId);
@@ -797,6 +882,18 @@ service cloud.firestore {
       allow get: if signedIn()
         && request.auth.uid in get(/databases/$(database)/documents/conversations/$(resource.data.groupId)).data.get('members', []);
       allow list, create, update, delete: if false;
+    }
+
+    // End-to-end encryption key directory and its rate-limit counters: server only (publishPreKeys, fetchPreKeyBundle).
+    match /e2eeKeys/{uid} {
+      allow read, write: if false;
+      match /oneTime/{keyId} {
+        allow read, write: if false;
+      }
+    }
+
+    match /e2eeFetchLimits/{id} {
+      allow read, write: if false;
     }
 
     // ---- default deny --------------------------------------------------

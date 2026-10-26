@@ -5,7 +5,11 @@ suite. Specs: [B1 foundation + auth](../docs/superpowers/specs/2026-10-09-founda
 [B2 1:1 messaging](../docs/superpowers/specs/2026-10-13-b2-messaging-design.md).
 The Android client must follow the client contract in §8 of that spec.
 
-> Nothing here encrypts message content end to end. Do not describe Samvad as end-to-end encrypted.
+> One-to-one chats can be end-to-end encrypted by the app (key directory in `functions/src/prekeys.ts`, envelope rules in
+> `firestore.rules`; see `docs/security/E2EE_DESIGN.md`). It is not deployed or externally reviewed yet, groups, polls,
+> Moments and calls are not encrypted, so do not describe Samvad as end-to-end encrypted anywhere public yet.
+> New callables to deploy: `publishPreKeys`, `fetchPreKeyBundle`, `preKeyStatus`, `deletePreKeys`, `upgradeConversationE2ee`
+> (plus changed `onMessageCreated`, `sendScheduledMessages`, `reportContact`, `deleteAccount`, and the Firestore and Storage rules).
 
 ## Prerequisites
 

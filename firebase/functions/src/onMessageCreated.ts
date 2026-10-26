@@ -29,11 +29,23 @@ export interface CreatedMessage {
     /** Shared contact card; only its name is used in previews (never the phone numbers). */
     contact?: { name?: string };
     meeting?: { title?: string };
+    /** End-to-end encrypted messages: the Signal envelope (ciphertext only). `text` is empty then. */
+    enc?: { v?: number; type?: string; ciphertext?: string; registrationId?: number };
   };
+}
+
+/** FCM allows 4 KB of data per message; the ciphertext rides along only when it leaves room for the rest. */
+export const MAX_PUSH_CIPHERTEXT_CHARS = 2400;
+
+/** Server-written system lines in an encrypted chat carry no envelope and are not encrypted. */
+export function isEncrypted(data: CreatedMessage['data']): boolean {
+  return data.enc !== undefined;
 }
 
 /** Chat-list and notification preview: media kinds get a short label, then the caption. */
 export function previewOf(data: CreatedMessage['data']): string {
+  // End-to-end encrypted: the server must not (and cannot) describe the content, not even by media type.
+  if (data.enc !== undefined) return '';
   const caption = (data.text ?? '').trim();
   const label = (() => {
     switch (data.kind) {
@@ -66,11 +78,13 @@ export async function applyMessageCreated(deps: Deps, msg: CreatedMessage): Prom
   let recipients: string[] = [];
   let group: { name: string; community?: boolean } | null = null;
   let newlyEngaged = false;
+  let encrypted = false;
 
   await db.runTransaction(async (tx) => {
     recipients = [];
     group = null;
     newlyEngaged = false;
+    encrypted = false;
     const [marker, conv] = await Promise.all([tx.get(markerRef), tx.get(convRef)]);
     if (marker.exists || !conv.exists) return;
 
@@ -80,6 +94,7 @@ export async function applyMessageCreated(deps: Deps, msg: CreatedMessage): Prom
     const isAnnouncements = type === 'community_announcements';
     // Disappearing messages: the timer in force right now decides this message's expiry (written below).
     const timer = Number(conv.get('disappearAfterSec') ?? 0);
+    encrypted = isEncrypted(msg.data);
     if (isGroup) group = { name: String(conv.get('name') ?? '') };
     if (isAnnouncements) group = { name: String(conv.get('name') ?? ''), community: true };
     const members: string[] = conv.get('members') ?? [];
@@ -100,8 +115,10 @@ export async function applyMessageCreated(deps: Deps, msg: CreatedMessage): Prom
         lastMessage: {
           id: msg.mid,
           senderId: msg.data.senderId,
-          preview: previewOf(msg.data),
+          // Empty for encrypted messages: the app shows what it decrypted on the device.
+          preview: encrypted ? '' : previewOf(msg.data),
           kind: msg.data.kind,
+          ...(encrypted ? { encrypted: true } : {}),
           createdAt: msg.data.createdAt,
           ...(msg.data.kind === 'system' && msg.data.system ? { system: msg.data.system } : {}),
           ...(timer > 0 ? { expiresAt: Timestamp.fromMillis(msg.data.createdAt.toMillis() + timer * 1000) } : {}),
@@ -141,11 +158,27 @@ export async function applyMessageCreated(deps: Deps, msg: CreatedMessage): Prom
   // Push only when this delivery applied the event, so a redelivered trigger never re-notifies.
   if (recipients.length > 0) {
     try {
-      await notifyRecipients(deps, msg, recipients, group);
+      await notifyRecipients(deps, msg, recipients, group, encrypted);
     } catch {
       logEvent('push_failed', { outcome: 'error' });
     }
   }
+}
+
+/**
+ * Push fields for an encrypted message: a flag and the kind (so a generic notification can say "voice message"),
+ * and the ciphertext itself when it fits, so the app can decrypt it on the phone and show a preview if the person
+ * allows previews. Never any text. Larger messages arrive without it and are fetched when the app opens.
+ */
+export function encryptedPushFields(msg: CreatedMessage): Record<string, string> {
+  const out: Record<string, string> = { e2ee: '1', kind: msg.data.kind };
+  const enc = msg.data.enc;
+  if (enc && typeof enc.ciphertext === 'string' && enc.ciphertext.length <= MAX_PUSH_CIPHERTEXT_CHARS) {
+    out.encType = String(enc.type);
+    out.encCipher = enc.ciphertext;
+    out.encReg = String(enc.registrationId);
+  }
+  return out;
 }
 
 /**
@@ -158,12 +191,13 @@ export async function notifyRecipients(
   msg: CreatedMessage,
   recipients: string[],
   group: { name: string; community?: boolean } | null = null,
+  encrypted = false,
 ): Promise<void> {
   const { db } = deps;
   const sender = await db.doc(`profiles/${msg.data.senderId}`).get();
   const senderName = (sender.get('displayName') as string | undefined) ?? 'New message';
   const title = group ? group.name : senderName;
-  const body = group ? `${senderName}: ${previewOf(msg.data)}` : previewOf(msg.data);
+  const body = encrypted ? '' : group ? `${senderName}: ${previewOf(msg.data)}` : previewOf(msg.data);
   const mentioned = new Set(Array.isArray(msg.data.mentions) ? msg.data.mentions : []);
   const tokenOwners = new Map<string, FirebaseFirestore.DocumentReference>();
 
@@ -191,6 +225,7 @@ export async function notifyRecipients(
     senderId: msg.data.senderId,
     title,
     body: body.slice(0, PREVIEW_LENGTH + 66),
+    ...(encrypted ? encryptedPushFields(msg) : {}),
     ...(group ? { group: '1' } : {}),
     ...(group?.community ? { community: '1' } : {}),
   });

@@ -58,6 +58,7 @@ import androidx.compose.material.icons.automirrored.outlined.Forward
 import androidx.compose.material.icons.automirrored.outlined.Reply
 import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.outlined.AttachFile
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
@@ -169,6 +170,8 @@ fun ConversationScreen(
   onOpenContact: (conversationId: String, otherUid: String) -> Unit = { _, _ -> },
   /** Global search "Open": the message this chat should scroll to once it is loaded. */
   initialJumpId: String? = null,
+  /** Opens the security code (safety number) screen for the other person. */
+  onOpenVerify: (otherUid: String) -> Unit = {},
 ) {
   val appCtx = LocalContext.current.applicationContext as android.app.Application
   val vm: ConversationViewModel = viewModel(factory = ConversationViewModel.factory(appCtx, container, me, conversationId, otherUid))
@@ -181,6 +184,9 @@ fun ConversationScreen(
   val pinnedBanner = vm.pinnedBanner.collectAsStateWithLifecycle().value
   val pinnedIds = vm.pinnedIds.collectAsStateWithLifecycle().value
   val pinNotice = vm.pinNotice.collectAsStateWithLifecycle().value
+  val encryption = vm.encryption.collectAsStateWithLifecycle().value
+  val e2eeNotice = vm.e2eeNotice.collectAsStateWithLifecycle().value
+  val chatEncrypted = vm.encrypted.collectAsStateWithLifecycle().value
   var composingPoll by remember { mutableStateOf(false) }
   var pickingGif by remember { mutableStateOf(false) }
   var schedulingMeeting by remember { mutableStateOf(false) }
@@ -243,6 +249,13 @@ fun ConversationScreen(
     if (pinNoticeText != null) {
       snackbar.showSnackbar(pinNoticeText)
       vm.clearPinNotice()
+    }
+  }
+  val e2eeNoticeMessage = e2eeNotice?.let { e2eeNoticeText(it, state.title) }
+  LaunchedEffect(e2eeNoticeMessage) {
+    if (e2eeNoticeMessage != null) {
+      snackbar.showSnackbar(e2eeNoticeMessage)
+      vm.clearE2eeNotice()
     }
   }
   val copied = stringResource(R.string.chat_copied)
@@ -585,6 +598,9 @@ fun ConversationScreen(
               DropdownMenuItem(text = { Text(stringResource(R.string.group_events)) }, onClick = { menu = false; onOpenEvents() })
             }
             DropdownMenuItem(text = { Text(stringResource(R.string.media_tab_title)) }, onClick = { menu = false; onOpenMedia() })
+            if (chatEncrypted && !state.isGroup && otherUid != null) {
+              DropdownMenuItem(text = { Text(stringResource(R.string.e2ee_verify_action)) }, onClick = { menu = false; onOpenVerify(otherUid) })
+            }
             if (state.isGroup && state.isAdmin && !state.removed) {
               DropdownMenuItem(text = { Text(stringResource(R.string.meeting_schedule_title)) }, onClick = { menu = false; schedulingMeeting = true })
             }
@@ -635,13 +651,18 @@ fun ConversationScreen(
       StatusBanner(state.error, stringResource(R.string.home_load_error), isError = true, actionLabel = stringResource(R.string.retry), onAction = vm::retryLoad)
 
       if (pinnedBanner != null) PinnedBannerBar(pinnedBanner, onClick = { vm.bannerTapped()?.let { jumpTo = it } })
+      if (encryption.codeChanged && otherUid != null) SecurityCodeChangedBanner(state.title) { onOpenVerify(otherUid) }
 
       Box(Modifier.weight(1f)) {
         if (themeSettings != null) ChatBackdrop(backdrop, themeSettings, container.chatThemes, dark, Modifier.fillMaxSize())
         when {
           state.loading -> CircularProgressIndicator(Modifier.align(Alignment.Center), color = colors.brand)
           state.items.isEmpty() -> Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
-            PrivacyNotice(onLearnMore = { privacyInfo = true })
+            EncryptionNotice(
+              banner = encryption.banner, otherName = state.title, sinceMs = encryption.sinceMs, upgrading = encryption.upgrading,
+              verified = encryption.verified, onUpgrade = vm::upgradeToEncrypted,
+              onVerify = { otherUid?.let(onOpenVerify) }, onLearnMore = { privacyInfo = true },
+            )
             Text(
               stringResource(R.string.chat_empty, state.title),
               style = MaterialTheme.typography.bodyLarge,
@@ -765,7 +786,13 @@ fun ConversationScreen(
               }
               }
             }
-            if (!state.hasMore) item(key = "privacy-notice") { PrivacyNotice(onLearnMore = { privacyInfo = true }) }
+            if (!state.hasMore) item(key = "privacy-notice") {
+              EncryptionNotice(
+                banner = encryption.banner, otherName = state.title, sinceMs = encryption.sinceMs, upgrading = encryption.upgrading,
+                verified = encryption.verified, onUpgrade = vm::upgradeToEncrypted,
+                onVerify = { otherUid?.let(onOpenVerify) }, onLearnMore = { privacyInfo = true },
+              )
+            }
             if (firstContact.show) item(key = "first-contact") {
               FirstContactBanner(state.title, onBlock = { confirmBlock = true }, onReport = { reportOpen = true }, onDismiss = firstContact.dismiss)
             }
@@ -807,7 +834,8 @@ fun ConversationScreen(
           onSend = vm::submit,
           onCancel = vm::cancelContext,
           onAttach = { attaching = true },
-          onSchedule = { scheduling = true },
+          // Scheduling needs the server to write the text, which an encrypted chat does not allow.
+          onSchedule = if (com.samvad.core.e2ee.E2eePolicy.canSchedule(chatEncrypted)) ({ scheduling = true }) else null,
           onMic = {
             val granted = androidx.core.content.ContextCompat.checkSelfPermission(
               context, android.Manifest.permission.RECORD_AUDIO,
@@ -843,8 +871,8 @@ fun ConversationScreen(
           container.appLock.expectExternal()
           pickContactPhone()
         },
-        onPoll = { attaching = false; composingPoll = true },
-        onGif = { attaching = false; pickingGif = true },
+        onPoll = if (com.samvad.core.e2ee.E2eePolicy.canSendPoll(chatEncrypted)) ({ attaching = false; composingPoll = true }) else null,
+        onGif = if (chatEncrypted) null else ({ attaching = false; pickingGif = true }),
       )
     }
   }
@@ -881,7 +909,9 @@ fun ConversationScreen(
   }
 
   if (privacyInfo) {
-    ModalBottomSheet(onDismissRequest = { privacyInfo = false }) { PrivacyInfoSheet(onClose = { privacyInfo = false }) }
+    ModalBottomSheet(onDismissRequest = { privacyInfo = false }) {
+      if (vm.e2eeEnabled) EncryptionInfoSheet(onClose = { privacyInfo = false }) else PrivacyInfoSheet(onClose = { privacyInfo = false })
+    }
   }
 
   person?.let { uid ->
@@ -974,8 +1004,11 @@ fun ConversationScreen(
       name = state.title,
       sending = reportSending,
       alreadyBlocked = blocked,
-      onSend = vm::report,
+      onSend = { reason, alsoBlock -> vm.report(reason, alsoBlock) },
       onDismiss = { reportOpen = false },
+      encryptedChat = chatEncrypted,
+      attachableCount = if (chatEncrypted) vm.reportableCount() else 0,
+      onSendEncrypted = { reason, alsoBlock, attach -> vm.report(reason, alsoBlock, attach) },
     )
   }
 
@@ -1131,11 +1164,15 @@ private fun MessageBubble(
           mediaContent()
           if (m.text.isNotBlank()) Spacer(Modifier.size(6.dp))
         }
-        if (m.deleted || m.text.isNotBlank()) {
+        if (m.deleted || m.text.isNotBlank() || m.lock != null) {
           Text(
-            if (m.deleted) AnnotatedString(stringResource(R.string.chat_deleted)) else linkedText(mentionText(m.text, mentionNames), assessment, scam),
+            when {
+              m.deleted -> AnnotatedString(stringResource(R.string.chat_deleted))
+              m.lock != null -> AnnotatedString(lockedMessageText(m.lock))
+              else -> linkedText(mentionText(m.text, mentionNames), assessment, scam)
+            },
             style = MaterialTheme.typography.bodyLarge,
-            color = if (m.deleted) colors.onSurfaceVariant else colors.onBubble,
+            color = if (m.deleted || m.lock != null) colors.onSurfaceVariant else colors.onBubble,
           )
         }
         Row(
@@ -1143,6 +1180,7 @@ private fun MessageBubble(
           verticalAlignment = Alignment.CenterVertically,
           horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
+          if (m.encrypted && !m.deleted) Icon(Icons.Outlined.Lock, stringResource(R.string.e2ee_message_cd), tint = meta, modifier = Modifier.size(12.dp))
           if (starred && !m.deleted) Icon(Icons.Filled.Star, stringResource(R.string.cd_starred), tint = meta, modifier = Modifier.size(13.dp))
           if (m.editedAt != null && !m.deleted) Text(stringResource(R.string.chat_edited), style = MaterialTheme.typography.labelSmall, color = meta)
           Text(item.timeLabel, style = MaterialTheme.typography.labelSmall, color = meta)

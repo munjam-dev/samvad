@@ -555,7 +555,7 @@
     <string name="privacy_notice_title">Your messages are protected</string>
     <string name="privacy_notice_body">Messages are encrypted while they travel and stored securely on Google Cloud. End-to-end encryption is coming to Samvad.</string>
     <string name="privacy_notice_title_e2ee">Your conversations are private</string>
-    <string name="privacy_notice_body_e2ee">Messages and calls are end-to-end encrypted. Only the people in this chat can read, listen to or share them.</string>
+    <string name="privacy_notice_body_e2ee">Messages and attachments in this chat are end-to-end encrypted. Only the people in this chat can read them. Calls are not end-to-end encrypted.</string>
     <string name="privacy_learn_more">Learn more</string>
     <string name="privacy_sheet_title">How Samvad protects your chats</string>
     <string name="privacy_sheet_now_title">Protected today</string>

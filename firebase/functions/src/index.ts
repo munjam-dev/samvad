@@ -70,3 +70,4 @@ export {
 export { startCall, answerCall, declineCall, endCall, getCallToken, cleanupMissedCalls } from './calls';
 export { scheduleMeeting, getMeetingToken, endMeeting } from './meetings';
 export { searchGifs, trendingGifs } from './gifs';
+export { publishPreKeys, fetchPreKeyBundle, preKeyStatus, deletePreKeys, upgradeConversationE2ee } from './prekeys';

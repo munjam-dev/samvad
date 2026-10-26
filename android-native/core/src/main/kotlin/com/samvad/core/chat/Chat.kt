@@ -18,6 +18,8 @@ data class LastMessage(
   val system: SystemInfo? = null,
   /** When the disappearing-message timer will remove it; null when none. */
   val expiresAt: Long? = null,
+  /** End-to-end encrypted: the server keeps no preview, so [preview] is only what this device decrypted. */
+  val encrypted: Boolean = false,
 )
 
 data class Conversation(
@@ -43,6 +45,10 @@ data class Conversation(
   val eventsByMembers: Boolean = false,
   /** Phase 6: the community this group is linked into, if any (set only by the community functions). */
   val communityId: String? = null,
+  /** Direct chats: new messages are end-to-end encrypted (Signal Protocol). Set once, by the server. */
+  val e2ee: Boolean = false,
+  /** When encryption was switched on for a chat that existed before; messages older than this are not encrypted. Null: since creation. */
+  val e2eeSince: Long? = null,
 )
 
 data class MemberState(
@@ -90,6 +96,13 @@ data class Message(
   val contact: ContactCard? = null,
   /** Phase 7: a scheduled group meeting card (kind "meeting"). */
   val meeting: MeetingCard? = null,
+  /** Sent end-to-end encrypted (it carried a Signal envelope). Never true for a plaintext message. */
+  val encrypted: Boolean = false,
+  /**
+   * Encrypted but not readable on this device, and why: see [com.samvad.core.e2ee.LockReason]. [text] is empty then.
+   * Null for readable messages.
+   */
+  val lock: String? = null,
 )
 
 /** The card posted in a group when an admin schedules a meeting; [kind] is "audio" or "video". */

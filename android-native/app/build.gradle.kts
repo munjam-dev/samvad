@@ -12,6 +12,12 @@ plugins {
 val useEmulators = (findProperty("samvad.useEmulators") as String?)?.toBoolean() ?: false
 val emulatorHost = (findProperty("samvad.emulatorHost") as String?) ?: "10.0.2.2"
 
+// End-to-end encryption (libsignal, AGPL-3.0). On in debug builds. In release it is OFF unless -Psamvad.e2ee=true,
+// so a release that must exclude the encrypted-chat code paths (see docs/security/E2EE_DECISION.md, release gate)
+// still builds. NOTE: this switches the feature off at run time; libsignal is still linked. To ship a build with no
+// AGPL code at all, also remove the libsignal-android dependency (docs/security/E2EE_DESIGN.md, section Release).
+val e2eeInRelease = (findProperty("samvad.e2ee") as String?)?.toBoolean() ?: false
+
 android {
   namespace = "com.samvad.messenger"
   compileSdk = 36
@@ -69,6 +75,7 @@ android {
       if (!abiSplits) ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
       buildConfigField("boolean", "USE_EMULATORS", useEmulators.toString())
       buildConfigField("String", "EMULATOR_HOST", "\"$emulatorHost\"")
+      buildConfigField("boolean", "E2EE_ENABLED", "true")
     }
     release {
       isMinifyEnabled = true
@@ -78,6 +85,7 @@ android {
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       buildConfigField("boolean", "USE_EMULATORS", "false")
       buildConfigField("String", "EMULATOR_HOST", "\"\"")
+      buildConfigField("boolean", "E2EE_ENABLED", e2eeInRelease.toString())
     }
   }
 
@@ -134,6 +142,9 @@ dependencies {
   implementation(libs.androidx.navigation.compose)
   // Signal Protocol, AGPL-3.0: read docs/security/E2EE_DECISION.md (release gate) before any distribution
   implementation(libs.libsignal.android)
+  // Safety-number QR code: drawing (zxing core, Apache-2.0) and scanning (Google code scanner, needs no camera permission).
+  implementation(libs.zxing.core)
+  implementation(libs.play.services.code.scanner)
   coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
   implementation(libs.androidx.datastore.preferences)
   implementation(libs.androidx.exifinterface)
