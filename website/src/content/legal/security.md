@@ -1,7 +1,7 @@
 ---
 title: Security and Responsible Disclosure
 summary: How we protect Samvad, how to report a vulnerability safely, and what we promise researchers who do.
-updated: 2026-10-14
+updated: 2026-10-26
 order: 9
 group: authorities
 ---
@@ -11,6 +11,7 @@ group: authorities
 ## 1. How we protect Samvad
 
 - **Encryption** of all connections (TLS) and of stored data. Call and meeting media is encrypted in transit to LiveKit Cloud.
+- **End-to-end encryption for one-to-one chats** using the Signal protocol (the open-source libsignal library), when both people have keys. Private keys stay on the phone. Our servers hold only encrypted content for those chats.
 - **Personal Vault** contents are encrypted on the phone and never uploaded.
 - **Deny-by-default access rules** on our databases and file storage, so every request is checked and only the people in a chat can read it. These rules are covered by automated tests that run on every change.
 - **App integrity checks** (Google Play Integrity through Firebase App Check) on server functions.
@@ -19,7 +20,9 @@ group: authorities
 - **Privacy-preserving logs** that exclude message content and phone numbers, enforced by an automated check.
 - **Least-privilege access** for our team and service accounts.
 
-Messages and calls are **not end-to-end encrypted**; end-to-end encryption is planned but not built.
+**Limits.** Existing chats, group chats, polls and Moments are not end-to-end encrypted, and neither are calls and meetings. Even in an encrypted chat, details such as who talked to whom and when are visible to our servers. The encryption has not yet had an independent security review.
+
+**Open source.** The Samvad Android app source is published under the GNU AGPL-3.0 at [github.com/munjam-dev/samvad](https://github.com/munjam-dev/samvad), so anyone can inspect how the app works. The server code in the same repository contains no secrets.
 
 ## 2. Reporting a vulnerability
 

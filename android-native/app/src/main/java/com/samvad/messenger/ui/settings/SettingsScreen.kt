@@ -48,6 +48,7 @@ import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material.icons.outlined.PrivacyTip
 import androidx.compose.material.icons.outlined.VerifiedUser
@@ -127,6 +128,7 @@ fun SettingsScreen(
   onOpenPrivacy: () -> Unit = {},
   onOpenDevices: () -> Unit = {},
   onOpenAppeal: () -> Unit = {},
+  onOpenLicences: () -> Unit = {},
 ) {
   val colors = SamvadTheme.colors
   val scope = rememberCoroutineScope()
@@ -352,7 +354,7 @@ fun SettingsScreen(
         }
         Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
           Icon(Icons.Outlined.Lock, null, tint = colors.onPrimaryContainer)
-          Text(stringResource(R.string.settings_privacy_body), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+          Text(stringResource(if (BuildConfig.E2EE_ENABLED) R.string.settings_privacy_body_e2ee else R.string.settings_privacy_body), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
         }
       }
 
@@ -368,10 +370,11 @@ fun SettingsScreen(
         ActionRow(Icons.Outlined.DeleteForever, stringResource(R.string.settings_delete), danger = true, onClick = { confirmDelete = true })
       }
 
-      if (container.appeals != null) {
-        Group(stringResource(R.string.settings_help)) {
+      Group(stringResource(R.string.settings_help)) {
+        if (container.appeals != null) {
           ActionRow(Icons.AutoMirrored.Outlined.HelpOutline, stringResource(R.string.appeal_title), onClick = onOpenAppeal)
         }
+        ActionRow(Icons.Outlined.Code, stringResource(R.string.settings_licences), onClick = onOpenLicences)
       }
       Text(
         stringResource(R.string.settings_version, BuildConfig.VERSION_NAME),

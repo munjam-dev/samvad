@@ -5,9 +5,9 @@ and release builds are unsigned until you supply signing values.
 
 ## 0. Gate: the libsignal (AGPL-3.0) question
 
-**libsignal must not ship until the licence question is answered in writing.** `docs/security/E2EE_DECISION.md`
-records that the owner is "not sure" whether the Android source can be published under AGPL-3.0 and that a lawyer
-must confirm. Until then no build that goes to the Play Store, a tester group, or any other person may contain it.
+**Decision (owner, 2026-10-26): the Android app source is published under AGPL-3.0** (see `LICENSE` and `NOTICE`), which
+resolves the licence question in `docs/security/E2EE_DECISION.md`. The lawyer's written confirmation is still listed as a
+TODO-OWNER item in `docs/LEGAL_REVIEW_NOTES.md`. If you decide to ship a build without libsignal, use the steps below.
 
 The app now uses libsignal for end-to-end encryption of one-to-one chats (`docs/security/E2EE_DESIGN.md`). The Gradle
 property `samvad.e2ee` (default false in release) switches the feature off at run time, but **libsignal is still linked**,
@@ -24,9 +24,16 @@ so the licence gate applies to every build that contains it. To make a release t
    absent; remove it for tidiness.
 4. Build `:app:assembleRelease` and check the APK has no `libsignal_jni.so`
    (`unzip -l app-release-unsigned.apk | grep -i signal` must print nothing).
-5. Keep the in-app and website wording that messages are **not** end-to-end encrypted. Do not add E2EE claims until the
-   encrypted build is released with `-Psamvad.e2ee=true`, the external review in `E2EE_DESIGN.md` is done, and the website,
-   privacy policy, Play data-safety form and Settings text are all changed together.
+5. Public wording (website legal pages, FAQ, Settings and in-app privacy sheet, Play data-safety sheet) was updated on
+   2026-10-26 to say that one-to-one chats **can** be end-to-end encrypted and that existing chats, groups, polls,
+   Moments and calls are not. That wording is true only for a build made with `-Psamvad.e2ee=true`. **Do not publish the
+   site or the app text together with a release build that has the flag off (the default), and do not publish a build
+   with the flag on before the external review in `E2EE_DESIGN.md` is done.** Without the flag, the in-app notice
+   (`EncryptionBanner.PLAINTEXT_FEATURE_OFF`) tells the user chats are not encrypted, but the website would be ahead of
+   the app.
+6. The Android app source is published under AGPL-3.0 (`LICENSE`, `NOTICE`). Check that the repository the Settings
+   screen links to (`https://github.com/munjam-dev/samvad`) is public before the release goes out, and that
+   `docs/LEGAL_REVIEW_NOTES.md` TODO-OWNER items are closed.
 
 When the lawyer confirms, re-add the dependency, publish the app source under AGPL-3.0 as advised, and only then
 build the encrypted-message features listed in the decision record.

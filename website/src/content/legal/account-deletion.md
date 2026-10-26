@@ -39,6 +39,7 @@ You can delete much of your data yourself, without deleting your account:
 | Your membership of a group | Group info → **Leave group** |
 | Two-step verification data | Settings → Two-step verification → turn it off |
 | Data stored only on your phone (themes, wallpapers, saved names, search index, Personal Vault) | Sign out, or uninstall the app |
+| Vault backup in your own Google Drive (only if you turned it on) | Turn backup off in the app, which deletes it; or delete it from the hidden app data in your Google Drive settings |
 
 For anything else, email [{{GRIEVANCE_EMAIL}}](mailto:{{GRIEVANCE_EMAIL}}) and tell us what you would like deleted. We respond within 30 days.
 

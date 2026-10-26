@@ -49,4 +49,5 @@
     <string name="appeal_status_granted">Resolved in your favour</string>
     <string name="appeal_status_denied">Not upheld</string>
 
+    <string name="settings_privacy_body_e2ee">Your phone number is visible only to you. One-to-one chats can be end-to-end encrypted, and each chat tells you if it is. Groups, older chats and calls are not end-to-end encrypted; they are protected in transit and at rest by Firebase.</string>
 </resources>

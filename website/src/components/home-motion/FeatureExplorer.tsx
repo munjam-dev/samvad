@@ -10,7 +10,7 @@ const TABS: { id: DemoMode; label: string; title: string; body: string }[] = [
   { id: 'chat', label: 'Chat', title: 'Chat that keeps up with you', body: 'Replies, reactions, edits and delivery ticks. Schedule a message for later and star the ones you want to keep.' },
   { id: 'calls', label: 'Calls', title: 'Calls are coming soon', body: 'Voice and video calling is on the roadmap. This preview shows the direction, not a shipped feature.' },
   { id: 'groups', label: 'Groups', title: 'Spaces for your circles', body: 'Start a group for family or friends, name it, add a photo and keep everyone in one thread.' },
-  { id: 'privacy', label: 'Privacy', title: 'Privacy you can read', body: 'No ads and no analytics. Encrypted in transit, with optional app lock and a two-step PIN. Not end-to-end encrypted yet.' },
+  { id: 'privacy', label: 'Privacy', title: 'Privacy you can read', body: 'No ads and no analytics. Encrypted in transit, with optional app lock and a two-step PIN. One-to-one chats can be end-to-end encrypted; groups and calls are not yet.' },
   { id: 'moments', label: 'Sharing', title: 'Share what matters', body: 'Send photos in chat and keep your favourite messages in a private starred list.' },
 ];
 

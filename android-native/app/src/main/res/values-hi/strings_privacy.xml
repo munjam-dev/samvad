@@ -49,4 +49,5 @@
     <string name="appeal_status_granted">आपके पक्ष में हल हुआ</string>
     <string name="appeal_status_denied">फ़ैसला नहीं बदला गया</string>
 
+    <string name="settings_privacy_body_e2ee">आपका फ़ोन नंबर सिर्फ़ आपको दिखता है। एक-से-एक चैट एंड-टू-एंड एन्क्रिप्टेड हो सकती हैं, और हर चैट बताती है कि वह है या नहीं। ग्रुप, पुरानी चैट और कॉल एंड-टू-एंड एन्क्रिप्टेड नहीं हैं; वे Firebase द्वारा रास्ते में और स्टोरेज में सुरक्षित रहते हैं।</string>
 </resources>

@@ -1,12 +1,12 @@
 ---
 title: Privacy Policy
 summary: What Samvad collects, why, where it is stored, how long we keep it, and your rights under Indian law.
-updated: 2026-10-22
+updated: 2026-10-26
 order: 1
 group: privacy
 ---
 
-> **In short.** We collect what a messenger needs to work: your phone number, your profile, and the messages and files you send. We do not show ads, sell your data, or use advertising or analytics trackers. Messages are encrypted in transit and stored on Google Cloud, but **neither messages nor calls are end-to-end encrypted**, which means our systems could technically access messages. Your Personal Vault stays on your phone unless you choose to turn on Vault backup, which saves an encrypted copy to your own Google Drive that we cannot read. We are building end-to-end encryption and will update this policy and tell you in the app when it is live. You can delete your account at any time.
+> **In short.** We collect what a messenger needs to work: your phone number, your profile, and the messages and files you send. We do not show ads, sell your data, or use advertising or analytics trackers. **One-to-one chats can be end-to-end encrypted** when both people have the encryption keys that come with a recent version of the app; in those chats Samvad's servers store only scrambled data they cannot read. **Existing chats, group chats, polls, Moments, and voice and video calls and meetings are not end-to-end encrypted.** They are encrypted in transit and stored on Google Cloud, which means our systems could technically access them. The app tells you, inside each chat, whether that chat is end-to-end encrypted. Your Personal Vault stays on your phone unless you choose to turn on Vault backup, which saves an encrypted copy to your own Google Drive that we cannot read. You can delete your account at any time.
 
 ## 1. Who we are and how this policy applies
 
@@ -53,6 +53,8 @@ Only if you allow it, Samvad reads the **phone numbers** in your address book an
 
 - The **text messages, photos, voice messages, documents, polls and poll votes, reactions, replies, edits and deletions** you send, with the time sent and delivery and read status.
 - This content is stored on our servers so it can be delivered to the people you send it to and synced to your devices.
+- **End-to-end encrypted chats.** In a one-to-one chat that is end-to-end encrypted, the text of your messages and your attachments are encrypted on your phone with the Signal protocol (the open-source libsignal library) and can be opened only on the phones of the two people in the chat. Our servers store and deliver the encrypted data, but cannot read it. We can still see the information needed to deliver it: who sent it to whom, when, its approximate size, and its delivery status. Messages sent before a chat became encrypted stay as they were, and only messages after that point are protected. A chat is end-to-end encrypted only when both people have encryption keys; the app shows a notice inside the chat so you can tell. If you get a new phone, reinstall the app or clear its data, older encrypted messages cannot be recovered. In an encrypted chat, features that need our servers to read the content, such as scheduled messages, polls and replies to Moments, are not available.
+- **Groups and older chats are not end-to-end encrypted.** Group chats, polls, Moments and chats that existed before encryption was available are stored in a form our systems can read.
 - Photos are resized and re-encoded on your phone before upload, which removes hidden information such as location.
 - You can set a chat to **disappearing messages** (24 hours, 7 days or 90 days); see section 8.
 - Files are limited to 16 MB and to safe file types; app installation files (APKs) cannot be sent.
@@ -81,19 +83,20 @@ Group name, description, photo, members, admins, when each member joined, and in
 
 ### 3.9 Security data
 
+- If you use end-to-end encrypted chats, your phone creates encryption keys. The **public** parts (identity key and one-time prekeys) are stored on our servers so other people can start an encrypted chat with you. The **private** keys stay on your phone and are never sent to us.
 - If you turn on **two-step verification**, we store your PIN only as a salted, one-way hash (scrypt), never the PIN itself, together with failed-attempt counts and lockout times.
 - **App lock** and **screenshot blocking** work on your phone. Your fingerprint, face or screen-lock data never leaves your phone and is never sent to us.
 
 ### 3.10 Safety reports and blocks
 
-- If you **report** someone, the report includes the reported account and the **last 5 messages** of that chat, so our safety team can review it.
+- If you **report** someone, the report includes the reported account and the **last 5 messages** of that chat, so our safety team can review it. If the chat is end-to-end encrypted, we cannot read its messages, so the report contains only information about them (who sent them and when) unless you choose to attach the messages. Before anything is attached, the app asks for your agreement, and only the messages you pick are sent.
 - If you **block** someone, we store that, so they cannot message you or see your presence and profile photo.
 
 ### 3.11 Calls and meetings
 
 - When you make or answer a voice or video call, or join a group meeting, our servers record who called whom, the time, the duration and the outcome (answered, declined, missed), so the Calls tab can show your call history and so we can ring the other person. Meeting details (the group, schedule and host) are stored for the same reason.
 - The **audio and video** of calls and meetings are carried by **LiveKit Cloud**, a service provider that acts as our data processor. Our own servers only ring the other person and issue short-lived (10 minute) access tokens; they do not carry the media.
-- Call and meeting media is **encrypted in transit** to LiveKit's servers. It is **not end-to-end encrypted**, so LiveKit's servers handle it unencrypted while relaying it. Samvad **does not record or store** the audio or video of calls and meetings.
+- Call and meeting media is **encrypted in transit** to LiveKit's servers. Calls and meetings are **not end-to-end encrypted yet**, so LiveKit's servers handle the media unencrypted while relaying it. The end-to-end encryption of chats does not apply to calls. Samvad **does not record or store** the audio or video of calls and meetings.
 - The app asks for the camera and microphone only when a call starts or is answered. Samvad does not use your camera or microphone at any other time, except when you record a voice message or capture a photo or video yourself.
 
 ### 3.12 Moments
@@ -120,7 +123,7 @@ If you ask us to review a decision we made about your account or content (Settin
 
 ### 3.17 Data that stays on your phone
 
-Chat themes, wallpaper photos you choose, names from your contacts, the on-device search index, the Personal Vault (unless you turn on Vault backup, see 3.14), app lock settings and other preferences stay on your phone and are not uploaded. Chats you export are files you create and control.
+Scam Shield, which shows a notice when someone you have not chatted with before messages you, works on your phone; messages are not sent anywhere for it, and the only thing it stores is which notices you dismissed. Chat themes, wallpaper photos you choose, names from your contacts, the on-device search index, the Personal Vault (unless you turn on Vault backup, see 3.14), app lock settings and other preferences stay on your phone and are not uploaded. Chats you export are files you create and control.
 
 ### 3.18 This website
 
@@ -129,7 +132,7 @@ This website does not use advertising or analytics cookies. See our [Cookie Poli
 ## 4. What we do not do
 
 - We do **not** sell, rent or trade your personal data.
-- We do **not** show advertising, and we do **not** use advertising, analytics or tracking SDKs in the app.
+- We do **not** show advertising, and we do **not** use advertising, analytics, crash-reporting or tracking SDKs in the app. The only technical data we see is in our server logs and in the App Check integrity signals described in section 3.8.
 - We do **not** collect your precise or approximate location.
 - We do **not** read your contacts' names on our servers or build profiles of people who are not Samvad users.
 - We do **not** use your messages to train artificial intelligence models.
@@ -168,7 +171,7 @@ We use **Google Cloud and Firebase** (Google LLC and its affiliates) to host our
 
 We use **LiveKit Cloud** (LiveKit, Inc.) to carry the audio and video of voice calls, video calls and group meetings. LiveKit processes this media only to relay it between participants and does not receive your messages.
 
-When you search for a GIF or sticker, your search words go to our server and on to our GIF provider, GIPHY, with no account details, and the phone that receives a GIF loads it from GIPHY's servers, so GIPHY can see that phone's IP address.
+When you search for a GIF or sticker, your search words go to our server and on to our GIF provider, GIPHY, with no name, phone number or account identifier, and the phone that shows a GIF loads it from GIPHY's servers, so GIPHY can see that phone's IP address. We do not store search words.
 
 If you turn on the optional Vault backup, an encrypted copy of your vault is stored in your own **Google Drive** account (see section 3.14). That is your account with Google, not a service we run for you: Samvad does not receive the copy or the key to open it.
 
@@ -224,7 +227,7 @@ We use reasonable security practices in line with the Information Technology Act
 - logging designed to exclude message content and phone numbers;
 - limiting staff access to personal data to what is needed, and keeping a record of that access.
 
-**Messages and calls are not end-to-end encrypted.** Messages are encrypted in transit and stored on Google Cloud; calls and meetings are encrypted in transit to LiveKit's servers. We will update this policy and tell you in the app when end-to-end encryption is available.
+**What is and is not end-to-end encrypted.** One-to-one chats between two people who both have encryption keys can be end-to-end encrypted (section 3.4). Existing chats, group chats, polls and Moments are not: they are encrypted in transit and stored on Google Cloud. Voice and video calls and meetings are encrypted in transit to LiveKit's servers but are not end-to-end encrypted yet. We will update this policy and tell you in the app if that changes. End-to-end encryption protects message content, not details such as who you talk to and when, and it does not protect a message from someone who has your unlocked phone or from the person you sent it to. The app's source code is published so that anyone can inspect it (see [Security](/legal/security)).
 
 No system is perfectly secure. If a personal data breach happens, we will inform the **Data Protection Board of India** and each affected user, as the DPDP Act and its rules require, and tell you what happened and what you can do. To report a security problem, see our [Security and Responsible Disclosure](/legal/security) page.
 
@@ -287,7 +290,7 @@ We acknowledge complaints within **24 hours** and resolve them within **15 days*
 
 ## 15. Changes to this policy
 
-We will update this policy when Samvad or the law changes. For important changes — for example, when end-to-end encryption becomes available, or if we start collecting a new kind of personal data — we will tell you in the app before the change takes effect and, where the law requires, ask for your consent again. The "Effective" date at the top shows the current version. Earlier versions are available on request.
+We will update this policy when Samvad or the law changes. For important changes — for example, when end-to-end encryption is extended to groups or calls, or if we start collecting a new kind of personal data — we will tell you in the app before the change takes effect and, where the law requires, ask for your consent again. The "Effective" date at the top shows the current version. Earlier versions are available on request.
 
 ## 16. Contact us
 

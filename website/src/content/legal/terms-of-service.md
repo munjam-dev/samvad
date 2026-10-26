@@ -1,7 +1,7 @@
 ---
 title: Terms of Service
 summary: The agreement between you and Samvad — who can use it, your content, the rules, and how disputes are handled.
-updated: 2026-10-14
+updated: 2026-10-26
 order: 2
 group: using
 ---
@@ -54,7 +54,7 @@ Samvad lets you send messages, photos, voice messages, files and polls to indivi
 
 - **Scheduled messages** are sent by our servers at the time you choose. You are responsible for their content when they are sent. A scheduled message may not be sent if you leave the chat, either of you blocks the other, or your account is deleted; the app shows when this happens.
 - **Groups** are run by their admins, who can add and remove members, change group details and create or revoke invite codes. Anyone with an invite code can join, so share codes with care.
-- **Messages and calls are not end-to-end encrypted.** Calls and meetings are carried by our service provider LiveKit Cloud and are not recorded or stored by Samvad. The Personal Vault is stored only on your phone and has no backup; if you lose the phone or clear the app's data, the vault cannot be recovered. Our [Privacy Policy](/legal/privacy-policy) explains what this means.
+- **What is end-to-end encrypted.** One-to-one chats can be end-to-end encrypted when both people have encryption keys; the app shows in each chat whether it is. Existing chats, group chats, polls and Moments are not end-to-end encrypted, and neither are calls and meetings, which are carried by our service provider LiveKit Cloud and are not recorded or stored by Samvad. If you lose your phone or clear the app's data, older end-to-end encrypted messages cannot be recovered. The Personal Vault is stored on your phone; unless you turn on the optional Vault backup to your own Google Drive, if you lose the phone or clear the app's data, the vault cannot be recovered. Our [Privacy Policy](/legal/privacy-policy) explains what this means.
 - **Samvad is not an emergency service.** You cannot use it to contact police, ambulance or fire services. In an emergency, call **112**.
 
 ## 5. Your content

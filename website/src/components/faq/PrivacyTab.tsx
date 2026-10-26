@@ -5,7 +5,7 @@ const faqData = [
     id: 1,
     question: 'Are my messages end-to-end encrypted?',
     answer:
-      "Not yet. They are encrypted in transit and protected by access rules, but our systems can technically read them. We will announce clearly when this changes.",
+      "One-to-one chats can be, when both people have encryption keys. The app shows in each chat whether it is end-to-end encrypted. Existing chats, group chats and calls are not: they are encrypted in transit and protected by access rules, but our systems can technically read them.",
   },
   {
     id: 2,

@@ -205,7 +205,7 @@
     <string name="settings_layout_bold">बोल्ड हेडर</string>
     <string name="settings_layout_bento">कार्ड और बेंटो</string>
     <string name="settings_privacy">गोपनीयता और सुरक्षा</string>
-    <string name="settings_privacy_body">आपका फ़ोन नंबर सिर्फ़ आपको दिखता है। संदेश Firebase द्वारा ट्रांज़िट में और स्टोरेज में सुरक्षित रखे जाते हैं; Samvad अभी एंड-टू-एंड एन्क्रिप्शन नहीं देता।</string>
+    <string name="settings_privacy_body">आपका फ़ोन नंबर सिर्फ़ आपको दिखता है। संदेश Firebase द्वारा रास्ते में और स्टोरेज में सुरक्षित रहते हैं। Samvad के इस संस्करण में एंड-टू-एंड एन्क्रिप्शन नहीं है।</string>
     <string name="settings_help">मदद और सुझाव</string>
     <string name="settings_sign_out">साइन आउट</string>
     <string name="settings_sign_out_all">सभी डिवाइस से साइन आउट</string>
@@ -553,7 +553,7 @@
     <string name="chat_theme_night_garden">रात का बग़ीचा</string>
     <string name="close">बंद करें</string>
     <string name="privacy_notice_title">आपके संदेश सुरक्षित हैं</string>
-    <string name="privacy_notice_body">संदेश रास्ते में एन्क्रिप्टेड रहते हैं और Google Cloud पर सुरक्षित रखे जाते हैं। Samvad में एंड-टू-एंड एन्क्रिप्शन आने वाला है।</string>
+    <string name="privacy_notice_body">संदेश रास्ते में एन्क्रिप्टेड रहते हैं और Google Cloud पर सुरक्षित रखे जाते हैं। Samvad के इस संस्करण में एंड-टू-एंड एन्क्रिप्शन नहीं है।</string>
     <string name="privacy_notice_title_e2ee">आपकी बातचीत निजी है</string>
     <string name="privacy_notice_body_e2ee">इस चैट के संदेश और अटैचमेंट एंड-टू-एंड एन्क्रिप्टेड हैं। उन्हें सिर्फ़ इस चैट के लोग ही पढ़ सकते हैं। कॉल एंड-टू-एंड एन्क्रिप्टेड नहीं हैं।</string>
     <string name="privacy_learn_more">और जानें</string>
@@ -561,9 +561,9 @@
     <string name="privacy_sheet_now_title">आज सुरक्षित</string>
     <string name="privacy_sheet_now">• संदेश, फ़ोटो, वॉइस नोट और फ़ाइलें रास्ते में और Google Cloud पर रखे जाने के दौरान एन्क्रिप्टेड रहते हैं।\n• चैट सिर्फ़ उसके लोग खोल सकते हैं: हमारे सर्वर हर अनुरोध की जाँच करते हैं।\n• टू-स्टेप PIN, ऐप लॉक, स्क्रीनशॉट रोक और निजी सूचनाएँ सेटिंग्स में हैं।</string>
     <string name="privacy_sheet_not_title">अभी सुरक्षित नहीं</string>
-    <string name="privacy_sheet_not">• एंड-टू-एंड एन्क्रिप्शन आने तक, तकनीकी रूप से Samvad के सर्वर संदेश की सामग्री पढ़ सकते हैं।\n• अगर आप किसी की रिपोर्ट करते हैं, तो उनके आख़िरी 5 संदेश Samvad की सुरक्षा टीम के साथ साझा किए जाते हैं।\n• एक्सपोर्ट की गई चैट सादा टेक्स्ट फ़ाइलें हैं जो आपके नियंत्रण में हैं।</string>
+    <string name="privacy_sheet_not">• इस संस्करण में Samvad के सर्वर तकनीकी रूप से संदेश की सामग्री पढ़ सकते हैं।\n• अगर आप किसी की रिपोर्ट करते हैं, तो उनके आखिरी 5 संदेश Samvad की सुरक्षा टीम को भेजे जाते हैं।\n• एक्सपोर्ट की गई चैट सादी टेक्स्ट फ़ाइलें होती हैं, जो आपके नियंत्रण में रहती हैं।</string>
     <string name="privacy_sheet_next_title">आगे आ रहा है</string>
-    <string name="privacy_sheet_next">एंड-टू-एंड एन्क्रिप्शन, ताकि सिर्फ़ चैट के लोग ही उसे पढ़ या सुन सकें। Samvad भी नहीं।</string>
+    <string name="privacy_sheet_next">एक-से-एक चैट के लिए एंड-टू-एंड एन्क्रिप्शन, ताकि चैट के सिर्फ़ दो लोग ही उसे पढ़ या सुन सकें। ग्रुप और कॉल इसमें शामिल नहीं हैं।</string>
     <string name="privacy_sheet_depends">आपकी निजता आपके अकाउंट की सुरक्षा, जिन डिवाइस पर आप साइन इन हैं और आप अपनी चैट कैसे साझा करते हैं, इन पर भी निर्भर करती है।</string>
     <string name="home_footer_tag">#SamvadBeginsHere</string>
     <string name="home_footer_line1">हैदराबाद, भारत में गर्व से बना।</string>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings: Source code and licences -->
+    <string name="settings_licences">సోర్స్ కోడ్ మరియు లైసెన్సులు</string>
+    <string name="licences_title">సోర్స్ కోడ్ మరియు లైసెన్సులు</string>
+    <string name="licences_intro">Samvad ఓపెన్ సోర్స్. Android యాప్ GNU Affero General Public License, వెర్షన్ 3 (AGPL-3.0) కింద ప్రచురించబడింది. ఎవరైనా కోడ్ చదవవచ్చు, యాప్ ఎలా పనిచేస్తుందో పరిశీలించవచ్చు, అదే లైసెన్స్ కింద మళ్లీ వాడుకోవచ్చు.</string>
+    <string name="licences_server">సర్వర్ కోడ్ అదే రిపాజిటరీలో ఉంది. అందులో పాస్‌వర్డ్‌లు లేదా రహస్య కీలు లేవు.</string>
+    <string name="licences_open_repo">సోర్స్ కోడ్ తెరవండి</string>
+    <string name="licences_libs_title">మూడో పక్షం లైబ్రరీలు</string>
+    <string name="licences_libs_body">• Signal Protocol లైబ్రరీ (libsignal), AGPL-3.0: ఇద్దరి మధ్య చాట్‌ల ఎండ్-టు-ఎండ్ ఎన్‌క్రిప్షన్\n• LiveKit Android SDK, Apache-2.0: కాల్స్ మరియు మీటింగ్‌లు\n• Firebase Android SDK, Apache-2.0, Google Firebase నిబంధనలతో: సైన్-ఇన్, డేటాబేస్, ఫైళ్లు, నోటిఫికేషన్లు, యాప్ తనిఖీలు\n• Google Play services (Drive సైన్-ఇన్, కోడ్ స్కానర్), Google నిబంధనల కింద\n• AndroidX, Jetpack Compose, Material 3, Room, DataStore, WorkManager, Biometric, Apache-2.0\n• Coil, Apache-2.0: చిత్రాలు మరియు GIFలు\n• ZXing core, Apache-2.0: భద్రతా-సంఖ్య QR కోడ్\n• Kotlin coroutines, Apache-2.0\n• Plus Jakarta Sans ఫాంట్, SIL Open Font License 1.1</string>
+    <string name="licences_notice">పూర్తి జాబితా మరియు లైసెన్స్ పాఠాలు రిపాజిటరీలోని NOTICE మరియు LICENSE ఫైళ్లలో ఉన్నాయి.</string>
+</resources>
