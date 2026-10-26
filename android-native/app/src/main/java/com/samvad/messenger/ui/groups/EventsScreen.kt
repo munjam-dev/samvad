@@ -215,23 +215,24 @@ private fun RsvpChip(label: String, selected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun CreateEventSheet(
+internal fun CreateEventSheet(
   busy: Boolean,
   error: EventError?,
   onClearError: () -> Unit,
   onCreate: (String, String, String, Long) -> Unit,
   onClose: () -> Unit,
+  initial: GroupEvent? = null,
 ) {
   val colors = SamvadTheme.colors
-  var title by rememberSaveable { mutableStateOf("") }
-  var description by rememberSaveable { mutableStateOf("") }
-  var place by rememberSaveable { mutableStateOf("") }
+  var title by rememberSaveable { mutableStateOf(initial?.title.orEmpty()) }
+  var description by rememberSaveable { mutableStateOf(initial?.description.orEmpty()) }
+  var place by rememberSaveable { mutableStateOf(initial?.place.orEmpty()) }
   var picking by remember { mutableStateOf(false) }
-  var startsAt by rememberSaveable { mutableStateOf<Long?>(null) }
+  var startsAt by rememberSaveable { mutableStateOf<Long?>(initial?.startsAt) }
   val now = System.currentTimeMillis()
   val check = EventRules.check(title, description, place, startsAt, now)
   Column(Modifier.fillMaxWidth().imePadding().padding(horizontal = 20.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-    Text(stringResource(R.string.group_event_new), style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
+    Text(stringResource(if (initial == null) R.string.group_event_new else R.string.group_event_edit_title), style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
     OutlinedTextField(
       value = title,
       onValueChange = { title = it.take(com.samvad.core.chat.EventRules.MAX_TITLE); onClearError() },
@@ -267,7 +268,7 @@ private fun CreateEventSheet(
     }
     val errorText = error?.let { eventErrorText(it) }
     if (errorText != null) Text(errorText, color = colors.error, style = MaterialTheme.typography.bodySmall)
-    PrimaryButton(stringResource(R.string.group_event_create), onClick = {
+    PrimaryButton(stringResource(if (initial == null) R.string.group_event_create else R.string.group_event_save), onClick = {
       val ok = check as? com.samvad.core.chat.EventCheck.Ok ?: return@PrimaryButton
       onCreate(ok.title, ok.description, ok.place, ok.startsAt)
     }, enabled = check is com.samvad.core.chat.EventCheck.Ok, loading = busy)
@@ -314,7 +315,7 @@ private fun EventDateTimePicker(onDismiss: () -> Unit, onPicked: (Long) -> Unit)
 }
 
 @Composable
-private fun eventErrorText(e: EventError): String = stringResource(
+internal fun eventErrorText(e: EventError): String = stringResource(
   when (e) {
     EventError.PAST -> R.string.group_event_error_past
     EventError.TOO_FAR -> R.string.group_event_error_too_far

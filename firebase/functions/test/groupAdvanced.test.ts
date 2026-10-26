@@ -3,8 +3,10 @@ import { Timestamp } from 'firebase-admin/firestore';
 import {
   DAILY_EVENTS,
   handleCancelGroupEvent,
+  handleCancelJoinRequest,
   handleCreateGroupEvent,
   handleDecideJoinRequest,
+  handleEditGroupEvent,
   handleRsvpGroupEvent,
   handleSetGroupSettings,
   MAX_EVENT_DESCRIPTION,
@@ -91,6 +93,19 @@ describe('approving new members', () => {
     const req = (await deps.db.doc(`groupJoinRequests/${cid}_dev`).get()).data()!;
     expect(req).toMatchObject({ cid, uid: 'dev', status: 'pending', groupName: 'Family' });
     expect((await call(handlePreviewGroupInvite, 'dev', { code })).pending).toBe(true);
+  });
+
+  it('a person withdraws their own pending request; it does not touch anyone else\'s and repeating is harmless', async () => {
+    const cid = await group();
+    const code = await invite(cid);
+    await settings(cid, 'anil', { approveMembers: true });
+    await call(handleJoinGroupWithCode, 'dev', { code });
+    await call(handleJoinGroupWithCode, 'esha', { code });
+    await call(handleCancelJoinRequest, 'dev', { cid });
+    await call(handleCancelJoinRequest, 'dev', { cid });
+    expect((await deps.db.doc(`groupJoinRequests/${cid}_dev`).get()).exists).toBe(false);
+    expect((await deps.db.doc(`groupJoinRequests/${cid}_esha`).get()).exists).toBe(true);
+    expect(await errorOf(call(handleCancelJoinRequest, 'dev', { cid: 'short' }))).toBe('invalid-argument');
   });
 
   it('existing members joining by code are unaffected by the setting', async () => {
@@ -284,6 +299,29 @@ describe('events', () => {
     const { eventId: gone } = await newEvent(cid, 'anil');
     await call(handleCancelGroupEvent, 'anil', { cid, eid: gone });
     expect(await errorOf(call(handleRsvpGroupEvent, 'bina', { cid, eid: gone, answer: 'going' }))).toBe('event-cancelled');
+  });
+
+  it('the creator or an admin edits an upcoming event; others cannot; invalid and finished events are refused', async () => {
+    const cid = await group();
+    await settings(cid, 'anil', { eventsByMembers: true });
+    const { eventId } = await newEvent(cid, 'bina');
+    const ref = deps.db.doc(`conversations/${cid}/events/${eventId}`);
+    const edit = (uid: string, extra: Record<string, unknown> = {}) =>
+      call(handleEditGroupEvent, uid, { cid, eid: eventId, title: 'Brunch', description: '', place: 'Cubbon', startsAt: inHours(72), ...extra });
+    expect(await errorOf(edit('chetan'))).toBe('permission-denied');
+    expect(await errorOf(edit('esha'))).toBe('not-found');
+    expect(await errorOf(edit('bina', { title: ' ' }))).toBe('invalid-argument');
+    expect(await errorOf(edit('bina', { startsAt: Date.now() - 1000 }))).toBe('event-in-past');
+    await ref.update({ reminderSent: true });
+    await edit('bina');
+    expect((await ref.get()).data()).toMatchObject({ title: 'Brunch', place: 'Cubbon', reminderSent: false });
+    await edit('anil', { title: 'Brunch 2' }); // an admin may edit someone else's event
+    expect((await ref.get()).get('title')).toBe('Brunch 2');
+    await call(handleCancelGroupEvent, 'anil', { cid, eid: eventId });
+    expect(await errorOf(edit('bina'))).toBe('event-cancelled');
+    const { eventId: old } = await newEvent(cid, 'anil');
+    await deps.db.doc(`conversations/${cid}/events/${old}`).update({ startsAt: Timestamp.fromMillis(Date.now() - 1000) });
+    expect(await errorOf(call(handleEditGroupEvent, 'anil', { cid, eid: old, title: 'x', startsAt: inHours(5) }))).toBe('event-over');
   });
 
   it('the creator or an admin cancels; other members cannot; a chat line is written once', async () => {

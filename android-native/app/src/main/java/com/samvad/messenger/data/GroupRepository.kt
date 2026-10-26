@@ -114,6 +114,17 @@ class GroupRepository(private val functions: FirebaseFunctions) {
     call("rsvpGroupEvent", mapOf("cid" to cid, "eid" to eventId, "answer" to answer?.wire))
   }
 
+  /** Creator or admin only; the server re-checks the same rules as for a new event. */
+  suspend fun editEvent(cid: String, eventId: String, title: String, description: String, place: String, startsAtMs: Long) {
+    call(
+      "editGroupEvent",
+      mapOf("cid" to cid, "eid" to eventId, "title" to title, "description" to description, "place" to place, "startsAt" to startsAtMs),
+    )
+  }
+
+  /** Withdraws my own pending request to join [cid]. */
+  suspend fun cancelJoinRequest(cid: String) { call("cancelGroupJoinRequest", mapOf("cid" to cid)) }
+
   suspend fun cancelEvent(cid: String, eventId: String) {
     call("cancelGroupEvent", mapOf("cid" to cid, "eid" to eventId))
   }

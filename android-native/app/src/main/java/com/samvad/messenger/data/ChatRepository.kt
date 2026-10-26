@@ -989,6 +989,29 @@ class ChatRepository(
     } ?: com.samvad.core.chat.RsvpCounts(),
   )
 
+  /** My own pending requests to join groups that ask admins to approve new members, live. */
+  fun myJoinRequests(me: String): Flow<List<com.samvad.core.chat.JoinRequest>> = callbackFlow {
+    val reg = db.collection("groupJoinRequests")
+      .whereEqualTo("uid", me)
+      .whereEqualTo("status", "pending")
+      .addSnapshotListener { snap, err ->
+        if (err != null) { trySend(emptyList()); return@addSnapshotListener }
+        if (snap != null) {
+          trySend(
+            snap.documents.map { d ->
+              com.samvad.core.chat.JoinRequest(
+                uid = me,
+                cid = d.getString("cid") ?: "",
+                groupName = d.getString("groupName") ?: "",
+                requestedAt = d.millis("requestedAt") ?: 0L,
+              )
+            }.filter { it.cid.isNotEmpty() }.sortedByDescending { it.requestedAt },
+          )
+        }
+      }
+    awaitClose { reg.remove() }
+  }
+
   /** Phase 6: pending join requests for a group (admins only; the rules enforce that). */
   fun joinRequests(conversationId: String): Flow<List<com.samvad.core.chat.JoinRequest>> = callbackFlow {
     val reg = db.collection("groupJoinRequests")

@@ -44,6 +44,10 @@
     <string name="group_event_place_hint">Place (optional)</string>
     <string name="group_event_description_hint">Description (optional)</string>
     <string name="group_event_pick_time">Choose when it starts</string>
+    <string name="group_event_counts_full">%1$d going · %2$d maybe · %3$d can\'t go</string>
+    <string name="group_event_edit">Edit event</string>
+    <string name="group_event_edit_title">Edit event</string>
+    <string name="group_event_save">Save changes</string>
     <string name="group_event_create">Create event</string>
     <string name="group_event_error_past">Choose a time that hasn\'t happened yet.</string>
     <string name="group_event_error_too_far">Choose a time within the next two years.</string>
@@ -69,4 +73,11 @@
     <string name="settings_quiet_hours_start">Starts</string>
     <string name="settings_quiet_hours_end">Ends</string>
     <string name="settings_quiet_hours_note">Applies on this device only, using its current time zone.</string>
+    <string name="waiting_approval_title">Waiting for approval</string>
+    <string name="waiting_approval_unnamed">Group</string>
+    <string name="waiting_approval_status">Waiting for an admin</string>
+    <string name="waiting_approval_cancel">Cancel request</string>
+    <string name="waiting_approval_cancel_title">Cancel your request?</string>
+    <string name="waiting_approval_cancel_body">An admin of \"%1$s\" hasn\'t answered yet. You can ask to join again with the invite link.</string>
+    <string name="waiting_approval_keep">Keep request</string>
 </resources>

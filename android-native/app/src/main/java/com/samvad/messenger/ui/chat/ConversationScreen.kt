@@ -768,7 +768,9 @@ fun ConversationScreen(
                       PollCard(item.message, result, item.mine) { id -> if (selecting) toggle() else vm.vote(item.message, id, result.mine) }
                     }
                     if (item.message.kind == "event" && !item.message.deleted) {
-                      EventMessageCard(item.message.eventTitle.orEmpty()) { if (selecting) toggle() else onOpenEvents?.invoke() }
+                      val eid = item.message.eventId
+                      if (eid != null) LiveEventMessageCard(container, me, conversationId, eid, item.message.eventTitle.orEmpty()) { if (selecting) toggle() else onOpenEvents?.invoke() }
+                      else EventMessageCard(item.message.eventTitle.orEmpty()) { if (selecting) toggle() else onOpenEvents?.invoke() }
                     }
                     val card = item.message.contact
                     if (item.message.kind == "contact" && card != null && !item.message.deleted) {

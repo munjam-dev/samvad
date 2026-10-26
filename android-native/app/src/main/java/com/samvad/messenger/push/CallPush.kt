@@ -9,9 +9,14 @@ object CallPush {
   /** True when [data] was a call push and has been handled. */
   fun handle(context: Context, data: Map<String, String>): Boolean {
     val type = data["type"]
-    if (type != "incoming_call" && type != "missed_call") return false
+    if (type != "incoming_call" && type != "missed_call" && type != "call_cancel") return false
     val callId = data["callId"] ?: return true
     if (callId.length > 64) return true
+    if (type == "call_cancel") {
+      // Answered or declined on another device: stop this one ringing. Leaves no missed-call line.
+      CallNotifications.cancelIncoming(context, callId)
+      return true
+    }
     val container = (context.applicationContext as SamvadApplication).container
     // Only a signed-in device rings.
     val uid = container.auth?.currentUser?.uid ?: return true

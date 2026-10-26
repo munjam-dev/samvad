@@ -81,7 +81,7 @@ class SamvadMessagingService : FirebaseMessagingService() {
       }
       if (body.isEmpty()) body = getString(com.samvad.messenger.R.string.e2ee_notification_generic)
     }
-    Notifications.showMessage(this, cid, sender, data["title"].orEmpty(), body, showPreview, group = data["group"] == "1", silent = quiet)
+    Notifications.showMessage(this, cid, sender, data["title"].orEmpty(), body, showPreview, group = data["group"] == "1", silent = quiet, communityId = data["communityId"])
   }
 
   override fun onNewToken(token: String) {

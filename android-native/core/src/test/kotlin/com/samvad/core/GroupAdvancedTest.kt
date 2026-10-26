@@ -82,6 +82,16 @@ class GroupAdvancedTest {
   }
 
   @Test
+  fun `editing is for the creator or an admin until the event starts`() {
+    val g = group()
+    assertTrue(EventRules.canEdit(event(startsAt = 9), g, "sita", 5))
+    assertTrue(EventRules.canEdit(event(startsAt = 9), g, "ravi", 5))
+    assertFalse(EventRules.canEdit(event(startsAt = 9), g, "tara", 5))
+    assertFalse(EventRules.canEdit(event(startsAt = 9), g, "sita", 9))
+    assertFalse(EventRules.canEdit(event(startsAt = 9, cancelled = true), g, "sita", 5))
+  }
+
+  @Test
   fun `events split into upcoming soonest first and earlier newest first`() {
     val now = 100L
     val list = listOf(

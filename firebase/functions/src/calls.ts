@@ -132,6 +132,7 @@ export async function answerCallCore(deps: Deps, uid: string, callId: string): P
     }
     tx.update(ref, { status: 'active', answeredAt: Timestamp.fromMillis(deps.nowMs()) });
   });
+  await cancelRing(deps, callId, uid);
 }
 
 export async function declineCallCore(deps: Deps, uid: string, callId: string): Promise<void> {
@@ -144,14 +145,17 @@ export async function declineCallCore(deps: Deps, uid: string, callId: string): 
     if (snap.get('status') !== 'ringing') throw new HttpsError('failed-precondition', 'call-ended');
     tx.update(ref, { status: 'declined', endedAt: Timestamp.fromMillis(deps.nowMs()), endedBy: uid });
   });
+  await cancelRing(deps, callId, uid);
 }
 
 export async function endCallCore(deps: Deps, uid: string, callId: string, livekit: LiveKitService | null): Promise<void> {
   let roomName: string | null = null;
   let cancelled: FirebaseFirestore.DocumentData | null = null;
+  let declinedByCallee = false;
   await deps.db.runTransaction(async (tx) => {
     roomName = null;
     cancelled = null;
+    declinedByCallee = false;
     const ref = deps.db.doc(`calls/${callId}`);
     const snap = await tx.get(ref);
     const participants: string[] = snap.exists ? snap.get('participants') ?? [] : [];
@@ -166,11 +170,13 @@ export async function endCallCore(deps: Deps, uid: string, callId: string, livek
       cancelled = snap.data() ?? null;
     } else if (status === 'ringing') {
       tx.update(ref, { status: 'declined', endedAt, endedBy: uid });
+      declinedByCallee = true;
     } else {
       tx.update(ref, { status: 'ended', endedAt, endedBy: uid });
     }
   });
   if (cancelled) await notifyMissed(deps, callId, cancelled);
+  if (declinedByCallee) await cancelRing(deps, callId, uid);
   if (roomName && livekit) await livekit.closeRoom(roomName);
 }
 
@@ -199,6 +205,26 @@ export async function getCallTokenCore(
     video: snap.get('kind') === 'video',
   });
   return { url: kit.url, token, roomName };
+}
+
+/**
+ * Tells every device of the callee to stop ringing for [callId] (a 'call_cancel' data push): used when the call is
+ * answered or declined on one device, so the others do not keep ringing. Best effort; a failed push never fails the call.
+ */
+async function cancelRing(deps: Deps, callId: string, actor: string): Promise<void> {
+  try {
+    const snap = await deps.db.doc(`calls/${callId}`).get();
+    const callee = ((snap.get('participants') as string[] | undefined) ?? []).find((p) => p !== snap.get('callerUid'));
+    if (!callee || callee !== actor) return;
+    const devices = await deps.db.collection(`users/${callee}/devices`).where('fcmToken', '!=', null).get();
+    const tokens = devices.docs
+      .filter((d) => !d.get('revokedAt'))
+      .map((d) => d.get('fcmToken'))
+      .filter((t): t is string => typeof t === 'string' && t.length > 0);
+    if (tokens.length > 0) await deps.push.send(tokens, { type: 'call_cancel', callId });
+  } catch {
+    logEvent('call_cancel_failed', { outcome: 'error' });
+  }
 }
 
 /** Tells the callee's devices the ring is over (stops the ringing and leaves a missed-call line). */

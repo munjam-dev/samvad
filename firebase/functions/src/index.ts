@@ -39,6 +39,8 @@ export {
   createGroupEvent,
   rsvpGroupEvent,
   cancelGroupEvent,
+  cancelGroupJoinRequest,
+  editGroupEvent,
   sendEventReminders,
 } from './groupAdvanced';
 export {

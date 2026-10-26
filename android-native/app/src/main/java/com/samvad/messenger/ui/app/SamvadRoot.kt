@@ -119,7 +119,11 @@ private fun SignedInNav(
       com.samvad.messenger.ui.home.HomeTabRequest.openMoments()
       onLinkHandled()
     } else if (link != null) {
-      val route = link.otherUid?.let { "chat/${link.conversationId}/$it" } ?: "group/${link.conversationId}"
+      val route = when {
+        link.otherUid != null -> "chat/${link.conversationId}/${link.otherUid}"
+        link.communityId != null -> "communityannouncements/${link.communityId}/${link.conversationId}"
+        else -> "group/${link.conversationId}"
+      }
       nav.navigate(route) { popUpTo("home") }
       onLinkHandled()
     }
