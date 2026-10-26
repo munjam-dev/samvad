@@ -132,6 +132,16 @@ export async function decideJoinRequestCore(
   return { status: result };
 }
 
+/** The requester withdraws their own pending join request. Nothing to do when there is none. */
+export async function cancelJoinRequestCore(deps: Deps, actor: string, cid: string): Promise<void> {
+  await consumeDailyBudget(deps, actor, 'joinDecisions', DAILY_DECISIONS);
+  await deps.db.runTransaction(async (tx) => {
+    const ref = requestRef(deps, cid, actor);
+    const req = await tx.get(ref);
+    if (req.exists && req.get('status') === 'pending') tx.delete(ref);
+  });
+}
+
 // ---- events -------------------------------------------------------------------------------------
 
 export interface EventInput {
@@ -372,6 +382,11 @@ export const handleDecideJoinRequest = async (r: Req, deps: Deps = defaultDeps()
   if (typeof approve !== 'boolean') throw new HttpsError('invalid-argument', 'approve must be a boolean.');
   return run('group_join_decided', () => decideJoinRequestCore(deps, uid, cid, target, approve));
 };
+export const handleCancelJoinRequest = async (r: Req, deps: Deps = defaultDeps()) => {
+  const { uid } = requirePhoneAuth(r);
+  const cid = cidOf(r.data);
+  return run('group_join_cancelled', async () => (await cancelJoinRequestCore(deps, uid, cid), { ok: true }));
+};
 export const handleCreateGroupEvent = async (r: Req, deps: Deps = defaultDeps()) => {
   const { uid } = requirePhoneAuth(r);
   const cid = cidOf(r.data);
@@ -406,6 +421,7 @@ export const handleEditGroupEvent = async (r: Req, deps: Deps = defaultDeps()) =
 const options = buildCallableOptions(process.env);
 export const setGroupSettings = onCall(options, (r) => handleSetGroupSettings(r));
 export const decideGroupJoinRequest = onCall(options, (r) => handleDecideJoinRequest(r));
+export const cancelGroupJoinRequest = onCall(options, (r) => handleCancelJoinRequest(r));
 export const createGroupEvent = onCall(options, (r) => handleCreateGroupEvent(r));
 export const rsvpGroupEvent = onCall(options, (r) => handleRsvpGroupEvent(r));
 export const cancelGroupEvent = onCall(options, (r) => handleCancelGroupEvent(r));

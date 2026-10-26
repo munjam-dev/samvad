@@ -67,4 +67,11 @@
     <string name="settings_quiet_hours_start">தொடக்கம்</string>
     <string name="settings_quiet_hours_end">முடிவு</string>
     <string name="settings_quiet_hours_note">இது இந்தச் சாதனத்தில் மட்டும், அதன் இப்போதைய நேர மண்டலத்தின்படி பொருந்தும்.</string>
+    <string name="waiting_approval_title">ஒப்புதலுக்காகக் காத்திருக்கிறது</string>
+    <string name="waiting_approval_unnamed">குழு</string>
+    <string name="waiting_approval_status">நிர்வாகிக்காகக் காத்திருக்கிறது</string>
+    <string name="waiting_approval_cancel">கோரிக்கையை ரத்துசெய்</string>
+    <string name="waiting_approval_cancel_title">உங்கள் கோரிக்கையை ரத்துசெய்யவா?</string>
+    <string name="waiting_approval_cancel_body">\"%1$s\" நிர்வாகி இன்னும் பதிலளிக்கவில்லை. அழைப்பு இணைப்பு மூலம் மீண்டும் சேரக் கேட்கலாம்.</string>
+    <string name="waiting_approval_keep">கோரிக்கையை வைத்திரு</string>
 </resources>

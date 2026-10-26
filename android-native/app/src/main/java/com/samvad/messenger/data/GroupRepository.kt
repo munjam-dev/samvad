@@ -122,6 +122,9 @@ class GroupRepository(private val functions: FirebaseFunctions) {
     )
   }
 
+  /** Withdraws my own pending request to join [cid]. */
+  suspend fun cancelJoinRequest(cid: String) { call("cancelGroupJoinRequest", mapOf("cid" to cid)) }
+
   suspend fun cancelEvent(cid: String, eventId: String) {
     call("cancelGroupEvent", mapOf("cid" to cid, "eid" to eventId))
   }

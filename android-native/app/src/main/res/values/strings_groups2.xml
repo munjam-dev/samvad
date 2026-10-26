@@ -73,4 +73,11 @@
     <string name="settings_quiet_hours_start">Starts</string>
     <string name="settings_quiet_hours_end">Ends</string>
     <string name="settings_quiet_hours_note">Applies on this device only, using its current time zone.</string>
+    <string name="waiting_approval_title">Waiting for approval</string>
+    <string name="waiting_approval_unnamed">Group</string>
+    <string name="waiting_approval_status">Waiting for an admin</string>
+    <string name="waiting_approval_cancel">Cancel request</string>
+    <string name="waiting_approval_cancel_title">Cancel your request?</string>
+    <string name="waiting_approval_cancel_body">An admin of \"%1$s\" hasn\'t answered yet. You can ask to join again with the invite link.</string>
+    <string name="waiting_approval_keep">Keep request</string>
 </resources>

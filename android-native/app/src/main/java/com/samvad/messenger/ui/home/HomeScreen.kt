@@ -281,6 +281,7 @@ private fun ChatsTab(
       }
     }
     item(key = "notif-prompt") { NotificationPrompt(container) }
+    item(key = "waiting-approval") { WaitingForApproval(container, me) }
     item(key = "banners") {
       StatusBanner(state.offline, stringResource(R.string.home_offline))
       StatusBanner(state.error, stringResource(R.string.home_load_error), isError = true, actionLabel = stringResource(R.string.retry), onAction = vm::retry)

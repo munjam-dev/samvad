@@ -3,6 +3,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 import {
   DAILY_EVENTS,
   handleCancelGroupEvent,
+  handleCancelJoinRequest,
   handleCreateGroupEvent,
   handleDecideJoinRequest,
   handleEditGroupEvent,
@@ -92,6 +93,19 @@ describe('approving new members', () => {
     const req = (await deps.db.doc(`groupJoinRequests/${cid}_dev`).get()).data()!;
     expect(req).toMatchObject({ cid, uid: 'dev', status: 'pending', groupName: 'Family' });
     expect((await call(handlePreviewGroupInvite, 'dev', { code })).pending).toBe(true);
+  });
+
+  it('a person withdraws their own pending request; it does not touch anyone else\'s and repeating is harmless', async () => {
+    const cid = await group();
+    const code = await invite(cid);
+    await settings(cid, 'anil', { approveMembers: true });
+    await call(handleJoinGroupWithCode, 'dev', { code });
+    await call(handleJoinGroupWithCode, 'esha', { code });
+    await call(handleCancelJoinRequest, 'dev', { cid });
+    await call(handleCancelJoinRequest, 'dev', { cid });
+    expect((await deps.db.doc(`groupJoinRequests/${cid}_dev`).get()).exists).toBe(false);
+    expect((await deps.db.doc(`groupJoinRequests/${cid}_esha`).get()).exists).toBe(true);
+    expect(await errorOf(call(handleCancelJoinRequest, 'dev', { cid: 'short' }))).toBe('invalid-argument');
   });
 
   it('existing members joining by code are unaffected by the setting', async () => {

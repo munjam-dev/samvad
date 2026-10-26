@@ -67,4 +67,11 @@
     <string name="settings_quiet_hours_start">మొదలు</string>
     <string name="settings_quiet_hours_end">ముగింపు</string>
     <string name="settings_quiet_hours_note">ఇది ఈ డివైస్‌కు మాత్రమే, దాని ఇప్పటి టైమ్ జోన్ ప్రకారం వర్తిస్తుంది.</string>
+    <string name="waiting_approval_title">ఆమోదం కోసం వేచి ఉంది</string>
+    <string name="waiting_approval_unnamed">గ్రూప్</string>
+    <string name="waiting_approval_status">అడ్మిన్ కోసం వేచి ఉంది</string>
+    <string name="waiting_approval_cancel">అభ్యర్థనను రద్దు చేయి</string>
+    <string name="waiting_approval_cancel_title">మీ అభ్యర్థనను రద్దు చేయాలా?</string>
+    <string name="waiting_approval_cancel_body">\"%1$s\" అడ్మిన్ ఇంకా సమాధానం ఇవ్వలేదు. ఆహ్వాన లింక్‌తో మళ్లీ చేరమని అడగవచ్చు.</string>
+    <string name="waiting_approval_keep">అభ్యర్థనను ఉంచు</string>
 </resources>

@@ -67,4 +67,11 @@
     <string name="settings_quiet_hours_start">शुरू</string>
     <string name="settings_quiet_hours_end">खत्म</string>
     <string name="settings_quiet_hours_note">यह सिर्फ़ इस डिवाइस पर लागू है, इसके मौजूदा टाइम ज़ोन के हिसाब से।</string>
+    <string name="waiting_approval_title">मंज़ूरी का इंतज़ार</string>
+    <string name="waiting_approval_unnamed">ग्रुप</string>
+    <string name="waiting_approval_status">एडमिन के जवाब का इंतज़ार</string>
+    <string name="waiting_approval_cancel">अनुरोध रद्द करें</string>
+    <string name="waiting_approval_cancel_title">अपना अनुरोध रद्द करें?</string>
+    <string name="waiting_approval_cancel_body">\"%1$s\" के एडमिन ने अभी जवाब नहीं दिया है। आप इन्वाइट लिंक से फिर से जुड़ने का अनुरोध कर सकते हैं।</string>
+    <string name="waiting_approval_keep">अनुरोध रखें</string>
 </resources>
