@@ -91,6 +91,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -232,8 +233,13 @@ private fun ComingSoon(icon: ImageVector, title: Int, body: Int, menu: HomeMenu,
 @Composable
 internal fun TabTopBar(title: Int, menu: HomeMenu) {
   val colors = SamvadTheme.colors
-  Row(Modifier.fillMaxWidth().statusBarsPadding().padding(start = 20.dp, end = 8.dp, top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-    Text(stringResource(title), style = MaterialTheme.typography.headlineSmall, color = colors.onSurface, modifier = Modifier.weight(1f))
+  Row(Modifier.fillMaxWidth().statusBarsPadding().padding(start = 20.dp, end = 8.dp, top = 6.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+    Text(
+      stringResource(title),
+      style = MaterialTheme.typography.headlineSmall,
+      color = colors.onSurface,
+      modifier = Modifier.weight(1f).semantics { heading() },
+    )
     MoreMenu(menu, tint = colors.onSurface, circled = false)
   }
 }
@@ -660,7 +666,7 @@ fun ChatRowItem(row: ChatRow, highlight: Boolean, onClick: () -> Unit) {
       .clip(RoundedCornerShape(18.dp))
       .background(if (highlight) colors.primaryContainer else androidx.compose.ui.graphics.Color.Transparent)
       .clickable(interactionSource = press, indication = LocalIndication.current, onClick = onClick)
-      .padding(horizontal = 14.dp, vertical = 11.dp),
+      .padding(horizontal = 14.dp, vertical = 12.dp),
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.spacedBy(13.dp),
   ) {

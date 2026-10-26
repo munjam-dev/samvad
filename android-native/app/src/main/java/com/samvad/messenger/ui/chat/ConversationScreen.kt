@@ -1129,7 +1129,7 @@ private fun MessageBubble(
   Column(
     Modifier
       .fillMaxWidth()
-      .padding(top = if (item.groupedWithPrevious) 2.dp else 8.dp)
+      .padding(top = if (item.groupedWithPrevious) 3.dp else 10.dp)
       .graphicsLayer {
         alpha = appear.value.coerceIn(0f, 1f)
         val s = 0.85f + 0.15f * appear.value

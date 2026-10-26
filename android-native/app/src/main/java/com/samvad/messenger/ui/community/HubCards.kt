@@ -1,6 +1,17 @@
 package com.samvad.messenger.ui.community
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.graphicsLayer
+import com.samvad.messenger.ui.theme.LocalReducedMotion
+import com.samvad.messenger.ui.theme.Motion
+import com.samvad.messenger.ui.theme.pressScale
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -97,12 +108,24 @@ private fun HubCard(
   val shape = RoundedCornerShape(24.dp)
   val titleText = stringResource(title)
   val subText = stringResource(subtitle)
+  val press = remember { MutableInteractionSource() }
+  val reduced = LocalReducedMotion.current
+  val appear = remember { Animatable(if (reduced) 1f else 0f) }
+  LaunchedEffect(Unit) { if (appear.value < 1f) appear.animateTo(1f, Motion.lively()) }
   Column(
     modifier
+      .graphicsLayer {
+        val t = appear.value.coerceIn(0f, 1f)
+        alpha = t
+        translationY = (1f - t) * 16.dp.toPx()
+      }
+      .pressScale(press, 0.97f)
+      .shadow(1.dp, shape, clip = false)
       .clip(shape)
       .background(container, shape)
-      .clickable(role = Role.Button, onClickLabel = titleText, onClick = onClick)
-      .padding(16.dp),
+      .border(1.dp, content.copy(alpha = 0.08f), shape)
+      .clickable(interactionSource = press, indication = LocalIndication.current, role = Role.Button, onClickLabel = titleText, onClick = onClick)
+      .padding(20.dp),
     verticalArrangement = if (wide) Arrangement.spacedBy(4.dp) else Arrangement.SpaceBetween,
   ) {
     if (wide) {
@@ -117,8 +140,8 @@ private fun HubCard(
       Icon(icon, null, tint = content, modifier = Modifier.size(32.dp))
       Spacer(Modifier.height(12.dp))
       Column {
-        Text(titleText, style = MaterialTheme.typography.titleMedium, color = content)
-        Text(subText, style = MaterialTheme.typography.bodySmall, color = content)
+        Text(titleText, style = MaterialTheme.typography.titleLarge, color = content)
+        Text(subText, style = MaterialTheme.typography.bodyMedium, color = content, modifier = Modifier.padding(top = 4.dp))
       }
     }
   }
