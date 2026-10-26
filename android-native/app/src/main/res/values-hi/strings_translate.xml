@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- On-device message translation. -->
+    <string name="translate_action">अनुवाद करें</string>
+    <string name="translate_sheet_title">इस भाषा में अनुवाद करें</string>
+    <string name="translate_sheet_note">अनुवाद आपके फ़ोन पर ही होता है। संदेश कहीं भेजा नहीं जाता।</string>
+    <string name="translate_downloading">%1$s का भाषा पैक डाउनलोड हो रहा है। यह सिर्फ़ एक बार होता है।</string>
+    <string name="translate_working">अनुवाद हो रहा है</string>
+    <string name="translate_header">%1$s में अनुवाद</string>
+    <string name="translate_show_original">मूल संदेश दिखाएँ</string>
+    <string name="translate_show_translation">अनुवाद दिखाएँ</string>
+    <string name="translate_remove">अनुवाद हटाएँ</string>
+    <string name="translate_retry">फिर कोशिश करें</string>
+    <string name="translate_error_offline">आप ऑफ़लाइन हैं। भाषा पैक डाउनलोड करने के लिए एक बार इंटरनेट से जुड़ें। उसके बाद अनुवाद बिना इंटरनेट के भी चलेगा।</string>
+    <string name="translate_error_unknown">हम पहचान नहीं पाए कि यह संदेश किस भाषा में है।</string>
+    <string name="translate_error_same">यह संदेश पहले से %1$s में है।</string>
+    <string name="translate_error_failed">हम इस संदेश का अनुवाद नहीं कर पाए। कृपया फिर कोशिश करें।</string>
+</resources>

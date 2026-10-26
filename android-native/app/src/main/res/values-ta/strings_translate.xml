@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- On-device message translation. -->
+    <string name="translate_action">மொழிபெயர்</string>
+    <string name="translate_sheet_title">இந்த மொழியில் மொழிபெயர்க்கவும்</string>
+    <string name="translate_sheet_note">மொழிபெயர்ப்பு உங்கள் சாதனத்திலேயே நடக்கும். செய்தி எங்கும் அனுப்பப்படாது.</string>
+    <string name="translate_downloading">%1$s மொழித் தொகுப்பு பதிவிறக்கப்படுகிறது. இது ஒரே ஒரு முறை மட்டுமே நடக்கும்.</string>
+    <string name="translate_working">மொழிபெயர்க்கிறது</string>
+    <string name="translate_header">%1$s மொழியில் மொழிபெயர்ப்பு</string>
+    <string name="translate_show_original">அசல் செய்தியைக் காட்டு</string>
+    <string name="translate_show_translation">மொழிபெயர்ப்பைக் காட்டு</string>
+    <string name="translate_remove">மொழிபெயர்ப்பை நீக்கு</string>
+    <string name="translate_retry">மீண்டும் முயலவும்</string>
+    <string name="translate_error_offline">நீங்கள் ஆஃப்லைனில் உள்ளீர்கள். மொழித் தொகுப்பைப் பதிவிறக்க ஒருமுறை இணையத்துடன் இணையுங்கள். அதன் பிறகு மொழிபெயர்ப்பு இணையம் இல்லாமலும் வேலை செய்யும்.</string>
+    <string name="translate_error_unknown">இந்தச் செய்தி எந்த மொழியில் உள்ளது என்பதை எங்களால் கண்டறிய முடியவில்லை.</string>
+    <string name="translate_error_same">இந்தச் செய்தி ஏற்கனவே %1$s மொழியில் உள்ளது.</string>
+    <string name="translate_error_failed">இந்தச் செய்தியை எங்களால் மொழிபெயர்க்க முடியவில்லை. மீண்டும் முயலவும்.</string>
+</resources>

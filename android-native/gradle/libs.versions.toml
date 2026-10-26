@@ -73,6 +73,8 @@ libsignal-client = { group = "org.signal", name = "libsignal-client", version.re
 libsignal-android = { group = "org.signal", name = "libsignal-android", version.ref = "libsignal" }
 zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
 play-services-code-scanner = { group = "com.google.android.gms", name = "play-services-code-scanner", version.ref = "codeScanner" }
+mlkit-translate = { group = "com.google.mlkit", name = "translate", version = "17.0.3" }
+mlkit-language-id = { group = "com.google.mlkit", name = "language-id", version = "17.0.6" }
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }

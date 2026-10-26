@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- On-device message translation. -->
+    <string name="translate_action">అనువదించు</string>
+    <string name="translate_sheet_title">ఈ భాషలోకి అనువదించండి</string>
+    <string name="translate_sheet_note">అనువాదం మీ ఫోన్‌లోనే జరుగుతుంది. సందేశం ఎక్కడికీ పంపబడదు.</string>
+    <string name="translate_downloading">%1$s భాషా ప్యాక్ డౌన్‌లోడ్ అవుతోంది. ఇది ఒక్కసారి మాత్రమే జరుగుతుంది.</string>
+    <string name="translate_working">అనువదిస్తోంది</string>
+    <string name="translate_header">%1$sలోకి అనువాదం</string>
+    <string name="translate_show_original">అసలు సందేశం చూపు</string>
+    <string name="translate_show_translation">అనువాదం చూపు</string>
+    <string name="translate_remove">అనువాదాన్ని తీసివేయి</string>
+    <string name="translate_retry">మళ్లీ ప్రయత్నించండి</string>
+    <string name="translate_error_offline">మీరు ఆఫ్‌లైన్‌లో ఉన్నారు. భాషా ప్యాక్ డౌన్‌లోడ్ చేయడానికి ఒకసారి ఇంటర్నెట్‌కు కనెక్ట్ అవ్వండి. ఆ తర్వాత అనువాదం ఇంటర్నెట్ లేకుండా కూడా పనిచేస్తుంది.</string>
+    <string name="translate_error_unknown">ఈ సందేశం ఏ భాషలో ఉందో మేము గుర్తించలేకపోయాము.</string>
+    <string name="translate_error_same">ఈ సందేశం ఇప్పటికే %1$sలో ఉంది.</string>
+    <string name="translate_error_failed">ఈ సందేశాన్ని అనువదించలేకపోయాము. దయచేసి మళ్లీ ప్రయత్నించండి.</string>
+</resources>
