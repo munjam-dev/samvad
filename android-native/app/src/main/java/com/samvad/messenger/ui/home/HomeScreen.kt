@@ -182,7 +182,12 @@ fun HomeScreen(
           onNewText = onNewStatus,
           onNewPhoto = onNewPhotoStatus,
         )
-        Tab.COMMUNITIES -> com.samvad.messenger.ui.community.CommunitiesTab(container, me, menu, onOpenCommunity, onNewCommunity)
+        Tab.COMMUNITIES -> com.samvad.messenger.ui.community.CommunitiesTab(
+          container, me, menu, onOpenCommunity, onNewCommunity,
+          onOpenVault = onOpenVault,
+          onOpenMoments = { tab = Tab.STATUS.ordinal },
+          onOpenStarred = onOpenStarred,
+        )
         Tab.CALLS -> com.samvad.messenger.ui.call.CallsTab(container, me, topBar = { TabTopBar(R.string.nav_calls, menu) })
       }
     }

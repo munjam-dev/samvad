@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Home hub cards. -->
+    <string name="hub_communities_sub">మీ వారి కోసం గ్రూపులు, ప్రకటనలతో</string>
+    <string name="hub_vault_sub">మీరు మాత్రమే తెరవగల ఫోటోలు, నోట్లు, ఫైళ్లు</string>
+    <string name="hub_moments_sub">మీ వారితో ఫోటో లేదా నోట్ పంచుకోండి</string>
+    <string name="hub_starred_sub">మీరు సేవ్ చేసిన సందేశాలను కనుగొనండి</string>
+    <string name="hub_your_communities">మీ కమ్యూనిటీలు</string>
+</resources>
