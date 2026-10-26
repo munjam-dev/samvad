@@ -76,6 +76,7 @@ android {
       buildConfigField("boolean", "USE_EMULATORS", useEmulators.toString())
       buildConfigField("String", "EMULATOR_HOST", "\"$emulatorHost\"")
       buildConfigField("boolean", "E2EE_ENABLED", "true")
+      buildConfigField("boolean", "VAULT_BACKUP_ENABLED", "false")
     }
     release {
       isMinifyEnabled = true
@@ -86,6 +87,7 @@ android {
       buildConfigField("boolean", "USE_EMULATORS", "false")
       buildConfigField("String", "EMULATOR_HOST", "\"\"")
       buildConfigField("boolean", "E2EE_ENABLED", e2eeInRelease.toString())
+      buildConfigField("boolean", "VAULT_BACKUP_ENABLED", "false")
     }
   }
 

@@ -161,7 +161,7 @@ private fun VaultList(
             Icon(Icons.Outlined.MoreVert, stringResource(R.string.cd_more), tint = colors.onSurface)
           }
           DropdownMenu(menuOpen, onDismissRequest = { menuOpen = false }) {
-            DropdownMenuItem(text = { Text(stringResource(R.string.vbk_menu)) }, onClick = { menuOpen = false; onOpenBackup() })
+            if (com.samvad.messenger.BuildConfig.VAULT_BACKUP_ENABLED) DropdownMenuItem(text = { Text(stringResource(R.string.vbk_menu)) }, onClick = { menuOpen = false; onOpenBackup() })
             DropdownMenuItem(text = { Text(stringResource(R.string.vault_about)) }, onClick = { menuOpen = false; about = true })
           }
         }
