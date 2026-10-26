@@ -11,10 +11,12 @@ import {
   cleanupMissedCallsCore,
   cleanupCallsForDeletedAccount,
 } from '../src/calls';
-import { testDeps, phoneRequest, fakeLiveKit } from '../../test-support/deps';
+import { testDeps, phoneRequest, fakeLiveKit, fakePush } from '../../test-support/deps';
 import { resetEmulators } from '../../test-support/auth';
 
-const deps = testDeps();
+const pushSpy = fakePush();
+const deps = testDeps({ push: pushSpy.sender });
+const cancels = () => pushSpy.sent.filter((p) => p.data.type === 'call_cancel');
 const { service: livekit, closed } = fakeLiveKit();
 const A = 'anil';
 const B = 'bina';
@@ -40,6 +42,7 @@ async function seed() {
 beforeEach(async () => {
   await resetEmulators();
   closed.length = 0;
+  pushSpy.sent.length = 0;
   await seed();
 });
 
@@ -105,6 +108,38 @@ describe('answerCall / declineCall', () => {
     expect(await errorOf(decline(A, callId))).toBe('permission-denied');
     expect(await errorOf(decline(B, callId))).toBe('ok');
     expect((await deps.db.doc(`calls/${callId}`).get()).get('status')).toBe('declined');
+  });
+});
+
+describe('call_cancel', () => {
+  it('stops the ring on every callee device when the callee answers or declines, once', async () => {
+    await deps.db.doc(`users/${B}/devices/d2`).set({ platform: 'android', appVersion: '1', osVersion: '14', createdAt: T0, lastSeenAt: T0, fcmToken: 'tok-bina-2' });
+    const first = await start(A);
+    expect(cancels()).toHaveLength(0);
+    await answer(B, first.callId);
+    expect(cancels()).toHaveLength(1);
+    expect(cancels()[0]).toEqual({ tokens: ['tok-bina', 'tok-bina-2'], data: { type: 'call_cancel', callId: first.callId } });
+    await end(B, first.callId);
+    const second = await start(A);
+    await decline(B, second.callId);
+    expect(cancels()).toHaveLength(2);
+    expect(cancels()[1].data.callId).toBe(second.callId);
+  });
+
+  it('is sent when the callee ends a ringing call (a decline), not when the caller hangs up', async () => {
+    const a = await start(A);
+    await end(B, a.callId);
+    expect(cancels()).toHaveLength(1);
+    const b = await start(A);
+    await end(A, b.callId); // caller gives up: the missed_call push already stops the ring
+    expect(cancels()).toHaveLength(1);
+    expect(pushSpy.sent.some((p) => p.data.type === 'missed_call' && p.data.callId === b.callId)).toBe(true);
+  });
+
+  it('never sends one for a refused answer', async () => {
+    const { callId } = await start(A);
+    await answer(A, callId).catch(() => undefined);
+    expect(cancels()).toHaveLength(0);
   });
 });
 
