@@ -32,6 +32,8 @@ object Notifications {
   const val EXTRA_CONVERSATION = "samvad.conversationId"
   const val EXTRA_OTHER = "samvad.otherUid"
   const val EXTRA_GROUP = "samvad.group"
+  /** A community announcement push also carries the community, so a tap opens the Announcements channel. */
+  const val EXTRA_COMMUNITY = "samvad.community"
 
   fun createChannels(context: Context) {
     val channel = NotificationChannel(
@@ -137,6 +139,7 @@ object Notifications {
     group: Boolean = false,
     /** Quiet hours (Settings → Notifications): still delivered and visible, but no sound or vibration. */
     silent: Boolean = false,
+    communityId: String? = null,
   ) {
     if (!canPost(context) || ActiveChat.id.value == conversationId) return
     val open = Intent(context, MainActivity::class.java)
@@ -144,6 +147,7 @@ object Notifications {
       .putExtra(EXTRA_CONVERSATION, conversationId)
       .putExtra(EXTRA_OTHER, senderId)
       .putExtra(EXTRA_GROUP, group)
+      .apply { if (communityId != null) putExtra(EXTRA_COMMUNITY, communityId) }
     val pending = PendingIntent.getActivity(
       context,
       conversationId.hashCode(),

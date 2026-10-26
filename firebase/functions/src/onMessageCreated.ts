@@ -76,7 +76,7 @@ export async function applyMessageCreated(deps: Deps, msg: CreatedMessage): Prom
   const convRef = db.doc(`conversations/${msg.cid}`);
   const markerRef = db.doc(`processedEvents/${msg.eventId}`);
   let recipients: string[] = [];
-  let group: { name: string; community?: boolean } | null = null;
+  let group: { name: string; community?: boolean; communityId?: string } | null = null;
   let newlyEngaged = false;
   let encrypted = false;
 
@@ -96,7 +96,7 @@ export async function applyMessageCreated(deps: Deps, msg: CreatedMessage): Prom
     const timer = Number(conv.get('disappearAfterSec') ?? 0);
     encrypted = isEncrypted(msg.data);
     if (isGroup) group = { name: String(conv.get('name') ?? '') };
-    if (isAnnouncements) group = { name: String(conv.get('name') ?? ''), community: true };
+    if (isAnnouncements) group = { name: String(conv.get('name') ?? ''), community: true, communityId: String(conv.get('communityId') ?? '') };
     const members: string[] = conv.get('members') ?? [];
     // Phase 3: a person who writes in a direct chat becomes one of its engaged people ("People I chat with").
     if (!isGroup && msg.data.kind !== 'system' && !((conv.get('engagedBy') ?? []) as string[]).includes(msg.data.senderId)) {
@@ -190,7 +190,7 @@ export async function notifyRecipients(
   deps: Deps,
   msg: CreatedMessage,
   recipients: string[],
-  group: { name: string; community?: boolean } | null = null,
+  group: { name: string; community?: boolean; communityId?: string } | null = null,
   encrypted = false,
 ): Promise<void> {
   const { db } = deps;
@@ -227,7 +227,7 @@ export async function notifyRecipients(
     body: body.slice(0, PREVIEW_LENGTH + 66),
     ...(encrypted ? encryptedPushFields(msg) : {}),
     ...(group ? { group: '1' } : {}),
-    ...(group?.community ? { community: '1' } : {}),
+    ...(group?.community ? { community: '1', ...(group.communityId ? { communityId: group.communityId } : {}) } : {}),
   });
   for (const t of invalidTokens) {
     await tokenOwners.get(t)?.update({ fcmToken: null });

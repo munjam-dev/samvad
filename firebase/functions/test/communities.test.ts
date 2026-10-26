@@ -415,7 +415,7 @@ describe('announcements: push and server-side protections', () => {
     const sent = await announcement(announcementsCid, 'anil');
     expect(sent).toHaveLength(1);
     expect(sent[0].tokens).toEqual(['tb', 'tc']);
-    expect(sent[0].data).toMatchObject({ title: 'Neighbours', body: 'anil: Water cut at 10', group: '1', community: '1', cid: announcementsCid });
+    expect(sent[0].data).toMatchObject({ title: 'Neighbours', body: 'anil: Water cut at 10', group: '1', community: '1', communityId: id, cid: announcementsCid });
     expect((await conv(announcementsCid)).lastMessage.preview).toBe('Water cut at 10');
     expect((await deps.db.doc(`conversations/${announcementsCid}/members/bina`).get()).get('unreadCount')).toBe(0);
     expect(await announcement(announcementsCid, 'anil', fakePush(), { kind: 'system', system: { event: 'x' } })).toEqual([]);
