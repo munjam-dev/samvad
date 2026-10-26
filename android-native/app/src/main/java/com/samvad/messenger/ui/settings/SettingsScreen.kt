@@ -136,83 +136,40 @@ fun SettingsScreen(
   val profile = remember { container.accounts!!.profile(me) }.collectAsStateWithLifecycle(null).value
   val phone = container.auth?.currentUser?.phoneNumber.orEmpty()
   val context = androidx.compose.ui.platform.LocalContext.current
-  var editing by remember { mutableStateOf(false) }
   var choosingLanguage by remember { mutableStateOf(false) }
   var confirmSignOutAll by remember { mutableStateOf(false) }
   var confirmDelete by remember { mutableStateOf(false) }
   var reauthing by remember { mutableStateOf(false) }
   var deletingWithPin by remember { mutableStateOf(false) }
-  var photoMenu by remember { mutableStateOf(false) }
-  var photoBusy by remember { mutableStateOf(false) }
-  val msgPhotoFailed = stringResource(R.string.settings_photo_failed)
-  val updatePhoto: (suspend () -> ByteArray?) -> Unit = { produce ->
-    photoBusy = true
-    scope.launch {
-      runCatching { container.accounts!!.setProfilePhoto(produce()) }.onFailure { snackbar.showSnackbar(msgPhotoFailed) }
-      photoBusy = false
-    }
-  }
-  val pickPhoto = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-    if (uri != null) updatePhoto { container.media!!.prepareAvatar(uri) }
-  }
   // With two-step on, deletion is confirmed with the PIN instead of a fresh SMS code.
   val twoStepOn = produceState(false) { value = runCatching { container.twoStep?.session()?.enabled == true }.getOrDefault(false) }.value
   var busy by remember { mutableStateOf(false) }
   val msgSignedOutAll = stringResource(R.string.settings_signed_out_all)
   val msgCooldown = stringResource(R.string.settings_cooldown)
   val msgError = stringResource(R.string.error_unknown)
-  val msgUsernameFailed = stringResource(R.string.username_save_failed)
   val msgNoScreenLock = stringResource(R.string.settings_app_lock_unavailable)
   val lockTitle = stringResource(R.string.lock_prompt_title)
   val lockSubtitle = stringResource(R.string.lock_prompt_subtitle)
   val activity = LocalActivity.current
 
-  Column(Modifier.fillMaxSize().background(colors.background)) {
+  Column(Modifier.fillMaxSize().background(colors.background).verticalScroll(rememberScrollState())) {
+    SettingsHeader(
+      me = me,
+      name = profile?.displayName.orEmpty(),
+      username = profile?.username,
+      about = profile?.about.orEmpty(),
+      photoPath = profile?.photoPath,
+      onBack = onBack,
+      onOpenProfile = onOpenProfile,
+      chips = buildList {
+        add(HeaderChip(Icons.Outlined.Lock, stringResource(R.string.vault_title), onOpenVault))
+        add(HeaderChip(Icons.Outlined.StarOutline, stringResource(R.string.starred_title), onOpenStarred))
+        if (container.devices != null) add(HeaderChip(Icons.Outlined.PhoneAndroid, stringResource(R.string.devices_title), onOpenDevices))
+        add(HeaderChip(Icons.Outlined.Language, stringResource(R.string.settings_language)) { choosingLanguage = true })
+      },
+    )
     Column(
-      Modifier
-        .fillMaxWidth()
-        .background(Brush.verticalGradient(listOf(colors.primaryContainer, colors.background)))
-        .statusBarsPadding()
-        .padding(start = 8.dp, end = 20.dp, bottom = 20.dp),
-    ) {
-      Row(verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, stringResource(R.string.cd_back), tint = colors.onSurface) }
-        Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
-      }
-      Row(Modifier.padding(start = 12.dp, top = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        val photoLabel = stringResource(R.string.settings_photo)
-        Box(
-          Modifier
-            .clip(CircleShape)
-            .clickable(enabled = !photoBusy, onClickLabel = photoLabel) { photoMenu = true }
-            .semantics { contentDescription = photoLabel },
-        ) {
-          Avatar(ChatList.initials(profile?.displayName ?: ""), me, size = 72.dp, photoPath = profile?.photoPath)
-          if (photoBusy) {
-            CircularProgressIndicator(Modifier.size(72.dp), color = colors.brand, strokeWidth = 3.dp)
-          } else {
-            Icon(
-              Icons.Outlined.PhotoCamera,
-              null,
-              tint = colors.onPrimary,
-              modifier = Modifier.align(Alignment.BottomEnd).size(24.dp).background(colors.primary, CircleShape).padding(4.dp),
-            )
-          }
-        }
-        Column(Modifier.weight(1f)) {
-          Text(profile?.displayName ?: "", style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
-          if (!profile?.username.isNullOrEmpty()) Text("@${profile!!.username}", style = MaterialTheme.typography.bodyMedium, color = colors.brand)
-          if (!profile?.about.isNullOrBlank()) Text(profile!!.about, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
-          Text(phone, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
-        }
-        IconButton(onClick = onOpenProfile, modifier = Modifier.background(colors.surface, RoundedCornerShape(14.dp))) {
-          Icon(Icons.Outlined.Edit, stringResource(R.string.settings_edit_profile), tint = colors.primary)
-        }
-      }
-    }
-
-    Column(
-      Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).navigationBarsPadding(),
+      Modifier.padding(horizontal = 16.dp).navigationBarsPadding(),
       verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
       Group(stringResource(R.string.settings_appearance)) {
@@ -399,27 +356,6 @@ fun SettingsScreen(
     }
   }
 
-  if (editing) {
-    EditProfileSheet(
-      initialName = profile?.displayName ?: "",
-      initialAbout = profile?.about ?: "",
-      initialUsername = profile?.username ?: "",
-      accounts = container.accounts,
-      onDismiss = { editing = false },
-      onSave = { name, about, username ->
-        scope.launch {
-          runCatching { container.accounts!!.updateProfile(me, name, about) }
-            .onFailure { snackbar.showSnackbar(msgError) }
-          if (username != (profile?.username ?: "")) {
-            val result = container.accounts!!.setUsername(username.ifEmpty { null })
-            if (result != UsernameResult.Saved) snackbar.showSnackbar(msgUsernameFailed)
-          }
-          editing = false
-        }
-      },
-    )
-  }
-
   if (confirmSignOutAll) {
     AlertDialog(
       onDismissRequest = { confirmSignOutAll = false },
@@ -465,30 +401,6 @@ fun SettingsScreen(
       },
       dismissButton = { TextButton({ confirmDelete = false }) { Text(stringResource(R.string.cancel)) } },
     )
-  }
-
-  if (photoMenu) {
-    ModalBottomSheet(onDismissRequest = { photoMenu = false }) {
-      Column(Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
-        ActionRow(Icons.Outlined.PhotoLibrary, stringResource(R.string.settings_photo_choose), onClick = {
-          photoMenu = false
-          container.appLock.expectExternal()
-          pickPhoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-        })
-        if (profile?.photoPath != null) {
-          ActionRow(Icons.Outlined.Delete, stringResource(R.string.settings_photo_remove), danger = true, onClick = {
-            photoMenu = false
-            updatePhoto { null }
-          })
-        }
-        Text(
-          stringResource(R.string.settings_photo_note),
-          style = MaterialTheme.typography.bodySmall,
-          color = colors.onSurfaceVariant,
-          modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-        )
-      }
-    }
   }
 
   if (deletingWithPin) {
@@ -545,31 +457,6 @@ private fun ReauthThenDelete(container: AppContainer, phone: String, onDeleted: 
   }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun EditProfileSheet(
-  initialName: String,
-  initialAbout: String,
-  initialUsername: String,
-  accounts: AccountRepository?,
-  onDismiss: () -> Unit,
-  onSave: (String, String, String) -> Unit,
-) {
-  var name by remember { mutableStateOf(initialName) }
-  var about by remember { mutableStateOf(initialAbout) }
-  var username by remember { mutableStateOf(initialUsername) }
-  val status by usernameStatus(accounts, username, initialUsername.ifEmpty { null })
-  ModalBottomSheet(onDismissRequest = onDismiss) {
-    Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-      Text(stringResource(R.string.settings_edit_profile), style = MaterialTheme.typography.titleLarge, color = SamvadTheme.colors.onSurface)
-      SamvadTextField(name, { name = it }, stringResource(R.string.profile_name), maxLength = 64, supportingText = stringResource(R.string.setup_name_help))
-      UsernameField(username, { username = it }, status)
-      SamvadTextField(about, { about = it }, stringResource(R.string.profile_about), maxLength = 140, singleLine = false, supportingText = stringResource(R.string.setup_about_help))
-      PrimaryButton(stringResource(R.string.save), { onSave(name.trim(), about.trim(), Usernames.normalize(username)) }, enabled = name.isNotBlank() && status.ok)
-      Spacer(Modifier.height(16.dp))
-    }
-  }
-}
 
 @Composable
 private fun Group(title: String, content: @Composable () -> Unit) {
