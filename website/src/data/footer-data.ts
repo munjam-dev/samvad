@@ -9,6 +9,7 @@ export const footerLinks: FooterData[] = [
       { label: 'Download', href: '/download' },
       { label: 'Changelog', href: '/changelog' },
       { label: 'Brand kit', href: '/brandkit' },
+      { label: 'Source code (AGPL-3.0)', href: 'https://github.com/munjam-dev/samvad' },
     ],
   },
   {
@@ -28,6 +29,9 @@ export const footerLinks: FooterData[] = [
       { label: 'Community guidelines', href: '/legal/community-guidelines' },
       { label: 'Account deletion', href: '/legal/account-deletion' },
       { label: 'Child safety standards', href: '/legal/child-safety-standards' },
+      { label: 'Service providers', href: '/legal/service-providers' },
+      { label: 'Cookie policy', href: '/legal/cookie-policy' },
+      { label: 'Security and disclosure', href: '/legal/security' },
       { label: 'All policies', href: '/legal' },
     ],
   },

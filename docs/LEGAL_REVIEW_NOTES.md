@@ -54,7 +54,7 @@ nothing about the items below.
 8. **GIPHY.** The server sends only the search words, rating `g` and paging to GIPHY (`lib/gifs.ts`). Check GIPHY's
    current terms and privacy policy, and whether an API agreement or attribution is needed.
 9. **Analytics and crash reporting.** None in the app (no analytics, Crashlytics or Performance dependency). Server logs
-   are 30 days (unverified configuration, see item 5 above). Confirm that Firebase Console settings (Google Analytics
+   are kept 30 days per the policy (configuration not verified from the repo). Confirm that Firebase Console settings (Google Analytics
    linking, Crashlytics, data sharing) are off.
 10. **Account deletion** removes the account, profile, devices, tokens, scheduled messages and avatars (`deleteAccount.ts`).
     The deletion code reviewed does not clearly remove the user's end-to-end encryption prekeys, or Moments and their media.
@@ -71,3 +71,5 @@ nothing about the items below.
     licence scanner before release.
 15. **Hindi, Telugu and Tamil** wording of the new privacy strings was written by an AI and has not been reviewed by a
     native speaker (see `docs/LOCALIZATION.md`).
+16. **Website dependency.** `next` was raised from 16.4.0 to 16.4.3 in `website/package.json` because the build stopped on
+    Next.js's known-vulnerability check. `website/yarn.lock` was not updated; use npm (`package-lock.json`) or regenerate it.
