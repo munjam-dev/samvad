@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- On-device message translation. -->
+    <string name="translate_action">Translate</string>
+    <string name="translate_sheet_title">Translate to</string>
+    <string name="translate_sheet_note">Translated on your device. The message is not sent anywhere.</string>
+    <string name="translate_downloading">Downloading the language pack for %1$s. This happens once.</string>
+    <string name="translate_working">Translating</string>
+    <string name="translate_header">Translated to %1$s</string>
+    <string name="translate_show_original">Show original</string>
+    <string name="translate_show_translation">Show translation</string>
+    <string name="translate_remove">Remove translation</string>
+    <string name="translate_retry">Try again</string>
+    <string name="translate_error_offline">You are offline. Connect to the internet once to download the language pack, then translating works without a connection.</string>
+    <string name="translate_error_unknown">We could not tell which language this message is in.</string>
+    <string name="translate_error_same">This message is already in %1$s.</string>
+    <string name="translate_error_failed">We could not translate this message. Please try again.</string>
+</resources>

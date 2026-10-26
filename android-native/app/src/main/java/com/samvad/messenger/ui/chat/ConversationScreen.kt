@@ -6,6 +6,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.Crossfade
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.animation.animateColorAsState
@@ -201,6 +202,17 @@ fun ConversationScreen(
   val clipboard = LocalClipboardManager.current
   val lifecycle = LocalLifecycleOwner.current.lifecycle
   var selected by remember { mutableStateOf<Message?>(null) }
+  var translatePick by remember { mutableStateOf<Message?>(null) }
+  val translations = remember { androidx.compose.runtime.mutableStateMapOf<String, com.samvad.core.translate.TranslationEntry>() }
+  fun runTranslate(msg: Message, lang: com.samvad.core.translate.TranslateLanguage) {
+    translations[msg.id] = com.samvad.core.translate.TranslationEntry(lang, com.samvad.core.translate.TranslateState.Working)
+    scope.launch {
+      val result = OnDeviceTranslator.translate(appCtx, msg.text, lang) {
+        translations[msg.id] = com.samvad.core.translate.TranslationEntry(lang, com.samvad.core.translate.TranslateState.Downloading)
+      }
+      if (translations.containsKey(msg.id)) translations[msg.id] = com.samvad.core.translate.TranslationEntry(lang, result)
+    }
+  }
   var person by remember { mutableStateOf<String?>(null) }
   var privacyInfo by remember { mutableStateOf(false) }
   var scheduling by remember { mutableStateOf(false) }
@@ -709,6 +721,10 @@ fun ConversationScreen(
                   onReact = { emoji -> if (selecting) toggle() else vm.react(item.message, emoji) },
                   mentionNames = groupStatus.allNames,
                   scam = scam,
+                  translation = translations[item.message.id],
+                  onToggleOriginal = { translations[item.message.id]?.let { translations[item.message.id] = it.toggleOriginal() } },
+                  onRetryTranslate = { translations[item.message.id]?.let { runTranslate(item.message, it.target) } },
+                  onRemoveTranslation = { translations.remove(item.message.id) },
                   mediaContent = {
                     val media = item.message.media
                     if (media != null) {
@@ -1037,7 +1053,14 @@ fun ConversationScreen(
           (msg.id in pinnedIds || !blocked) && com.samvad.core.chat.PinnedMessages.isPinnable(msg),
         pinned = msg.id in pinnedIds,
         onPin = { vm.togglePin(msg); selected = null },
+        canTranslate = com.samvad.core.translate.TranslateRules.canTranslate(msg.kind, msg.text, msg.deleted, msg.pending) && msg.lock == null,
+        onTranslate = { translatePick = msg; selected = null },
       )
+    }
+  }
+  translatePick?.let { msg ->
+    ModalBottomSheet(onDismissRequest = { translatePick = null }) {
+      TranslateSheetContent(onPick = { lang -> translatePick = null; runTranslate(msg, lang) })
     }
   }
   } // ProvideChatTheme
@@ -1076,6 +1099,10 @@ private fun MessageBubble(
   picked: Boolean = false,
   onToggle: () -> Unit = {},
   scam: ScamLinks? = null,
+  translation: com.samvad.core.translate.TranslationEntry? = null,
+  onToggleOriginal: () -> Unit = {},
+  onRetryTranslate: () -> Unit = {},
+  onRemoveTranslation: () -> Unit = {},
 ) {
   val colors = SamvadTheme.colors
   val m = item.message
@@ -1102,7 +1129,7 @@ private fun MessageBubble(
   Column(
     Modifier
       .fillMaxWidth()
-      .padding(top = if (item.groupedWithPrevious) 2.dp else 8.dp)
+      .padding(top = if (item.groupedWithPrevious) 3.dp else 10.dp)
       .graphicsLayer {
         alpha = appear.value.coerceIn(0f, 1f)
         val s = 0.85f + 0.15f * appear.value
@@ -1187,6 +1214,9 @@ private fun MessageBubble(
           item.delivery?.let { DeliveryIcon(it) }
         }
       }
+    }
+    if (translation != null && !m.deleted) {
+      TranslationCard(translation, onToggleOriginal, onRetryTranslate, onRemoveTranslation, Modifier.padding(start = indent, top = 4.dp))
     }
     if (!mine) ScamNotice(assessment, Modifier.padding(start = indent, top = 4.dp))
     if (m.failed) {
@@ -1462,6 +1492,8 @@ private fun MessageActions(
   canPin: Boolean = false,
   pinned: Boolean = false,
   onPin: () -> Unit = {},
+  canTranslate: Boolean = false,
+  onTranslate: () -> Unit = {},
 ) {
   val colors = SamvadTheme.colors
   Column(Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
@@ -1484,6 +1516,7 @@ private fun MessageActions(
     if (canStar) ActionRow(if (starred) Icons.Outlined.StarOutline else Icons.Outlined.Star, stringResource(if (starred) R.string.chat_unstar else R.string.chat_star), onStar)
     if (canPin) ActionRow(Icons.Outlined.PushPin, stringResource(if (pinned) R.string.pinmsg_unpin else R.string.pinmsg_pin), onPin)
     if (canCopy) ActionRow(Icons.Outlined.ContentCopy, stringResource(R.string.chat_copy), onCopy)
+    if (canTranslate) ActionRow(Icons.Outlined.Translate, stringResource(R.string.translate_action), onTranslate)
     if (canEdit) ActionRow(Icons.Outlined.Edit, stringResource(R.string.chat_edit), onEdit)
     if (mine) ActionRow(Icons.Outlined.Delete, stringResource(R.string.chat_delete), onDelete, danger = true)
   }

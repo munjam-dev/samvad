@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Home hub cards. -->
+    <string name="hub_communities_sub">Groups for your people, with announcements</string>
+    <string name="hub_vault_sub">Photos, notes and files only you can open</string>
+    <string name="hub_moments_sub">Share a photo or note with your people</string>
+    <string name="hub_starred_sub">Find the messages you saved</string>
+    <string name="hub_your_communities">Your communities</string>
+</resources>

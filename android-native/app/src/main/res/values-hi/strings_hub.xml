@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Home hub cards. -->
+    <string name="hub_communities_sub">आपके अपनों के समूह, घोषणाओं के साथ</string>
+    <string name="hub_vault_sub">फ़ोटो, नोट और फ़ाइलें जो सिर्फ़ आप खोल सकते हैं</string>
+    <string name="hub_moments_sub">अपनों के साथ फ़ोटो या नोट साझा करें</string>
+    <string name="hub_starred_sub">अपने सहेजे हुए संदेश खोजें</string>
+    <string name="hub_your_communities">आपकी कम्युनिटी</string>
+</resources>

@@ -28,6 +28,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -51,34 +53,73 @@ import kotlinx.coroutines.launch
 
 /** My communities: a list with unread announcements, "Start a community" and "Join with code". */
 @Composable
-fun CommunitiesTab(container: AppContainer, me: String, menu: HomeMenu, onOpenCommunity: (String) -> Unit, onNewCommunity: () -> Unit) {
+fun CommunitiesTab(
+  container: AppContainer,
+  me: String,
+  menu: HomeMenu,
+  onOpenCommunity: (String) -> Unit,
+  onNewCommunity: () -> Unit,
+  onOpenVault: () -> Unit = {},
+  onOpenMoments: () -> Unit = {},
+  onOpenStarred: () -> Unit = {},
+) {
   val colors = SamvadTheme.colors
   val vm: CommunitiesViewModel = viewModel(factory = CommunitiesViewModel.factory(container, me))
   val state = vm.state.collectAsStateWithLifecycle().value
   var joinOpen by rememberSaveable { mutableStateOf(false) }
+  val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+  val scope = rememberCoroutineScope()
 
   Column(Modifier.fillMaxSize().background(colors.background)) {
     TabTopBar(R.string.nav_communities, menu)
-    when {
-      state.loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = colors.brand) }
-      state.rows.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        EmptyState(
-          Icons.Outlined.Groups,
-          stringResource(R.string.communities_title),
-          stringResource(R.string.communities_body),
-          action = stringResource(R.string.community_start),
-          onAction = onNewCommunity,
-        )
-      }
-      else -> LazyColumn(Modifier.fillMaxSize().navigationBarsPadding(), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
-        item(key = "actions") {
-          Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            PrimaryButton(stringResource(R.string.community_start), onClick = onNewCommunity, modifier = Modifier.weight(1f))
-          }
+    if (state.loading) {
+      Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = colors.brand) }
+    } else {
+      LazyColumn(Modifier.fillMaxSize().navigationBarsPadding(), state = listState, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 120.dp)) {
+        item(key = "hub") {
+          HubCards(
+            onCommunities = { if (state.rows.isEmpty()) onNewCommunity() else scope.launch { listState.animateScrollToItem(1) } },
+            onVault = onOpenVault,
+            onMoments = onOpenMoments,
+            onStarred = onOpenStarred,
+            modifier = Modifier.padding(bottom = 20.dp),
+          )
         }
-        item(key = "join") {
-          Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), horizontalArrangement = Arrangement.Center) {
-            QuietButton(stringResource(R.string.community_join_with_code), onClick = { joinOpen = true })
+        if (state.rows.isEmpty()) {
+          item(key = "empty") {
+            Box(Modifier.fillMaxWidth().padding(vertical = 16.dp), contentAlignment = Alignment.Center) {
+              EmptyState(
+                Icons.Outlined.Groups,
+                stringResource(R.string.communities_title),
+                stringResource(R.string.communities_body),
+                action = stringResource(R.string.community_start),
+                onAction = onNewCommunity,
+              )
+            }
+          }
+          item(key = "join_empty") {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+              QuietButton(stringResource(R.string.community_join_with_code), onClick = { joinOpen = true })
+            }
+          }
+        } else {
+          item(key = "heading") {
+            Text(
+              stringResource(R.string.hub_your_communities),
+              style = MaterialTheme.typography.titleMedium,
+              color = colors.onSurface,
+              modifier = Modifier.padding(bottom = 8.dp).semantics { heading() },
+            )
+          }
+          item(key = "actions") {
+            Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+              PrimaryButton(stringResource(R.string.community_start), onClick = onNewCommunity, modifier = Modifier.weight(1f))
+            }
+          }
+          item(key = "join") {
+            Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), horizontalArrangement = Arrangement.Center) {
+              QuietButton(stringResource(R.string.community_join_with_code), onClick = { joinOpen = true })
+            }
           }
         }
         items(state.rows, key = { it.id }) { row ->

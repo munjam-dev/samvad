@@ -145,6 +145,8 @@ dependencies {
   // Safety-number QR code: drawing (zxing core, Apache-2.0) and scanning (Google code scanner, needs no camera permission).
   implementation(libs.zxing.core)
   implementation(libs.play.services.code.scanner)
+  implementation(libs.mlkit.translate)
+  implementation(libs.mlkit.language.id)
   coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
   implementation(libs.androidx.datastore.preferences)
   implementation(libs.androidx.exifinterface)

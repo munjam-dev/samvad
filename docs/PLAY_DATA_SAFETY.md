@@ -145,3 +145,7 @@ User-generated-content safeguards (UGC policy):
 ## 7. Privacy policy URL
 
 `/legal/privacy-policy` (also `/privacy`). Add the full production domain when entering it in Play Console.
+
+## Message translation (on device)
+
+The Translate action in a chat uses Google ML Kit Translation and Language ID on the device. Message text is not sent to Samvad, Google or anyone else, and translations are held in memory only (not stored, not sent). The only network use is the one-time download of a language pack by Google Play services, which carries no message or account data. No new Data safety type is collected; no change to the answers above. Translation is offered for any text message you can read, including end-to-end encrypted chats, because it runs locally.
