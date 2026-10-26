@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="profile_title">प्रोफ़ाइल</string>
+    <string name="profile_photo_sheet_title">प्रोफ़ाइल फ़ोटो</string>
+    <string name="profile_photo_view">फ़ोटो देखें</string>
+    <string name="profile_photo_camera">फ़ोटो खींचें</string>
+    <string name="profile_photo_gallery">फ़ोटो और एल्बम से चुनें</string>
+    <string name="profile_photo_remove_title">अपनी फ़ोटो हटाएँ?</string>
+    <string name="profile_photo_remove_body">लोगों को इसकी जगह आपके नाम के अक्षर दिखेंगे।</string>
+    <string name="profile_photo_remove_confirm">हटाएँ</string>
+    <string name="profile_photo_uploading">आपकी फ़ोटो अपडेट हो रही है</string>
+    <string name="profile_camera_denied">कैमरे की अनुमति बंद है। फ़ोन की सेटिंग में अनुमति दें, या कोई फ़ोटो चुनें।</string>
+    <string name="profile_name_edit">नाम बदलें</string>
+    <string name="profile_about_edit">परिचय बदलें</string>
+    <string name="profile_name_blank">अपना नाम लिखें ताकि लोग आपको पहचान सकें।</string>
+    <string name="profile_about_empty">अपने बारे में कुछ शब्द जोड़ें</string>
+    <string name="profile_about_counter">%1$d अक्षर बचे हैं</string>
+    <string name="profile_username_add">यूज़रनेम जोड़ें</string>
+    <string name="profile_username_edit">यूज़रनेम बदलें</string>
+    <string name="profile_phone_label">फ़ोन नंबर</string>
+    <string name="profile_phone_find_on">लोग इस नंबर से आपको ढूँढ़ सकते हैं</string>
+    <string name="profile_phone_find_off">लोग इस नंबर से आपको नहीं ढूँढ़ सकते</string>
+    <string name="profile_phone_chip_cd">%1$s। गोपनीयता सेटिंग खुलती हैं।</string>
+    <string name="settings_open_profile">अपनी प्रोफ़ाइल खोलें</string>
+</resources>

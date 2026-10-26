@@ -314,6 +314,15 @@ private fun SignedInNav(
         onOpenDevices = { nav.navigate("devices") },
         onOpenAppeal = { nav.navigate("appeal") },
         onOpenLicences = { nav.navigate("licences") },
+        onOpenProfile = { nav.navigate("profile") },
+      )
+    }
+    composable("profile") {
+      com.samvad.messenger.ui.profile.ProfileScreen(
+        container = container,
+        me = uid,
+        onBack = { nav.popBackStack() },
+        onOpenPrivacy = { nav.navigate("privacy") },
       )
     }
     composable("licences") {

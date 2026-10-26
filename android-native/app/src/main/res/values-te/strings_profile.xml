@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="profile_title">ప్రొఫైల్</string>
+    <string name="profile_photo_sheet_title">ప్రొఫైల్ ఫోటో</string>
+    <string name="profile_photo_view">ఫోటో చూడండి</string>
+    <string name="profile_photo_camera">ఫోటో తీయండి</string>
+    <string name="profile_photo_gallery">ఫోటోలు, ఆల్బమ్‌ల నుండి ఎంచుకోండి</string>
+    <string name="profile_photo_remove_title">మీ ఫోటోను తీసివేయాలా?</string>
+    <string name="profile_photo_remove_body">దానికి బదులుగా మీ పేరు అక్షరాలు కనిపిస్తాయి.</string>
+    <string name="profile_photo_remove_confirm">తీసివేయి</string>
+    <string name="profile_photo_uploading">మీ ఫోటోను అప్‌డేట్ చేస్తున్నాం</string>
+    <string name="profile_camera_denied">కెమెరా అనుమతి ఆఫ్‌లో ఉంది. ఫోన్ సెట్టింగ్‌లలో అనుమతించండి, లేదా ఫోటోను ఎంచుకోండి.</string>
+    <string name="profile_name_edit">పేరు మార్చండి</string>
+    <string name="profile_about_edit">పరిచయం మార్చండి</string>
+    <string name="profile_name_blank">ఇతరులు మిమ్మల్ని గుర్తించేందుకు పేరు రాయండి.</string>
+    <string name="profile_about_empty">మీ గురించి కొన్ని మాటలు జోడించండి</string>
+    <string name="profile_about_counter">%1$d అక్షరాలు మిగిలాయి</string>
+    <string name="profile_username_add">యూజర్‌నేమ్ జోడించండి</string>
+    <string name="profile_username_edit">యూజర్‌నేమ్ మార్చండి</string>
+    <string name="profile_phone_label">ఫోన్ నంబర్</string>
+    <string name="profile_phone_find_on">ఈ నంబర్‌తో ఇతరులు మిమ్మల్ని కనుగొనగలరు</string>
+    <string name="profile_phone_find_off">ఈ నంబర్‌తో ఇతరులు మిమ్మల్ని కనుగొనలేరు</string>
+    <string name="profile_phone_chip_cd">%1$s. గోప్యతా సెట్టింగ్‌లు తెరుచుకుంటాయి.</string>
+    <string name="settings_open_profile">మీ ప్రొఫైల్ తెరవండి</string>
+</resources>

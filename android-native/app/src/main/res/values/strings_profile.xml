@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="profile_title">Profile</string>
+    <string name="profile_photo_sheet_title">Profile photo</string>
+    <string name="profile_photo_view">View photo</string>
+    <string name="profile_photo_camera">Take a photo</string>
+    <string name="profile_photo_gallery">Choose from photos and albums</string>
+    <string name="profile_photo_remove_title">Remove your photo?</string>
+    <string name="profile_photo_remove_body">People will see your initials instead.</string>
+    <string name="profile_photo_remove_confirm">Remove</string>
+    <string name="profile_photo_uploading">Updating your photo</string>
+    <string name="profile_camera_denied">Camera access is off. Allow it in your phone settings, or choose a photo instead.</string>
+    <string name="profile_name_edit">Edit name</string>
+    <string name="profile_about_edit">Edit about</string>
+    <string name="profile_name_blank">Enter a name so people know it\'s you.</string>
+    <string name="profile_about_empty">Add a few words about you</string>
+    <string name="profile_about_counter">%1$d characters left</string>
+    <string name="profile_username_add">Add a username</string>
+    <string name="profile_username_edit">Edit username</string>
+    <string name="profile_phone_label">Phone number</string>
+    <string name="profile_phone_find_on">People can find you by this number</string>
+    <string name="profile_phone_find_off">People can\'t find you by this number</string>
+    <string name="profile_phone_chip_cd">%1$s. Opens privacy settings.</string>
+    <string name="settings_open_profile">Open your profile</string>
+</resources>

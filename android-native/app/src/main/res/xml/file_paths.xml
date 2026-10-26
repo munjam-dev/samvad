@@ -4,6 +4,8 @@
 <paths>
     <cache-path name="media" path="media/" />
     <cache-path name="exports" path="exports/" />
+    <!-- Profile photo taken with the camera, deleted once uploaded. -->
+    <cache-path name="camera" path="camera/" />
     <!-- Personal Vault: one-time decrypted copies, deleted when viewing ends. -->
     <cache-path name="vault_view" path="vault_view/" />
 </paths>
