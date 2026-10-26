@@ -1,12 +1,12 @@
 ---
 title: Service Providers
 summary: The companies that process personal data on Samvad's behalf, what they do, and where.
-updated: 2026-10-14
+updated: 2026-10-26
 order: 11
 group: privacy
 ---
 
-> **In short.** Samvad runs on Google Cloud and Firebase, and uses LiveKit Cloud to carry call and meeting audio and video. These providers process data only on our instructions, to host and deliver the service. We do not use any advertising or analytics providers.
+> **In short.** Samvad runs on Google Cloud and Firebase, uses LiveKit Cloud to carry call and meeting audio and video, and GIPHY for GIF and sticker search. These providers process data only on our instructions, to host and deliver the service. We do not use any advertising or analytics providers.
 
 ## 1. Why we use service providers
 
@@ -25,6 +25,8 @@ Running a reliable, secure messenger needs data centres, SMS delivery and push n
 | Google LLC and affiliates (Firebase App Check, Play Integrity) | App integrity | Confirm requests come from the genuine app on a genuine device | Device integrity signals | Global |
 | Google LLC and affiliates (Firebase Hosting) | Website hosting | Serve this website | Standard server logs | Global (content delivery network) |
 | LiveKit, Inc. (LiveKit Cloud) | Call and meeting media | Relay the audio and video of voice calls, video calls and group meetings. Encrypted in transit; not end-to-end encrypted; not recorded or stored by Samvad | Call audio and video, the access token for the call | Region chosen for the project |
+| GIPHY | GIF and sticker search | Find GIFs and stickers. Your search words reach GIPHY through our server, without your name, phone number or account identifier. A phone that shows a GIF loads it from GIPHY, which can see that phone's IP address | Search words; IP address of the phone that loads a GIF | Global |
+| Google LLC (Google Drive, only if you turn on Vault backup) | Your own Google account | Store an encrypted copy of your vault in the hidden app-data folder of your own Drive. This is your account with Google, not a service we run for you; we never receive the copy or the key | An encrypted archive that only you can open | Global |
 | Google LLC (Google Play) | App distribution | Distribute and update the app | As described in Google's own privacy policy | Global |
 
 ## 3. Providers we do not use

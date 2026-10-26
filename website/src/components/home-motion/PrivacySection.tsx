@@ -9,7 +9,7 @@ const PRINCIPLES = [
   ['Collect little', 'No ads and no analytics. Contact numbers are matched on your phone and never stored on our servers.'],
   ['Protected in transit', 'Everything travels over TLS and is stored in Google Cloud regions in Mumbai and Singapore.'],
   ['You hold the keys to your account', 'Optional app lock and a two-step PIN. Delete your account and data from Settings.'],
-  ['Honest about limits', 'Messages are not end-to-end encrypted yet. We will announce clearly when that changes.'],
+  ['Honest about limits', 'One-to-one chats can be end-to-end encrypted. Groups, older chats and calls are not yet, and the app tells you which is which.'],
 ];
 
 const PrivacySection = () => (

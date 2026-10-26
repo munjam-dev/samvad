@@ -149,7 +149,7 @@ const BentoGrid = () => (
         <Card className="lg:col-span-3" title="Voice and video" tag="Coming soon" body="Calling is on the way. This is a preview of the experience.">
           <VideoTiles />
         </Card>
-        <Card className="lg:col-span-3" title="Privacy by design" body="Encrypted in transit, optional app lock and two-step PIN, no ads and no analytics. Not end-to-end encrypted yet.">
+        <Card className="lg:col-span-3" title="Privacy by design" body="Encrypted in transit, optional app lock and two-step PIN, no ads and no analytics. One-to-one chats can be end-to-end encrypted; groups and calls are not yet.">
           <Lock />
         </Card>
         <Card className="lg:col-span-2" title="Family and groups" body="Circles for the people who matter.">

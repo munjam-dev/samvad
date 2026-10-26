@@ -1,7 +1,7 @@
 ---
 title: Law Enforcement Guidelines
 summary: How government and law enforcement agencies can request information, what we can provide, and how we protect users.
-updated: 2026-10-14
+updated: 2026-10-26
 order: 8
 group: authorities
 ---
@@ -32,7 +32,7 @@ What we hold depends on how the account was used and how long ago. Generally:
 |---|---|
 | Basic account information | Phone number, account creation date, profile name, about text, profile photo, registered devices (app and Android version), and last connection time |
 | Group information | Groups the account belongs to, group names, members and admins |
-| Message content | Message content is stored on our servers until deleted. Because messages are not end-to-end encrypted, content may be produced where Indian law requires it, under a valid order |
+| Message content | Message content is stored on our servers until deleted. Messages in groups and in older chats are not end-to-end encrypted, so that content may be produced where Indian law requires it, under a valid order. In a one-to-one chat that is end-to-end encrypted we hold only encrypted data we cannot read, so we can produce only information about it (who, when and approximate size) |
 | Call records | Who called whom, when, for how long and the outcome, kept as call history, including after an account is deleted. We do not record or store call audio or video |
 | Personal Vault | Stored only on the user's phone; we do not hold it and cannot produce it |
 | Content no longer held | Deleted messages and data past our retention periods (see the [Privacy Policy](/legal/privacy-policy)) generally cannot be produced |

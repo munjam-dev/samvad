@@ -4,7 +4,11 @@ Prepared 2026-10-21 from the code, `docs/CALLING_SETUP.md`, `docs/VAULT_DESIGN.m
 (`website/src/content/legal/`). Keep this in step with the privacy policy. Items marked CHECK need the owner or a
 lawyer (see `docs/LEGAL_REVIEW_NOTES.md`).
 
-Never tick or write "end-to-end encrypted" anywhere. Messages and calls are not end-to-end encrypted.
+Wording rule (updated 2026-10-26): say "end-to-end encrypted" only for one-to-one chats between people who both have
+keys, and only for a release built with `-Psamvad.e2ee=true`. Existing chats, group chats, polls, Moments, calls and
+meetings are not end-to-end encrypted. The Data safety form field "Is all user data encrypted in transit" stays Yes.
+Do not tick "independent security review" until the external review in `docs/security/E2EE_DESIGN.md` is done.
+Analytics: the app contains no analytics, advertising or crash-reporting SDKs (checked in `app/build.gradle.kts`).
 
 ## 1. Data safety: top-level questions
 
@@ -57,7 +61,11 @@ Notes for the form:
   CHECK: owner or lawyer to confirm the position before submission. The Google Cloud OAuth consent screen and the
   Play Data safety form must describe the same thing (see `docs/VAULT_BACKUP_SETUP.md`).
 - Reports: the reported account and the last 5 messages of that chat are sent to Samvad's safety team (user-initiated).
-  Declared under Messages; retained 90 days.
+  Declared under Messages; retained 90 days. For an end-to-end encrypted chat the report holds metadata only (sender,
+  time, size) unless the reporter agrees to attach messages, which are then sent as plain text.
+- End-to-end encryption keys: the public identity key and one-time prekeys are stored on our servers (declared with
+  User IDs); private keys never leave the phone. Encrypted message bodies are stored as ciphertext in the same
+  Messages data type.
 - Appeals: text the user submits; deleted with the account.
 - Linked devices: device id, name and last-used time, deleted with the account.
 - Privacy settings (last seen, about, photo visibility, who can add me to groups, phone-number discovery) are stored

@@ -36,7 +36,7 @@ const contentSections: ContentSection[] = [
     id: '3',
     title: 'What is not protected yet',
     description:
-      'Messages are not end-to-end encrypted yet. They are encrypted in transit and protected by access rules, but our systems can technically read them. We will say so clearly in the app and in our policies, and we will announce it when this changes.',
+      'One-to-one chats can be end-to-end encrypted when both people have keys. Existing chats, group chats, polls, Moments and calls are not end-to-end encrypted yet: they are encrypted in transit and protected by access rules, but our systems can technically read them. The app says which chats are encrypted, and we will update our policies if this changes.',
   },
   {
     id: '4',
