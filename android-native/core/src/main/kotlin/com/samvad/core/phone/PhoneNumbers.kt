@@ -57,6 +57,28 @@ object PhoneNumbers {
   fun normalize(raw: String, regionCode: String = DEFAULT_REGION): String? =
     (validate(raw, regionCode) as? PhoneValidation.Valid)?.e164
 
+  /**
+   * [normalize], then a plain rule for numbers libphonenumber refuses (for example Firebase test numbers such as
+   * +91 12345 67890, or a mobile range it does not know yet): "+" or "00" keeps the digits, 10 digits get +91 when the
+   * region is India, a leading trunk "0" is dropped. The result is always a well-formed E.164 string or null.
+   */
+  fun normalizeLenient(raw: String, regionCode: String = DEFAULT_REGION): String? {
+    normalize(raw, regionCode)?.let { return it }
+    val trimmed = raw.trim()
+    val digits = trimmed.filter { it.isDigit() }
+    val candidate = when {
+      trimmed.startsWith("+") -> digits
+      digits.startsWith("00") -> digits.drop(2)
+      else -> {
+        val code = util.getCountryCodeForRegion(regionCode).toString()
+        val national = digits.removePrefix("0")
+        if (national.length < 8) return null
+        if (national.startsWith(code) && national.length >= code.length + 8) national else code + national
+      }
+    }
+    return "+$candidate".takeIf { isE164(it) }
+  }
+
   /** As-you-type national formatting for the input field. */
   fun formatAsYouType(input: String, regionCode: String = DEFAULT_REGION): String {
     val formatter = util.getAsYouTypeFormatter(regionCode)

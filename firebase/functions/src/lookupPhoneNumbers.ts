@@ -7,7 +7,12 @@ import { logEvent, newCorrelationId } from './lib/logger';
 import { parsePrivacy, privacyPath } from './lib/privacy';
 
 export const MAX_NUMBERS_PER_CALL = 50;
-export const DAILY_LOOKUP_LIMIT = 500;
+/**
+ * Numbers per caller per rolling day. Every address-book entry counts, registered or not, and the app re-syncs the
+ * whole book. At 500 a normal address book (often 600+ numbers) hit the limit part-way through the first sync, so
+ * contacts after the cut-off, including friends on Samvad, never showed up.
+ */
+export const DAILY_LOOKUP_LIMIT = 5000;
 const WINDOW_MS = 24 * 60 * 60 * 1000;
 const E164 = /^\+[1-9][0-9]{6,14}$/;
 

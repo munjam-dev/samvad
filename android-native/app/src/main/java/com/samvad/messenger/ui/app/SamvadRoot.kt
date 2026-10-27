@@ -97,7 +97,12 @@ fun SamvadRoot(
           if (chooseLanguage) LanguageScreen(onContinue = session::profileCreated)
           else ProfileSetupScreen(container, state.uid!!, state.phone.orEmpty(), onDone = { chooseLanguage = true })
         }
-        Destination.HOME -> SignedInNav(container, session, state.uid!!, link, onLinkHandled)
+        Destination.HOME -> {
+          // One-time, skippable permissions screen before the main screen; a notification tap goes straight in.
+          var permissionsDone by rememberSaveable { mutableStateOf(link != null || com.samvad.core.permissions.PermissionOnboarding.isDone(container.permissionOnboarding.state())) }
+          if (permissionsDone) SignedInNav(container, session, state.uid!!, link, onLinkHandled)
+          else com.samvad.messenger.ui.onboarding.PermissionsScreen(container.permissionOnboarding, onDone = { permissionsDone = true })
+        }
       }
     }
   }
@@ -165,6 +170,7 @@ private fun SignedInNav(
           val route = if (other == null) "group/$cid?mid=$mid" else "chat/$cid/$other?mid=$mid"
           nav.navigate(route)
         },
+        onOpenChat = { cid, other -> nav.navigate(if (other == null) "group/$cid" else "chat/$cid/$other") },
       )
     }
     composable(

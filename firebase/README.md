@@ -46,7 +46,8 @@ cached, for example `env -u HTTPS_PROXY -u https_proxy npm test`.
 | `functions/src/deleteAccount.ts` | Callable: tombstone → recursive delete → profile delete → Auth user delete; idempotent |
 | `functions/src/signOutAllDevices.ts` | Callable: 60 s cooldown, revoke refresh tokens, stamp `tokensRevokedAt`, mark devices `revokedAt` |
 | `functions/src/onMessageCreated.ts` | Trigger: sets the conversation's `lastMessage`, bumps other members' `unreadCount`; idempotent per event |
-| `functions/src/lookupPhoneNumbers.ts` | Callable: up to 50 E.164 numbers → registered UIDs; 500 numbers per user per rolling day |
+| `functions/src/lookupPhoneNumbers.ts` | Callable: up to 50 E.164 numbers → registered UIDs; 5000 numbers per user per rolling day |
+| `functions/src/findPerson.ts` | Callable: one exact phone number or username → uid, name, photo (privacy-aware); 60 per user per day |
 | `functions/src/onConversationCreated.ts`, `onBlockWritten.ts` | Triggers: mirror membership and block lists into RTDB for its rules |
 | `functions/src/onMessageUpdated.ts` | Trigger: deletes a message's media file when the message is deleted |
 | `functions/src/reportContact.ts` | Callable: report a contact with a 5-message evidence snapshot; optional block; 20 per day |

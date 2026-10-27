@@ -7,6 +7,9 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.samvad.core.chat.ChatList
 import com.samvad.core.chat.ConversationIds
 import com.samvad.core.search.ChatHits
+import com.samvad.core.search.GroupCandidate
+import com.samvad.core.search.PeopleSearch
+import com.samvad.core.search.PersonCandidate
 import com.samvad.core.search.SearchFilter
 import com.samvad.messenger.AppContainer
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +30,12 @@ data class SearchResultGroup(
   val conversationId: String get() = hits.conversationId
 }
 
+/** A known person (registered contact or chat partner) matching the query. */
+data class PersonResult(val uid: String, val title: String, val savedName: String?, val photoPath: String?)
+
 data class GlobalSearchState(
+  val people: List<PersonResult> = emptyList(),
+  val groupChats: List<GroupCandidate> = emptyList(),
   val query: String = "",
   val filter: SearchFilter = SearchFilter.ALL,
   val groups: List<SearchResultGroup> = emptyList(),
@@ -66,10 +74,13 @@ class GlobalSearchViewModel(private val container: AppContainer, private val me:
     val gen = ++generation
     val query = _state.value.query
     if (query.trim().length < com.samvad.core.search.SearchPolicy.MIN_QUERY_CHARS) {
-      _state.update { it.copy(groups = emptyList(), searched = false, tooShort = query.isNotBlank()) }
+      _state.update { it.copy(groups = emptyList(), people = emptyList(), groupChats = emptyList(), searched = false, tooShort = query.isNotBlank()) }
       return
     }
     viewModelScope.launch {
+      val (people, groupChats) = findKnown(query)
+      if (gen != generation) return@launch
+      _state.update { it.copy(people = people, groupChats = groupChats) }
       val hits = repo.search(query, _state.value.filter)
       if (gen != generation) return@launch
       // One-shot read of what is already cached, so results can show a title without a live subscription per row.
@@ -87,9 +98,51 @@ class GlobalSearchViewModel(private val container: AppContainer, private val me:
         }
         SearchResultGroup(h, title, c?.isGroup ?: false, other, if (c?.isGroup == true) c.photoPath else null)
       }
-      _state.update { it.copy(groups = groups, searched = true, tooShort = false) }
+      _state.update { it.copy(groups = groups, people = people, groupChats = groupChats, searched = true, tooShort = false) }
     }
   }
+
+  private var contactsLoaded = false
+
+  /**
+   * People the searcher already knows, never a directory: registered address-book contacts (profile name and the name
+   * saved on the phone) and the people they chat with, plus group chats by name.
+   */
+  private suspend fun findKnown(query: String): Pair<List<PersonResult>, List<GroupCandidate>> {
+    val saved = container.savedNames
+    if (!contactsLoaded) {
+      contactsLoaded = true
+      runCatching { saved?.refresh() }
+    }
+    val savedByUid = saved?.state?.value?.byUid.orEmpty()
+    val conversations = runCatching { chats.conversations(me).first() }.getOrNull()?.value.orEmpty()
+    val partners = conversations.filter { !it.isGroup }.mapNotNull { ConversationIds.otherMember(it, me) }
+    val missing = (partners + savedByUid.keys).filter { it !in chats.profiles.value }.distinct()
+    if (missing.isNotEmpty()) runCatching { chats.loadProfiles(missing) }
+    val names = chats.profiles.value
+    val partnerNames = partners.associateWith { names[it]?.displayName.orEmpty() }
+    val contactNames = savedByUid.filterKeys { it != me }
+    val candidates = PeopleSearch.merge(contactNames, partnerNames).map { c ->
+      if (c.samvadName.isBlank()) c.copy(samvadName = names[c.uid]?.displayName.orEmpty()) else c
+    }
+    val people = PeopleSearch.people(query, candidates).map { c: PersonCandidate ->
+      PersonResult(
+        c.uid,
+        c.samvadName.ifBlank { c.savedName.orEmpty() },
+        c.savedName?.takeIf { it != c.samvadName },
+        names[c.uid]?.photoPath,
+      )
+    }
+    val groupChats = PeopleSearch.groups(
+      query,
+      conversations.filter { it.isGroup }.mapNotNull { c -> c.name?.takeIf { it.isNotBlank() }?.let { GroupCandidate(c.id, it) } },
+    )
+    return people to groupChats
+  }
+
+  /** Opens (creating if needed) the direct chat with a person found by name. */
+  suspend fun openPerson(uid: String): String? =
+    runCatching { chats.openDirect(me, uid, container::applyDefaultTimer) }.getOrNull()
 
   fun senderName(uid: String): String = if (uid == me) "" else chats.profiles.value[uid]?.displayName ?: ChatList.DELETED_ACCOUNT
 

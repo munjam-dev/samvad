@@ -91,21 +91,27 @@ fun NewChatScreen(
           SamvadTextField(
             state.number, vm::onNumber, stringResource(R.string.newchat_number_hint),
             keyboardType = KeyboardType.Phone,
-            isError = state.numberNotFound,
-            supportingText = if (state.numberNotFound) stringResource(R.string.newchat_not_found) else null,
+            isError = state.numberNotFound || state.invalidInput,
+            supportingText = when {
+              state.invalidInput -> stringResource(R.string.newchat_invalid_input)
+              state.numberNotFound -> stringResource(R.string.newchat_not_found)
+              else -> null
+            },
           )
           Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             PrimaryButton(
-              stringResource(R.string.newchat_start),
-              { vm.openByNumber(onOpenChat) },
+              stringResource(R.string.newchat_find),
+              { vm.find() },
               enabled = state.number.isNotBlank(),
-              loading = state.opening,
+              loading = state.finding,
               modifier = Modifier.weight(1f),
             )
           }
+          state.found?.let { person ->
+            ContactRow(person.displayName, person.uid, action = stringResource(R.string.newchat_start), onClick = { vm.open(person.uid, onOpenChat) }, photoPath = person.photoPath)
+          }
           if (state.numberNotFound) QuietButton(stringResource(R.string.newchat_invite), invite)
-          if (state.limitReached) Text(stringResource(R.string.newchat_limit), color = colors.error, style = MaterialTheme.typography.bodySmall)
-          if (state.error) Text(stringResource(R.string.error_unknown), color = colors.error, style = MaterialTheme.typography.bodySmall)
+          if (state.error && !state.hasPermission) Text(stringResource(R.string.error_unknown), color = colors.error, style = MaterialTheme.typography.bodySmall)
         }
       }
 
@@ -128,6 +134,15 @@ fun NewChatScreen(
         val matches = state.onSamvad.filter { q.isEmpty() || it.name.contains(q, true) }
         item(key = "search") {
           SamvadTextField(state.query, vm::onQuery, stringResource(R.string.newchat_search), modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
+        }
+        if (state.limitReached || state.error) {
+          item(key = "sync-note") {
+            Text(
+              stringResource(if (state.limitReached) R.string.newchat_limit else R.string.newchat_sync_error),
+              color = colors.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+            )
+            QuietButton(stringResource(R.string.newchat_retry), { vm.load() }, modifier = Modifier.padding(horizontal = 12.dp))
+          }
         }
         item(key = "h1") { Header(stringResource(R.string.newchat_on_samvad)) }
         if (matches.isEmpty()) {
@@ -183,14 +198,14 @@ private fun Header(text: String) {
 }
 
 @Composable
-private fun ContactRow(name: String, seed: String, action: String?, onClick: () -> Unit) {
+private fun ContactRow(name: String, seed: String, action: String?, onClick: () -> Unit, photoPath: String? = null) {
   val colors = SamvadTheme.colors
   Row(
     Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 20.dp, vertical = 10.dp),
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.spacedBy(14.dp),
   ) {
-    Avatar(ChatList.initials(name), seed, size = 44.dp)
+    Avatar(ChatList.initials(name), seed, size = 44.dp, photoPath = photoPath)
     Text(name, style = MaterialTheme.typography.titleMedium, color = colors.onSurface, modifier = Modifier.weight(1f), maxLines = 1)
     if (action != null) Text(action, style = MaterialTheme.typography.labelLarge, color = colors.primary)
   }
