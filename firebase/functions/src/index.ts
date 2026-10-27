@@ -9,6 +9,7 @@ export { onMessageCreated } from './onMessageCreated';
 export { onConversationCreated } from './onConversationCreated';
 export { onMessageUpdated } from './onMessageUpdated';
 export { lookupPhoneNumbers } from './lookupPhoneNumbers';
+export { findPerson } from './findPerson';
 export { onBlockWritten } from './onBlockWritten';
 export { reportContact } from './reportContact';
 export { setProfilePhoto } from './setProfilePhoto';

@@ -41,11 +41,28 @@ describe('lookupPhoneNumbers', () => {
     expect(res.matches).toEqual([{ phoneE164: '+919999900002', uid: 'bob' }]);
   });
 
-  it('enforces the rolling daily budget, then resets after 24 h', async () => {
-    const batch = Array.from({ length: 50 }, (_, i) => `+9199999${String(10000 + i)}`);
-    for (let i = 0; i < DAILY_LOOKUP_LIMIT / 50; i++) {
-      await handleLookupPhoneNumbers(phoneRequest('alice', { data: { phoneNumbers: batch } }), deps);
+  it('lets a 600-number address book sync fully, so a friend near the end is found (regression)', async () => {
+    // Before the fix the daily budget was 500 numbers: the 11th batch failed and every later contact was lost.
+    await seedUser('bob', '+919999999999');
+    const numbers = Array.from({ length: 600 }, (_, i) => `+9198765${String(10000 + i)}`);
+    numbers[599] = '+919999999999';
+    const found: string[] = [];
+    for (let i = 0; i < numbers.length; i += 50) {
+      const res = await handleLookupPhoneNumbers(phoneRequest('alice', { data: { phoneNumbers: numbers.slice(i, i + 50) } }), deps);
+      found.push(...res.matches.map((m) => m.uid));
     }
+    expect(found).toEqual(['bob']);
+  });
+
+  it('does not return people who turned off phone discovery', async () => {
+    await seedUser('bob', '+919999900002');
+    await deps.db.doc('users/bob/settings/privacy').set({ phoneDiscovery: false });
+    const res = await handleLookupPhoneNumbers(phoneRequest('alice', { data: { phoneNumbers: ['+919999900002'] } }), deps);
+    expect(res.matches).toEqual([]);
+  });
+
+  it('enforces the rolling daily budget, then resets after 24 h', async () => {
+    await deps.db.doc('rateLimits/alice').set({ lookupWindowStart: Timestamp.now(), lookupCount: DAILY_LOOKUP_LIMIT });
     expect(await codeOf(handleLookupPhoneNumbers(phoneRequest('alice', { data: { phoneNumbers: ['+919999900002'] } }), deps))).toBe(
       'resource-exhausted',
     );
