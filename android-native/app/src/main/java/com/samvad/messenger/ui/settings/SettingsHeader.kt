@@ -43,18 +43,15 @@ import com.samvad.messenger.R
 import com.samvad.messenger.ui.components.Avatar
 import com.samvad.messenger.ui.theme.SamvadTheme
 
-class HeaderChip(val icon: ImageVector, val label: String, val onClick: () -> Unit)
-
 private val BANNER_HEIGHT = 112.dp
 private val DP_SIZE = 92.dp
 private val DP_OVERLAP = 46.dp
 
 /**
  * Settings top: a branded banner (Samvad pinwheel and a soft pinwheel pattern, drawn in Compose),
- * the profile photo overlapping its bottom edge, then name, bio and quick feature chips.
+ * the profile photo overlapping its bottom edge, then username and bio.
  * Tapping the photo, name or bio opens the Profile page.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SettingsHeader(
   me: String,
@@ -64,7 +61,6 @@ fun SettingsHeader(
   photoPath: String?,
   onBack: () -> Unit,
   onOpenProfile: () -> Unit,
-  chips: List<HeaderChip>,
 ) {
   val colors = SamvadTheme.colors
   Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -115,31 +111,6 @@ fun SettingsHeader(
         modifier = Modifier.padding(top = 4.dp, bottom = 12.dp),
       )
     }
-    FlowRow(
-      Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 16.dp),
-      horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-      verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-      chips.forEach { QuickChip(it) }
-    }
-  }
-}
-
-@Composable
-private fun QuickChip(chip: HeaderChip) {
-  val colors = SamvadTheme.colors
-  Row(
-    Modifier
-      .defaultMinSize(minHeight = 48.dp)
-      .clip(RoundedCornerShape(16.dp))
-      .border(1.dp, colors.outline, RoundedCornerShape(16.dp))
-      .clickable(role = Role.Button, onClick = chip.onClick)
-      .padding(horizontal = 14.dp, vertical = 8.dp),
-    verticalAlignment = Alignment.CenterVertically,
-    horizontalArrangement = Arrangement.spacedBy(8.dp),
-  ) {
-    Icon(chip.icon, null, tint = colors.onPrimaryContainer, modifier = Modifier.size(20.dp))
-    Text(chip.label, style = MaterialTheme.typography.labelLarge, color = colors.onSurface)
   }
 }
 

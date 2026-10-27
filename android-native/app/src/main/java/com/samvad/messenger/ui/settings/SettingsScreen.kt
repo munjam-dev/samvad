@@ -163,12 +163,6 @@ fun SettingsScreen(
       photoPath = profile?.photoPath,
       onBack = onBack,
       onOpenProfile = onOpenProfile,
-      chips = buildList {
-        add(HeaderChip(Icons.Outlined.Lock, stringResource(R.string.vault_title), onOpenVault))
-        add(HeaderChip(Icons.Outlined.StarOutline, stringResource(R.string.starred_title), onOpenStarred))
-        if (container.devices != null) add(HeaderChip(Icons.Outlined.PhoneAndroid, stringResource(R.string.devices_title), onOpenDevices))
-        add(HeaderChip(Icons.Outlined.Language, stringResource(R.string.settings_language)) { choosingLanguage = true })
-      },
     )
     Column(
       Modifier.padding(horizontal = 16.dp).navigationBarsPadding(),
@@ -194,7 +188,6 @@ fun SettingsScreen(
         }
         ActionRow(Icons.Outlined.Wallpaper, stringResource(R.string.chat_theme_title), onClick = onOpenChatTheme)
         ActionRow(Icons.Outlined.Language, stringResource(R.string.settings_language), onClick = { choosingLanguage = true })
-        ActionRow(Icons.Outlined.StarOutline, stringResource(R.string.starred_title), onClick = onOpenStarred)
       }
 
       Group(stringResource(R.string.settings_notifications)) {
@@ -303,7 +296,6 @@ fun SettingsScreen(
           checked = prefs.secureScreen,
           onChange = { v -> scope.launch { container.preferences.setSecureScreen(v) } },
         )
-        ActionRow(Icons.Outlined.Lock, stringResource(R.string.vault_title), onClick = onOpenVault)
         if (container.safety != null) {
           ActionRow(Icons.Outlined.Block, stringResource(R.string.settings_blocked), onClick = onOpenBlocked)
         }
