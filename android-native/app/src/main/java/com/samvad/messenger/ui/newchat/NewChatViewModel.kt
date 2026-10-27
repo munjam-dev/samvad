@@ -7,10 +7,12 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.functions.FirebaseFunctionsException
-import com.samvad.core.phone.PhoneNumbers
+import com.samvad.core.phone.PersonQueries
+import com.samvad.core.phone.PersonQuery
 import com.samvad.messenger.AppContainer
 import com.samvad.messenger.BuildConfig
 import com.samvad.messenger.data.DeviceContact
+import com.samvad.messenger.data.FoundPerson
 import com.samvad.messenger.data.LookupLimitException
 import com.samvad.messenger.data.SamvadContact
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,6 +30,9 @@ data class NewChatState(
   val query: String = "",
   val number: String = "",
   val numberNotFound: Boolean = false,
+  val invalidInput: Boolean = false,
+  val found: FoundPerson? = null,
+  val finding: Boolean = false,
   val limitReached: Boolean = false,
   val error: Boolean = false,
   val opening: Boolean = false,
@@ -51,23 +56,38 @@ class NewChatViewModel(private val container: AppContainer, private val me: Stri
   }
 
   fun load() = viewModelScope.launch {
-    _state.update { it.copy(loading = true, error = false) }
-    try {
-      val device = contacts.deviceContacts()
-      val matches = contacts.lookup(device.map { it.e164 })
-      val onSamvad = device.mapNotNull { c -> matches[c.e164]?.takeIf { it != me }?.let { SamvadContact(c.name, c.e164, it) } }
-      _state.update {
-        it.copy(loading = false, onSamvad = onSamvad, invite = device.filter { c -> c.e164 !in matches })
-      }
-    } catch (_: LookupLimitException) {
-      _state.update { it.copy(loading = false, limitReached = true) }
-    } catch (_: Exception) {
-      _state.update { it.copy(loading = false, error = true) }
+    _state.update { it.copy(loading = true, error = false, limitReached = false) }
+    val device = try {
+      contacts.deviceContacts()
+    } catch (e: Exception) {
+      logFailure("contacts", e)
+      return@launch _state.update { it.copy(loading = false, error = true) }
     }
+    val numbers = device.map { it.e164 }
+    var limited = false
+    var failed = false
+    val matches = try {
+      contacts.lookup(numbers)
+    } catch (_: LookupLimitException) {
+      limited = true
+      contacts.cached(numbers)
+    } catch (e: Exception) {
+      logFailure("lookup", e)
+      failed = true
+      contacts.cached(numbers)
+    }
+    val onSamvad = device.mapNotNull { c -> matches[c.e164]?.takeIf { it != me }?.let { SamvadContact(c.name, c.e164, it) } }
+    _state.update {
+      it.copy(
+        loading = false, onSamvad = onSamvad, invite = device.filter { c -> c.e164 !in matches },
+        limitReached = limited, error = failed,
+      )
+    }
+    container.savedNames?.refresh()
   }
 
   fun onQuery(q: String) = _state.update { it.copy(query = q) }
-  fun onNumber(n: String) = _state.update { it.copy(number = n, numberNotFound = false, error = false) }
+  fun onNumber(n: String) = _state.update { it.copy(number = n, numberNotFound = false, invalidInput = false, found = null, error = false) }
 
   fun open(uid: String, then: (String, String) -> Unit) = viewModelScope.launch {
     _state.update { it.copy(opening = true, error = false) }
@@ -77,20 +97,26 @@ class NewChatViewModel(private val container: AppContainer, private val me: Stri
     _state.update { it.copy(opening = false) }
   }
 
-  fun openByNumber(then: (String, String) -> Unit) = viewModelScope.launch {
-    if (_state.value.opening) return@launch
-    val e164 = PhoneNumbers.normalize(_state.value.number) ?: return@launch _state.update { it.copy(numberNotFound = true) }
-    _state.update { it.copy(opening = true, error = false, numberNotFound = false) }
+  /** One exact lookup of the typed phone number (+91 by default) or username. Never a name search. */
+  fun find() = viewModelScope.launch {
+    if (_state.value.finding) return@launch
+    val query = PersonQueries.parse(_state.value.number)
+    if (query == PersonQuery.Invalid) return@launch _state.update { it.copy(invalidInput = true, found = null) }
+    _state.update { it.copy(finding = true, error = false, numberNotFound = false, invalidInput = false, found = null, limitReached = false) }
     try {
-      val uid = contacts.lookup(listOf(e164))[e164]
-      if (uid == null || uid == me) _state.update { it.copy(numberNotFound = true) } else open(uid, then).join()
+      val person = when (query) {
+        is PersonQuery.Phone -> contacts.findPerson(phoneE164 = query.e164)
+        is PersonQuery.Username -> contacts.findPerson(username = query.name)
+        PersonQuery.Invalid -> null
+      }
+      if (person == null || person.uid == me) _state.update { it.copy(numberNotFound = true) } else _state.update { it.copy(found = person) }
     } catch (_: LookupLimitException) {
       _state.update { it.copy(limitReached = true) }
     } catch (e: Exception) {
-      logFailure("lookup", e)
+      logFailure("find", e)
       _state.update { it.copy(error = true) }
     } finally {
-      _state.update { it.copy(opening = false) }
+      _state.update { it.copy(finding = false) }
     }
   }
 

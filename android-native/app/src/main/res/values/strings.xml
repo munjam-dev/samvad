@@ -179,8 +179,8 @@
     <string name="newchat_permission_body">Samvad checks your contacts\' phone numbers against Samvad accounts so you can start chatting. Numbers are sent securely for matching and are not stored or shown to anyone.</string>
     <string name="newchat_permission_allow">Allow access to contacts</string>
     <string name="newchat_permission_denied">Contacts access is off. You can still start a chat by number.</string>
-    <string name="newchat_by_number">Start a chat by number</string>
-    <string name="newchat_number_hint">Phone number with country code</string>
+    <string name="newchat_by_number">Find by phone number or username</string>
+    <string name="newchat_number_hint">Phone number or @username</string>
     <string name="newchat_search">Search contacts</string>
     <string name="newchat_on_samvad">On Samvad</string>
     <string name="newchat_none">None of your contacts use Samvad yet.</string>
@@ -611,4 +611,25 @@
     <string name="scheduled_failed_blocked">this chat is blocked</string>
     <string name="scheduled_failed_account">the account was deleted</string>
     <string name="scheduled_failed_invalid">the message was empty or too long</string>
+    <string name="newchat_find">Find</string>
+    <string name="newchat_invalid_input">Enter a phone number or a username that starts with @.</string>
+    <string name="newchat_sync_error">We couldn\'t check your contacts just now.</string>
+    <string name="newchat_retry">Try again</string>
+    <string name="gsearch_people">People</string>
+    <string name="gsearch_groups">Groups</string>
+    <string name="gsearch_messages">Messages</string>
+    <string name="gsearch_saved_as">Saved as %1$s</string>
+    <string name="perm_title">A few quick things</string>
+    <string name="perm_intro">Samvad works without these. You can change them any time in your phone\'s settings.</string>
+    <string name="perm_step">Step %1$d of %2$d</string>
+    <string name="perm_contacts_title">Find friends on Samvad</string>
+    <string name="perm_contacts_body">Samvad checks your contacts\' phone numbers against Samvad accounts, so you can see who to chat with. This is optional.</string>
+    <string name="perm_notifications_title">Message notifications</string>
+    <string name="perm_notifications_body">Get a notification when someone messages or calls you.</string>
+    <string name="perm_battery_title">Calls that ring on time</string>
+    <string name="perm_battery_body">Let Samvad run in the background so calls ring even when your phone is resting. This is optional.</string>
+    <string name="perm_allow">Allow</string>
+    <string name="perm_not_now">Not now</string>
+    <string name="perm_open_settings">Open settings</string>
+    <string name="perm_blocked_hint">This is turned off for Samvad. Open settings to turn it on.</string>
 </resources>

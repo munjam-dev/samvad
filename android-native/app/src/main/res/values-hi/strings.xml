@@ -179,8 +179,8 @@
     <string name="newchat_permission_body">Samvad आपके कॉन्टैक्ट्स के फ़ोन नंबरों को Samvad अकाउंट से मिलाता है ताकि आप चैट शुरू कर सकें। नंबर मिलान के लिए सुरक्षित रूप से भेजे जाते हैं; उन्हें सहेजा नहीं जाता और किसी को दिखाया नहीं जाता।</string>
     <string name="newchat_permission_allow">कॉन्टैक्ट्स की अनुमति दें</string>
     <string name="newchat_permission_denied">कॉन्टैक्ट्स की अनुमति बंद है। आप फिर भी नंबर डालकर चैट शुरू कर सकते हैं।</string>
-    <string name="newchat_by_number">नंबर से चैट शुरू करें</string>
-    <string name="newchat_number_hint">देश कोड के साथ फ़ोन नंबर</string>
+    <string name="newchat_by_number">फ़ोन नंबर या यूज़रनेम से खोजें</string>
+    <string name="newchat_number_hint">फ़ोन नंबर या @यूज़रनेम</string>
     <string name="newchat_search">कॉन्टैक्ट्स खोजें</string>
     <string name="newchat_on_samvad">Samvad पर</string>
     <string name="newchat_none">आपके किसी कॉन्टैक्ट के पास अभी Samvad नहीं है।</string>
@@ -611,4 +611,25 @@
     <string name="scheduled_failed_blocked">यह चैट ब्लॉक है</string>
     <string name="scheduled_failed_account">अकाउंट हटा दिया गया था</string>
     <string name="scheduled_failed_invalid">संदेश ख़ाली या बहुत लंबा था</string>
+    <string name="newchat_find">खोजें</string>
+    <string name="newchat_invalid_input">फ़ोन नंबर डालें, या @ से शुरू होने वाला यूज़रनेम।</string>
+    <string name="newchat_sync_error">अभी आपके कॉन्टैक्ट्स जाँचे नहीं जा सके।</string>
+    <string name="newchat_retry">फिर कोशिश करें</string>
+    <string name="gsearch_people">लोग</string>
+    <string name="gsearch_groups">ग्रुप</string>
+    <string name="gsearch_messages">संदेश</string>
+    <string name="gsearch_saved_as">%1$s के नाम से सेव</string>
+    <string name="perm_title">कुछ ज़रूरी बातें</string>
+    <string name="perm_intro">इनके बिना भी Samvad चलता है। आप कभी भी फ़ोन की सेटिंग में इन्हें बदल सकते हैं।</string>
+    <string name="perm_step">चरण %1$d / %2$d</string>
+    <string name="perm_contacts_title">Samvad पर दोस्तों को खोजें</string>
+    <string name="perm_contacts_body">Samvad आपके कॉन्टैक्ट्स के फ़ोन नंबरों को Samvad अकाउंट से मिलाता है, ताकि आप देख सकें किससे चैट करें। यह वैकल्पिक है।</string>
+    <string name="perm_notifications_title">संदेश की सूचनाएँ</string>
+    <string name="perm_notifications_body">कोई संदेश भेजे या कॉल करे तो सूचना पाएँ।</string>
+    <string name="perm_battery_title">समय पर बजने वाली कॉल</string>
+    <string name="perm_battery_body">Samvad को बैकग्राउंड में चलने दें, ताकि फ़ोन के आराम में होने पर भी कॉल बजे। यह वैकल्पिक है।</string>
+    <string name="perm_allow">अनुमति दें</string>
+    <string name="perm_not_now">अभी नहीं</string>
+    <string name="perm_open_settings">सेटिंग खोलें</string>
+    <string name="perm_blocked_hint">Samvad के लिए यह बंद है। चालू करने के लिए सेटिंग खोलें।</string>
 </resources>

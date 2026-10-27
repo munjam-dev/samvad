@@ -51,6 +51,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.samvad.core.chat.ChatList
@@ -72,7 +73,10 @@ fun GlobalSearchScreen(
   onBack: () -> Unit,
   /** cid, otherUid (null for a group), messageId. */
   onOpenMessage: (String, String?, String) -> Unit,
+  /** cid, otherUid (null for a group). */
+  onOpenChat: (String, String?) -> Unit = { _, _ -> },
 ) {
+  val scope = androidx.compose.runtime.rememberCoroutineScope()
   val colors = SamvadTheme.colors
   val vm: GlobalSearchViewModel = viewModel(factory = GlobalSearchViewModel.factory(container, me))
   val state = vm.state.collectAsStateWithLifecycle().value
@@ -137,7 +141,7 @@ fun GlobalSearchScreen(
       state.tooShort -> EmptyLine(stringResource(R.string.gsearch_too_short))
       state.query.isBlank() -> Unit
       !state.searched -> Unit
-      state.groups.isEmpty() -> Column(
+      state.groups.isEmpty() && state.people.isEmpty() && state.groupChats.isEmpty() -> Column(
         Modifier.fillMaxSize().padding(32.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -153,6 +157,25 @@ fun GlobalSearchScreen(
         )
       }
       else -> LazyColumn(Modifier.fillMaxSize()) {
+        if (state.people.isNotEmpty()) {
+          item(key = "h-people") { SectionLabel(stringResource(R.string.gsearch_people)) }
+          items(state.people, key = { "p-" + it.uid }) { p ->
+            PersonRow(p, onClick = { scope.launch { vm.openPerson(p.uid)?.let { cid -> onOpenChat(cid, p.uid) } } })
+          }
+        }
+        if (state.groupChats.isNotEmpty()) {
+          item(key = "h-groups") { SectionLabel(stringResource(R.string.gsearch_groups)) }
+          items(state.groupChats, key = { "g-" + it.conversationId }) { g ->
+            Row(
+              Modifier.fillMaxWidth().heightIn(min = 56.dp).clickable { onOpenChat(g.conversationId, null) }.padding(horizontal = 16.dp, vertical = 6.dp),
+              verticalAlignment = Alignment.CenterVertically,
+            ) {
+              Avatar(ChatList.initials(g.name), g.conversationId, size = 40.dp)
+              Text(g.name, style = MaterialTheme.typography.titleSmall, color = colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 12.dp))
+            }
+          }
+        }
+        if (state.groups.isNotEmpty()) item(key = "h-messages") { SectionLabel(stringResource(R.string.gsearch_messages)) }
         state.groups.forEach { group ->
           item(key = "header-${group.conversationId}") { ChatHeader(group) }
           val shown = if (group.conversationId in state.expanded) group.hits.hits else group.hits.hits.take(com.samvad.core.search.SearchPolicy.PER_CHAT_SHOWN)
@@ -171,6 +194,33 @@ fun GlobalSearchScreen(
           }
           item(key = "divider-${group.conversationId}") { HorizontalDivider(color = colors.outlineVariant) }
         }
+      }
+    }
+  }
+}
+
+@Composable
+private fun SectionLabel(text: String) {
+  Text(
+    text,
+    style = MaterialTheme.typography.labelLarge,
+    color = SamvadTheme.colors.onSurfaceVariant,
+    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 2.dp),
+  )
+}
+
+@Composable
+private fun PersonRow(p: PersonResult, onClick: () -> Unit) {
+  val colors = SamvadTheme.colors
+  Row(
+    Modifier.fillMaxWidth().heightIn(min = 56.dp).clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 6.dp),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    Avatar(ChatList.initials(p.title), p.uid, size = 40.dp, photoPath = p.photoPath)
+    Column(Modifier.padding(start = 12.dp)) {
+      Text(p.title, style = MaterialTheme.typography.titleSmall, color = colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+      if (p.savedName != null) {
+        Text(stringResource(R.string.gsearch_saved_as, p.savedName), style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
       }
     }
   }

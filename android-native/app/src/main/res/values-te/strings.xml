@@ -179,8 +179,8 @@
     <string name="newchat_permission_body">మీరు చాట్ చేయడం మొదలుపెట్టేలా, Samvad మీ కాంటాక్ట్‌ల ఫోన్ నంబర్‌లను Samvad ఖాతాలతో సరిపోల్చుతుంది. నంబర్‌లు సరిపోల్చడానికి సురక్షితంగా పంపబడతాయి; అవి నిల్వ చేయబడవు, ఎవరికీ చూపబడవు.</string>
     <string name="newchat_permission_allow">కాంటాక్ట్‌ల యాక్సెస్ అనుమతించండి</string>
     <string name="newchat_permission_denied">కాంటాక్ట్‌ల యాక్సెస్ ఆఫ్‌లో ఉంది. నంబర్ ఇచ్చి కూడా చాట్ ప్రారంభించవచ్చు.</string>
-    <string name="newchat_by_number">నంబర్‌తో చాట్ ప్రారంభించండి</string>
-    <string name="newchat_number_hint">దేశ కోడ్‌తో ఫోన్ నంబర్</string>
+    <string name="newchat_by_number">ఫోన్ నంబర్ లేదా యూజర్‌నేమ్‌తో వెతకండి</string>
+    <string name="newchat_number_hint">ఫోన్ నంబర్ లేదా @యూజర్‌నేమ్</string>
     <string name="newchat_search">కాంటాక్ట్‌లను వెతకండి</string>
     <string name="newchat_on_samvad">Samvadలో ఉన్నవారు</string>
     <string name="newchat_none">మీ కాంటాక్ట్‌లలో ఎవరూ ఇంకా Samvad వాడటం లేదు.</string>
@@ -611,4 +611,25 @@
     <string name="scheduled_failed_blocked">ఈ చాట్ బ్లాక్ చేయబడింది</string>
     <string name="scheduled_failed_account">ఖాతా తొలగించబడింది</string>
     <string name="scheduled_failed_invalid">సందేశం ఖాళీగా ఉంది లేదా చాలా పొడవుగా ఉంది</string>
+    <string name="newchat_find">వెతకండి</string>
+    <string name="newchat_invalid_input">ఫోన్ నంబర్ లేదా @తో మొదలయ్యే యూజర్‌నేమ్ ఇవ్వండి.</string>
+    <string name="newchat_sync_error">ఇప్పుడు మీ కాంటాక్ట్‌లను తనిఖీ చేయలేకపోయాం.</string>
+    <string name="newchat_retry">మళ్లీ ప్రయత్నించండి</string>
+    <string name="gsearch_people">వ్యక్తులు</string>
+    <string name="gsearch_groups">గ్రూపులు</string>
+    <string name="gsearch_messages">సందేశాలు</string>
+    <string name="gsearch_saved_as">%1$s పేరుతో సేవ్ చేశారు</string>
+    <string name="perm_title">కొన్ని ముఖ్యమైన విషయాలు</string>
+    <string name="perm_intro">ఇవి లేకపోయినా Samvad పని చేస్తుంది. వీటిని ఎప్పుడైనా ఫోన్ సెట్టింగ్‌లలో మార్చవచ్చు.</string>
+    <string name="perm_step">దశ %1$d / %2$d</string>
+    <string name="perm_contacts_title">Samvadలో స్నేహితులను వెతకండి</string>
+    <string name="perm_contacts_body">మీ కాంటాక్ట్‌ల ఫోన్ నంబర్లను Samvad ఖాతాలతో సరిపోలుస్తుంది, తద్వారా ఎవరితో చాట్ చేయాలో చూడవచ్చు. ఇది ఐచ్ఛికం.</string>
+    <string name="perm_notifications_title">సందేశ నోటిఫికేషన్లు</string>
+    <string name="perm_notifications_body">ఎవరైనా సందేశం పంపినా, కాల్ చేసినా నోటిఫికేషన్ పొందండి.</string>
+    <string name="perm_battery_title">సమయానికి మోగే కాల్స్</string>
+    <string name="perm_battery_body">ఫోన్ విశ్రాంతిలో ఉన్నా కాల్స్ మోగేలా Samvadను బ్యాక్‌గ్రౌండ్‌లో నడవనివ్వండి. ఇది ఐచ్ఛికం.</string>
+    <string name="perm_allow">అనుమతించు</string>
+    <string name="perm_not_now">ఇప్పుడు కాదు</string>
+    <string name="perm_open_settings">సెట్టింగ్‌లు తెరవండి</string>
+    <string name="perm_blocked_hint">Samvadకు ఇది ఆఫ్‌లో ఉంది. ఆన్ చేయడానికి సెట్టింగ్‌లు తెరవండి.</string>
 </resources>

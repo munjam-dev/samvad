@@ -17,6 +17,8 @@ data class DeviceContact(val name: String, val e164: String)
 
 data class SamvadContact(val name: String, val e164: String, val uid: String)
 
+data class FoundPerson(val uid: String, val displayName: String, val photoPath: String?)
+
 class LookupLimitException : Exception("lookup limit reached")
 
 /**
@@ -24,7 +26,7 @@ class LookupLimitException : Exception("lookup limit reached")
  * rate-limited lookupPhoneNumbers callable. Results are cached for the session to save the budget.
  */
 class ContactsRepository(private val context: Context, private val functions: FirebaseFunctions) {
-  private val cache = mutableMapOf<String, String?>()
+  private val cache = mutableMapOf<String, Pair<String?, Long>>()
   private val limitedUse = HttpsCallableOptions.Builder().setLimitedUseAppCheckTokens(true).build()
 
   fun hasPermission(): Boolean =
@@ -45,7 +47,7 @@ class ContactsRepository(private val context: Context, private val functions: Fi
     )?.use { c ->
       while (c.moveToNext()) {
         val name = c.getString(0) ?: continue
-        val e164 = PhoneNumbers.normalize(c.getString(1) ?: continue) ?: continue
+        val e164 = PhoneNumbers.normalizeLenient(c.getString(1) ?: continue) ?: continue
         out.putIfAbsent(e164, DeviceContact(name, e164))
       }
     }
@@ -54,7 +56,8 @@ class ContactsRepository(private val context: Context, private val functions: Fi
 
   /** Maps E.164 numbers to Samvad UIDs (absent when not registered). */
   suspend fun lookup(numbers: List<String>): Map<String, String> {
-    val unknown = numbers.distinct().filter { it !in cache }
+    val now = System.currentTimeMillis()
+    val unknown = numbers.distinct().filter { n -> cache[n]?.let { (uid, at) -> uid == null && now - at > MISS_TTL_MS } ?: true }
     for (chunk in unknown.chunked(50)) {
       try {
         val result = functions.getHttpsCallable("lookupPhoneNumbers", limitedUse)
@@ -62,7 +65,7 @@ class ContactsRepository(private val context: Context, private val functions: Fi
         @Suppress("UNCHECKED_CAST")
         val matches = ((result.data as? Map<String, Any?>)?.get("matches") as? List<Map<String, Any?>>).orEmpty()
         val found = matches.associate { (it["phoneE164"] as String) to (it["uid"] as String) }
-        chunk.forEach { cache[it] = found[it] }
+        chunk.forEach { cache[it] = found[it] to now }
       } catch (e: FirebaseFunctionsException) {
         if (e.code == FirebaseFunctionsException.Code.RESOURCE_EXHAUSTED) throw LookupLimitException()
         throw e
@@ -72,5 +75,23 @@ class ContactsRepository(private val context: Context, private val functions: Fi
   }
 
   /** Matches already known this session, without calling the server (e.g. after the daily limit). */
-  fun cached(numbers: List<String>): Map<String, String> = numbers.mapNotNull { n -> cache[n]?.let { n to it } }.toMap()
+  fun cached(numbers: List<String>): Map<String, String> = numbers.mapNotNull { n -> cache[n]?.first?.let { n to it } }.toMap()
+
+  /** One exact lookup by phone number (E.164) or username; null when nobody matches or they cannot be found that way. */
+  suspend fun findPerson(phoneE164: String? = null, username: String? = null): FoundPerson? {
+    val args = if (phoneE164 != null) mapOf("phoneE164" to phoneE164) else mapOf("username" to username)
+    try {
+      val data = functions.getHttpsCallable("findPerson", limitedUse).call(args).await().data as? Map<*, *> ?: return null
+      if (data["found"] != true) return null
+      return FoundPerson(data["uid"] as String, data["displayName"] as? String ?: "", data["photoPath"] as? String)
+    } catch (e: FirebaseFunctionsException) {
+      if (e.code == FirebaseFunctionsException.Code.RESOURCE_EXHAUSTED) throw LookupLimitException()
+      throw e
+    }
+  }
+
+  private companion object {
+    /** A number that was not registered is asked about again after this, so friends who sign up later appear. */
+    const val MISS_TTL_MS = 10 * 60 * 1000L
+  }
 }

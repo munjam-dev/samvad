@@ -66,6 +66,7 @@ class AppContainer(context: Context) {
     PendingUploadManager(context, media!!, chats!!, network, e2ee) { fb.auth.currentUser?.uid }
   }
   val contacts: ContactsRepository? = firebase?.let { ContactsRepository(context, it.functions) }
+  val permissionOnboarding = com.samvad.messenger.data.PermissionOnboardingStore(context)
   val savedNames: SavedNamesRepository? = contacts?.let { SavedNamesRepository(context, it) }
   val safety: SafetyRepository? = firebase?.let { SafetyRepository(it.db, it.functions) }
   val scamPrefs = com.samvad.messenger.data.ScamPreferences(context)
