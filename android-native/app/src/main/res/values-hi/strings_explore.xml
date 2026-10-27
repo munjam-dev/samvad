@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_explore">एक्सप्लोर</string>
+    <string name="calls_new">नई कॉल</string>
+    <string name="calls_new_title">कॉल शुरू करें</string>
+    <string name="call_detail_voice">वॉइस कॉल</string>
+    <string name="call_detail_video">वीडियो कॉल</string>
+    <string name="calls_pick_empty">अभी कोई चैट नहीं है। पहले चैट शुरू करें, फिर आप यहाँ से उस व्यक्ति को कॉल कर सकते हैं।</string>
+    <string name="calls_error_title">कॉल लोड नहीं हुईं</string>
+    <string name="calls_error_body">अपना कनेक्शन जाँचें और फिर कोशिश करें।</string>
+    <string name="call_detail_title">कॉल की जानकारी</string>
+</resources>

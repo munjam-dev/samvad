@@ -71,7 +71,7 @@ fun CommunitiesTab(
   val scope = rememberCoroutineScope()
 
   Column(Modifier.fillMaxSize().background(colors.background)) {
-    TabTopBar(R.string.nav_communities, menu)
+    TabTopBar(R.string.nav_explore, menu)
     if (state.loading) {
       Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = colors.brand) }
     } else {

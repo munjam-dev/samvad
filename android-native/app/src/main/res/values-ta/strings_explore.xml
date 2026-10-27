@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_explore">ஆராயுங்கள்</string>
+    <string name="calls_new">புதிய அழைப்பு</string>
+    <string name="calls_new_title">அழைப்பைத் தொடங்குங்கள்</string>
+    <string name="call_detail_voice">குரல் அழைப்பு</string>
+    <string name="call_detail_video">வீடியோ அழைப்பு</string>
+    <string name="calls_pick_empty">இன்னும் அரட்டைகள் இல்லை. முதலில் அரட்டையைத் தொடங்குங்கள், பிறகு இங்கிருந்து அவர்களை அழைக்கலாம்.</string>
+    <string name="calls_error_title">அழைப்புகள் ஏற்றப்படவில்லை</string>
+    <string name="calls_error_body">இணைப்பைச் சரிபார்த்து மீண்டும் முயலுங்கள்.</string>
+    <string name="call_detail_title">அழைப்பு விவரங்கள்</string>
+</resources>

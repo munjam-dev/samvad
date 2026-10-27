@@ -8,13 +8,18 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.offset
+import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -170,7 +175,15 @@ fun HomeScreen(
   Box(Modifier.fillMaxSize().background(colors.background)) {
     AnimatedContent(
       targetState = Tab.entries[tab],
-      transitionSpec = { (fadeIn(tween(220)) + scaleIn(initialScale = 0.98f)) togetherWith fadeOut(tween(120)) },
+      transitionSpec = {
+        if (reduced) {
+          fadeIn(snap()) togetherWith fadeOut(snap())
+        } else {
+          val dir = if (targetState.ordinal >= initialState.ordinal) 1 else -1
+          (slideInHorizontally(tween(260)) { it / 6 * dir } + fadeIn(tween(220))) togetherWith
+            (slideOutHorizontally(tween(180)) { -it / 8 * dir } + fadeOut(tween(120)))
+        }
+      },
       label = "tab",
     ) { t ->
       when (t) {
@@ -722,11 +735,12 @@ fun ChatRowItem(row: ChatRow, highlight: Boolean, onClick: () -> Unit) {
 @Composable
 private fun FloatingNavBar(selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
   val colors = SamvadTheme.colors
+  val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
   val items = listOf(
     Triple(R.string.nav_chats, Icons.AutoMirrored.Outlined.Chat, Icons.Filled.ChatBubble),
     Triple(R.string.nav_status, Icons.Outlined.DonutLarge, Icons.Outlined.DonutLarge),
-    Triple(R.string.nav_communities, Icons.Outlined.Groups, Icons.Outlined.Groups),
-    Triple(R.string.nav_calls, Icons.Outlined.Call, Icons.Outlined.Call),
+    Triple(R.string.nav_explore, Icons.Outlined.Explore, Icons.Filled.Explore),
+    Triple(R.string.nav_calls, Icons.Outlined.Call, Icons.Filled.Call),
   )
   Box(
     modifier
@@ -735,7 +749,7 @@ private fun FloatingNavBar(selected: Int, onSelect: (Int) -> Unit, modifier: Mod
       .navigationBarsPadding()
       .padding(start = 14.dp, end = 14.dp, top = 24.dp, bottom = 14.dp),
   ) {
-    Row(
+    BoxWithConstraints(
       Modifier
         .fillMaxWidth()
         .height(68.dp)
@@ -743,28 +757,46 @@ private fun FloatingNavBar(selected: Int, onSelect: (Int) -> Unit, modifier: Mod
         .background(colors.surface, RoundedCornerShape(24.dp))
         .border(1.dp, colors.outlineVariant, RoundedCornerShape(24.dp)),
     ) {
-      items.forEachIndexed { i, (label, icon, activeIcon) ->
-        val active = i == selected
-        val pill by animateColorAsState(if (active) colors.primaryContainer else colors.surface, motionSpec(Motion.standard()), label = "pill")
-        val pillWidth by animateDpAsState(if (active) 52.dp else 30.dp, motionSpec(Motion.lively()), label = "pillW")
-        val tint by animateColorAsState(if (active) colors.brand else colors.onSurfaceVariant, motionSpec(Motion.standard()), label = "tint")
-        Column(
-          Modifier
-            .weight(1f)
-            .fillMaxSize()
-            .clickable(onClickLabel = stringResource(label)) { onSelect(i) }
-            .semantics { this.selected = active; role = Role.Tab },
-          horizontalAlignment = Alignment.CenterHorizontally,
-          verticalArrangement = Arrangement.Center,
-        ) {
-          Box(
-            Modifier.size(width = pillWidth, height = 30.dp).background(pill, RoundedCornerShape(15.dp)),
-            contentAlignment = Alignment.Center,
+      val cell = maxWidth / items.size
+      val pillW = 60.dp
+      // One pill that slides between tabs on a spring.
+      val pillX by animateDpAsState(cell * selected + (cell - pillW) / 2, motionSpec(Motion.lively()), label = "pillX")
+      Box(
+        Modifier
+          .offset(x = pillX, y = 10.dp)
+          .size(width = pillW, height = 32.dp)
+          .background(colors.primaryContainer, RoundedCornerShape(16.dp)),
+      )
+      Row(Modifier.fillMaxSize()) {
+        items.forEachIndexed { i, (label, icon, activeIcon) ->
+          val active = i == selected
+          val tint by animateColorAsState(if (active) colors.brand else colors.onSurfaceVariant, motionSpec(Motion.standard()), label = "tint")
+          val scale by androidx.compose.animation.core.animateFloatAsState(if (active) 1.12f else 1f, motionSpec(Motion.lively()), label = "scale")
+          val labelColor by animateColorAsState(if (active) colors.primary else colors.onSurfaceVariant, motionSpec(Motion.standard()), label = "labelColor")
+          val labelAlpha by androidx.compose.animation.core.animateFloatAsState(if (active) 1f else 0.78f, motionSpec(Motion.standard()), label = "labelAlpha")
+          Column(
+            Modifier
+              .weight(1f)
+              .fillMaxSize()
+              .clickable(onClickLabel = stringResource(label)) {
+                if (!active) {
+                  haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                  onSelect(i)
+                }
+              }
+              .semantics { this.selected = active; role = Role.Tab },
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top,
           ) {
-            Icon(if (active) activeIcon else icon, null, tint = tint, modifier = Modifier.size(22.dp))
+            Spacer(Modifier.height(10.dp))
+            Box(Modifier.height(32.dp), contentAlignment = Alignment.Center) {
+              androidx.compose.animation.Crossfade(active, animationSpec = motionSpec(tween(160)), label = "icon") { on ->
+                Icon(if (on) activeIcon else icon, null, tint = tint, modifier = Modifier.size(22.dp).graphicsLayer { scaleX = scale; scaleY = scale })
+              }
+            }
+            Spacer(Modifier.height(3.dp))
+            Text(stringResource(label), style = MaterialTheme.typography.labelSmall, color = labelColor, maxLines = 1, modifier = Modifier.graphicsLayer { alpha = labelAlpha })
           }
-          Spacer(Modifier.height(3.dp))
-          Text(stringResource(label), style = MaterialTheme.typography.labelSmall, color = if (active) colors.primary else colors.onSurfaceVariant, maxLines = 1)
         }
       }
     }

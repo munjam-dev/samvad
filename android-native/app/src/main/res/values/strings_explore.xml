@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_explore">Explore</string>
+    <string name="calls_new">New call</string>
+    <string name="calls_new_title">Start a call</string>
+    <string name="call_detail_voice">Voice call</string>
+    <string name="call_detail_video">Video call</string>
+    <string name="calls_pick_empty">You have no chats yet. Start a chat first, then you can call that person here.</string>
+    <string name="calls_error_title">Calls didn\'t load</string>
+    <string name="calls_error_body">Check your connection and try again.</string>
+    <string name="call_detail_title">Call details</string>
+</resources>
