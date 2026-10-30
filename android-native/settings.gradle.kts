@@ -37,6 +37,8 @@ val localProps = Properties().apply {
 }
 val sdkDir = localProps.getProperty("sdk.dir") ?: System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
 if (sdkDir != null && file(sdkDir).exists()) {
+  // Tarang: bitchat-android Bluetooth mesh (GPL-3.0 code, see docs/TARANG_INTEGRATION.md).
+  include(":tarang")
   include(":app")
 } else {
   logger.warn("Samvad: no Android SDK found (local.properties sdk.dir / ANDROID_HOME); building :core only.")

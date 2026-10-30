@@ -128,6 +128,7 @@ googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.W
 
 dependencies {
   implementation(project(":core"))
+  implementation(project(":tarang"))
 
   implementation(platform(libs.androidx.compose.bom))
   implementation(libs.androidx.compose.ui)
