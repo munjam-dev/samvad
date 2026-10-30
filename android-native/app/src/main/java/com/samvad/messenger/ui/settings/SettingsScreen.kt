@@ -46,6 +46,7 @@ import androidx.compose.material.icons.outlined.Devices
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Code
@@ -188,6 +189,8 @@ fun SettingsScreen(
         }
         ActionRow(Icons.Outlined.Wallpaper, stringResource(R.string.chat_theme_title), onClick = onOpenChatTheme)
         ActionRow(Icons.Outlined.Language, stringResource(R.string.settings_language), onClick = { choosingLanguage = true })
+        val inviteText = stringResource(R.string.newchat_invite_text, com.samvad.messenger.ui.newchat.INVITE_DOWNLOAD_URL)
+        ActionRow(Icons.Outlined.PersonAdd, stringResource(R.string.settings_invite_friends), onClick = { com.samvad.messenger.ui.newchat.shareInvite(context, inviteText) })
       }
 
       Group(stringResource(R.string.settings_notifications)) {

@@ -103,4 +103,15 @@ class FindAndPermissionsTest {
     assertTrue(PermissionOnboarding.batteryStepUseful(34, false))
     assertTrue(!PermissionOnboarding.batteryStepUseful(34, true))
   }
+
+  @Test fun autoFireSkipsBatteryAndPermanentDenials() {
+    val pending = listOf(OnboardingStep.CONTACTS, OnboardingStep.NOTIFICATIONS, OnboardingStep.BATTERY)
+    assertEquals(listOf(OnboardingStep.CONTACTS, OnboardingStep.NOTIFICATIONS), PermissionOnboarding.autoSteps(pending))
+    assertTrue(PermissionOnboarding.canRequest(false, false))
+    assertTrue(PermissionOnboarding.canRequest(true, true))
+    assertTrue(!PermissionOnboarding.canRequest(true, false))
+    assertTrue(PermissionOnboarding.showBatteryCard(pending, 34, false))
+    assertTrue(!PermissionOnboarding.showBatteryCard(pending, 34, true))
+    assertTrue(!PermissionOnboarding.showBatteryCard(listOf(OnboardingStep.CONTACTS), 34, false))
+  }
 }
