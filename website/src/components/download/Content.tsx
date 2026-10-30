@@ -14,6 +14,9 @@ interface DownloadItem {
   instant?: boolean;
 }
 
+// TODO-OWNER: replace with the real APK or Google Play listing URL once published.
+export const ANDROID_DOWNLOAD_URL = '#';
+
 const downloadItems: DownloadItem[] = [
   {
     id: '1',
@@ -46,7 +49,12 @@ const Content = () => {
                       <p className="text-tagline-2">{item.description}</p>
                     </div>
                   </div>
-                  <span className="badge badge-green text-tagline-3 shrink-0">Coming soon</span>
+                  <a
+                    href={ANDROID_DOWNLOAD_URL}
+                    className="bg-primary-500 text-tagline-2 hover:bg-primary-600 shrink-0 rounded-full px-5 py-3 font-medium text-white"
+                  >
+                    Download
+                  </a>
                 </div>
               </RevealAnimation>
             );
