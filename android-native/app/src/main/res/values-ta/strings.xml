@@ -186,7 +186,8 @@
     <string name="newchat_none">உங்கள் தொடர்புகளில் யாரும் இன்னும் Samvad பயன்படுத்தவில்லை.</string>
     <string name="newchat_not_found">அந்த எண் இன்னும் Samvad-இல் இல்லை.</string>
     <string name="newchat_invite">அழை</string>
-    <string name="newchat_invite_text">Samvad-இல் சாட் செய்யலாம் வாருங்கள் — அமைதியான, தனிப்பட்ட மெசஞ்சர்.</string>
+    <string name="newchat_invite_text">வணக்கம்! 👋 நான் Samvad பயன்படுத்துகிறேன், இந்தியர்களுக்காக உருவான தனிப்பட்ட, வேகமான மெசஞ்சர். 🇮🇳\n\n🔒 தொடக்கத்திலிருந்தே தனிப்பட்டது\n⚡ வேகமாகவும் எளிதாகவும்\n\nஇங்கே பெறுங்கள்:\n%1$s</string>
+    <string name="settings_invite_friends">நண்பர்களை அழையுங்கள்</string>
     <string name="newchat_limit">இன்றைய தேடல் வரம்பு முடிந்தது. நாளை முயலவும்.</string>
     <string name="newchat_start">சாட்</string>
 
