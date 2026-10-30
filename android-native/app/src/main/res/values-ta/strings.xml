@@ -628,6 +628,9 @@
     <string name="perm_notifications_body">யாராவது செய்தி அனுப்பினாலோ அழைத்தாலோ அறிவிப்பு பெறுங்கள்.</string>
     <string name="perm_battery_title">சரியான நேரத்தில் ஒலிக்கும் அழைப்புகள்</string>
     <string name="perm_battery_body">ஃபோன் ஓய்வில் இருந்தாலும் அழைப்புகள் ஒலிக்க, Samvad-ஐ பின்னணியில் இயங்க அனுமதியுங்கள். இது விருப்பத்திற்குரியது.</string>
+    <string name="perm_intro_title">Samvad-ஐ முழுமையாகப் பயன்படுத்துங்கள்</string>
+    <string name="perm_continue">தொடரவும்</string>
+    <string name="perm_denied_forever">சில அனுமதிகள் முடக்கப்பட்டுள்ளன. அமைப்புகளில் அவற்றை இயக்கலாம்.</string>
     <string name="perm_allow">அனுமதி</string>
     <string name="perm_not_now">இப்போது வேண்டாம்</string>
     <string name="perm_open_settings">அமைப்புகளைத் திற</string>

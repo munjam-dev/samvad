@@ -628,6 +628,9 @@
     <string name="perm_notifications_body">कोई संदेश भेजे या कॉल करे तो सूचना पाएँ।</string>
     <string name="perm_battery_title">समय पर बजने वाली कॉल</string>
     <string name="perm_battery_body">Samvad को बैकग्राउंड में चलने दें, ताकि फ़ोन के आराम में होने पर भी कॉल बजे। यह वैकल्पिक है।</string>
+    <string name="perm_intro_title">Samvad का पूरा लाभ उठाएँ</string>
+    <string name="perm_continue">जारी रखें</string>
+    <string name="perm_denied_forever">कुछ अनुमतियाँ बंद हैं। आप उन्हें सेटिंग में चालू कर सकते हैं।</string>
     <string name="perm_allow">अनुमति दें</string>
     <string name="perm_not_now">अभी नहीं</string>
     <string name="perm_open_settings">सेटिंग खोलें</string>

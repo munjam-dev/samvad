@@ -628,6 +628,9 @@
     <string name="perm_notifications_body">Get a notification when someone messages or calls you.</string>
     <string name="perm_battery_title">Calls that ring on time</string>
     <string name="perm_battery_body">Let Samvad run in the background so calls ring even when your phone is resting. This is optional.</string>
+    <string name="perm_intro_title">Get the most from Samvad</string>
+    <string name="perm_continue">Continue</string>
+    <string name="perm_denied_forever">Some permissions are turned off. You can turn them on in settings.</string>
     <string name="perm_allow">Allow</string>
     <string name="perm_not_now">Not now</string>
     <string name="perm_open_settings">Open settings</string>
