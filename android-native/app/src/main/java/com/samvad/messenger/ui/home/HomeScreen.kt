@@ -156,6 +156,7 @@ fun HomeScreen(
   onOpenStarred: () -> Unit = {},
   onOpenChatTheme: () -> Unit = {},
   onOpenVault: () -> Unit = {},
+  onOpenTarang: () -> Unit = {},
   onOpenCommunity: (String) -> Unit = {},
   onNewCommunity: () -> Unit = {},
   onOpenSearchMessages: () -> Unit = {},
@@ -199,6 +200,7 @@ fun HomeScreen(
         Tab.COMMUNITIES -> com.samvad.messenger.ui.community.CommunitiesTab(
           container, me, menu, onOpenCommunity, onNewCommunity,
           onOpenVault = onOpenVault,
+          onOpenTarang = onOpenTarang,
           onOpenMoments = { tab = Tab.STATUS.ordinal },
           onOpenStarred = onOpenStarred,
         )

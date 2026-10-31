@@ -13,6 +13,7 @@ import com.samvad.messenger.ui.theme.LocalReducedMotion
 import com.samvad.messenger.ui.theme.Motion
 import com.samvad.messenger.ui.theme.pressScale
 import androidx.compose.foundation.clickable
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Bluetooth
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.PhotoCamera
@@ -59,6 +61,8 @@ fun HubCards(
   onMoments: () -> Unit,
   onStarred: () -> Unit,
   modifier: Modifier = Modifier,
+  tarang: com.samvad.messenger.tarang.TarangRepository? = null,
+  onTarang: () -> Unit = {},
 ) {
   val colors = SamvadTheme.colors
   val gap = 12.dp
@@ -66,6 +70,7 @@ fun HubCards(
     val total = if (maxWidth > 560.dp) 560.dp else maxWidth
     val cell = (total - gap) / 2
     Column(Modifier.widthIn(max = 560.dp), verticalArrangement = Arrangement.spacedBy(gap)) {
+      if (tarang != null) TarangHeroCard(tarang, onTarang)
       Row(Modifier.fillMaxWidth().height(IntrinsicSize.Max), horizontalArrangement = Arrangement.spacedBy(gap)) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(gap)) {
           HubCard(
@@ -144,5 +149,52 @@ private fun HubCard(
         Text(subText, style = MaterialTheme.typography.bodyMedium, color = content, modifier = Modifier.padding(top = 4.dp))
       }
     }
+  }
+}
+
+/** Tarang: nearby chat over Bluetooth, highlighted above the other cards. Works with no internet. */
+@Composable
+private fun TarangHeroCard(tarang: com.samvad.messenger.tarang.TarangRepository, onClick: () -> Unit) {
+  val colors = SamvadTheme.colors
+  val shape = RoundedCornerShape(24.dp)
+  val state = tarang.state.collectAsStateWithLifecycle().value
+  val title = stringResource(R.string.tarang_title)
+  val unread = com.samvad.core.tarang.TarangReducer.totalUnread(state)
+  val status = when {
+    state.availability != com.samvad.core.tarang.TarangAvailability.RUNNING -> stringResource(R.string.tarang_hub_sub)
+    state.peerCount == 0 -> stringResource(R.string.tarang_status_scanning)
+    else -> androidx.compose.ui.res.pluralStringResource(R.plurals.tarang_peers_count, state.peerCount, state.peerCount)
+  }
+  val press = remember { MutableInteractionSource() }
+  val reduced = LocalReducedMotion.current
+  val appear = remember { Animatable(if (reduced) 1f else 0f) }
+  LaunchedEffect(Unit) { if (appear.value < 1f) appear.animateTo(1f, Motion.lively()) }
+  Row(
+    Modifier
+      .fillMaxWidth()
+      .graphicsLayer {
+        val t = appear.value.coerceIn(0f, 1f)
+        alpha = t
+        translationY = (1f - t) * 16.dp.toPx()
+      }
+      .pressScale(press, 0.97f)
+      .shadow(1.dp, shape, clip = false)
+      .clip(shape)
+      .background(colors.deep, shape)
+      .clickable(interactionSource = press, indication = LocalIndication.current, role = Role.Button, onClickLabel = title, onClick = onClick)
+      .padding(20.dp),
+    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.spacedBy(16.dp),
+  ) {
+    Icon(Icons.Outlined.Bluetooth, null, tint = colors.onDeep, modifier = Modifier.size(36.dp))
+    Column(Modifier.weight(1f)) {
+      Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(title, style = MaterialTheme.typography.titleLarge, color = colors.onDeep)
+        Text(stringResource(R.string.tarang_native_name), style = MaterialTheme.typography.titleMedium, color = colors.onDeepMuted)
+      }
+      Text(stringResource(R.string.tarang_hero_tagline), style = MaterialTheme.typography.bodyMedium, color = colors.onDeep, modifier = Modifier.padding(top = 2.dp))
+      Text(status, style = MaterialTheme.typography.labelMedium, color = colors.onDeepMuted, modifier = Modifier.padding(top = 6.dp), maxLines = 2, overflow = TextOverflow.Ellipsis)
+    }
+    if (unread > 0) com.samvad.messenger.ui.components.UnreadBadge(unread, stringResource(R.string.tarang_unread_cd, unread))
   }
 }

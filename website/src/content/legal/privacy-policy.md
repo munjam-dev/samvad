@@ -125,7 +125,11 @@ If you ask us to review a decision we made about your account or content (Settin
 
 Scam Shield, which shows a notice when someone you have not chatted with before messages you, works on your phone; messages are not sent anywhere for it, and the only thing it stores is which notices you dismissed. Chat themes, wallpaper photos you choose, names from your contacts, the on-device search index, the Personal Vault (unless you turn on Vault backup, see 3.14), app lock settings and other preferences stay on your phone and are not uploaded. Chats you export are files you create and control.
 
-### 3.18 This website
+### 3.18 Tarang (nearby chat over Bluetooth)
+
+Tarang is optional and off until you turn it on. It uses Bluetooth to find and talk to phones close to you, including phones running the open-source bitchat app. It needs no internet and no phone number. While it is on, nearby devices can see the random ID Tarang creates for you and the nickname you choose, and everything you write in the nearby room. Public messages can be passed on by other phones, so people further away may read them. Private chats with one nearby person are encrypted between the two phones. Tarang messages are kept only in your phone's memory and are removed when you stop Tarang or close the app; the nickname you chose, and the random key that makes your Tarang ID, stay on your phone until you reset them or uninstall the app. Tarang does not send anything to our servers, does not link your Tarang ID to your phone number or Samvad account, and does not collect or store your location. On Android 11 and older, Android requires the location permission for Bluetooth scanning; Samvad does not read your location. Your Samvad name and photo are not shared through Tarang.
+
+### 3.19 This website
 
 This website does not use advertising or analytics cookies. See our [Cookie Policy](/legal/cookie-policy). Our hosting provider keeps standard server logs (such as IP address and pages requested) for security, for a short period.
 

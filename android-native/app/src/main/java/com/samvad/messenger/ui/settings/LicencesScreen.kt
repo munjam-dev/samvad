@@ -64,6 +64,18 @@ fun LicencesScreen(onBack: () -> Unit) {
         modifier = Modifier.padding(top = 8.dp),
       )
       Text(
+        stringResource(R.string.licences_tarang_title),
+        style = MaterialTheme.typography.titleSmall,
+        color = colors.onSurface,
+        modifier = Modifier.padding(top = 24.dp),
+      )
+      Text(
+        stringResource(R.string.licences_tarang_body),
+        style = MaterialTheme.typography.bodyMedium,
+        color = colors.onSurfaceVariant,
+        modifier = Modifier.padding(top = 8.dp),
+      )
+      Text(
         stringResource(R.string.licences_notice),
         style = MaterialTheme.typography.bodyMedium,
         color = colors.onSurfaceVariant,

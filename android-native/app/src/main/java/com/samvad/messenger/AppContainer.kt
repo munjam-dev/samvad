@@ -43,6 +43,8 @@ import kotlinx.coroutines.launch
 class AppContainer(context: Context) {
   val preferences = PreferencesRepository(context)
   val network = NetworkMonitor(context)
+  /** Tarang: nearby chat over Bluetooth. Idle (no Bluetooth use, no service) until the person turns it on. */
+  val tarang = com.samvad.messenger.tarang.TarangRepository(context)
   val drafts = DraftRepository(context)
   val chatThemes = ChatThemeRepository(context)
   val appLock = AppLock(preferences, CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate))
