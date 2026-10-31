@@ -1069,7 +1069,7 @@ fun ConversationScreen(
 }
 
 @Composable
-private fun DateChip(label: String) {
+internal fun DateChip(label: String) {
   val colors = SamvadTheme.colors
   Box(Modifier.fillMaxWidth().padding(vertical = 10.dp), contentAlignment = Alignment.Center) {
     Text(
@@ -1349,7 +1349,7 @@ private val AVATAR_SIZE = 32.dp
 private val AVATAR_GAP = 8.dp
 
 @Composable
-private fun DeliveryIcon(state: DeliveryState) {
+internal fun DeliveryIcon(state: DeliveryState) {
   val colors = SamvadTheme.colors
   val (icon: ImageVector, label: Int) = when (state) {
     DeliveryState.SENDING -> Icons.Outlined.Schedule to R.string.cd_delivery_sending
@@ -1439,7 +1439,7 @@ private fun Composer(
 }
 
 @Composable
-private fun SendButton(canSend: Boolean, editing: Boolean, onSend: () -> Unit, onSchedule: (() -> Unit)? = null) {
+internal fun SendButton(canSend: Boolean, editing: Boolean, onSend: () -> Unit, onSchedule: (() -> Unit)? = null) {
   val colors = SamvadTheme.colors
   val sendBg by animateColorAsState(if (canSend) colors.primary else colors.surfaceContainer, motionSpec(Motion.standard()), label = "sendBg")
   val sendTint by animateColorAsState(if (canSend) colors.onPrimary else colors.onSurfaceVariant, motionSpec(Motion.standard()), label = "sendTint")

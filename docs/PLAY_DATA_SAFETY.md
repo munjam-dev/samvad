@@ -76,6 +76,17 @@ Notes for the form:
   address. Recent and favourite GIFs stay on the phone. No new Play data type applies (search words are not stored by us).
   CHECK: confirm this against GIPHY's current terms and privacy policy before filing the form.
 
+### Tarang (Bluetooth nearby chat): answers to give
+
+- **Collected by the developer:** nothing new. Tarang data never reaches Samvad servers. Nickname, random Tarang ID and
+  messages go only to other devices over Bluetooth (peer to peer), so they are not "collected" or "shared" with
+  a third party in Play's sense. State this in the review notes (CHECK with Play's wording on device-to-device transfer).
+- **Location:** not collected. `BLUETOOTH_SCAN` is declared with `neverForLocation`. `ACCESS_FINE_LOCATION` is declared
+  with `maxSdkVersion="30"` only because Android 11 and older require it for BLE scans; the app never reads location.
+- **On device:** nickname (optional, shared preferences) and a random identity key (encrypted preferences). Messages are in
+  memory only.
+- **Nearby devices see:** random peer ID, nickname, public room messages (relayable by other phones).
+
 ## 3. Permissions justification
 
 Permissions declared in `android-native/app/src/main/AndroidManifest.xml`. `USE_BIOMETRIC` is not declared in the
@@ -84,6 +95,9 @@ manifest by Samvad's own code; AndroidX Biometric may merge it in, so check the 
 | Permission | Why the app needs it | When asked | If refused |
 |---|---|---|---|
 | INTERNET | Send and receive messages, calls, sync | Install time (normal) | App cannot work |
+| BLUETOOTH_SCAN (`neverForLocation`), BLUETOOTH_ADVERTISE, BLUETOOTH_CONNECT | Tarang: find, be found by, and talk to nearby phones | When the person taps "Turn on Tarang" (Android 12+) | Tarang stays off; the rest of the app is unaffected |
+| BLUETOOTH, BLUETOOTH_ADMIN (max SDK 30), ACCESS_FINE_LOCATION (max SDK 30) | Tarang on Android 11 and older, where BLE scanning needs location | When the person taps "Turn on Tarang" | Tarang stays off. No location is read or stored |
+| FOREGROUND_SERVICE_CONNECTED_DEVICE | Keeps the Tarang Bluetooth mesh running in the background while Tarang is on | Not a runtime prompt | Mesh stops when the app is closed |
 | ACCESS_NETWORK_STATE | Detect connectivity for sending, retry and call quality | Install time (normal) | n/a |
 | READ_CONTACTS | Match the phone numbers in the address book to Samvad accounts; show saved names on device | Runtime, after an explanation | Add chats by phone number |
 | POST_NOTIFICATIONS | New message, call and meeting notifications | Runtime (Android 13+) | No notifications |
@@ -110,6 +124,13 @@ Hardware features `camera` and `microphone` are declared `required="false"`.
 - Description: *User-initiated voice and video calls and group meetings. The service runs only while a call or
   meeting is connected, shows an ongoing notification with a Hang up button, and stops when the call ends.*
 - Video to attach: start a call, show the ongoing notification, hang up.
+
+`TarangService` declares `foregroundServiceType="connectedDevice"`.
+
+- Type: Connected device.
+- Description: *User-started nearby chat over Bluetooth. The service runs only after the person turns Tarang on, shows an
+  ongoing notification with a Stop Tarang button, and stops when Tarang is stopped.*
+- Video to attach: open Tarang, turn it on, show the notification, stop Tarang.
 
 ### Full-screen intent
 

@@ -29,10 +29,11 @@ class BluetoothPermissionManager(private val context: Context) {
             ))
         }
         
-        permissions.addAll(listOf(
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ))
+        // Samvad: location is needed for BLE scans only before Android 12. On Android 12+ BLUETOOTH_SCAN is
+        // declared with neverForLocation, so Tarang never asks for or uses location there.
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.S) {
+            permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
 
         return permissions.all { 
             ActivityCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED 

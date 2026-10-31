@@ -73,3 +73,13 @@ nothing about the items below.
     native speaker (see `docs/LOCALIZATION.md`).
 16. **Website dependency.** `next` was raised from 16.4.0 to 16.4.3 in `website/package.json` because the build stopped on
     Next.js's known-vulnerability check. `website/yarn.lock` was not updated; use npm (`package-lock.json`) or regenerate it.
+17. **Tarang (Bluetooth nearby chat, bitchat-android code).** TODO-OWNER: (a) confirm the upstream licence. Upstream ships
+    `LICENSE.md` as GNU GPL v3 while its README also says public domain; Samvad treats it as GPL-3.0 and credits it in `NOTICE`
+    and the in-app licences screen; ask counsel to confirm the combination with AGPL-3.0 and that no upstream file has a
+    conflicting header. (b) Confirm the privacy-policy section 3.18 and the Play Data safety wording for peer-to-peer
+    Bluetooth data (nickname, random ID and messages are visible to nearby devices, never sent to our servers, no location
+    collected). (c) Decide whether Tarang may be offered to under-18 users, since strangers nearby can read the public room
+    and there is no moderation or report flow. (d) Check local radio and age rules for public-room content. (e) Declare the
+    `connectedDevice` foreground service and Bluetooth permissions in Play Console (see `docs/PLAY_DATA_SAFETY.md`).
+    (f) Hindi, Telugu and Tamil Tarang strings are AI-written and unreviewed. (g) Stage 2 (Nostr, geohash) is not included;
+    any internet relay would need a new privacy review. See `docs/TARANG_INTEGRATION.md`.

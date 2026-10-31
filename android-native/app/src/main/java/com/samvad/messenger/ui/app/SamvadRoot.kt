@@ -156,10 +156,25 @@ private fun SignedInNav(
         onOpenStarred = { nav.navigate("starred") },
         onOpenChatTheme = { nav.navigate("chattheme") },
         onOpenVault = { nav.navigate(VAULT_ROUTE) },
+        onOpenTarang = { nav.navigate("tarang") },
         onOpenCommunity = { id -> nav.navigate("community/$id") },
         onNewCommunity = { nav.navigate("newcommunity") },
         onOpenSearchMessages = { nav.navigate("search") },
       )
+    }
+    composable("tarang") {
+      com.samvad.messenger.ui.tarang.TarangHomeScreen(
+        repository = container.tarang,
+        onBack = { nav.popBackStack() },
+        onOpenRoom = { nav.navigate("tarang/room") },
+        onOpenChat = { peer -> nav.navigate("tarang/chat/$peer") },
+      )
+    }
+    composable("tarang/room") {
+      com.samvad.messenger.ui.tarang.TarangRoomScreen(container.tarang, onBack = { nav.popBackStack() })
+    }
+    composable("tarang/chat/{peer}", arguments = listOf(navArgument("peer") { type = NavType.StringType })) { entry ->
+      com.samvad.messenger.ui.tarang.TarangPrivateChatScreen(container.tarang, entry.arguments!!.getString("peer")!!, onBack = { nav.popBackStack() })
     }
     composable("search") {
       com.samvad.messenger.ui.search.GlobalSearchScreen(
