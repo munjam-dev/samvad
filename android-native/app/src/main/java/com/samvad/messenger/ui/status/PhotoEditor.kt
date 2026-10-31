@@ -31,6 +31,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Undo
 import androidx.compose.material.icons.outlined.Brush
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.EmojiEmotions
+import androidx.compose.material.icons.outlined.RotateRight
+import androidx.compose.material.icons.outlined.ZoomIn
+import androidx.compose.material.icons.outlined.ZoomOut
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.calculateRotation
+import androidx.compose.foundation.gestures.calculateZoom
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
@@ -78,6 +90,13 @@ import com.samvad.messenger.ui.theme.SamvadTheme
 
 private const val TOOL_TEXT = 0
 private const val TOOL_PEN = 1
+private const val TOOL_STICKER = 2
+private val PACK_LABELS = mapOf(
+  "faces" to R.string.photo_edit_pack_faces,
+  "hearts" to R.string.photo_edit_pack_hearts,
+  "celebrate" to R.string.photo_edit_pack_celebrate,
+  "nature" to R.string.photo_edit_pack_nature,
+)
 
 private val COLOR_NAMES_TEXT = listOf(R.string.photo_edit_color_white, R.string.photo_edit_color_champagne, R.string.photo_edit_color_lime, R.string.photo_edit_color_green)
 private val COLOR_NAMES_PEN = listOf(R.string.photo_edit_color_white, R.string.photo_edit_color_lime, R.string.photo_edit_color_red)
@@ -144,6 +163,10 @@ private fun PhotoEditor(
   var spotX by rememberSaveable { mutableFloatStateOf(0.5f) }
   var spotY by rememberSaveable { mutableFloatStateOf(0.5f) }
   var confirmClear by rememberSaveable { mutableStateOf(false) }
+  var selected by rememberSaveable { mutableIntStateOf(-1) }
+  var packIndex by rememberSaveable { mutableIntStateOf(0) }
+  // A removed sticker must not leave a stale selection behind.
+  val selectedIndex = if (selected in edits.stickers.indices) selected else -1
 
   val latest = rememberUpdatedState(edits)
   val sizeNow = OverlaySize.fromOrdinal(textSize)
@@ -177,7 +200,7 @@ private fun PhotoEditor(
                 val y = at.y / size.height
                 if (latest.value.hasText) onEdits(PhotoEditRules.moveText(latest.value, x, y)) else openTextDialog(x, y)
               }
-            } else {
+            } else if (tool == TOOL_PEN) {
               detectTapGestures { at -> onEdits(PhotoEditRules.beginStroke(latest.value, penColor, at.x / size.width, at.y / size.height)) }
             }
           }
@@ -194,7 +217,7 @@ private fun PhotoEditor(
                   onEdits(working)
                 },
               )
-            } else {
+            } else if (tool == TOOL_PEN) {
               detectDragGestures(
                 onDragStart = { at -> working = PhotoEditRules.beginStroke(latest.value, penColor, at.x / size.width, at.y / size.height); onEdits(working) },
                 onDrag = { change, _ ->
@@ -204,9 +227,39 @@ private fun PhotoEditor(
                 },
               )
             }
+          }
+          .pointerInput(tool, enabled) {
+            if (!enabled || tool != TOOL_STICKER) return@pointerInput
+            // Touch a sticker to select it, then drag, pinch and twist it. Touching empty space deselects.
+            awaitEachGesture {
+              val down = awaitFirstDown(requireUnconsumed = false)
+              val hit = PhotoEditRules.hitSticker(latest.value, down.position.x / size.width, down.position.y / size.height, size.width.toFloat(), size.height.toFloat())
+              selected = hit
+              if (hit < 0) return@awaitEachGesture
+              var working = latest.value
+              do {
+                val event = awaitPointerEvent()
+                val zoom = event.calculateZoom()
+                val turn = event.calculateRotation()
+                val pan = event.calculatePan()
+                if (zoom != 1f || turn != 0f || pan != Offset.Zero) {
+                  working = PhotoEditRules.transformSticker(working, hit, pan.x / size.width, pan.y / size.height, zoom, turn)
+                  onEdits(working)
+                  event.changes.forEach { if (it.positionChanged()) it.consume() }
+                }
+              } while (event.changes.any { it.pressed })
+            }
           },
       ) {
         drawIntoCanvas { c -> PhotoEditRenderer.draw(c.nativeCanvas, size.width.toInt(), size.height.toInt(), edits) }
+        // The ring that shows which sticker is selected is only drawn here, never into the posted picture.
+        val chosen = edits.stickers.getOrNull(selectedIndex)
+        if (tool == TOOL_STICKER && chosen != null) {
+          val r = PhotoEditRules.stickerRadiusPx(size.width, chosen.scale) * 1.1f
+          val c = Offset(chosen.cx * size.width, chosen.cy * size.height)
+          drawCircle(Color.Black.copy(alpha = 0.55f), r, c, style = Stroke(width = 5.dp.toPx()))
+          drawCircle(Color.White, r, c, style = Stroke(width = 2.dp.toPx()))
+        }
       }
     }
 
@@ -221,7 +274,17 @@ private fun PhotoEditor(
         label = { Text(stringResource(R.string.photo_edit_tool_pen)) },
         leadingIcon = { Icon(Icons.Outlined.Brush, null, Modifier.size(18.dp)) },
       )
+      FilterChip(
+        selected = tool == TOOL_STICKER, enabled = enabled, onClick = { tool = TOOL_STICKER },
+        label = { Text(stringResource(R.string.photo_edit_tool_stickers)) },
+        leadingIcon = { Icon(Icons.Outlined.EmojiEmotions, null, Modifier.size(18.dp)) },
+      )
     }
+
+    if (tool == TOOL_STICKER) StickerPanel(
+      edits = edits, onEdits = onEdits, enabled = enabled, selectedIndex = selectedIndex,
+      onSelect = { selected = it }, packIndex = packIndex, onPack = { packIndex = it },
+    ) else
 
     if (tool == TOOL_TEXT) {
       FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -263,7 +326,7 @@ private fun PhotoEditor(
     }
     if (edits.isEmpty) {
       Text(
-        stringResource(if (tool == TOOL_TEXT) R.string.photo_edit_hint_text else R.string.photo_edit_hint_pen),
+        stringResource(when (tool) { TOOL_TEXT -> R.string.photo_edit_hint_text; TOOL_PEN -> R.string.photo_edit_hint_pen; else -> R.string.photo_edit_hint_stickers }),
         style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, modifier = Modifier.fillMaxWidth(),
       )
     }
@@ -306,6 +369,74 @@ private fun PhotoEditor(
       },
       dismissButton = { TextButton(onClick = { confirmClear = false }) { Text(stringResource(R.string.cancel)) } },
     )
+  }
+}
+
+/**
+ * Emoji packs and the controls for the chosen sticker. Dragging, pinching and twisting happen on the photo; the buttons
+ * here do the same in steps, for people who cannot pinch (switch access, TalkBack).
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun StickerPanel(
+  edits: PhotoEdits,
+  onEdits: (PhotoEdits) -> Unit,
+  enabled: Boolean,
+  selectedIndex: Int,
+  onSelect: (Int) -> Unit,
+  packIndex: Int,
+  onPack: (Int) -> Unit,
+) {
+  val colors = SamvadTheme.colors
+  val packs = com.samvad.core.status.EmojiPacks.ALL
+  val pack = packs[packIndex.coerceIn(0, packs.lastIndex)]
+  val full = edits.stickers.size >= PhotoEditRules.MAX_STICKERS
+  FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    packs.forEachIndexed { i, p ->
+      FilterChip(
+        selected = pack.id == p.id, enabled = enabled, onClick = { onPack(i) },
+        label = { Text(stringResource(PACK_LABELS.getValue(p.id))) },
+      )
+    }
+  }
+  // Fixed in dp, so the emoji stay inside their 48 dp targets at 200% font scale.
+  val emojiSize = with(androidx.compose.ui.platform.LocalDensity.current) { 26.dp.toSp() }
+  FlowRow(Modifier.fillMaxWidth()) {
+    pack.emoji.forEach { e ->
+      val label = stringResource(R.string.photo_edit_sticker_add, e)
+      Box(
+        Modifier.size(48.dp).clip(CircleShape)
+          .clickable(enabled = enabled && !full, role = Role.Button, onClickLabel = label) {
+            val next = PhotoEditRules.addSticker(edits, e)
+            onEdits(next)
+            onSelect(next.stickers.lastIndex)
+          }
+          .semantics { contentDescription = label },
+        contentAlignment = Alignment.Center,
+      ) { Text(e, fontSize = emojiSize, color = if (enabled && !full) Color.Unspecified else colors.onSurfaceVariant.copy(alpha = 0.5f)) }
+    }
+  }
+  if (full) {
+    Text(
+      stringResource(R.string.photo_edit_sticker_limit, PhotoEditRules.MAX_STICKERS),
+      style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, modifier = Modifier.fillMaxWidth(),
+    )
+  }
+  if (selectedIndex >= 0) {
+    FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(0.dp)) {
+      IconButton(onClick = { onEdits(PhotoEditRules.transformSticker(edits, selectedIndex, 0f, 0f, 1.25f, 0f)) }, enabled = enabled) {
+        Icon(Icons.Outlined.ZoomIn, stringResource(R.string.photo_edit_sticker_bigger))
+      }
+      IconButton(onClick = { onEdits(PhotoEditRules.transformSticker(edits, selectedIndex, 0f, 0f, 0.8f, 0f)) }, enabled = enabled) {
+        Icon(Icons.Outlined.ZoomOut, stringResource(R.string.photo_edit_sticker_smaller))
+      }
+      IconButton(onClick = { onEdits(PhotoEditRules.transformSticker(edits, selectedIndex, 0f, 0f, 1f, 15f)) }, enabled = enabled) {
+        Icon(Icons.Outlined.RotateRight, stringResource(R.string.photo_edit_sticker_rotate))
+      }
+      IconButton(onClick = { onEdits(PhotoEditRules.removeSticker(edits, selectedIndex)); onSelect(-1) }, enabled = enabled) {
+        Icon(Icons.Outlined.Delete, stringResource(R.string.photo_edit_sticker_delete))
+      }
+    }
   }
 }
 

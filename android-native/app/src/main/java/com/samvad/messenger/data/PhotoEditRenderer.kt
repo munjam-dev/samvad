@@ -23,7 +23,24 @@ internal object PhotoEditRenderer {
   fun draw(canvas: Canvas, width: Int, height: Int, edits: PhotoEdits) {
     if (width <= 0 || height <= 0 || edits.isEmpty) return
     drawStrokes(canvas, width, height, edits)
+    drawStickers(canvas, width, height, edits)
     drawText(canvas, width, height, edits)
+  }
+
+  /** Emoji are drawn as text, centred on their point and turned about it, so they are burned in with the rest. */
+  private fun drawStickers(canvas: Canvas, width: Int, height: Int, edits: PhotoEdits) {
+    if (edits.stickers.isEmpty()) return
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { textAlign = Paint.Align.CENTER }
+    edits.stickers.forEach { s ->
+      paint.textSize = width * PhotoEditRules.STICKER_BASE_FRACTION * s.scale
+      val metrics = paint.fontMetrics
+      val baseline = -(metrics.ascent + metrics.descent) / 2f
+      canvas.save()
+      canvas.translate(s.cx * width, s.cy * height)
+      canvas.rotate(s.rotation)
+      canvas.drawText(s.emoji, 0f, baseline, paint)
+      canvas.restore()
+    }
   }
 
   private fun drawStrokes(canvas: Canvas, width: Int, height: Int, edits: PhotoEdits) {

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- మోమెంట్స్, నాలుగో దశ: ఫోటోలపై ఎమోజీ స్టిక్కర్లు, మోమెంట్ అలర్ట్ స్విచ్ -->
+
+    <string name="photo_edit_tool_stickers">స్టిక్కర్లు</string>
+    <string name="photo_edit_hint_stickers">ఎమోజీని ఎంచుకుని జోడించండి. కదిలించడానికి లాగండి, పెద్దది లేదా చిన్నది చేయడానికి చిటికెడు చేయండి, తిప్పడానికి మెలితిప్పండి.</string>
+    <string name="photo_edit_pack_faces">ముఖాలు</string>
+    <string name="photo_edit_pack_hearts">హృదయాలు, చేతులు</string>
+    <string name="photo_edit_pack_celebrate">వేడుక</string>
+    <string name="photo_edit_pack_nature">ప్రకృతి, ఆహారం</string>
+    <string name="photo_edit_sticker_add">%1$s జోడించండి</string>
+    <string name="photo_edit_sticker_limit">మీరు గరిష్ఠంగా %1$d స్టిక్కర్లు జోడించవచ్చు.</string>
+    <string name="photo_edit_sticker_bigger">స్టిక్కర్‌ను పెద్దది చేయండి</string>
+    <string name="photo_edit_sticker_smaller">స్టిక్కర్‌ను చిన్నది చేయండి</string>
+    <string name="photo_edit_sticker_rotate">స్టిక్కర్‌ను తిప్పండి</string>
+    <string name="photo_edit_sticker_delete">స్టిక్కర్‌ను తొలగించండి</string>
+
+    <string name="settings_moment_alerts">మోమెంట్ అలర్ట్‌లు</string>
+    <string name="settings_moment_alerts_body">మీరు చాట్ చేసేవారు మోమెంట్ షేర్ చేసినప్పుడు నిశ్శబ్ద నోటిఫికేషన్ పొందండి. ప్రతి వ్యక్తి నుండి 6 గంటలకు గరిష్ఠంగా ఒకటి.</string>
+</resources>
