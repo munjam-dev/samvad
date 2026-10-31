@@ -15,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -45,7 +44,7 @@ fun LockScreen(onUnlock: () -> Unit, onLeave: () -> Unit) {
   Box(
     Modifier
       .fillMaxSize()
-      .background(Brush.verticalGradient(listOf(colors.primaryContainer, colors.background)))
+      .background(colors.background)
       .pointerInput(Unit) {
         awaitPointerEventScope {
           while (true) awaitPointerEvent().changes.forEach { it.consume() }
