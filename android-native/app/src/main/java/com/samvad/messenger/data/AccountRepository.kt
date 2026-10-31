@@ -111,6 +111,14 @@ class AccountRepository(
     }.await()
   }
 
+  /**
+   * Tells the server whether this person wants new-moment pushes, so it does not send them at all. The phone also drops
+   * them when the switch is off (Preferences), so a failed write here only costs a push that is then ignored.
+   */
+  suspend fun setMomentAlerts(uid: String, enabled: Boolean) {
+    db.document("users/$uid/settings/notifications").set(mapOf("momentAlerts" to enabled)).await()
+  }
+
   /** Called when FCM rotates this install's token; may run before the first registration. */
   suspend fun updatePushToken(uid: String, deviceId: String, fcmToken: String) =
     registerDevice(uid, deviceId, fcmToken)

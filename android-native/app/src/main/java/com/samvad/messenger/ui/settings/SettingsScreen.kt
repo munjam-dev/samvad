@@ -207,6 +207,17 @@ fun SettingsScreen(
           checked = prefs.notificationPreviews,
           onChange = { v -> scope.launch { container.preferences.setNotificationPreviews(v) } },
         )
+        SwitchRow(
+          title = stringResource(R.string.settings_moment_alerts),
+          body = stringResource(R.string.settings_moment_alerts_body),
+          checked = prefs.momentAlerts,
+          onChange = { v ->
+            scope.launch {
+              container.preferences.setMomentAlerts(v)
+              runCatching { container.accounts?.setMomentAlerts(me, v) }
+            }
+          },
+        )
         com.samvad.messenger.ui.settings.QuietHoursRow(prefs.quietHours) { enabled, start, end ->
           scope.launch { container.preferences.setQuietHours(enabled, start, end) }
         }

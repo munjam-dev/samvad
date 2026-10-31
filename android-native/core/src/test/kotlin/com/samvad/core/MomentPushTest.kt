@@ -27,6 +27,12 @@ class MomentPushTest {
     assertEquals(MomentPingAction.DROP, MomentPush.action("me", "me", emptySet(), quiet = false))
   }
 
+  @Test fun turningMomentAlertsOffDropsEveryPush() {
+    assertEquals(MomentPingAction.DROP, MomentPush.action("anil", "me", emptySet(), quiet = false, alertsOn = false))
+    assertEquals(MomentPingAction.DROP, MomentPush.action("anil", "me", emptySet(), quiet = true, alertsOn = false))
+    assertEquals(MomentPingAction.SHOW, MomentPush.action("anil", "me", emptySet(), quiet = false, alertsOn = true))
+  }
+
   @Test fun voiceRepliesAreLimitedToThirtySeconds() {
     assertTrue(StatusRules.voiceReplyOk(1_000))
     assertTrue(StatusRules.voiceReplyOk(30_000))
