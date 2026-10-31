@@ -186,7 +186,8 @@
     <string name="newchat_none">మీ కాంటాక్ట్‌లలో ఎవరూ ఇంకా Samvad వాడటం లేదు.</string>
     <string name="newchat_not_found">ఆ నంబర్ ఇంకా Samvadలో లేదు.</string>
     <string name="newchat_invite">ఆహ్వానించు</string>
-    <string name="newchat_invite_text">Samvadలో చాట్ చేద్దాం — ప్రశాంతమైన, ప్రైవేట్ మెసెంజర్.</string>
+    <string name="newchat_invite_text">హాయ్! 👋 నేను Samvad వాడుతున్నాను, భారతీయుల కోసం తయారైన ప్రైవేట్, వేగవంతమైన మెసెంజర్. 🇮🇳\n\n🔒 మొదటి నుంచే ప్రైవేట్\n⚡ వేగంగా, సులభంగా\n\nఇక్కడ పొందండి:\n%1$s</string>
+    <string name="settings_invite_friends">స్నేహితులను ఆహ్వానించండి</string>
     <string name="newchat_limit">ఈరోజు వెతికే పరిమితి చేరుకుంది. రేపు మళ్లీ ప్రయత్నించండి.</string>
     <string name="newchat_start">చాట్</string>
 
@@ -628,6 +629,9 @@
     <string name="perm_notifications_body">ఎవరైనా సందేశం పంపినా, కాల్ చేసినా నోటిఫికేషన్ పొందండి.</string>
     <string name="perm_battery_title">సమయానికి మోగే కాల్స్</string>
     <string name="perm_battery_body">ఫోన్ విశ్రాంతిలో ఉన్నా కాల్స్ మోగేలా Samvadను బ్యాక్‌గ్రౌండ్‌లో నడవనివ్వండి. ఇది ఐచ్ఛికం.</string>
+    <string name="perm_intro_title">Samvad ను పూర్తిగా ఉపయోగించుకోండి</string>
+    <string name="perm_continue">కొనసాగించండి</string>
+    <string name="perm_denied_forever">కొన్ని అనుమతులు ఆఫ్‌లో ఉన్నాయి. మీరు వాటిని సెట్టింగ్‌లలో ఆన్ చేయవచ్చు.</string>
     <string name="perm_allow">అనుమతించు</string>
     <string name="perm_not_now">ఇప్పుడు కాదు</string>
     <string name="perm_open_settings">సెట్టింగ్‌లు తెరవండి</string>

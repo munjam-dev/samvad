@@ -67,12 +67,8 @@ fun NewChatScreen(
   val colors = SamvadTheme.colors
   val context = LocalContext.current
   val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission(), vm::onPermissionResult)
-  val inviteText = stringResource(R.string.newchat_invite_text)
-  val invite = {
-    context.startActivity(
-      Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, inviteText), null),
-    )
-  }
+  val inviteText = stringResource(R.string.newchat_invite_text, INVITE_DOWNLOAD_URL)
+  val invite = { shareInvite(context, inviteText) }
 
   Column(Modifier.fillMaxSize().background(colors.background).statusBarsPadding().imePadding()) {
     Row(Modifier.fillMaxWidth().padding(4.dp), verticalAlignment = Alignment.CenterVertically) {

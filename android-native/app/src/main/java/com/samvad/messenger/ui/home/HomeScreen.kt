@@ -755,7 +755,6 @@ private fun FloatingNavBar(selected: Int, onSelect: (Int) -> Unit, modifier: Mod
       Modifier
         .fillMaxWidth()
         .height(68.dp)
-        .shadow(18.dp, RoundedCornerShape(24.dp), ambientColor = colors.deep, spotColor = colors.deep)
         .background(colors.surface, RoundedCornerShape(24.dp))
         .border(1.dp, colors.outlineVariant, RoundedCornerShape(24.dp)),
     ) {
@@ -780,7 +779,11 @@ private fun FloatingNavBar(selected: Int, onSelect: (Int) -> Unit, modifier: Mod
             Modifier
               .weight(1f)
               .fillMaxSize()
-              .clickable(onClickLabel = stringResource(label)) {
+              .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClickLabel = stringResource(label),
+              ) {
                 if (!active) {
                   haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
                   onSelect(i)

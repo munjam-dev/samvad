@@ -7,6 +7,9 @@ const Hero = () => {
         <RevealAnimation delay={0.1} instant>
           <h1 className="text-center font-normal">Download Samvad</h1>
         </RevealAnimation>
+        <RevealAnimation delay={0.2} instant>
+          <p className="text-tagline-1 mt-4 text-center">Private, fast messaging built for India.</p>
+        </RevealAnimation>
       </div>
     </section>
   );

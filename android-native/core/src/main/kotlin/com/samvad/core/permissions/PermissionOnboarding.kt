@@ -53,4 +53,14 @@ object PermissionOnboarding {
 
   /** Battery optimisation is only worth asking about when calls would otherwise ring late. */
   fun batteryStepUseful(sdk: Int, alreadyExempt: Boolean): Boolean = sdk >= BATTERY_OPTIMISATION_SDK && !alreadyExempt
+
+  /** Steps fired automatically, back to back, after the intro. Battery is never auto-fired. */
+  fun autoSteps(pending: List<OnboardingStep>): List<OnboardingStep> = pending.filter { it != OnboardingStep.BATTERY }
+
+  /** Whether the system dialog can still appear: not if it was refused before and Android offers no rationale. */
+  fun canRequest(askedBefore: Boolean, shouldShowRationale: Boolean): Boolean = !askedBefore || shouldShowRationale
+
+  /** The optional battery card comes last and only when pending and useful. */
+  fun showBatteryCard(pending: List<OnboardingStep>, sdk: Int, alreadyExempt: Boolean): Boolean =
+    OnboardingStep.BATTERY in pending && batteryStepUseful(sdk, alreadyExempt)
 }

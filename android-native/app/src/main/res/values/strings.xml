@@ -186,7 +186,8 @@
     <string name="newchat_none">None of your contacts use Samvad yet.</string>
     <string name="newchat_not_found">That number isn\'t on Samvad yet.</string>
     <string name="newchat_invite">Invite</string>
-    <string name="newchat_invite_text">Let\'s chat on Samvad — a calm, private messenger.</string>
+    <string name="newchat_invite_text">Hey! 👋 I\'m using Samvad, a private and fast messenger built for Indians. 🇮🇳\n\n🔒 Private by design\n⚡ Quick and smooth\n\nGet it here:\n%1$s</string>
+    <string name="settings_invite_friends">Invite friends</string>
     <string name="newchat_limit">Lookup limit reached for today. Try again tomorrow.</string>
     <string name="newchat_start">Chat</string>
 
@@ -628,6 +629,9 @@
     <string name="perm_notifications_body">Get a notification when someone messages or calls you.</string>
     <string name="perm_battery_title">Calls that ring on time</string>
     <string name="perm_battery_body">Let Samvad run in the background so calls ring even when your phone is resting. This is optional.</string>
+    <string name="perm_intro_title">Get the most from Samvad</string>
+    <string name="perm_continue">Continue</string>
+    <string name="perm_denied_forever">Some permissions are turned off. You can turn them on in settings.</string>
     <string name="perm_allow">Allow</string>
     <string name="perm_not_now">Not now</string>
     <string name="perm_open_settings">Open settings</string>
