@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, it } from 'vitest';
 import { assertFails, assertSucceeds, type RulesTestEnvironment } from '@firebase/rules-unit-testing';
-import { doc, serverTimestamp, setDoc, Timestamp, updateDoc, type Firestore } from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp, setDoc, Timestamp, updateDoc, type Firestore } from 'firebase/firestore';
 import { createRulesEnv, phoneContext } from '../test-support/rulesEnv';
 
 // Phase 8: repliesOff on a moment, and replies (text or short voice) that name the moment they answer.
@@ -142,5 +142,30 @@ describe('replying to a moment', () => {
   it('a plain message without a reference still works as before', async () => {
     const { momentRef: _omit, ...plain } = textReply();
     await assertSucceeds(setDoc(msg(B, cidOf(A, B)), plain));
+  });
+});
+
+describe('users/{uid}/settings/notifications', () => {
+  const path = (uid: string) => `users/${uid}/settings/notifications`;
+
+  beforeEach(async () => {
+    await seed(async (d) => {
+      for (const u of [A, B]) await setDoc(doc(d, `users/${u}`), { phoneE164: '+919999900001', consent: { version: 1 }, createdAt: Timestamp.now() });
+    });
+  });
+
+  it('the owner can turn Moment alerts off and on', async () => {
+    await assertSucceeds(setDoc(doc(db(B), path(B)), { momentAlerts: false }));
+    await assertSucceeds(setDoc(doc(db(B), path(B)), { momentAlerts: true }));
+  });
+
+  it('refuses other fields and non-boolean values', async () => {
+    await assertFails(setDoc(doc(db(B), path(B)), { momentAlerts: 'no' }));
+    await assertFails(setDoc(doc(db(B), path(B)), { momentAlerts: false, extra: 1 }));
+  });
+
+  it('nobody else can read or write it', async () => {
+    await assertFails(setDoc(doc(db(A), path(B)), { momentAlerts: false }));
+    await assertFails(getDoc(doc(db(A), path(B))));
   });
 });

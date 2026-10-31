@@ -168,6 +168,16 @@ service cloud.firestore {
           && validPrivacy(request.resource.data);
       }
 
+      // Notification choices the server needs to know about. Today: whether new-moment pushes are wanted
+      // (momentAlerts, on when the document is absent). Read by notifyMomentViewers.
+      match /settings/notifications {
+        allow get: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && notDeleted(uid)
+          && request.resource.data.keys().hasOnly(['momentAlerts'])
+          && request.resource.data.momentAlerts is bool;
+      }
+
       // Phase 3: starred messages. Private to their owner; a reference only (never a copy of the
       // message), so delete-for-everyone and group rules still decide what can be read.
       match /savedMessages/{key} {

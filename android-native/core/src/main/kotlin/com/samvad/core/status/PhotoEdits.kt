@@ -26,10 +26,20 @@ data class PenStroke(val color: Int, val points: List<PenPoint>)
 
 data class PenPoint(val x: Float, val y: Float)
 
+/**
+ * An emoji placed on a photo. [cx] and [cy] are the centre as 0..1 shares of the photo, [scale] multiplies the base size
+ * ([PhotoEditRules.STICKER_BASE_FRACTION] of the width) and [rotation] is in degrees, clockwise.
+ */
+data class Sticker(val emoji: String, val cx: Float, val cy: Float, val scale: Float, val rotation: Float)
+
 /** Everything drawn on a photo moment before it is posted. Plain data, so it is easy to keep across rotation. */
-data class PhotoEdits(val text: OverlayText? = null, val strokes: List<PenStroke> = emptyList()) {
+data class PhotoEdits(
+  val text: OverlayText? = null,
+  val strokes: List<PenStroke> = emptyList(),
+  val stickers: List<Sticker> = emptyList(),
+) {
   val hasText: Boolean get() = text != null && text.text.isNotBlank()
-  val isEmpty: Boolean get() = !hasText && strokes.isEmpty()
+  val isEmpty: Boolean get() = !hasText && strokes.isEmpty() && stickers.isEmpty()
 
   companion object {
     val NONE = PhotoEdits()
@@ -142,6 +152,61 @@ object PhotoEditRules {
 
   fun clearStrokes(edits: PhotoEdits): PhotoEdits = edits.copy(strokes = emptyList())
 
+  // ---- Stickers --------------------------------------------------------------------------------
+
+  const val MAX_STICKERS = 12
+  const val MIN_STICKER_SCALE = 0.4f
+  const val MAX_STICKER_SCALE = 4f
+  const val STICKER_BASE_FRACTION = 0.16f
+
+  /** Adds an emoji in the middle of the photo. Nothing changes at the limit or for a blank or very long emoji. */
+  fun addSticker(edits: PhotoEdits, emoji: String): PhotoEdits {
+    if (edits.stickers.size >= MAX_STICKERS || emoji.isBlank() || emoji.length > 16) return edits
+    // Each new one is nudged a little so a row of additions does not hide the one before.
+    val nudge = (edits.stickers.size % 5) * 0.04f
+    return edits.copy(stickers = edits.stickers + Sticker(emoji, clamp01(0.5f + nudge), clamp01(0.5f + nudge), 1f, 0f))
+  }
+
+  /** Moves by ([dx], [dy]) shares of the photo, multiplies the scale by [zoom] and turns by [rotationDeg] degrees. */
+  fun transformSticker(edits: PhotoEdits, index: Int, dx: Float, dy: Float, zoom: Float, rotationDeg: Float): PhotoEdits {
+    val s = edits.stickers.getOrNull(index) ?: return edits
+    val z = if (zoom.isNaN() || zoom <= 0f) 1f else zoom
+    val turned = if (rotationDeg.isNaN()) s.rotation else normalizeDegrees(s.rotation + rotationDeg)
+    val next = s.copy(
+      cx = clamp01(s.cx + (if (dx.isNaN()) 0f else dx)),
+      cy = clamp01(s.cy + (if (dy.isNaN()) 0f else dy)),
+      scale = (s.scale * z).coerceIn(MIN_STICKER_SCALE, MAX_STICKER_SCALE),
+      rotation = turned,
+    )
+    return edits.copy(stickers = edits.stickers.toMutableList().also { it[index] = next })
+  }
+
+  fun removeSticker(edits: PhotoEdits, index: Int): PhotoEdits =
+    if (index in edits.stickers.indices) edits.copy(stickers = edits.stickers.filterIndexed { i, _ -> i != index }) else edits
+
+  fun normalizeDegrees(deg: Float): Float {
+    var d = deg % 360f
+    if (d > 180f) d -= 360f
+    if (d <= -180f) d += 360f
+    return d
+  }
+
+  /** Half the width of a sticker, in pixels, for hit tests and the selection ring. */
+  fun stickerRadiusPx(imageWidthPx: Float, scale: Float): Float = imageWidthPx * STICKER_BASE_FRACTION * scale / 2f
+
+  /** The top-most sticker under the point ([x], [y]) given in shares of the photo, or -1. */
+  fun hitSticker(edits: PhotoEdits, x: Float, y: Float, imageW: Float, imageH: Float): Int {
+    for (i in edits.stickers.indices.reversed()) {
+      val s = edits.stickers[i]
+      // A touch target never smaller than about 24 px of radius, so a tiny sticker can still be grabbed.
+      val r = maxOf(stickerRadiusPx(imageW, s.scale), 24f)
+      val dx = (x - s.cx) * imageW
+      val dy = (y - s.cy) * imageH
+      if (dx * dx + dy * dy <= r * r) return i
+    }
+    return -1
+  }
+
   // ---- Keeping the edits across rotation and process death -----------------------------------
 
   /** A short string for saved instance state; [decode] reads it back. */
@@ -149,6 +214,9 @@ object PhotoEditRules {
     val parts = mutableListOf<String>()
     edits.text?.let { t ->
       parts += "T:${num(t.cx)},${num(t.cy)},${t.size.ordinal},${t.color},${URLEncoder.encode(t.text, "UTF-8")}"
+    }
+    edits.stickers.forEach { k ->
+      parts += "E:${num(k.cx)},${num(k.cy)},${num(k.scale)},${num(k.rotation)},${URLEncoder.encode(k.emoji, "UTF-8")}"
     }
     edits.strokes.forEach { s ->
       parts += "S:${s.color}:" + s.points.joinToString(",") { "${num(it.x)},${num(it.y)}" }
@@ -166,6 +234,15 @@ object PhotoEditRules {
           part.startsWith("T:") -> {
             val f = part.removePrefix("T:").split(',', limit = 5)
             edits = withText(edits, URLDecoder.decode(f[4], "UTF-8"), f[0].toFloat(), f[1].toFloat(), OverlaySize.fromOrdinal(f[2].toInt()), f[3].toInt())
+          }
+          part.startsWith("E:") -> {
+            val f = part.removePrefix("E:").split(',', limit = 5)
+            val at = addSticker(edits, URLDecoder.decode(f[4], "UTF-8"))
+            if (at !== edits) {
+              val i = at.stickers.lastIndex
+              val placed = at.stickers[i].copy(cx = clamp01(f[0].toFloat()), cy = clamp01(f[1].toFloat()), scale = f[2].toFloat().coerceIn(MIN_STICKER_SCALE, MAX_STICKER_SCALE), rotation = normalizeDegrees(f[3].toFloat()))
+              edits = at.copy(stickers = at.stickers.toMutableList().also { it[i] = placed })
+            }
           }
           part.startsWith("S:") -> {
             val f = part.removePrefix("S:").split(':', limit = 2)

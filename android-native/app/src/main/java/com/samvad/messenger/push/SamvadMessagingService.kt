@@ -48,7 +48,7 @@ class SamvadMessagingService : FirebaseMessagingService() {
       // Mute is stored only on this device, so a muted author's push is dropped here.
       val me = (application as SamvadApplication).container.auth?.currentUser?.uid.orEmpty()
       val p = runCatching { runBlocking { prefs.preferences.first() } }.getOrNull()
-      val action = com.samvad.core.status.MomentPush.action(data["authorId"], me, p?.statusMuted ?: emptySet(), quiet)
+      val action = com.samvad.core.status.MomentPush.action(data["authorId"], me, p?.statusMuted ?: emptySet(), quiet, p?.momentAlerts ?: true)
       if (action == com.samvad.core.status.MomentPingAction.DROP) return
       Notifications.showMoment(
         this, data["authorId"].orEmpty(), data["title"].orEmpty(),

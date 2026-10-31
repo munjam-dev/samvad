@@ -72,6 +72,21 @@ describe('new-moment notifications', () => {
     expect(push.sent).toHaveLength(3);
   });
 
+  it('skips a viewer who turned Moment alerts off, and still notifies one who turned them on', async () => {
+    await chat('anil', 'bina');
+    await chat('anil', 'chetan');
+    await device('bina', 'bina-phone');
+    await device('chetan', 'chetan-phone');
+    await db.doc('users/bina/settings/notifications').set({ momentAlerts: false });
+    await db.doc('users/chetan/settings/notifications').set({ momentAlerts: true });
+    const push = fakePush();
+    const n = await notifyMomentViewers(testDeps({ push: push.sender }), 'anil', ['bina', 'chetan']);
+    expect(n).toBe(1);
+    expect(push.sent.flatMap((s) => s.tokens)).toEqual(['chetan-phone']);
+    // The opted-out viewer's allowance is untouched, so turning alerts back on works straight away.
+    expect((await db.doc('momentPings/bina_anil').get()).exists).toBe(false);
+  });
+
   it('a viewer without a device does not use up their allowance', async () => {
     await chat('anil', 'bina');
     const push = fakePush();

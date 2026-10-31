@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- मोमेंट्स, चौथा चरण: फ़ोटो पर इमोजी स्टिकर और मोमेंट अलर्ट का स्विच -->
+
+    <string name="photo_edit_tool_stickers">स्टिकर</string>
+    <string name="photo_edit_hint_stickers">इमोजी चुनकर जोड़ें। हिलाने के लिए खींचें, बड़ा-छोटा करने के लिए चुटकी लें और घुमाने के लिए मरोड़ें।</string>
+    <string name="photo_edit_pack_faces">चेहरे</string>
+    <string name="photo_edit_pack_hearts">दिल और हाथ</string>
+    <string name="photo_edit_pack_celebrate">जश्न</string>
+    <string name="photo_edit_pack_nature">प्रकृति और खाना</string>
+    <string name="photo_edit_sticker_add">%1$s जोड़ें</string>
+    <string name="photo_edit_sticker_limit">आप अधिकतम %1$d स्टिकर जोड़ सकते हैं।</string>
+    <string name="photo_edit_sticker_bigger">स्टिकर बड़ा करें</string>
+    <string name="photo_edit_sticker_smaller">स्टिकर छोटा करें</string>
+    <string name="photo_edit_sticker_rotate">स्टिकर घुमाएँ</string>
+    <string name="photo_edit_sticker_delete">स्टिकर हटाएँ</string>
+
+    <string name="settings_moment_alerts">मोमेंट अलर्ट</string>
+    <string name="settings_moment_alerts_body">जिनसे आप चैट करते हैं, वे मोमेंट शेयर करें तो शांत सूचना पाएँ। हर व्यक्ति से 6 घंटे में अधिकतम एक।</string>
+</resources>

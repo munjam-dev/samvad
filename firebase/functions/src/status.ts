@@ -75,12 +75,14 @@ export async function notifyMomentViewers(deps: Deps, author: string, visibleTo:
     await Promise.all(
       viewers.slice(i, i + PING_PARALLELISM).map(async (viewer) => {
         const cid = [author, viewer].sort().join('_');
-        const [member, iBlocked, theyBlocked] = await Promise.all([
+        const [member, iBlocked, theyBlocked, alerts] = await Promise.all([
           db.doc(`conversations/${cid}/members/${viewer}`).get(),
           db.doc(`users/${author}/blocked/${viewer}`).get(),
           db.doc(`users/${viewer}/blocked/${author}`).get(),
+          db.doc(`users/${viewer}/settings/notifications`).get(),
         ]);
-        if (member.get('muted') === true || iBlocked.exists || theyBlocked.exists) return;
+        // Moment alerts are on unless the viewer turned them off in Settings. Quiet hours and previews are on-device.
+        if (member.get('muted') === true || iBlocked.exists || theyBlocked.exists || alerts.get('momentAlerts') === false) return;
         const devices = await db.collection(`users/${viewer}/devices`).where('fcmToken', '!=', null).get();
         const tokens: Array<[string, FirebaseFirestore.DocumentReference]> = [];
         for (const d of devices.docs) {

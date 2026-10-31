@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Moments, fourth step: emoji stickers on photos, and the Moment alerts switch -->
+
+    <string name="photo_edit_tool_stickers">Stickers</string>
+    <string name="photo_edit_hint_stickers">Pick an emoji to add it. Drag it to move it, pinch to resize and twist to turn it.</string>
+    <string name="photo_edit_pack_faces">Faces</string>
+    <string name="photo_edit_pack_hearts">Hearts and hands</string>
+    <string name="photo_edit_pack_celebrate">Celebrate</string>
+    <string name="photo_edit_pack_nature">Nature and food</string>
+    <string name="photo_edit_sticker_add">Add %1$s</string>
+    <string name="photo_edit_sticker_limit">You can add up to %1$d stickers.</string>
+    <string name="photo_edit_sticker_bigger">Make sticker bigger</string>
+    <string name="photo_edit_sticker_smaller">Make sticker smaller</string>
+    <string name="photo_edit_sticker_rotate">Turn sticker</string>
+    <string name="photo_edit_sticker_delete">Delete sticker</string>
+
+    <string name="settings_moment_alerts">Moment alerts</string>
+    <string name="settings_moment_alerts_body">Get a quiet notification when someone you chat with shares a Moment. At most one per person every 6 hours.</string>
+</resources>
