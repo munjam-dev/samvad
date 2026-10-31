@@ -31,7 +31,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
@@ -87,7 +86,7 @@ fun BuiltWithLove(modifier: Modifier = Modifier) {
         line,
         style = TextStyle(
           fontFamily = JakartaSans, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp, letterSpacing = 0.sp,
-          brush = Brush.horizontalGradient(listOf(Saffron, colors.brand, Leaf)),
+          color = colors.brand,
         ),
         textAlign = TextAlign.Center,
         modifier = Modifier.weight(1f, fill = false),
