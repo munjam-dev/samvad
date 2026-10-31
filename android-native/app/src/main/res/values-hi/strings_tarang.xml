@@ -74,7 +74,7 @@
     <string name="tarang_channel">तरंग</string>
     <string name="tarang_channel_desc">तरंग चालू रहने पर दिखता है, ताकि ब्लूटूथ चलता रहे।</string>
     <plurals name="tarang_peers_count">
-        <item quantity="one">आस-पास 1 व्यक्ति</item>
+        <item quantity="one">आस-पास %d व्यक्ति</item>
         <item quantity="other">आस-पास %d लोग</item>
     </plurals>
 </resources>
