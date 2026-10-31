@@ -12,6 +12,13 @@ Signal Protocol (libsignal-client, libsignal-android)
   Copyright Signal Messenger, LLC. Licensed under the GNU AGPL-3.0. https://github.com/signalapp/libsignal
   Used for end-to-end encryption of one-to-one chats. This is why the app as a whole is published under AGPL-3.0.
 
+bitchat-android (Tarang, nearby chat over Bluetooth)
+  Copyright the bitchat-android authors. Licensed under the GNU GPL-3.0 (upstream also describes it as public domain).
+  https://github.com/permissionlesstech/bitchat-android, commit 20501fdfe0d56c7705c377d4a263b01d8f38eeeb
+  Source for the Bluetooth mesh, Noise encryption and protocol code in android-native/tarang. Modified for Samvad;
+  see docs/TARANG_INTEGRATION.md. It includes Noise-Java by Southern Storm Software (MIT licence).
+  GPL-3.0 code may be combined into this AGPL-3.0 work.
+
 LiveKit Android SDK (io.livekit:livekit-android), including its bundled WebRTC
   Licensed under the Apache License 2.0. https://github.com/livekit/client-sdk-android
   WebRTC is licensed under the BSD 3-Clause licence. Used for calls and meetings.

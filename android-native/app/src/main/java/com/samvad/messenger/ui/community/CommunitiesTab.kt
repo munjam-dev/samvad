@@ -62,6 +62,7 @@ fun CommunitiesTab(
   onOpenVault: () -> Unit = {},
   onOpenMoments: () -> Unit = {},
   onOpenStarred: () -> Unit = {},
+  onOpenTarang: () -> Unit = {},
 ) {
   val colors = SamvadTheme.colors
   val vm: CommunitiesViewModel = viewModel(factory = CommunitiesViewModel.factory(container, me))
@@ -78,6 +79,8 @@ fun CommunitiesTab(
       LazyColumn(Modifier.fillMaxSize().navigationBarsPadding(), state = listState, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 120.dp)) {
         item(key = "hub") {
           HubCards(
+            tarang = container.tarang,
+            onTarang = onOpenTarang,
             onCommunities = { if (state.rows.isEmpty()) onNewCommunity() else scope.launch { listState.animateScrollToItem(1) } },
             onVault = onOpenVault,
             onMoments = onOpenMoments,
